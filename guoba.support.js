@@ -59,13 +59,13 @@ export function supportGuoba() {
     return {
         pluginInfo: {
             name: 'Lain-plugin',
-            title: 'QQ频道插件',
+            title: 'Lian-plugin',
             author: '@Lain.',
             authorLink: 'https://gitee.com/Zyy955',
             link: 'https://gitee.com/Zyy955/Lain-plugin',
             isV3: true,
             isV2: false,
-            description: '主要为云崽提供QQ频道机器人功能',
+            description: '主要为云崽提供QQ频道、PC微信、网页版微信机器人等功能',
             // 显示图标，此为个性化配置
             // 图标可在 https://icon-sets.iconify.design 这里进行搜索
             icon: 'mdi: image-filter-drama-outline',
