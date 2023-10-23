@@ -73,7 +73,7 @@ export class QQGuildBot extends plugin {
                     config[i].appID,
                     config[i].token
                 ]
-                msg.push(`${Bot[i].name}：${cfg.join(':')}`)
+                msg.push(`${Bot[i].nickname}：${cfg.join(':')}`)
             }
             return e.reply(`共${msg.length}个账号：\n${msg.join('\n')}`)
         } else
@@ -197,7 +197,7 @@ let apps = {
         /** 重复的appID，删除 */
         if (cfg.hasIn(cmd[2])) {
             cfg.del(cmd[2])
-            return `Bot：${Bot[cmd[2]].name}${cmd[2]} 删除成功...重启后生效...`
+            return `Bot：${Bot[cmd[2]].nickname}${cmd[2]} 删除成功...重启后生效...`
         } else {
             bot = { appID: cmd[2], token: cmd[3], sandbox: cmd[0] === "1", allMsg: cmd[1] === "1" }
         }
@@ -207,7 +207,7 @@ let apps = {
         try {
             const qg = new guild(bot)
             await qg.monitor()
-            return `Bot：${Bot[cmd[2]].name}(${cmd[2]}) 已连接...`
+            return `Bot：${Bot[cmd[2]].nickname}(${cmd[2]}) 已连接...`
         } catch (err) {
             return err
         }

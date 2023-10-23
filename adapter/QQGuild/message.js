@@ -7,7 +7,7 @@ export default class message {
         /** 开发者id */
         this.id = id
         /** bot名称 */
-        this.name = Bot[id].name
+        this.name = Bot[id].nickname
         /** 接收到的消息 */
         this.data = data
     }
@@ -247,7 +247,7 @@ export default class message {
                 if (i.startsWith("<@")) {
                     let user_id = i.slice(3, -1)
                     const name = at_name(user_id)
-                    if (Bot[this.id].id === user_id) {
+                    if (Bot[this.id].tiny_id === user_id) {
                         user_id = Bot.uin
                         atBot = true
                     } else {

@@ -322,7 +322,7 @@ export default class SendMsg {
                 ? res = await Bot[this.id].client.messageApi.postMessage(this.channel_id, msg)
                 : res = await Bot[this.id].client.directMessageApi.postDirectMessage(this.guild_id, msg)
         } catch (error) {
-            logger.error(`${Bot[this.id].name} 发送消息错误，正在转成图片重新发送...\n错误信息：`, error)
+            logger.error(`${Bot[this.id].nickname} 发送消息错误，正在转成图片重新发送...\n错误信息：`, error)
             /** 转换为图片发送 */
             let image = new FormData()
             if (this.msg_id) image.set("msg_id", this.msg_id)

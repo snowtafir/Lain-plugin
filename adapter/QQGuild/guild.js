@@ -78,6 +78,9 @@ export default class guild {
             gl: new Map(),
             /** 子频道列表 */
             gml: new Map(),
+            /** 兼容旧配置 */
+            id: bot.id,
+            name: bot.username,
             uin: this.id,
             tiny_id: bot.id,
             nickname: bot.username,
@@ -93,8 +96,7 @@ export default class guild {
                 const [guild_id, channel_id] = groupId.replace("qg_", "").split('-')
                 return {
                     sendMsg: async (msg, quote = false) => {
-                        const newMsg = new SendMsg(this.id, { guild_id, channel_id }, "MESSAGE_CREATE")
-                        return await newMsg(msg, quote)
+                        return await (new SendMsg(this.id, { guild_id, channel_id }, "MESSAGE_CREATE")).message(msg, quote)
                     },
                     /** 转发 */
                     makeForwardMsg: async (forwardMsg) => {

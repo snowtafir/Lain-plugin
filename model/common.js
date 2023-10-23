@@ -15,11 +15,11 @@ function sleep(ms) {
  */
 export function logModule(id, log, type = "info") {
     const list = {
-        info: function () { logger.info(`${chalk.hex("#868ECC")(`[${Bot[id].nickname}]`)} ${log}`) },
-        error: function () { logger.error(`${chalk.hex("#868ECC")(`[${Bot[id].nickname}]`)} ${log}`) },
-        mark: function () { logger.mark(`${chalk.hex("#868ECC")(`[${Bot[id].nickname}]`)} ${log}`) },
-        debug: function () { logger.debug(`${chalk.hex("#868ECC")(`[${Bot[id].nickname}]`)} ${log}`) },
-        warn: function () { logger.warn(`${chalk.hex("#868ECC")(`[${Bot[id].nickname}]`)} ${log}`) },
+        info: function () { logger.info(`${chalk.hex("#868ECC")(`[${Bot[id].nickname}(${id}])`)} ${log}`) },
+        error: function () { logger.error(`${chalk.hex("#868ECC")(`[${Bot[id].nickname}(${id}])`)} ${log}`) },
+        mark: function () { logger.mark(`${chalk.hex("#868ECC")(`[${Bot[id].nickname}(${id}])`)} ${log}`) },
+        debug: function () { logger.debug(`${chalk.hex("#868ECC")(`[${Bot[id].nickname}(${id}])`)} ${log}`) },
+        warn: function () { logger.warn(`${chalk.hex("#868ECC")(`[${Bot[id].nickname}(${id}])`)} ${log}`) },
     }
     return list[type]()
 }
