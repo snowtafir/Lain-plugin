@@ -228,6 +228,10 @@ export default class guild {
     }
 
     async permissions(data, type = "") {
+        /** 解除私信 */
+        if (data.msg.content.includes("#QQ频道解除私信")) {
+            return await this.Sendprivate(data)
+        }
         const cfg = Bot.qg.cfg
         const { guild_id, channel_id } = data.msg
 
@@ -284,8 +288,8 @@ export default class guild {
             recipient_id: msg.author.id
         }
         const _data = await Bot[this.id].client.directMessageApi.createDirectMessage(new_msg)
-        const hi = "QQGuild-plugin：你好~"
-        logger.info(`${this.name} 发送私信消息：${hi}`)
+        const hi = "Lain-plugin：你好~"
+        await common.logModule(this.id, `发送私信消息：${hi}`)
         await Bot[this.id].client.directMessageApi.postDirectMessage(_data.data.guild_id, { content: hi })
     }
 

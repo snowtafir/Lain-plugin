@@ -7,14 +7,6 @@ import common from "../../../lib/common/common.js"
 
 const _path = process.cwd() + "/plugins/Lain-plugin/config"
 
-/** 兼容旧配置 */
-if (fs.existsSync("./plugins/Lain-plugin/config.yaml")) {
-    if (!fs.existsSync(_path + "/bot.yaml")) {
-        const old = Yaml.parse(fs.readFileSync("./plugins/Lain-plugin/config.yaml", "utf8"))
-        fs.writeFileSync(_path + "/bot.yaml", Yaml.stringify(old.bot), "utf8")
-    }
-}
-
 /** 检查配置文件是否存在 */
 if (!fs.existsSync(_path + "/config.yaml")) {
     fs.copyFileSync(_path + "/defSet/config.yaml", _path + "/config.yaml")
