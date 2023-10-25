@@ -248,7 +248,7 @@ export default class message {
                     let user_id = i.slice(3, -1)
                     const name = at_name(user_id)
                     if (Bot[this.id].tiny_id === user_id) {
-                        user_id = Bot.uin
+                        user_id = Bot[this.id].uin
                         atBot = true
                     } else {
                         user_id = `qg_${user_id}`
