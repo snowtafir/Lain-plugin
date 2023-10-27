@@ -18,11 +18,11 @@ let yenai_plugin = {
                     const ids = groupId.replace("qg_", "").split("-")
                     const [guildID, channels] = ids
                     /** 获取appID */
-                    let appID = Bot.qg.guilds[guildID].tiny_id || null
+                    let appID = Bot.lain.guilds[guildID].tiny_id || null
                     if (!appID) throw Error('❎ 这个群没有这个人哦~')
                     if (cfg.masterQQ?.includes(userId) && time != 0) throw Error('居然调戏主人！！！哼，坏蛋(ﾉ｀⊿´)ﾉ')
 
-                    if (!Bot.qg.guilds[guildID].admin) throw Error('我连管理员都木有，这种事怎么可能做到的辣！！！')
+                    if (!Bot.lain.guilds[guildID].admin) throw Error('我连管理员都木有，这种事怎么可能做到的辣！！！')
                     if (cfg.masterQQ?.includes(userId) && time != 0) throw Error('居然调戏主人！！！哼，坏蛋(ﾉ｀⊿´)ﾉ')
 
                     /** 获取用户身份组 */
@@ -45,7 +45,7 @@ let yenai_plugin = {
                     const ids = groupId.replace("qg_", "").split("-")
                     const [guildID, channels] = ids
                     /** 获取appID */
-                    let appID = Bot.qg.guilds[guildID].tiny_id || null
+                    let appID = Bot.lain.guilds[guildID].tiny_id || null
                     if (!appID) throw Error('❎ 这个群没有这个人哦~')
                     if (cfg.masterQQ?.includes(userId) && time != 0) throw Error('我连管理员都木有，这种事怎么可能做到的辣！！！')
 

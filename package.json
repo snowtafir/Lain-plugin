@@ -1,17 +1,21 @@
 {
-  "name": "qqguild-plugin",
-  "version": "1.0.0",
+  "name": "lain-plugin",
+  "version": "1.1.0",
   "author": "Lain.",
   "github": "https://github.com/Zyy955/Lain-plugin",
   "gitee": "https://gitee.com/Zyy955/Lain-plugin",
   "type": "module",
   "adapter": {
-    "qg": "0.5.1"
+    "qg": "0.5.1",
+    "stdin": "0.1.1",
+    "CWeChatRobot": "0.0.8"
   },
   "dependencies": {
     "qq-guild-bot": "^2.9.5",
     "qrcode": "^1.5.3",
     "axios": "^1.5.0",
-    "sharp": "^0.32.6"
+    "sharp": "^0.32.6",
+    "ws": "^8.13.0",
+    "file-type": "^18.5.0"
   }
 }

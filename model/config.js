@@ -1,11 +1,16 @@
 import fs from "fs"
 import Yaml from "yaml"
 import chalk from "chalk"
-import guild from "../adapter/QQGuild/guild.js"
 import chokidar from "chokidar"
-import common from "../../../lib/common/common.js"
+import common from "../model/common.js"
+import guild from "../adapter/QQGuild/guild.js"
 
 const _path = process.cwd() + "/plugins/Lain-plugin/config"
+
+try {
+    /** 覆盖apps.js */
+    fs.copyFileSync(_path + "/defSet/apps.js", "./apps.js")
+} catch (err) { }
 
 /** 检查配置文件是否存在 */
 if (!fs.existsSync(_path + "/config.yaml")) {
@@ -19,19 +24,20 @@ if (!fs.existsSync(_path + "/bot.yaml")) {
 
 const cfg = Yaml.parse(fs.readFileSync(_path + "/config.yaml", "utf8"))
 const YZ = JSON.parse(fs.readFileSync("./package.json", "utf-8"))
-const guilds = JSON.parse(fs.readFileSync("./plugins/Lain-plugin/package.json", "utf-8"))
+const packageCfg = JSON.parse(fs.readFileSync("./plugins/Lain-plugin/package.json", "utf-8"))
 
-Bot.qg = {
+Bot.lain = {
     /** 云崽信息 */
     YZ: {
+        ...packageCfg,
         name: YZ.name === "miao-yunzai" ? "Miao-Yunzai" : "Yunzai-Bot",
         ver: YZ.version
     },
     /** 插件信息 */
     guild: {
-        name: guilds.name,
-        ver: guilds.adapter.qg,
-        guild_ver: guilds.dependencies["qq-guild-bot"].replace("^", "")
+        name: packageCfg.name,
+        ver: packageCfg.adapter.qg,
+        guild_ver: packageCfg.dependencies["qq-guild-bot"].replace("^", "")
     },
     /** 基本配置 */
     cfg: cfg,
@@ -63,7 +69,7 @@ try {
 
         watcher.on("change", async () => {
             await common.sleep(1500)
-            Bot.qg.cfg = Yaml.parse(fs.readFileSync(filePath, "utf8"))
+            Bot.lain.cfg = Yaml.parse(fs.readFileSync(filePath, "utf8"))
             logger.mark("[Lain-plugin][配置文件修改] 成功重载")
         })
 
@@ -78,5 +84,5 @@ try {
     logger.error(err)
 }
 
-logger.info(chalk.hex("#868ECC")(`Lain-plugin插件${Bot.qg.guild.ver}全部初始化完成~`))
+logger.info(chalk.hex("#868ECC")(`Lain-plugin插件${Bot.version}全部初始化完成~`))
 logger.info(chalk.hex("#868ECC")("https://gitee.com/Zyy955/Lain-plugin"))

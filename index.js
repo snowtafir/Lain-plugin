@@ -6,6 +6,7 @@ import { execSync } from "child_process"
 import { createInterface } from "readline"
 import { update } from "../other/update.js"
 import yaml from "./model/yaml.js"
+import "./adapter/stdin/stdin.js"
 
 /** 设置主人 */
 let sign = {}
@@ -44,6 +45,11 @@ export class QQGuildBot extends plugin {
                 {
                     reg: /^#(我的|当前)?(id|信息)$/gi,
                     fnc: 'user_id'
+                },
+                {
+                    reg: /^#微信修改名称.+/,
+                    fnc: 'ComName',
+                    permission: "master"
                 }
             ]
         })
@@ -155,6 +161,17 @@ export class QQGuildBot extends plugin {
         e.group_id ? msg.push(`当前群聊ID：${e.group_id}`) : ""
         if (e.isMaster && e?.adapter === "QQGuild") msg.push("\n温馨提示：\n使用本体黑白名单请使用「群聊ID」\n使用插件黑白名单请按照配置文件说明进行添加~")
         return e.reply(`\n${msg.join('\n')}`, true, { at: true })
+    }
+
+    /** 微信椰奶状态自定义名称 */
+    async ComName(e) {
+        const msg = e.msg.replace("#微信修改名称", "").trim()
+        const _path = WeChat.cfg._path
+        let cfg = fs.readFileSync(_path, "utf8")
+        cfg = cfg.replace(RegExp("name:.*"), `name: ${msg}`)
+        fs.writeFileSync(_path, cfg, "utf8")
+        Bot[WeChat?.BotCfg?.user_id].nickname = msg
+        e.reply(`修改成功，新名称为：${msg}`, false, { at: true })
     }
 
     SetAdmin() {

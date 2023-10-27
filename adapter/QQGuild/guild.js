@@ -86,8 +86,8 @@ export default class guild {
             nickname: bot.username,
             avatar: bot.avatar,
             stat: { start_time: Date.now() / 1000, recv_msg_cnt: 0 },
-            apk: { display: Bot.qg.guild.name, version: Bot.qg.guild.ver },
-            version: { id: Bot[this.id].allMsg ? "私域" : "公域", name: "QQ频道Bot", version: Bot.qg.guild.guild_ver },
+            apk: { display: Bot.lain.guild.name, version: Bot.lain.guild.ver },
+            version: { id: Bot[this.id].allMsg ? "私域" : "公域", name: "QQ频道", version: Bot.lain.guild.guild_ver },
             /** 转发 */
             makeForwardMsg: async (forwardMsg) => {
                 return await common.makeForwardMsg(forwardMsg)
@@ -154,7 +154,7 @@ export default class guild {
             }
 
             /** 保存所有bot的频道列表 */
-            Bot.qg.guilds[qg.id] = {
+            Bot.lain.guilds[qg.id] = {
                 ...qg,
                 admin,
                 id: this.id,
@@ -189,7 +189,7 @@ export default class guild {
                         channel_name: i.name
                     })
                     /** 子频道id和对应名称 */
-                    Bot.qg.guilds[i.guild_id].channels[i.id] = i.name || i.id
+                    Bot.lain.guilds[i.guild_id].channels[i.id] = i.name || i.id
                 }
             } catch (err) {
                 await common.logModule(this.id, `Bot无法在频道 ${qg.id} 中读取子频道列表，请给予权限...错误信息：${err.message}`, "error")
@@ -232,7 +232,7 @@ export default class guild {
         if (data.msg.content.includes("#QQ频道解除私信")) {
             return await this.Sendprivate(data)
         }
-        const cfg = Bot.qg.cfg
+        const cfg = Bot.lain.cfg
         const { guild_id, channel_id } = data.msg
 
         /** 过频道黑白名单结果 */

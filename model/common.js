@@ -14,12 +14,13 @@ function sleep(ms) {
  * @param err 可选参数，日志转为错误日志
  */
 export function logModule(id, log, type = "info") {
+    const bot = id ? chalk.hex("#868ECC")(`[${Bot[id].nickname || "未知"}(${id}]) `) : ""
     const list = {
-        info: function () { logger.info(`${chalk.hex("#868ECC")(`[${Bot[id].nickname}(${id}])`)} ${log}`) },
-        error: function () { logger.error(`${chalk.hex("#868ECC")(`[${Bot[id].nickname}(${id}])`)} ${log}`) },
-        mark: function () { logger.mark(`${chalk.hex("#868ECC")(`[${Bot[id].nickname}(${id}])`)} ${log}`) },
-        debug: function () { logger.debug(`${chalk.hex("#868ECC")(`[${Bot[id].nickname}(${id}])`)} ${log}`) },
-        warn: function () { logger.warn(`${chalk.hex("#868ECC")(`[${Bot[id].nickname}(${id}])`)} ${log}`) },
+        info: function () { logger.info(`${bot}${log}`) },
+        error: function () { logger.error(`${bot}${log}`) },
+        mark: function () { logger.mark(`${bot}${log}`) },
+        debug: function () { logger.debug(`${bot}${log}`) },
+        warn: function () { logger.warn(`${bot}${log}`) },
     }
     return list[type]()
 }
@@ -55,7 +56,7 @@ export async function makeForwardMsg(forwardMsg, data = {}) {
         else if (typeof msg === "object" && /^#.*日志$/.test(data?.msg?.content)) {
             const splitMsg = msg.split("\n").map(i => {
                 if (!i || i.trim() === "") return
-                if (Bot.qg.cfg.forwar) {
+                if (Bot.lain.cfg.forwar) {
                     return { type: "forward", text: i.substring(0, 1000).trim().replace(/^\\n{1,3}|\\n{1,3}$/g, "") }
                 } else {
                     return { type: "forward", text: i.substring(0, 100).trim().replace(/^\\n{1,3}|\\n{1,3}$/g, "") }
@@ -73,6 +74,7 @@ export async function makeForwardMsg(forwardMsg, data = {}) {
             new_msg.push({ type: "forward", text: msg.replace(/^\\n{1,3}|\\n{1,3}$/g, "") })
         }
         else {
+            await logModule(this.id, `Bot无法在频道 ${qg.id} 中读取基础信息，请给予权限...错误信息：${err.message}`, "error")
             logger.error("未知字段，请反馈至作者：", msg)
         }
     }

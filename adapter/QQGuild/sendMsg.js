@@ -98,7 +98,7 @@ export default class SendMsg {
                     break
                 case "forward":
                     /** 转发消息 */
-                    if (Bot.qg.cfg.forwar) {
+                    if (Bot.lain.cfg.forwar) {
                         /** 构建请求参数、打印日志 */
                         const SendMsg = await this.Construct_data({
                             ...image || null,
@@ -135,7 +135,7 @@ export default class SendMsg {
     /** 处理URL */
     async HandleURL(msg) {
         if (typeof msg !== 'string') return msg
-        const urls = Bot.qg.cfg.whitelist_Url
+        const urls = Bot.lain.cfg.whitelist_Url
         const whiteRegex = new RegExp(`\\b(${urls.map(url => url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'g')
         /** 将url转二维码 */
         if (!msg.match(whiteRegex)) {
@@ -165,7 +165,7 @@ export default class SendMsg {
                         const Uint8Array = await this.rendering(base64, url)
                         const Api_msg = { content: "", type: "file_image", image: Uint8Array, log: "{image：base64://...}" }
                         /** 转换的二维码连接是否撤回 */
-                        const qr = Number(Bot.qg.cfg.recallQR) || 0
+                        const qr = Number(Bot.lain.cfg.recallQR) || 0
                         /** 构建请求参数、打印日志 */
                         const SendMsg = await this.Construct_data(Api_msg, false)
                         await this.SendMsg(SendMsg, qr)
@@ -223,7 +223,7 @@ export default class SendMsg {
         }
         /** 判断url是否为白名单，否则缓存图片转为二进制 */
         else if (typeof file === "string" && /^(https|http):\/\//.test(file)) {
-            const urls = Bot.qg.cfg.whitelist_Url
+            const urls = Bot.lain.cfg.whitelist_Url
             const whiteRegex = new RegExp(`\\b(${urls.map(url =>
                 url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'g')
             if (!file.match(whiteRegex)) {
@@ -256,12 +256,12 @@ export default class SendMsg {
                     let sizeInMB = image?.byteLength / (1024 * 1024)
                     /** 动态导入 */
                     const sharp = (await import("sharp")).default
-                    if (sharp && sizeInMB > Number(Bot.qg.cfg.ImageSize)) {
+                    if (sharp && sizeInMB > Number(Bot.lain.cfg.ImageSize)) {
                         await sharp(image)
                             /** 宽度像素 */
-                            .resize({ width: Bot.qg.cfg.width })
+                            .resize({ width: Bot.lain.cfg.width })
                             /** 质量 */
-                            .jpeg({ quality: Bot.qg.cfg.quality })
+                            .jpeg({ quality: Bot.lain.cfg.quality })
                             .toBuffer()
                             .then(data => {
                                 msg.set("file_image", new Blob([data]))
@@ -358,9 +358,9 @@ export default class SendMsg {
     /** 渲染图片 */
     async rendering(content, error) {
         const data = {
-            Yz: Bot.qg.YZ,
+            Yz: Bot.lain.YZ,
             error: error,
-            guild: Bot.qg.guild.ver,
+            guild: Bot.lain.guild.ver,
             msg: content,
             saveId: 'Lain-plugin',
             _plugin: 'Lain-plugin',

@@ -20,8 +20,8 @@ const prefixBlack = []
 setTimeout(async () => {
     while (true) {
         /** 防止为空 */
-        if (Bot?.qg?.guilds) {
-            const list = Bot.qg.guilds
+        if (Bot?.lain?.guilds) {
+            const list = Bot.lain.guilds
             for (let id in list) {
                 /** 频道 */
                 guilds.push({ label: list[id].name, value: `qg_${id}` })
@@ -58,7 +58,7 @@ export function supportGuoba() {
 
     return {
         pluginInfo: {
-            name: 'Lain-plugin',
+            name: '铃音插件',
             title: 'Lian-plugin',
             author: '@Lain.',
             authorLink: 'https://gitee.com/Zyy955',
@@ -221,11 +221,11 @@ export function supportGuoba() {
             ],
             // 获取配置数据方法（用于前端填充显示数据）
             getConfigData() {
-                return Bot.qg.cfg
+                return Bot.lain.cfg
             },
             // 设置配置的方法（前端点确定后调用的方法）
             setConfigData(data, { Result }) {
-                const _path = Bot.qg._path + "/config.yaml"
+                const _path = Bot.lain._path + "/config.yaml"
                 let cfg = Yaml.parseDocument(fs.readFileSync(_path, "utf8"))
                 for (const key in data) {
                     let value = data[key]

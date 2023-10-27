@@ -36,7 +36,7 @@ export default class message {
         /** 从gl中取出当前频道信息 */
         const gl = Bot[this.id].gl.get(group_id)
         /** 频道名称 */
-        const guild_name = gl ? gl.guild_name : (Bot.qg.guilds?.[msg?.src_guild_id || msg.guild_id]?.name || msg.guild_id)
+        const guild_name = gl ? gl.guild_name : (Bot.lain.guilds?.[msg?.src_guild_id || msg.guild_id]?.name || msg.guild_id)
         /** 子频道名称 */
         const channel_name = type === "私信" ? "私信" : (gl ? gl.channel_name : msg.channel_id)
         /**  群聊名称 */
@@ -261,7 +261,7 @@ export default class message {
                     message.push({ type: "face", text: faceValue })
                 } else {
                     /** 前缀处理 */
-                    if (i && Bot.qg.cfg.prefix && !Bot.qg.cfg.prefixBlack.includes(this.id)) {
+                    if (i && Bot.lain.cfg.prefix && !Bot.lain.cfg.prefixBlack.includes(this.id)) {
                         i = i.trim().replace(/^\//, "#")
                     }
                     raw_message.push(i)
@@ -346,7 +346,7 @@ export default class message {
     async log(e) {
         let group_name = e.guild_name + "-私信"
         e.message_type === "group" ? group_name = e.group_name : ""
-        return await common.logModule(this.id, `频道消息：[${group_name}，${e.sender?.card || e.sender?.nickname}] ${e.raw_message}`, Bot.qg.cfg.isLog ? "info" : "debug")
+        return await common.logModule(this.id, `频道消息：[${group_name}，${e.sender?.card || e.sender?.nickname}] ${e.raw_message}`, Bot.lain.cfg.isLog ? "info" : "debug")
     }
 
     /** 处理消息、转换格式 */
