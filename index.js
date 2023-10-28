@@ -156,7 +156,7 @@ export class QQGuildBot extends plugin {
         const msg = e.msg.replace("#微信修改名称", "").trim()
         const cfg = new yaml(Bot.lain._path + "/config.yaml")
         cfg.set("name", msg)
-        Bot[e.self_id].nickname = msg
+        Bot[Bot.lain.wc.uin].nickname = msg
         return await e.reply(`修改成功，新名称为：${msg}`, false, { at: true })
     }
 

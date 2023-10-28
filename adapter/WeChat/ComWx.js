@@ -176,7 +176,7 @@ export default class ComWeChat {
             nickname: Bot.lain.cfg.name || botCfg.user_name,
             avatar: botCfg?.["wx.avatar"],
             stat: { start_time: Date.now() / 1000, recv_msg_cnt: 0 },
-            apk: { display: Bot.lain.name, version: Bot.lain.adapter.CWeChatRobot },
+            apk: { display: "CWeChatRobot", version: Bot.lain.adapter.CWeChatRobot },
             version: { id: "PC", name: "微信", version: Bot.lain.adapter.WeChat },
             /** 转发 */
             makeForwardMsg: async (forwardMsg) => {
