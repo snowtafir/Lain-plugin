@@ -1,4 +1,5 @@
 import { createInterface } from "readline"
+import fs from "node:fs"
 import common from "../../model/common.js"
 import pluginsLoader from "../../../../lib/plugins/loader.js"
 
@@ -32,6 +33,16 @@ Bot[uin] = {
             }
         }
     }
+}
+/** 设置随机头像 */
+let txurl = `${process.cwd()}/resources/Avatar/`
+if (fs.existsSync(txurl)) {
+    let tx_img = []
+    for (let txlb of fs.readdirSync(txurl))
+        if (txlb.includes("."))
+            tx_img.push(txurl + txlb);
+    if (tx_img.length > 0)
+        Bot[uin].avatar = tx_img[Math.floor(Math.random() * tx_img.length)];
 }
 
 /** 注册uin */
@@ -93,7 +104,7 @@ function msg(msg) {
         },
         /** 获取头像 */
         getAvatarUrl: () => {
-            return `https://q1.qlogo.cn/g?b=qq&s=0&nk=528952540`
+            return Bot[uin].avatar
         }
     }
 
@@ -134,7 +145,8 @@ function msg(msg) {
 
             }
         }
-        return await common.logModule(uin, `发送消息：${log.join('\n')}`)
+        await common.logModule(uin, `发送消息：${log.join('\n')}`)
+        return { message_id: Date.now() }
     }
     return e
 }

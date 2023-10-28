@@ -240,9 +240,8 @@ export default class ComWeChat {
         if (!Bot?.adapter) {
             Bot.adapter = [Bot.uin, this.id]
         } else {
-            Bot.adapter.push(this.id)
+            if (!Bot.adapter.includes(this.id)) Bot.adapter.push(this.id)
             /** 去重防止断连后出现多个重复的id */
-            Bot.adapter = Array.from(new Set(Bot.adapter.map(JSON.stringify))).map(JSON.parse)
         }
 
         await common.logModule(this.id, "状态更新：ComWeChat已连接，正在加载资源中...")
