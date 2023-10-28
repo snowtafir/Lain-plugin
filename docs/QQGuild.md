@@ -1,5 +1,7 @@
 `请给予机器人基础的权限...什么权限都没有的发个鬼消息啊= =`
 
+ ![Visitor Count](https://profile-counter.glitch.me/Zyy955-Lain-plugin/count.svg)
+
 ## 1.获取频道机器人
 
 前往[QQ开放平台](https://q.qq.com/#/) -> 登录 -> 应用管理 -> 创建机器人 -> 创建完成

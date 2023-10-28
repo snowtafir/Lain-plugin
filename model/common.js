@@ -1,3 +1,4 @@
+import fs from "fs"
 import chalk from "chalk"
 /**
  * 休眠函数
@@ -14,15 +15,48 @@ function sleep(ms) {
  * @param err 可选参数，日志转为错误日志
  */
 export function logModule(id, log, type = "info") {
-    const bot = id ? chalk.hex("#868ECC")(`[${Bot[id].nickname || "未知"}(${id}]) `) : ""
+    const bot = id ? chalk.hex("#868ECC")(id === "ComWeChat" ? `[${id}]` : `[${Bot?.[id]?.nickname || "未知"}(${id})]`) : ""
     const list = {
-        info: function () { logger.info(`${bot}${log}`) },
-        error: function () { logger.error(`${bot}${log}`) },
-        mark: function () { logger.mark(`${bot}${log}`) },
-        debug: function () { logger.debug(`${bot}${log}`) },
-        warn: function () { logger.warn(`${bot}${log}`) },
+        info: function () { logger.info(`${bot} ${log}`) },
+        error: function () { logger.error(`${bot} ${log}`) },
+        mark: function () { logger.mark(`${bot} ${log}`) },
+        debug: function () { logger.debug(`${bot} ${log}`) },
+        warn: function () { logger.warn(`${bot} ${log}`) },
     }
     return list[type]()
+}
+
+
+/** 将云崽过来的消息全部统一格式存放到数组里面 */
+export function array(data) {
+    let msg = []
+    /** 将格式统一为对象 随后进行转换成api格式 */
+    if (data?.[1]?.data?.type === "test") {
+        msg.push({ type: "forward", text: data[0] })
+        msg.push(...data[1].msg)
+    }
+    else if (data?.data?.type === "test") {
+        msg.push(...data.msg)
+    }
+    else if (Array.isArray(data)) {
+        msg = [].concat(...data.map(i => (typeof i === "string" ? [{ type: "text", text: i }] :
+            Array.isArray(i) ? [].concat(...i.map(format => (typeof format === "string" ? [{ type: "text", text: format }]
+                : typeof format === "object" && format !== null ? [format] : []))) : typeof i === "object" && i !== null ? [i] : []
+        )))
+    }
+    else if (data instanceof fs.ReadStream) {
+        msg.push({ type: "image", file: `file://./${data.file.path}` })
+    }
+    else if (data instanceof Uint8Array) {
+        msg.push({ type: "image", file: data })
+    }
+    else if (typeof data === "object") {
+        msg.push(data)
+    }
+    else {
+        msg.push({ type: "text", text: data })
+    }
+    return msg
 }
 
 /**
@@ -84,4 +118,4 @@ export async function makeForwardMsg(forwardMsg, data = {}) {
     return message
 }
 
-export default { sleep, logModule, makeForwardMsg }
+export default { sleep, logModule, array, makeForwardMsg }

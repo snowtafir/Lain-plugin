@@ -1,5 +1,4 @@
 import fs from "fs"
-import chalk from "chalk"
 import { URL } from "url"
 import lodash from "lodash"
 import qrcode from "qrcode"
@@ -29,49 +28,20 @@ export default class SendMsg {
     async message(msg, quote) {
         /** 引用消息 */
         this.quote = quote
-        /** 统一为数组 */
-        msg = this.Array(msg)
+        /** 将云崽过来的消息统一为数组 */
+        msg = await common.array(msg)
         /** 转为api格式、打印日志、发送 */
         return await this.qg_msg(msg, quote)
     }
 
-    /** 将云崽过来的消息全部统一格式存放到数组里面 */
-    Array(msg) {
-        let newMsg = []
-        /** 将格式统一为对象 随后进行转换成api格式 */
-        if (msg?.[1]?.data?.type === "test") {
-            newMsg.push({ type: "forward", text: msg[0] })
-            newMsg.push(...msg[1].msg)
-        }
-        else if (msg?.data?.type === "test") {
-            newMsg.push(...msg.msg)
-        }
-        else if (Array.isArray(msg)) {
-            newMsg = [].concat(...msg.map(i => (typeof i === "string" ? [{ type: "text", text: i }] :
-                Array.isArray(i) ? [].concat(...i.map(format => (typeof format === "string" ? [{ type: "text", text: format }]
-                    : typeof format === "object" && format !== null ? [format] : []))) : typeof i === "object" && i !== null ? [i] : []
-            )))
-        }
-        else if (msg instanceof fs.ReadStream) {
-            newMsg.push({ type: "image", file: `file://./${msg.file.path}` })
-        }
-        else if (msg instanceof Uint8Array) {
-            newMsg.push({ type: "image", file: msg })
-        }
-        else if (typeof msg === "object") {
-            newMsg.push(msg)
-        }
-        else {
-            newMsg.push({ type: "text", text: msg })
-        }
-        return newMsg
-    }
+
 
     /** 转为频道格式的消息 */
     async qg_msg(msg, quote) {
         let image = {}
         let content = []
-        const images = []
+        /** 单独存储多图片，严格按照图片顺序进行发送 */
+        const ArrImg = []
 
         /** chatgpt-plugin */
         if (msg?.[0].type === "xml") msg = msg?.[0].msg
@@ -92,7 +62,7 @@ export default class SendMsg {
                     break
                 case "image":
                     const img = await this.Base64(i)
-                    if (Object.keys(image).length > 0) images.push(img)
+                    if (Object.keys(image).length > 0) ArrImg.push(img)
                     /** 分片处理图片 */
                     else image = img
                     break
@@ -121,8 +91,8 @@ export default class SendMsg {
         const res = await this.SendMsg(await this.Construct_data(Api_msg, quote))
 
         /** 处理分片 */
-        if (images.length > 0) {
-            for (const i of images) {
+        if (ArrImg.length > 0) {
+            for (const i of ArrImg) {
                 /** 延迟下... */
                 await common.sleep(200)
                 /** 构建请求参数、打印日志 */
@@ -267,7 +237,7 @@ export default class SendMsg {
                                 msg.set("file_image", new Blob([data]))
                             })
                     } else {
-                        if (!sharp) logger.error("[QQ频道]缺少 sharp 依赖，无法进行图片压缩，请运行 pnpm install -P 或 pnpm i 进行安装依赖~")
+                        if (!sharp) logger.error("[Lain-plugin] 缺少 sharp 依赖，无法进行图片压缩，请运行 pnpm install -P 或 pnpm i 进行安装依赖~")
                         /** 如果图片大小不超过2.5MB，那么直接存入SendMsg */
                         msg.set("file_image", new Blob([image]))
                     }
@@ -358,7 +328,7 @@ export default class SendMsg {
     /** 渲染图片 */
     async rendering(content, error) {
         const data = {
-            Yz: Bot.lain.YZ,
+            Yz: Bot.lain,
             error: error,
             guild: Bot.lain.guild.ver,
             msg: content,

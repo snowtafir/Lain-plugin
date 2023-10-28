@@ -29,7 +29,7 @@ export class QQGuildBot extends plugin {
                     permission: "master"
                 },
                 {
-                    reg: /^#QQ频道(强制)?更新(日志)?$/gi,
+                    reg: /^#(Lain|铃音|QQ频道)(强制)?更新(日志)?$/gi,
                     fnc: "update",
                     permission: "master"
                 },
@@ -44,11 +44,11 @@ export class QQGuildBot extends plugin {
                 },
                 {
                     reg: /^#(我的|当前)?(id|信息)$/gi,
-                    fnc: 'user_id'
+                    fnc: "user_id"
                 },
                 {
                     reg: /^#微信修改名称.+/,
-                    fnc: 'ComName',
+                    fnc: "ComName",
                     permission: "master"
                 }
             ]
@@ -79,11 +79,11 @@ export class QQGuildBot extends plugin {
                     config[i].appID,
                     config[i].token
                 ]
-                msg.push(`${Bot[i].nickname}：${cfg.join(':')}`)
+                msg.push(`${Bot[i]?.nickname || "未知"}：${cfg.join(':')}`)
             }
-            return e.reply(`共${msg.length}个账号：\n${msg.join('\n')}`)
+            return await e.reply(`共${msg.length}个账号：\n${msg.join('\n')}`)
         } else
-            return e.reply("请私聊查看")
+            return await e.reply("请私聊查看")
     }
 
     async update(e) {
@@ -131,25 +131,13 @@ export class QQGuildBot extends plugin {
     }
 
     async del_master(e) {
-        // const file = _path
         if (!e.at) return e.reply("你都没有告诉我是谁！快@他吧！^_^")
         const cfg = new yaml("./config/config/other.yaml")
-        /** trss */
-        if (cfg.hasIn("master")) {
-            if (!cfg.value("master", e.at)) {
-                return e.reply("这个人不是主人啦(〃'▽'〃)", false, { at: true })
-            }
-            cfg.delVal("master", e.at)
-            cfg.delVal("masterQQ", `${e.self_id}:${e.at}`)
+        if (!cfg.value("masterQQ", e.at)) {
+            return e.reply("这个人不是主人啦(〃'▽'〃)", false, { at: true })
         }
-        /** 喵 */
-        else {
-            if (!cfg.value("masterQQ", e.at)) {
-                return e.reply("这个人不是主人啦(〃'▽'〃)", false, { at: true })
-            }
-            cfg.delVal("masterQQ", e.at)
-        }
-        e.reply([segment.at(e.at), "拜拜~"])
+        cfg.delVal("masterQQ", e.at)
+        return await e.reply([segment.at(e.at), "拜拜~"])
     }
 
 
@@ -160,18 +148,16 @@ export class QQGuildBot extends plugin {
         e.channel_id ? msg.push(`当前子频道ID：${e.channel_id}`) : ""
         e.group_id ? msg.push(`当前群聊ID：${e.group_id}`) : ""
         if (e.isMaster && e?.adapter === "QQGuild") msg.push("\n温馨提示：\n使用本体黑白名单请使用「群聊ID」\n使用插件黑白名单请按照配置文件说明进行添加~")
-        return e.reply(`\n${msg.join('\n')}`, true, { at: true })
+        return await e.reply(`\n${msg.join('\n')}`, true, { at: true })
     }
 
     /** 微信椰奶状态自定义名称 */
     async ComName(e) {
         const msg = e.msg.replace("#微信修改名称", "").trim()
-        const _path = WeChat.cfg._path
-        let cfg = fs.readFileSync(_path, "utf8")
-        cfg = cfg.replace(RegExp("name:.*"), `name: ${msg}`)
-        fs.writeFileSync(_path, cfg, "utf8")
-        Bot[WeChat?.BotCfg?.user_id].nickname = msg
-        e.reply(`修改成功，新名称为：${msg}`, false, { at: true })
+        const cfg = new yaml(Bot.lain._path + "/config.yaml")
+        cfg.set("name", msg)
+        Bot[e.self_id].nickname = msg
+        return await e.reply(`修改成功，新名称为：${msg}`, false, { at: true })
     }
 
     SetAdmin() {
@@ -191,15 +177,7 @@ let apps = {
     master(e, user_id = null) {
         user_id = user_id || e.user_id
         const cfg = new yaml("./config/config/other.yaml")
-        /** trss */
-        if (cfg.hasIn("master")) {
-            cfg.addVal("master", user_id)
-            cfg.addVal("masterQQ", `${e.self_id}:${user_id}`)
-        }
-        /** 喵 */
-        else {
-            cfg.addVal("masterQQ", user_id)
-        }
+        cfg.addVal("masterQQ", user_id)
         return [segment.at(user_id), "新主人好~(*/ω＼*)"]
     },
 
@@ -222,31 +200,13 @@ let apps = {
         /** 保存新配置 */
         cfg.addIn(cmd[2], bot)
         try {
-            const qg = new guild(bot)
-            await qg.monitor()
+            await (new guild(bot)).monitor()
             return `Bot：${Bot[cmd[2]].nickname}(${cmd[2]}) 已连接...`
         } catch (err) {
             return err
         }
 
     }
-}
-
-/** 监听控制台输入 */
-if (!fs.existsSync(process.cwd() + "/plugins/ws-plugin") && Bot?.uin !== "88888") {
-    const rl = createInterface({ input: process.stdin, output: process.stdout })
-    rl.on('SIGINT', () => { rl.close(); process.exit() })
-    function getInput() {
-        rl.question('', async (input) => {
-            const msg = input.trim()
-            if (/#QQ频道设置.+/gi.test(msg)) {
-                const e = { msg: msg }
-                logger.mark(logger.green(await apps.addBot(e)))
-            }
-            getInput()
-        })
-    }
-    getInput()
 }
 
 /** 还是修改一下，不然cvs这边没法用...  */

@@ -7,9 +7,18 @@ QQ交流群~欢迎加入：`884587317`
 
  ![Visitor Count](https://profile-counter.glitch.me/Zyy955-Lain-plugin/count.svg)
 
+
+### 这里特别声明：
+
+如果你的喵崽不想使用QQ，并继续使用本插件，启动一次喵崽之后，本插件会在目录生成一个`apps.js`，你可以使用`node apps`启动喵崽来跳过登录QQ！
+
+如果你无法启动喵崽，即无法成功登录QQ，你可以在喵崽根目录执行`node plugins/Lain-plugin/model/app.js`来生成`apps.js`，随后即可使用`node apps`启动喵崽来跳过登录QQ！
+
 #### 适配进度
+- [√] 标准输入
+- [√] 跳过登录QQ
 - [√] QQ频道适配器
-- [ ] PC微信适配器
+- [√] PC微信适配器
 - [ ] 网页版微信适配器
 
 ## 1.安装插件
@@ -38,8 +47,12 @@ pnpm config set sharp_binary_host "https://npmmirror.com/mirrors/sharp" && pnpm 
 ```
 
 ## 3.使用适配器
+
+请点击查看对应教程~
+
 - [标准输入](./docs/stdin.md)
 - [QQ频道](./docs/QQGuild.md)
+- [PC微信](./docs/WeChat.md)
 
 ## 4.设置主人
 

@@ -46,31 +46,31 @@ setTimeout(async () => {
 export function supportGuoba() {
     /** 添加url链接白名单 */
     const addUrlPromptProps = {
-        content: '请输入URL：',
-        placeholder: '请输入URL',
-        okText: '添加',
+        content: "请输入URL：",
+        placeholder: "请输入URL",
+        okText: "添加",
         rules: [
-            { required: true, message: 'URL得填上才行哦~' },
-            { pattern: '^https?://\\S+', message: '请输入合法的URL' },
-            { max: 255, message: 'URL太长了……' },
+            { required: true, message: "URL得填上才行哦~" },
+            { pattern: "^https?://\\S+", message: "请输入合法的URL" },
+            { max: 255, message: "URL太长了……" },
         ],
     }
 
     return {
         pluginInfo: {
-            name: '铃音插件',
-            title: 'Lian-plugin',
-            author: '@Lain.',
-            authorLink: 'https://gitee.com/Zyy955',
-            link: 'https://gitee.com/Zyy955/Lain-plugin',
+            name: "铃音插件",
+            title: "Lian-plugin",
+            author: "@Lain.",
+            authorLink: "https://gitee.com/Zyy955",
+            link: "https://gitee.com/Zyy955/Lain-plugin",
             isV3: true,
             isV2: false,
-            description: '主要为云崽提供QQ频道、PC微信、网页版微信机器人等功能',
+            description: "主要为云崽提供QQ频道、PC微信、网页版微信机器人等功能",
             // 显示图标，此为个性化配置
             // 图标可在 https://icon-sets.iconify.design 这里进行搜索
-            icon: 'mdi: image-filter-drama-outline',
+            icon: "mdi: image-filter-drama-outline",
             // 图标颜色，例：#FF0000 或 rgb(255, 0, 0)
-            iconColor: '#6bb9dd',
+            iconColor: "#6bb9dd",
             // 如果想要显示成图片，也可以填写图标路径（绝对路径）
             iconPath: process.cwd() + "/plugins/Lain-plugin/resources/icon.png",
         },
@@ -79,90 +79,146 @@ export function supportGuoba() {
             // 配置项 schemas
             schemas: [
                 {
-                    field: 'prefix',
-                    label: '前缀转换',
-                    bottomHelpMessage: '是否开启前缀“/”转换为“#”',
-                    component: 'Switch',
+                    component: "Divider",
+                    label: "PC微信设置"
                 },
                 {
-                    field: 'prefixBlack',
-                    label: '前缀转换黑名单',
-                    bottomHelpMessage: '在这里添加机器人的开发者id(appID)则不会转换该机器人的前缀',
-                    component: 'Select',
+                    field: "port",
+                    label: "端口",
+                    bottomHelpMessage: "请输入反向连接端口",
+                    component: "InputNumber",
+                    required: true,
+                    componentProps: {
+                        type: "number",
+                        placeholder: "请输入反向连接端口",
+                        min: 1,
+                        max: 65535,
+                    },
+                },
+                {
+                    field: "autoFriend",
+                    label: "自动同意加好友",
+                    component: "RadioGroup",
+                    bottomHelpMessage: "是否自动同意加好友",
+                    componentProps: {
+                        options: [
+                            { label: "不处理", value: 0 },
+                            { label: "自动同意", value: 1 }
+                        ]
+                    }
+                },
+                {
+                    field: "path",
+                    label: "路径",
+                    bottomHelpMessage: "请输入反向连接路径请输入反向连接路径",
+                    component: "Input",
+                    componentProps: {
+                        placeholder: "请输入反向连接路径",
+                    },
+                },
+                {
+                    field: "name",
+                    label: "椰奶状态名称",
+                    bottomHelpMessage: "自定义椰奶状态名称",
+                    component: "Input",
+                    required: true,
+                    componentProps: {
+                        placeholder: "请输入自定义椰奶状态名称",
+                    },
+                },
+                {
+                    component: "Divider",
+                    label: "QQ频道设置"
+                },
+                {
+                    field: "prefix",
+                    label: "前缀转换",
+                    bottomHelpMessage: "是否开启前缀“/”转换为“#”",
+                    component: "Switch",
+                },
+                {
+                    field: "prefixBlack",
+                    label: "前缀转换黑名单",
+                    bottomHelpMessage: "在这里添加机器人的开发者id(appID)则不会转换该机器人的前缀",
+                    component: "Select",
                     componentProps: {
                         allowAdd: true,
                         allowDel: true,
-                        mode: 'multiple',
+                        mode: "multiple",
                         options: prefixBlack
                     }
                 },
                 {
-                    field: 'forwar',
-                    label: '分片转发',
-                    bottomHelpMessage: '是否使用分片发送转发消息',
-                    component: 'Switch',
+                    field: "forwar",
+                    label: "分片转发",
+                    bottomHelpMessage: "是否使用分片发送转发消息",
+                    component: "Switch",
                 },
                 {
-                    field: 'isLog',
-                    label: '黑白名单日志',
-                    bottomHelpMessage: '关闭后未通过黑白名单的日志将会转为debug日志',
-                    component: 'Switch',
+                    field: "isLog",
+                    label: "黑白名单日志",
+                    bottomHelpMessage: "关闭后未通过黑白名单的日志将会转为debug日志",
+                    component: "Switch",
                 },
                 {
-                    field: 'recallQR',
-                    label: '二维码撤回时间',
-                    bottomHelpMessage: 'url转换成二维码后的撤回时间 0表示不撤回',
-                    component: 'Input',
+                    field: "recallQR",
+                    label: "二维码撤回时间",
+                    bottomHelpMessage: "url转换成二维码后的撤回时间 0表示不撤回",
+                    component: "Input",
+                    required: true,
                     componentProps: {
-                        type: 'number',
-                        placeholder: '请输入纯数字',
+                        type: "number",
+                        placeholder: "请输入纯数字",
                         min: 1,
                         max: 120,
                     },
                 },
                 {
-                    field: 'ImageSize',
-                    label: '图片压缩阈值',
-                    bottomHelpMessage: '超过此大小的图片发送前会进行压缩',
-                    component: 'Input',
+                    field: "ImageSize",
+                    label: "图片压缩阈值",
+                    bottomHelpMessage: "超过此大小的图片发送前会进行压缩",
+                    component: "Input",
+                    required: true,
                     componentProps: {
-                        type: 'number',
-                        placeholder: '请输入纯数字',
+                        type: "number",
+                        placeholder: "请输入纯数字",
                         min: 1,
                         max: 5,
                     },
                 },
                 {
-                    field: 'width',
-                    label: '压缩图片-宽度',
-                    bottomHelpMessage: '压缩后的图片宽度像素大小',
-                    component: 'Input',
+                    field: "width",
+                    label: "压缩图片-宽度",
+                    bottomHelpMessage: "压缩后的图片宽度像素大小",
+                    component: "Input",
+                    required: true,
                     componentProps: {
-                        type: 'number',
-                        placeholder: '请输入压缩后的图片宽度像素大小',
+                        type: "number",
+                        placeholder: "请输入压缩后的图片宽度像素大小",
                         min: 1,
                         max: 3000,
                     },
                 },
                 {
-                    field: 'quality',
-                    label: '压缩图片-质量',
-                    bottomHelpMessage: '压缩后的图片质量',
-                    component: 'Input',
+                    field: "quality",
+                    label: "压缩图片-质量",
+                    bottomHelpMessage: "压缩后的图片质量",
+                    component: "Input",
+                    required: true,
                     componentProps: {
-                        type: 'number',
-                        placeholder: '请输入压缩后的图片质量',
+                        type: "number",
+                        placeholder: "请输入压缩后的图片质量",
                         min: 1,
                         max: 100,
                     },
                 },
                 {
-                    field: 'whitelist_Url',
-                    label: '白名单url',
-                    bottomHelpMessage: 'url白名单，在白名单中的链接不会转为二维码',
-                    component: 'GTags',
+                    field: "whitelist_Url",
+                    label: "白名单url",
+                    bottomHelpMessage: "url白名单，在白名单中的链接不会转为二维码",
+                    component: "GTags",
                     componentProps: {
-                        placeholder: '请输入链接',
+                        placeholder: "请输入链接",
                         allowAdd: true,
                         allowDel: true,
                         showPrompt: true,
@@ -171,50 +227,50 @@ export function supportGuoba() {
                     },
                 },
                 {
-                    field: 'whitelist',
-                    label: '白名单频道',
-                    bottomHelpMessage: '配置此项后，只有在配置中的频道能响应消息',
-                    component: 'Select',
+                    field: "whitelist",
+                    label: "白名单频道",
+                    bottomHelpMessage: "配置此项后，只有在配置中的频道能响应消息",
+                    component: "Select",
                     componentProps: {
                         allowAdd: true,
                         allowDel: true,
-                        mode: 'multiple',
+                        mode: "multiple",
                         options: guilds
                     }
                 },
                 {
-                    field: 'blacklist',
-                    label: '黑名单频道',
-                    bottomHelpMessage: '顾名思义',
-                    component: 'Select',
+                    field: "blacklist",
+                    label: "黑名单频道",
+                    bottomHelpMessage: "顾名思义",
+                    component: "Select",
                     componentProps: {
                         allowAdd: true,
                         allowDel: true,
-                        mode: 'multiple',
+                        mode: "multiple",
                         options: guilds
                     }
                 },
                 {
-                    field: 'channel_whitelist',
-                    label: '白名单子频道',
-                    bottomHelpMessage: '配置此项后，只有在配置中的子频道能响应消息',
-                    component: 'Select',
+                    field: "channel_whitelist",
+                    label: "白名单子频道",
+                    bottomHelpMessage: "配置此项后，只有在配置中的子频道能响应消息",
+                    component: "Select",
                     componentProps: {
                         allowAdd: true,
                         allowDel: true,
-                        mode: 'multiple',
+                        mode: "multiple",
                         options: channels
                     }
                 },
                 {
-                    field: 'channel_blacklist',
-                    label: '黑名单子频道',
-                    bottomHelpMessage: '顾名思义',
-                    component: 'Select',
+                    field: "channel_blacklist",
+                    label: "黑名单子频道",
+                    bottomHelpMessage: "顾名思义",
+                    component: "Select",
                     componentProps: {
                         allowAdd: true,
                         allowDel: true,
-                        mode: 'multiple',
+                        mode: "multiple",
                         options: channels
                     }
                 },
@@ -230,6 +286,18 @@ export function supportGuoba() {
                 for (const key in data) {
                     let value = data[key]
                     switch (key) {
+                        case "port":
+                            cfg.setIn([key], Number(value))
+                            break
+                        case "path":
+                            cfg.setIn([key], String(value))
+                            break
+                        case "autoFriend":
+                            cfg.setIn([key], Number(value))
+                            break
+                        case "name":
+                            cfg.setIn([key], String(value))
+                            break
                         case "prefix":
                             cfg.setIn([key], Boolean(value))
                             break
@@ -258,8 +326,8 @@ export function supportGuoba() {
                             break
                     }
                 }
-                fs.writeFileSync(_path, cfg.toString(), 'utf8')
-                return Result.ok({}, '保存成功~')
+                fs.writeFileSync(_path, cfg.toString(), "utf8")
+                return Result.ok({}, "保存成功~")
             },
         },
     }
