@@ -1,12 +1,9 @@
+## 此插件已被修改为适配本仓库云崽，如有需要请用原插件[Lain-plugin](https://gitee.com/sky-summer/Lain-plugin)
+
 插件名称来源于我的一位朋友，本插件也可称为`铃音插件`(啊哈哈哈哈)。
 
-QQ交流群~欢迎加入：`884587317`
 - 如果您对这个项目感到满意并认为它对你有所帮助，请给我一个`Star`！
 - 您的认可是我持续更新的动力~非常感谢您的支持！
-- 目前插件已不再支持原版云崽、喵版云崽，仅支持喵云崽
-
- ![Visitor Count](https://profile-counter.glitch.me/Zyy955-Lain-plugin/count.svg)
-
 
 ### 这里特别声明：
 
@@ -23,16 +20,10 @@ QQ交流群~欢迎加入：`884587317`
 
 ## 1.安装插件
 
-在`Miao-Yunzai`根目录执行，任选其一
+在`Miao-Yunzai`根目录执行
 
-Gitee：
 ```
-git clone --depth=1 https://gitee.com/Zyy955/Lain-plugin ./plugins/Lain-plugin
-```
-
-Github：
-```
-git clone --depth=1 https://github.com/Zyy955/Lain-plugin ./plugins/Lain-plugin
+git clone --depth=1 https://gitee.com/sky-summer/Lain-plugin ./plugins/Lain-plugin
 ```
 
 ## 2.安装依赖
