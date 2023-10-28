@@ -20,7 +20,7 @@ if (!fs.existsSync(_path + "/config.yaml")) {
     /** 兼容旧配置文件 */
     let cfg = fs.readFileSync(_path + "/config.yaml", "utf8")
     if (!cfg.match(RegExp("port:"))) {
-        cfg = cfg + `\n# 端口\nport: 2955`
+        cfg = cfg + `\n# 端口\nport: 2956`
     }
     if (!cfg.match(RegExp("path:"))) {
         cfg = cfg + `\n# 路径\npath: "/ComWeChat"`
