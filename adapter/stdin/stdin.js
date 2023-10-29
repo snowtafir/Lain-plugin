@@ -16,7 +16,7 @@ Bot[uin] = {
     uin: uin,
     nickname: name,
     avatar: `../../../../../plugins/Lain-plugin/resources/default_avatar.jpg`,
-    stat: { start_time: Date.now() / 1000, recv_msg_cnt: 1 },
+    stat: { start_time: Date.now() / 1000, recv_msg_cnt: 0 },
     version: { id: "stdin", name: name, version: Bot.lain.adapter.stdin },
     /** 转发 */
     makeForwardMsg: async (forwardMsg) => {
@@ -61,6 +61,8 @@ const rl = createInterface({
 rl.on('SIGINT', () => { rl.close(); process.exit() })
 function getInput() {
     rl.question('', async (input) => {
+        await common.logModule(uin, `收到消息：${input.trim()}`)
+        Bot[uin].stat.recv_msg_cnt++
         await pluginsLoader.deal(msg(input.trim()))
         getInput()
     })

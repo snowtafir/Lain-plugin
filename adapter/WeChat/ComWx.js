@@ -68,6 +68,7 @@ export default class ComWeChat {
             /** 群消息 */
             group: async () => {
                 await common.logModule(this.id, `群消息：[${group_id}，${user_id}] ${parse.alt_message}`)
+                Bot[this.id].stat.recv_msg_cnt++
                 /** 转换消息 交由云崽处理 */
                 PluginsLoader.deal(await (new e(this.id)).msg(parse))
             },
@@ -75,6 +76,7 @@ export default class ComWeChat {
             /** 好友消息 */
             private: async () => {
                 await common.logModule(this.id, `好友消息：[${user_id}] ${parse.alt_message}`)
+                Bot[this.id].stat.recv_msg_cnt++
                 /** 转换消息 交由云崽处理 */
                 PluginsLoader.deal(await (new e(this.id)).msg(parse))
             },
