@@ -138,6 +138,10 @@ class Shamrock {
                 /** 获取头像 */
                 getAvatarUrl: () => {
                     return `https://q1.qlogo.cn/g?b=qq&s=0&nk=${data.user_id}`
+                },
+                /** 椰奶禁言 */
+                mute: async (time) => {
+                    return await api.set_group_ban(self_id, data.group_id, data.user_id, time)
                 }
             }
         } else {
