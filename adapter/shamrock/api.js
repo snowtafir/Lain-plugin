@@ -459,13 +459,20 @@ const api = {
         const bot = Bot.shamrock.get(String(id))
         if (!bot) return common.log(id, "不存在此Bot")
         const echo = randomUUID()
+
+        let resolveFn
+        const onMessage = (res) => {
+            const data = JSON.parse(res)
+            if (data?.echo === echo) {
+                resolveFn(data?.data || data)
+                /** 在满足条件后，移除监听器 */
+                bot.socket.off("message", onMessage)
+            }
+        }
+
         return new Promise((resolve) => {
-            bot.socket.on("message", (res) => {
-                const data = JSON.parse(res);
-                if (data?.echo === echo) {
-                    resolve(data?.data || data);
-                }
-            })
+            resolveFn = resolve
+            bot.socket.on("message", onMessage)
             bot.socket.send(JSON.stringify({ echo, action, params }))
         })
     }

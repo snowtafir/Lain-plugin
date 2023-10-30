@@ -6,3 +6,7 @@
 # 如何使用
 
 请直接把`控制台`当成您的QQ`输入指令`即可！
+
+# 自定义椰奶状态头像
+
+如何使用：在`./plugins/Lain-plugin/resources`文件夹下方创建一个名称为`avatar.jpg`的图片

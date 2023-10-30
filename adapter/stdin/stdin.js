@@ -1,9 +1,16 @@
+import fs from "fs"
 import { createInterface } from "readline"
 import common from "../../model/common.js"
 import pluginsLoader from "../../../../lib/plugins/loader.js"
 
 const uin = "88888"
 const name = "标准输入"
+
+/** 自定义标准输入头像 */
+let avatar = "default_avatar.jpg"
+if (fs.existsSync(process.cwd() + "/plugins/Lain-plugin/resources/avatar.jpg")) {
+    avatar = "avatar.jpg"
+}
 
 /** 构建基本参数 */
 Bot[uin] = {
@@ -14,7 +21,7 @@ Bot[uin] = {
     name: name,
     uin: uin,
     nickname: name,
-    avatar: `../../../../../plugins/Lain-plugin/resources/default_avatar.jpg`,
+    avatar: `../../../../../plugins/Lain-plugin/resources/${avatar}`,
     stat: { start_time: Date.now() / 1000, recv_msg_cnt: 1 },
     version: { id: "stdin", name: name, version: Bot.lain.adapter.stdin },
     /** 转发 */

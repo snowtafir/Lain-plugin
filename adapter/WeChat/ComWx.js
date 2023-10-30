@@ -5,7 +5,7 @@ import e from "./message.js"
 import common from "../../model/common.js"
 import PluginsLoader from "../../../../lib/plugins/loader.js"
 
-export default class ComWeChat {
+class WeChat {
     /** 传入基本配置 */
     constructor() {
         const { port, path } = Bot.lain.cfg
@@ -18,28 +18,10 @@ export default class ComWeChat {
     }
 
     /** 处理监听事件 */
-    async server() {
-        /** ws服务器 */
-        const server = new WebSocketServer({
-            port: this.port,
-            path: this.path
-        })
-        server.on("connection", async (bot) => {
-            Bot.lain.wc = bot
-            bot.on("message", async (data) => { await this.message(data) })
-            bot.on("close", async () => { await common.log(this.id, "PC微信通知：连接已关闭") })
-        })
-        /** 捕获错误 */
-        server.on('error', async error => {
-            if (error.code === "EADDRINUSE") {
-                const msg = `PC微信通知：启动WS服务器失败，端口${this.port}已被占用，请自行解除端口`
-                return await common.log(this.id, msg, "error")
-            }
-            const msg = `PC微信-发生错误：${error.message}`
-            await common.log(this.id, msg, "error")
-            return await common.log(this.id, msg, "debug")
-        })
-        await common.log(this.id, `本地 ComWeChat 连接地址：${logger.blue(`ws://localhost:${this.port}${this.path}`)}`)
+    async server(bot, request) {
+        Bot.lain.wc = bot
+        bot.on("message", async (data) => { await this.message(data) })
+        bot.on("close", async () => { await common.log(this.id, "PC微信通知：连接已关闭") })
     }
 
     async message(data) {
@@ -301,9 +283,24 @@ export default class ComWeChat {
 
 }
 
-// const Bot_name = "[WeChatBot] "
-// const server = new WebSocketServer({ port: this.port, path: this.path })
-// logger.info(`本地 ComWeChat 连接地址：${logger.blue(`ws://localhost:${this.port}${this.path}`)}`)
+/** Shamrock的WebSocket服务器实例 */
+const ComWeChat = new WebSocketServer({ noServer: true })
 
+ComWeChat.on("connection", async (bot, request) => {
+    await new WeChat().server(bot, request)
+})
+
+/** 捕获错误 */
+ComWeChat.on("error", async error => {
+    if (error.code === "EADDRINUSE") {
+        const msg = `PC微信通知：启动WS服务器失败，端口${this.port}已被占用，请自行解除端口`
+        return await common.log(this.id, msg, "error")
+    }
+    const msg = `PC微信-发生错误：${error.message}`
+    await common.log(this.id, msg, "error")
+    return await common.log(this.id, msg, "debug")
+})
+
+export default ComWeChat
 
 

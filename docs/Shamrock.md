@@ -5,7 +5,7 @@
 - 目前本插件也是只实现了简单的图文收发，更建议您当前迁移至`QQNT`~
 
 ### 使用方法：
-- 由于测试阶段，目前本插件关于`Shamrock`部分的端口暂不支持自行更改，正式合并至主分支后会自定义~
+- 端口请自行到配置文件更改，如果服务器处于公网或者局域网，请把连接地址中的`localhost`更换为对应的ip
 - 启动`Shamrock.apk`，打开`被动WebSocket`
 - 填写`被动WebSocket地址`：`ws://localhost:2956/Shamrock`
 - 重启`Shamrock.apk`

@@ -85,12 +85,12 @@ export function supportGuoba() {
                 {
                     field: "port",
                     label: "端口",
-                    bottomHelpMessage: "请输入反向连接端口",
+                    bottomHelpMessage: "请输入HTTP服务器端口(Shamrock共用)",
                     component: "InputNumber",
                     required: true,
                     componentProps: {
                         type: "number",
-                        placeholder: "请输入反向连接端口",
+                        placeholder: "请输入HTTP服务器端口(Shamrock共用)",
                         min: 1,
                         max: 65535,
                     },
@@ -106,15 +106,6 @@ export function supportGuoba() {
                             { label: "自动同意", value: 1 }
                         ]
                     }
-                },
-                {
-                    field: "path",
-                    label: "路径",
-                    bottomHelpMessage: "请输入反向连接路径请输入反向连接路径",
-                    component: "Input",
-                    componentProps: {
-                        placeholder: "请输入反向连接路径",
-                    },
                 },
                 {
                     field: "name",

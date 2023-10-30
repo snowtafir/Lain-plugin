@@ -1,6 +1,4 @@
 import { WebSocketServer } from "ws"
-import express from "express"
-import { createServer } from "http"
 import common from "../../model/common.js"
 import { randomUUID } from "crypto"
 import SendMsg from "./sendMsg.js"
@@ -8,103 +6,67 @@ import api from "./api.js"
 import loader from "../../plugins/loader.js"
 import pluginsLoader from "../../../../lib/plugins/loader.js"
 
-export default class shamrock {
-    constructor() {
-        const port = 2956
-        const path = "/Shamrock"
-        this.port = port
-        this.path = path
-    }
+class Shamrock {
+    async server(bot, request) {
+        /** 获取机器人uin */
+        const uin = request.headers["x-self-id"]
 
-    async server() {
-        /** 存储连接的bot对象 */
-        Bot.shamrock = new Map()
-        /** 创建Express应用程序 */
-        const app = express()
-        /** 创建HTTP服务器 */
-        const httpServer = createServer(app)
-        /** 创建WebSocket服务器实例 */
-        const wss = new WebSocketServer({ noServer: true })
+        if (!uin) {
+            await common.log("shamrock", "没有提供机器人标识", "error")
+            return bot.close()
+        }
 
-        wss.on("connection", async (bot, request) => {
-            /** 获取机器人uin */
-            const uin = request.headers["x-self-id"]
-
-            if (!uin) {
-                await common.log("shamrock", "没有提供机器人标识", "error")
-                return bot.close()
-            }
-
-            /** 保存当前bot */
-            Bot.shamrock.set(uin, {
-                id: uin,
-                socket: bot,
-                "qq-ver": request.headers["x-qq-version"],
-                "user-agent": request.headers["user-agent"]
-            })
-
-            bot.on("message", async (data) => {
-                data = JSON.parse(data)
-                /** 丢弃带echo的事件 */
-                if (data?.echo) return
-                const event = {
-                    /** 产生连接 */
-                    lifecycle: async () => {
-                        await common.log(uin, `建立连接成功，正在加载资源`)
-                        return await this.loadRes(uin)
-                    },
-                    /** 心跳 */
-                    heartbeat: async () => {
-                        return await common.log(uin, `心跳：${data.status["qq.status"]}`, "debug")
-                    },
-                    message: async () => {
-                        return await loader.deal.call(pluginsLoader, await this.msg(data))
-                    }
-                }
-                try {
-                    await event[data?.meta_event_type || data?.post_type]()
-                } catch (error) {
-                    // logger.error(error)
-                    logger.mark("未知事件：", data)
-                }
-            })
-
-            bot.on("close", async () => {
-                await common.log(uin, "连接已关闭", "error")
-                Bot.shamrock.delete(uin)
-            })
+        /** 保存当前bot */
+        Bot.shamrock.set(uin, {
+            id: uin,
+            socket: bot,
+            "qq-ver": request.headers["x-qq-version"],
+            "user-agent": request.headers["user-agent"]
         })
 
-        /** 将WebSocket服务器实例与HTTP服务器关联 */
-        httpServer.on("upgrade", (request, socket, head) => {
-            const pathname = request.url
-
-            if (pathname === this.path) {
-                wss.handleUpgrade(request, socket, head, (socket) => {
-                    wss.emit("connection", socket, request)
-                })
-            } else {
-                socket.destroy()
+        bot.on("message", async (data) => {
+            data = JSON.parse(data)
+            /** 丢弃带echo的事件 */
+            if (data?.echo) return
+            const event = {
+                /** 产生连接 */
+                lifecycle: async () => {
+                    await common.log(uin, `建立连接成功，正在加载资源`)
+                    return await this.loadRes(uin)
+                },
+                /** 心跳 */
+                heartbeat: async () => {
+                    return await common.log(uin, `心跳：${data.status["qq.status"]}`, "debug")
+                },
+                message: async () => {
+                    return await loader.deal.call(pluginsLoader, await this.msg(data))
+                }
+            }
+            try {
+                await event[data?.meta_event_type || data?.post_type]()
+            } catch (error) {
+                logger.mark("未知事件：", data)
             }
         })
 
-        httpServer.listen(this.port, async () => {
-            await common.log("", `本地 Shamrock 连接地址：${logger.blue(`ws://localhost:${this.port}${this.path}`)}`)
+        bot.on("close", async () => {
+            await common.log(uin, "连接已关闭", "error")
+            Bot.shamrock.delete(uin)
         })
     }
 
     /** 转换格式给云崽 */
     async msg(data) {
         /** 机器人id */
-        const id = data.self_id
+        const self_id = data.self_id
         /** 判断是否群聊 */
         let isGroup = true
         /** 先打印日志 */
         if (data.message_type === "private") {
             isGroup = false
-            await common.log(id, `好友消息：[${data.user_id}] ${data.raw_message}`)
+            await common.log(self_id, `好友消息：[${data.user_id}] ${data.raw_message}`)
         } else {
-            await common.log(id, `群消息：[${data.group_id}，${data.user_id}] ${data.raw_message}`)
+            await common.log(self_id, `群消息：[${data.group_id}，${data.user_id}] ${data.raw_message}`)
         }
 
         /** 初始化e */
@@ -118,12 +80,12 @@ export default class shamrock {
 
         /** 快速撤回 */
         e.recall = async () => {
-            return await api.delete_msg(id, data.message_id)
+            return await api.delete_msg(self_id, data.message_id)
         }
         /** 快速回复 */
         e.reply = async (msg, quote) => {
             const peer_id = isGroup ? data.group_id : data.user_id
-            return await (new SendMsg(id, isGroup)).message(msg, peer_id, quote ? data.message_id : false)
+            return await (new SendMsg(self_id, isGroup)).message(msg, peer_id, quote ? data.message_id : false)
         }
         /** 将收到的消息转为字符串 */
         e.toString = () => {
@@ -139,7 +101,7 @@ export default class shamrock {
         if (isGroup) {
             e.group = {
                 pickMember: async (user_ID) => {
-                    let member = await api.get_group_member_info(id, data.group_id, user_ID)
+                    let member = await api.get_group_member_info(self_id, data.group_id, user_ID)
                     /** 获取头像 */
                     member.getAvatarUrl = (userID = data.user_id) => {
                         return `https://q1.qlogo.cn/g?b=qq&s=0&nk=${userID}`
@@ -152,24 +114,40 @@ export default class shamrock {
                     return ["test"]
                 },
                 recallMsg: async (msg_id) => {
-                    return await api.delete_msg(id, msg_id)
+                    return await api.delete_msg(self_id, msg_id)
                 },
                 sendMsg: async (msg, quote) => {
                     const peer_id = data.group_id
-                    return await (new SendMsg(id, quote ? data.message_id : false)).message(msg, peer_id)
+                    return await (new SendMsg(self_id, quote ? data.message_id : false)).message(msg, peer_id)
                 },
                 makeForwardMsg: async (forwardMsg) => {
                     return await common.makeForwardMsg(forwardMsg)
+                }
+            }
+            /** 构建member */
+            e.member = {
+                info: {
+                    group_id: data?.group_id,
+                    user_id: data?.user_id,
+                    nickname: data?.sender?.card,
+                    last_sent_time: data?.time,
+                },
+                group_id: data?.group_id,
+                is_admin: data.sender.role === "admin",
+                is_owner: data.sender.role === "owner",
+                /** 获取头像 */
+                getAvatarUrl: () => {
+                    return `https://q1.qlogo.cn/g?b=qq&s=0&nk=${data.user_id}`
                 }
             }
         } else {
             e.friend = {
                 sendMsg: async (msg, quote) => {
                     const peer_id = data.user_id
-                    return await (new SendMsg(id, quote ? data.message_id : false)).message(msg, peer_id)
+                    return await (new SendMsg(self_id, quote ? data.message_id : false)).message(msg, peer_id)
                 },
                 recallMsg: async (msg_id) => {
-                    return await api.delete_msg(id, msg_id)
+                    return await api.delete_msg(self_id, msg_id)
                 },
                 makeForwardMsg: async (forwardMsg) => {
                     return await common.makeForwardMsg(forwardMsg)
@@ -320,3 +298,25 @@ export default class shamrock {
         })
     }
 }
+
+/** 存储连接的bot对象 */
+Bot.shamrock = new Map()
+/** Shamrock的WebSocket服务器实例 */
+const shamrock = new WebSocketServer({ noServer: true })
+
+shamrock.on("connection", async (bot, request) => {
+    await new Shamrock().server(bot, request)
+})
+
+/** 捕获错误 */
+shamrock.on("error", async error => {
+    if (error.code === "EADDRINUSE") {
+        const msg = `Shamrock：启动WS服务器失败，端口${this.port}已被占用，请自行解除端口`
+        return await common.log(this.id, msg, "error")
+    }
+    const msg = `Shamrock-发生错误：${error.message}`
+    await common.log(this.id, msg, "error")
+    return await common.log(this.id, msg, "debug")
+})
+
+export default shamrock

@@ -128,14 +128,20 @@ const api = {
     /** 发送请求事件 */
     async SendApi(params, action) {
         const echo = randomUUID()
-        Bot.lain.wc.send(JSON.stringify({ echo, action, params }))
+
+        let resolveFn
+        const onMessage = (res) => {
+            const data = JSON.parse(res)
+            if (data?.echo === echo) {
+                resolveFn(data?.data || data)
+                Bot.lain.wc.off("message", onMessage)
+            }
+        }
+
         return new Promise((resolve) => {
-            Bot.lain.wc.once("message", (res) => {
-                const data = JSON.parse(res)
-                if (data?.echo === echo) {
-                    resolve(data?.data || data);
-                }
-            })
+            resolveFn = resolve
+            Bot.lain.wc.on("message", onMessage)
+            Bot.lain.wc.send(JSON.stringify({ echo, action, params }))
         })
     }
 }
