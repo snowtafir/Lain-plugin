@@ -454,7 +454,6 @@ let api = {
 
 
 
-    /** 发送请求事件 */
     async SendApi(id, action, params) {
         const bot = Bot.shamrock.get(String(id))
         if (!bot) return common.log(id, "不存在此Bot")
@@ -463,10 +462,8 @@ let api = {
         let resolveFn
         const onMessage = (res) => {
             const data = JSON.parse(res)
-            // if (data?.echo && data.retcode != 0) logger.error("Shamrock发生错误", data)
             if (data?.echo === echo) {
                 resolveFn(data?.data || data)
-                /** 在满足条件后，移除监听器 */
                 bot.socket.off("message", onMessage)
             }
         }
@@ -475,6 +472,12 @@ let api = {
             resolveFn = resolve
             bot.socket.once("message", onMessage)
             bot.socket.send(JSON.stringify({ echo, action, params }))
+
+            /** 5s超时时间 */
+            setTimeout(() => {
+                resolveFn("请求超时")
+                bot.socket.off("message", onMessage)
+            }, 5000)
         })
     }
 }

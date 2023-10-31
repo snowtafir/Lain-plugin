@@ -29,6 +29,7 @@ export default class SendMsg {
         if (!Array.isArray(msg)) msg = [{ type: "text", text: msg }]
         const content = []
         const CQ = []
+        let forward = []
         /** chatgpt-plugin */
         if (msg?.[0].type === "xml") msg = msg?.[0].msg
 
@@ -52,10 +53,7 @@ export default class SendMsg {
                     break
                 case "text":
                     CQ.push(`[CQ:text,text=${i.text}]`)
-                    content.push({
-                        type: "text",
-                        data: { text: i.text }
-                    })
+                    forward.push(i.text)
                     break
                 case "file":
                     break
@@ -86,15 +84,23 @@ export default class SendMsg {
                     CQ.push(`[CQ:image,file=base64://...]`)
                     content.push(await this.get_image(i))
                     break
-                case "forward":
-                    CQ.push(`[CQ:text,url=${i.text}]`)
+                case "poke":
+                    CQ.push(`[CQ:poke,id=${i.id}]`)
                     content.push({
-                        type: "text",
-                        data: { text: i.text }
+                        type: "poke",
+                        data: { type: i.id, id: 0, strength: i?.strength || 0 }
                     })
                     break
+                case "touch":
+                    CQ.push(`[CQ:poke,id=${i.id}]`)
+                    content.push(i)
+                    break
+                case "forward":
+                    CQ.push(`[CQ:text,text=${i.text}]`)
+                    forward.push(forward.length > 0 ? `${i.text}\n` : i.text)
+                    break
                 default:
-                    CQ.push(`[CQ:text,url=${JSON.stringify(i)}]`)
+                    CQ.push(`[CQ:text,text=${JSON.stringify(i)}]`)
                     content.push({
                         type: "text",
                         data: { text: JSON.stringify(i) }
@@ -102,6 +108,8 @@ export default class SendMsg {
                     break
             }
         }
+        forward = forward.join("\n").trim()
+        content.push({ type: "text", data: { text: forward } })
         return { content, CQ }
     }
 

@@ -149,11 +149,24 @@ class Shamrock {
                 },
                 sendMsg: async (msg, quote) => {
                     const peer_id = group_id
-                    return await (new SendMsg(self_id, quote ? message_id : false)).message(msg, peer_id)
+                    return await (new SendMsg(self_id, isGroup)).message(msg, peer_id, quote ? message_id : false)
                 },
                 makeForwardMsg: async (forwardMsg) => {
                     return await common.makeForwardMsg(forwardMsg)
-                }
+                },
+                /** 戳一戳 */
+                pokeMember: async (operator_id) => {
+                    const peer_id = group_id
+                    return await (new SendMsg(self_id, isGroup)).message({ type: "touch", data: { id: operator_id } }, peer_id)
+                },
+                /** 禁言 */
+                muteMember: async (group_id, user_id, time) => {
+                    return await api.set_group_ban(self_id, group_id, user_id, time)
+                },
+                /** 全体禁言 */
+                muteAll: async (type) => {
+                    return await api.set_group_whole_ban(self_id, group_id, type)
+                },
             }
             /** 构建member */
             e.member = {
@@ -173,13 +186,13 @@ class Shamrock {
                 /** 椰奶禁言 */
                 mute: async (time) => {
                     return await api.set_group_ban(self_id, group_id, user_id, time)
-                }
+                },
             }
         } else {
             e.friend = {
                 sendMsg: async (msg, quote) => {
                     const peer_id = user_id
-                    return await (new SendMsg(self_id, quote ? message_id : false)).message(msg, peer_id)
+                    return await (new SendMsg(self_id, isGroup)).message(msg, peer_id, quote ? message_id : false)
                 },
                 recallMsg: async (msg_id) => {
                     return await api.delete_msg(self_id, msg_id)
@@ -249,15 +262,27 @@ class Shamrock {
             makeForwardMsg: async (forwardMsg) => {
                 return await common.makeForwardMsg(forwardMsg)
             },
-            pickGroup: (group_id) => {
+            pickGroup: (groupID) => {
                 return {
+                    /** 无能为力，默认返回机器人是管理吧。 */
+                    is_admin: true,
                     sendMsg: async (msg) => {
-                        return await (new SendMsg(uin)).message(msg, group_id)
+                        return await (new SendMsg(uin)).message(msg, groupID)
                     },
                     /** 转发 */
                     makeForwardMsg: async (forwardMsg) => {
                         return await common.makeForwardMsg(forwardMsg)
-                    }
+                    },
+                    pickMember: async (id) => {
+                        let member = await api.get_group_member_info(uin, groupID, id)
+                        /** 获取头像 */
+                        member.getAvatarUrl = (userID = id) => {
+                            return `https://q1.qlogo.cn/g?b=qq&s=0&nk=${userID}`
+                        }
+                        const { group_id, user_id, nickname, last_sent_time } = member
+                        member.info = { group_id, user_id, nickname, last_sent_time }
+                        return member
+                    },
                 }
             },
             pickUser: (user_id) => {
@@ -272,6 +297,8 @@ class Shamrock {
                 }
             },
             getGroupMemberInfo: async function (group_id, user_id) {
+                /** 被自己坑了 */
+                if (user_id === "88888") user_id = uin
                 let member = await api.get_group_member_info(uin, group_id, user_id)
                 member.card = member.nickname
                 return member
@@ -317,7 +344,7 @@ class Shamrock {
         }
 
         /** 群列表获取失败 */
-        if (!group_list) {
+        if (!group_list || !typeof group_list === "object") {
             await common.log(uin, `Shamrock群列表获取失败次数过多，已停止重试`, "error")
         }
 
@@ -341,7 +368,7 @@ class Shamrock {
         }
 
         /** 好友列表获取失败 */
-        if (!group_list) {
+        if (!friend_list || !typeof friend_list === "object") {
             await common.log(uin, `Shamrock好友列表获取失败次数过多，已停止重试`, "error")
         }
 
@@ -355,6 +382,11 @@ class Shamrock {
         }
 
         await common.log(uin, "Shamrock加载资源成功")
+
+        /** 如果是免登陆启动的，直接代替icqq */
+        if (Bot.uin === "88888") {
+            Bot["88888"] = Bot[uin]
+        }
     }
 }
 
@@ -379,3 +411,6 @@ shamrock.on("error", async error => {
 })
 
 export default shamrock
+
+
+
