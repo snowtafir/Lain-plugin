@@ -16,17 +16,19 @@ export default class SendMsg {
         /** 将云崽过来的消息统一为数组 */
         msg = common.array(msg)
         /** 转为shamrock可以使用的格式 */
-        msg = await this.msg(msg)
+        const { content, CQ } = await this.msg(msg)
+        msg = content
         /** 引用消息 */
-        if (quote) msg.push({ type: "reply", data: { id: quote } })
+        if (quote) msg.unshift({ type: "reply", data: { id: quote } })
         /** 发送消息 */
-        this.SendMsg(msg, id)
+        return await this.SendMsg(id, msg, CQ)
     }
 
     /** 转为shamrock可以使用的格式 */
     async msg(msg) {
         if (!Array.isArray(msg)) msg = [{ type: "text", text: msg }]
         const content = []
+        const CQ = []
         /** chatgpt-plugin */
         if (msg?.[0].type === "xml") msg = msg?.[0].msg
 
@@ -35,18 +37,21 @@ export default class SendMsg {
             await common.sleep(200)
             switch (i.type) {
                 case "at":
+                    CQ.push(`[CQ:at,qq=${Number(i.qq) == 0 ? i.id : i.qq}]`)
                     content.push({
                         type: "at",
-                        data: { user_id: Number(i.qq) == 0 ? i.id : i.qq }
+                        data: { qq: Number(i.qq) == 0 ? i.id : i.qq }
                     })
                     break
                 case "face":
+                    CQ.push(`[CQ:face,id=${i.text}]`)
                     content.push({
                         type: "face",
                         data: { id: i.text }
                     })
                     break
                 case "text":
+                    CQ.push(`[CQ:text,text=${i.text}]`)
                     content.push({
                         type: "text",
                         data: { text: i.text }
@@ -57,11 +62,13 @@ export default class SendMsg {
                 case "record":
                     /** 不清楚是否可以发送魔法语音，暂不处理 */
                     if (i.url) {
+                        CQ.push(`[CQ:record,url=${i.url}]`)
                         content.push({
                             type: "record",
                             data: { url: i.url }
                         })
                     } else {
+                        CQ.push(`[CQ:record,file=${i.file}]`)
                         content.push({
                             type: "record",
                             data: { file: i.file.replace("protobuf://", "base64://") }
@@ -69,21 +76,25 @@ export default class SendMsg {
                     }
                     break
                 case "video":
+                    CQ.push(`[CQ:video,file=${i.file}]`)
                     content.push({
                         type: "video",
                         data: { file: i.file.replace("protobuf://", "base64://") }
                     })
                     break
                 case "image":
+                    CQ.push(`[CQ:image,file=base64://...]`)
                     content.push(await this.get_image(i))
                     break
                 case "forward":
+                    CQ.push(`[CQ:text,url=${i.text}]`)
                     content.push({
                         type: "text",
                         data: { text: i.text }
                     })
                     break
                 default:
+                    CQ.push(`[CQ:text,url=${JSON.stringify(i)}]`)
                     content.push({
                         type: "text",
                         data: { text: JSON.stringify(i) }
@@ -91,7 +102,7 @@ export default class SendMsg {
                     break
             }
         }
-        return content
+        return { content, CQ }
     }
 
     /** 统一图片格式 */
@@ -136,7 +147,7 @@ export default class SendMsg {
     }
 
     /** 发送消息 */
-    async SendMsg(msg, id) {
+    async SendMsg(id, msg, CQ) {
         const bot = Bot.shamrock.get(String(this.id))
         if (!bot) return common.log(this.id, "不存在此Bot")
 
@@ -144,10 +155,12 @@ export default class SendMsg {
         const action = this.isGroup ? "send_group_msg" : "send_private_msg"
         const params = { [this.isGroup ? "group_id" : "user_id"]: id, message: msg }
 
+        common.log(id, CQ.join(""))
+
         return new Promise((resolve) => {
             bot.socket.once("message", (res) => {
                 const data = JSON.parse(res)
-                const msg_id = data?.data?.id
+                const msg_id = data?.data?.message_id
                 /** 返回消息id给撤回用？ */
                 resolve({
                     seq: msg_id,

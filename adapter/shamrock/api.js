@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto"
 import common from "../../model/common.js"
 
-const api = {
+let api = {
     /**
      * 获取消息
      * @param {string} id - 机器人QQ
@@ -463,6 +463,7 @@ const api = {
         let resolveFn
         const onMessage = (res) => {
             const data = JSON.parse(res)
+            // if (data?.echo && data.retcode != 0) logger.error("Shamrock发生错误", data)
             if (data?.echo === echo) {
                 resolveFn(data?.data || data)
                 /** 在满足条件后，移除监听器 */
@@ -472,7 +473,7 @@ const api = {
 
         return new Promise((resolve) => {
             resolveFn = resolve
-            bot.socket.on("message", onMessage)
+            bot.socket.once("message", onMessage)
             bot.socket.send(JSON.stringify({ echo, action, params }))
         })
     }

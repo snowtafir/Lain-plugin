@@ -1,4 +1,3 @@
-import chalk from "chalk"
 import common from "../../model/common.js"
 
 export default class qg_log {

@@ -38,36 +38,49 @@ class Shamrock {
                 heartbeat: async () => {
                     return await common.log(uin, `心跳：${data.status["qq.status"]}`, "debug")
                 },
+                /** 消息事件 */
                 message: async () => {
                     return await loader.deal.call(pluginsLoader, await this.msg(data))
+                },
+                /** 戳一戳 */
+                notice: async () => {
+                    switch (data.notice_type) {
+                        case "group_recall":
+                            if (data.operator_id === data.user_id) {
+                                return await common.log(uin, `群消息撤回：[${data.group_id}，${data.user_id}] ${data.message_id}`)
+                            } else {
+                                return await common.log(uin, `群消息撤回：[${data.group_id}]${data.operator_id} 撤回 ${data.user_id}的消息 ${data.message_id} `)
+                            }
+                        case "notify":
+                            return await loader.deal.call(pluginsLoader, await this.msg(data))
+
+                        default:
+                            return
+                    }
                 }
             }
             try {
                 await event[data?.meta_event_type || data?.post_type]()
             } catch (error) {
+                logger.error(error)
                 logger.mark("未知事件：", data)
             }
         })
 
         bot.on("close", async () => {
             await common.log(uin, "连接已关闭", "error")
-            Bot.shamrock.delete(uin)
+            // Bot.shamrock.delete(uin)
         })
     }
 
     /** 转换格式给云崽 */
     async msg(data) {
-        /** 机器人id */
-        const self_id = data.self_id
+        const { self_id, user_id, group_id, message_type, message_id } = data
+
+        let raw_message = data.raw_message
+
         /** 判断是否群聊 */
         let isGroup = true
-        /** 先打印日志 */
-        if (data.message_type === "private") {
-            isGroup = false
-            await common.log(self_id, `好友消息：[${data.user_id}] ${data.raw_message}`)
-        } else {
-            await common.log(self_id, `群消息：[${data.group_id}，${data.user_id}] ${data.raw_message}`)
-        }
 
         /** 初始化e */
         let e = data
@@ -75,35 +88,53 @@ class Shamrock {
         /** 添加适配器标识 */
         e.adapter = "shamrock"
 
-        /** 格式化message */
-        e.message = this.message(data.message)
+        if (data.post_type === "message") {
+            /** 处理message，引用消息 */
+            const { message, source } = await this.message(self_id, data.message)
+            e.message = message
+            if (source) e.source = source
+        } else if (e.post_type === "notice" && e.sub_type === "poke") {
+            e.action = "戳了戳"
+            raw_message = `${e.operator_id} 戳了戳 ${e.user_id}`
+            /** 私聊字段 */
+            if (e?.sender_id) {
+                isGroup = false
+                e.notice_type = "private"
+            } else {
+                e.notice_type = "group"
+            }
+        }
+
+        /** 先打印日志 */
+        if (message_type === "private") {
+            isGroup = false
+            await common.log(self_id, `好友消息：[${user_id}] ${raw_message}`)
+        } else {
+            await common.log(self_id, `群消息：[${group_id}，${user_id}] ${raw_message}`)
+        }
 
         /** 快速撤回 */
         e.recall = async () => {
-            return await api.delete_msg(self_id, data.message_id)
+            return await api.delete_msg(self_id, message_id)
         }
         /** 快速回复 */
         e.reply = async (msg, quote) => {
-            const peer_id = isGroup ? data.group_id : data.user_id
-            return await (new SendMsg(self_id, isGroup)).message(msg, peer_id, quote ? data.message_id : false)
-        }
-        /** 将收到的消息转为字符串 */
-        e.toString = () => {
-            return data.raw_message
+            const peer_id = isGroup ? group_id : user_id
+            return await (new SendMsg(self_id, isGroup)).message(msg, peer_id, quote ? message_id : false)
         }
 
         /** 获取对应用户头像 */
-        e.getAvatarUrl = (userID = data.user_id) => {
-            return `https://q1.qlogo.cn/g?b=qq&s=0&nk=${userID}`
+        e.getAvatarUrl = (id = user_id) => {
+            return `https://q1.qlogo.cn/g?b=qq&s=0&nk=${id}`
         }
 
         /** 构建场景对应的方法 */
         if (isGroup) {
             e.group = {
-                pickMember: async (user_ID) => {
-                    let member = await api.get_group_member_info(self_id, data.group_id, user_ID)
+                pickMember: async (id) => {
+                    let member = await api.get_group_member_info(self_id, group_id, id)
                     /** 获取头像 */
-                    member.getAvatarUrl = (userID = data.user_id) => {
+                    member.getAvatarUrl = (userID = user_id) => {
                         return `https://q1.qlogo.cn/g?b=qq&s=0&nk=${userID}`
                     }
                     const { group_id, user_id, nickname, last_sent_time } = member
@@ -111,14 +142,14 @@ class Shamrock {
                     return member
                 },
                 getChatHistory: async (msg_id, num) => {
-                    return ["test"]
+                    return [source]
                 },
                 recallMsg: async (msg_id) => {
                     return await api.delete_msg(self_id, msg_id)
                 },
                 sendMsg: async (msg, quote) => {
-                    const peer_id = data.group_id
-                    return await (new SendMsg(self_id, quote ? data.message_id : false)).message(msg, peer_id)
+                    const peer_id = group_id
+                    return await (new SendMsg(self_id, quote ? message_id : false)).message(msg, peer_id)
                 },
                 makeForwardMsg: async (forwardMsg) => {
                     return await common.makeForwardMsg(forwardMsg)
@@ -133,22 +164,22 @@ class Shamrock {
                     last_sent_time: data?.time,
                 },
                 group_id: data?.group_id,
-                is_admin: data.sender.role === "admin",
-                is_owner: data.sender.role === "owner",
+                is_admin: data?.sender?.role === "admin" || false,
+                is_owner: data?.sender?.role === "owner" || false,
                 /** 获取头像 */
                 getAvatarUrl: () => {
-                    return `https://q1.qlogo.cn/g?b=qq&s=0&nk=${data.user_id}`
+                    return `https://q1.qlogo.cn/g?b=qq&s=0&nk=${user_id}`
                 },
                 /** 椰奶禁言 */
                 mute: async (time) => {
-                    return await api.set_group_ban(self_id, data.group_id, data.user_id, time)
+                    return await api.set_group_ban(self_id, group_id, user_id, time)
                 }
             }
         } else {
             e.friend = {
                 sendMsg: async (msg, quote) => {
-                    const peer_id = data.user_id
-                    return await (new SendMsg(self_id, quote ? data.message_id : false)).message(msg, peer_id)
+                    const peer_id = user_id
+                    return await (new SendMsg(self_id, quote ? message_id : false)).message(msg, peer_id)
                 },
                 recallMsg: async (msg_id) => {
                     return await api.delete_msg(self_id, msg_id)
@@ -157,12 +188,17 @@ class Shamrock {
                     return await common.makeForwardMsg(forwardMsg)
                 },
                 getChatHistory: async (msg_id, num) => {
-                    return ["test"]
+                    return [source]
                 },
-                getAvatarUrl: async (userID = data.user_id) => {
+                getAvatarUrl: async (userID = user_id) => {
                     return `https://q1.qlogo.cn/g?b=qq&s=0&nk=${userID}`
                 }
             }
+        }
+
+        /** 将收到的消息转为字符串 */
+        e.toString = () => {
+            return raw_message
         }
 
         return e
@@ -170,12 +206,27 @@ class Shamrock {
 
 
     /** 处理云崽的message */
-    message(msg) {
+    async message(id, msg) {
         const message = []
+        let source
         for (const i of msg) {
-            message.push({ type: i.type, ...i.data })
+            if (i.type === "reply") {
+                /** 引用消息的id */
+                const msg_id = i.data.id
+                /** id不存在滚犊子... */
+                if (!msg_id) continue
+                source = await api.get_msg(id, msg_id)
+                source = {
+                    ...source,
+                    seq: source.message_id,
+                    user_id: source.sender.user_id,
+                    message: source.message.map(msg => ({ type: msg.type, ...msg.data }))
+                }
+            } else {
+                message.push({ type: i.type, ...i.data })
+            }
         }
-        return message
+        return { message, source }
     }
 
     /** 加载资源 */
@@ -226,9 +277,24 @@ class Shamrock {
                 let member = await api.get_group_member_info(uin, group_id, user_id)
                 member.card = member.nickname
                 return member
+            },
+            pickFriend: (user_id) => {
+                return {
+                    sendMsg: async (msg) => {
+                        return await (new SendMsg(uin, false)).message(msg, user_id)
+                    },
+                    /** 转发 */
+                    makeForwardMsg: async (forwardMsg) => {
+                        return await common.makeForwardMsg(forwardMsg)
+                    }
+                }
             }
         }
+        /** 异步加载好友、群列表 */
+        this.LoadList(uin)
+    }
 
+    async LoadList(uin) {
         /** 注册uin */
         if (!Bot?.adapter) {
             Bot.adapter = [Bot.uin, uin]
@@ -287,19 +353,6 @@ class Shamrock {
         }
 
         await common.log(uin, "Shamrock加载资源成功")
-    }
-
-    /** 发送请求 */
-    async SendApi(id, action, params) {
-        const bot = Bot.shamrock.get(String(id))
-        if (!bot) return common.log(id, "不存在此Bot")
-        return new Promise((resolve) => {
-            bot.socket.once("message", (res) => {
-                const data = JSON.parse(res)
-                resolve(data?.data || data)
-            })
-            bot.socket.send(JSON.stringify({ echo: randomUUID(), action, params }))
-        })
     }
 }
 

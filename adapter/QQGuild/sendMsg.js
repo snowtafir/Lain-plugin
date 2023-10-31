@@ -29,7 +29,7 @@ export default class SendMsg {
         /** 引用消息 */
         this.quote = quote
         /** 将云崽过来的消息统一为数组 */
-        msg = await common.array(msg)
+        msg = common.array(msg)
         /** 转为api格式、打印日志、发送 */
         return await this.qg_msg(msg)
     }
@@ -307,7 +307,7 @@ export default class SendMsg {
         }
 
         /** 连接转二维码撤回 */
-        if (res.data.id && qr && qr > 0) this.recallQR(this.id, res, qr)
+        if (res.data.id && qr && qr > 0) this.recallQR(res, qr)
 
         /** 返回消息id给撤回用？ */
         return {
@@ -319,7 +319,7 @@ export default class SendMsg {
     }
 
     /** 撤回消息 */
-    async recallQR(id, res, qr) {
+    async recallQR(res, qr) {
         setTimeout(async function () {
             await Bot[this.id].client.messageApi.deleteMessage(res.channel_id, res.id, false)
         }, qr * 1000)
