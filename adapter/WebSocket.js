@@ -14,6 +14,8 @@ export default class WebSocket {
     async server() {
         /** 存储连接的bot对象 */
         Bot.shamrock = new Map()
+        /** 保存监听器返回 */
+        Bot.lain.on = new Map()
         /** 创建Express应用程序 */
         const app = express()
         /** 创建HTTP服务器 */
@@ -33,6 +35,7 @@ export default class WebSocket {
                 })
             }
             else {
+                logger.error("", `未知连接，已拒绝连接：${request.url}`)
                 socket.destroy()
             }
         })

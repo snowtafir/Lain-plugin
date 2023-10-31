@@ -162,8 +162,7 @@ export default class SendMsg {
         const echo = randomUUID()
         const action = this.isGroup ? "send_group_msg" : "send_private_msg"
         const params = { [this.isGroup ? "group_id" : "user_id"]: id, message: msg }
-
-        common.log(id, CQ.join(""))
+        common.log(id, `发送${this.isGroup ? "群" : "好友"}${CQ.join("")}`)
 
         return new Promise((resolve) => {
             bot.socket.once("message", (res) => {

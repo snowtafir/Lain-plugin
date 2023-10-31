@@ -5,12 +5,23 @@
 - 目前本插件也是只实现了简单的图文收发，更建议您当前迁移至`QQNT`~
 
 ### 使用方法：
-- 端口请自行到配置文件更改，如果服务器处于公网或者局域网，请把连接地址中的`localhost`更换为对应的ip
-- 启动`Shamrock.apk`，打开`被动WebSocket`
+
+- shamrock安装教程：[快速开始](https://whitechi73.github.io/OpenShamrock/guide/getting-started.html)
+- 安装好`Shamrock`并登录QQ之后，请打开`shamrock`，按照以下教程进行配置。
+- 启动`Shamrock`，打开`被动WebSocket`
 - 填写`被动WebSocket地址`：`ws://localhost:2956/Shamrock`
-- 重启`Shamrock.apk`
-- 启动QQ
+- 彻底关闭`QQ`，注意需要彻底关闭
+- 彻底关闭`Shamrock`，注意需要彻底关闭
+- 启动`Shamrock`
+- 启动`QQ`
 - 启动喵崽即可
+
+
+解释一下`ws://localhost:2956/Shamrock`这个地址
+- `ws://`这部分是固定的，无需更改
+- `localhost`这个是本地地址，如果你的喵崽在`云服务器`，请更换为云服务器的`公网IP地址`
+- `:2956`这部分是端口，需要使用`:`和`IP地址`连接起来，如需更改，请自行修改配置文件`config.yaml`或使用锅巴修改
+- `/Shamrock`这部分是固定的，无需更改
 
 # 适配进度
 

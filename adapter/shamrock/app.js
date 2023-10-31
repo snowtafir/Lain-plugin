@@ -26,8 +26,12 @@ class Shamrock {
 
         bot.on("message", async (data) => {
             data = JSON.parse(data)
-            /** 丢弃带echo的事件 */
-            if (data?.echo) return
+            // console.log("app:", data)
+            /** 带echo事件另外保存 */
+            if (data?.echo) {
+                Bot.lain.on.set(data.echo, data)
+                return
+            }
             const event = {
                 /** 产生连接 */
                 lifecycle: async () => {
@@ -133,12 +137,7 @@ class Shamrock {
             e.group = {
                 pickMember: async (id) => {
                     let member = await api.get_group_member_info(self_id, group_id, id)
-                    /** 获取头像 */
-                    member.getAvatarUrl = (userID = user_id) => {
-                        return `https://q1.qlogo.cn/g?b=qq&s=0&nk=${userID}`
-                    }
-                    const { group_id, user_id, nickname, last_sent_time } = member
-                    member.info = { group_id, user_id, nickname, last_sent_time }
+                    member.info = { ...member }
                     return member
                 },
                 getChatHistory: async (msg_id, num) => {
@@ -383,10 +382,10 @@ class Shamrock {
 
         await common.log(uin, "Shamrock加载资源成功")
 
-        /* 如果是免登陆启动的，直接代替icqq 
+        /** 如果是免登陆启动的，直接代替icqq */
         if (Bot.uin === "88888") {
             Bot["88888"] = Bot[uin]
-        }*/
+        }
     }
 }
 
@@ -411,6 +410,3 @@ shamrock.on("error", async error => {
 })
 
 export default shamrock
-
-
-

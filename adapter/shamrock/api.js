@@ -458,27 +458,20 @@ let api = {
         const bot = Bot.shamrock.get(String(id))
         if (!bot) return common.log(id, "不存在此Bot")
         const echo = randomUUID()
+        bot.socket.send(JSON.stringify({ echo, action, params }))
 
-        let resolveFn
-        const onMessage = (res) => {
-            const data = JSON.parse(res)
-            if (data?.echo === echo) {
-                resolveFn(data?.data || data)
-                bot.socket.off("message", onMessage)
+        for (let i = 0; i < 5; i++) {
+            const data = await Bot.lain.on.get(echo)
+            if (data) {
+                Bot.lain.on.delete(echo)
+                return data?.data || data
+            } else {
+                await common.sleep(1000)
             }
         }
 
-        return new Promise((resolve) => {
-            resolveFn = resolve
-            bot.socket.once("message", onMessage)
-            bot.socket.send(JSON.stringify({ echo, action, params }))
-
-            /** 5s超时时间 */
-            setTimeout(() => {
-                resolveFn("请求超时")
-                bot.socket.off("message", onMessage)
-            }, 5000)
-        })
+        /** 获取失败 */
+        return "获取失败"
     }
 }
 

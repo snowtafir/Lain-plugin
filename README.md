@@ -3,16 +3,26 @@
 QQ交流群~欢迎加入：`884587317`
 - 如果您对这个项目感到满意并认为它对你有所帮助，请给我一个`Star`！
 - 您的认可是我持续更新的动力~非常感谢您的支持！
-- 目前插件已不再支持原版云崽、喵版云崽，仅支持喵云崽
+- 目前插件已不再支持原版云崽、喵版云崽，仅支持喵崽`Miao-Yunzai`
 
  ![Visitor Count](https://profile-counter.glitch.me/Zyy955-Lain-plugin/count.svg)
 
+# 前言
+
+`Lain-plugin`是一个围绕喵崽`Miao-Yunzai`开发的多适配器插件，让喵崽可使用`QQ频道`、`微信`、`shamrock`等三方平台~，不再局限于QQ。
 
 ### 这里特别声明：
 
-如果你的喵崽不想使用QQ，并继续使用本插件，启动一次喵崽之后，本插件会在目录生成一个`apps.js`，你可以使用`node apps`启动喵崽来跳过登录QQ！
+不想登录ICQQ并继续使用本插件，`以下方法任选其一`：
 
-如果你无法启动喵崽，即无法成功登录QQ，你可以在喵崽根目录执行`node plugins/Lain-plugin/model/app.js`来生成`apps.js`，随后即可使用`node apps`启动喵崽来跳过登录QQ！
+- 1.启动一次喵崽之后，本插件会在目录生成一个`apps.js`
+- 2.无法登录ICQQ：喵崽根目录执行以下命令来生成`apps.js`
+```
+node plugins/Lain-plugin/model/app.js
+```
+
+随后，你可以更改启动命令为`node apps`来跳过登录`ICQQ`。
+
 
 #### 适配进度
 - [√] 标准输入
@@ -75,7 +85,7 @@ pnpm config set sharp_binary_host "https://npmmirror.com/mirrors/sharp" && pnpm 
 - 插件更新日志：[点击查看](./CHANGELOG.md)
 - `QQ频道适配器`更新日志：[点击查看](./CHANGELOG.md)
 
-<details><summary>最后请个爱发电~您的支持是我更新的动力</summary>
+<details><summary>最后求个爱发电~您的支持是我更新的动力</summary>
 
 ![爱发电](https://cdn.jsdelivr.net/gh/Zyy955/imgs/img/202308271209508.jpeg)
 
