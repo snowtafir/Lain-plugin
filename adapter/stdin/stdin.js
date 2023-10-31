@@ -31,7 +31,7 @@ Bot[uin] = {
     pickUser: (userId) => {
         return {
             sendMsg: async (msg, quote = false) => {
-                return await (new SendMsg(uin, { guild_id, channel_id }, "MESSAGE_CREATE")).message(msg, quote)
+                return await sendMsg(msg)
             },
             /** 转发 */
             makeForwardMsg: async (forwardMsg) => {
@@ -128,21 +128,6 @@ function msg(msg) {
     e.reply = async (reply) => {
         return await sendMsg(reply)
     }
-
-    /** 发送消息 */
-    async function sendMsg(msg) {
-        if (!Array.isArray(msg)) msg = [msg]
-        const log = []
-        for (const i of msg) {
-            if (typeof i === "string") {
-                log.push(i)
-            } else {
-                log.push(JSON.stringify(msg).slice(0, 2000))
-
-            }
-        }
-        return await common.log(uin, `发送消息：${log.join('\n')}`)
-    }
     return e
 }
 
@@ -160,6 +145,21 @@ async function makeForwardMsg(forwardMsg) {
     } catch (error) {
         return forwardMsg
     }
+}
+
+/** 发送消息 */
+async function sendMsg(msg) {
+    if (!Array.isArray(msg)) msg = [msg]
+    const log = []
+    for (const i of msg) {
+        if (typeof i === "string") {
+            log.push(i)
+        } else {
+            log.push(JSON.stringify(msg).slice(0, 2000))
+
+        }
+    }
+    return await common.log(uin, `发送消息：${log.join('\n')}`)
 }
 
 await common.log(uin, `加载完成...您可以在控制台输入指令哦~`)
