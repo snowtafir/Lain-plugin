@@ -231,8 +231,6 @@ class Shamrock {
 
     /** 加载资源 */
     async loadRes(uin) {
-        /** 获取bot自身信息 */
-        const info = await api.get_login_info(uin)
         const bot = Bot.shamrock.get(String(uin))
         /** 构建基本参数 */
         Bot[uin] = {
@@ -242,7 +240,7 @@ class Shamrock {
             gl: new Map(),
             gml: new Map(),
             uin: uin,
-            nickname: info.nickname,
+            tiny_id: uin,
             avatar: `https://q1.qlogo.cn/g?b=qq&s=0&nk=${uin}`,
             stat: { start_time: Date.now() / 1000, recv_msg_cnt: 0 },
             apk: { display: bot["qq-ver"].split(" ")[0], version: bot["qq-ver"].split(" ")[1] },
@@ -303,6 +301,10 @@ class Shamrock {
             /** 去重防止断连后出现多个重复的id */
             Bot.adapter = Array.from(new Set(Bot.adapter.map(JSON.stringify))).map(JSON.parse)
         }
+
+        /** 获取bot自身信息 */
+        const info = await api.get_login_info(uin)
+        Bot[uin].nickname = info?.nickname || ""
 
         /** 获取群聊列表啦~ */
         let group_list
