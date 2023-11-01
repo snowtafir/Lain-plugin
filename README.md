@@ -17,6 +17,7 @@
 - [√] QQ频道适配器
 - [√] PC微信适配器
 - [ ] 网页版微信适配器
+- [√] `shamrock适配器`
 
 ## 1.安装插件
 
@@ -44,6 +45,7 @@ pnpm config set sharp_binary_host "https://npmmirror.com/mirrors/sharp" && pnpm 
 - [标准输入](./docs/stdin.md)
 - [QQ频道](./docs/QQGuild.md)
 - [PC微信](./docs/WeChat.md)
+- [Shamrock](./docs/Shamrock.md)
 
 ## 4.设置主人
 

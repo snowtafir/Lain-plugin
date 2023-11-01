@@ -60,9 +60,9 @@ export function supportGuoba() {
         pluginInfo: {
             name: "铃音插件",
             title: "Lian-plugin",
-            author: "@Lain.",
-            authorLink: "https://gitee.com/Zyy955",
-            link: "https://gitee.com/Zyy955/Lain-plugin",
+            author: "@sky-summer @Lain.",
+            authorLink: "https://gitee.com/sky-summer/",
+            link: "https://gitee.com/sky-summer/Lain-plugin",
             isV3: true,
             isV2: false,
             description: "主要为云崽提供QQ频道、PC微信、网页版微信机器人等功能",
@@ -85,12 +85,12 @@ export function supportGuoba() {
                 {
                     field: "port",
                     label: "端口",
-                    bottomHelpMessage: "请输入反向连接端口",
+                    bottomHelpMessage: "请输入HTTP服务器端口(Shamrock共用)",
                     component: "InputNumber",
                     required: true,
                     componentProps: {
                         type: "number",
-                        placeholder: "请输入反向连接端口",
+                        placeholder: "请输入HTTP服务器端口(Shamrock共用)",
                         min: 1,
                         max: 65535,
                     },
@@ -106,15 +106,6 @@ export function supportGuoba() {
                             { label: "自动同意", value: 1 }
                         ]
                     }
-                },
-                {
-                    field: "path",
-                    label: "路径",
-                    bottomHelpMessage: "请输入反向连接路径请输入反向连接路径",
-                    component: "Input",
-                    componentProps: {
-                        placeholder: "请输入反向连接路径",
-                    },
                 },
                 {
                     field: "name",

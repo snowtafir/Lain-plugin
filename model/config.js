@@ -4,7 +4,7 @@ import chalk from "chalk"
 import chokidar from "chokidar"
 import common from "../model/common.js"
 import guild from "../adapter/QQGuild/guild.js"
-import ComWeChat from "../adapter/WeChat/ComWx.js"
+import WebSocket from "../adapter/WebSocket.js"
 
 const _path = process.cwd() + "/plugins/Lain-plugin/config"
 
@@ -99,7 +99,7 @@ try {
     logger.error(err)
 }
 
-await (new ComWeChat()).server()
+await (new WebSocket()).server()
 
 logger.info(chalk.hex("#868ECC")(`Lain-plugin插件${Bot.lain.version}全部初始化完成~`))
-logger.info(chalk.hex("#868ECC")("https://gitee.com/Zyy955/Lain-plugin"))
+logger.info(chalk.hex("#868ECC")("https://gitee.com/sky-summer/Lain-plugin"))

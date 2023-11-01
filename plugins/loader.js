@@ -2,14 +2,23 @@ import lodash from "lodash"
 import util from "node:util"
 import Runtime from '../../../lib/plugins/runtime.js'
 
-export default new class QQGuildLoader {
+export default new class loader {
     async deal(e) {
-        /** 记录消息次数 */
-        await redis.incr(`qg:${e.self_id}:sendMsg:total`)
-        Bot[e.self_id].stat.recv_msg_cnt = await redis.get(`qg:${e.self_id}:sendMsg:total`)
+        try {
+            /** 记录消息次数 */
+            await redis.incr(`lain:${e.self_id}:sendMsg:total`)
+            Bot[e.self_id].stat.recv_msg_cnt = await redis.get(`lain:${e.self_id}:sendMsg:total`)
+        } catch (error) { }
+
         Object.defineProperty(e, 'bot', {
             value: Bot[e.self_id]
         })
+
+        /** 检查频道消息 */
+        if (e.adapter = "shamrock" && this.checkGuildMsg(e)) return
+        /** 检查黑白名单 */
+        if (e.adapter = "shamrock" && !this.checkBlack(e)) return
+
         /** 冷却 */
         if (!this.checkLimit(e)) return
         /** 处理消息 */

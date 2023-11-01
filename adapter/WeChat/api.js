@@ -122,15 +122,27 @@ const api = {
                 concat += JSON.stringify(i)
             }
         }
-        await common.logModule(Bot.lain.wc.uin, `发送${send_type === "private" ? "好友消息" : "群消息"}：[${id}] ${concat}`)
+        await common.log(Bot.lain.wc.uin, `发送${send_type === "private" ? "好友消息" : "群消息"}：[${id}] ${concat}`)
         return await this.SendApi(params, "send_message")
     },
     /** 发送请求事件 */
     async SendApi(params, action) {
-        Bot.lain.wc.send(JSON.stringify({ echo: randomUUID(), action: action, params: params }))
-        const data = await (new Promise((resolve) => { Bot.lain.wc.once('message', (res) => { resolve(JSON.parse(res)) }) }))
-        if (action === "send_message") return data
-        return data.data
+        const echo = randomUUID()
+
+        let resolveFn
+        const onMessage = (res) => {
+            const data = JSON.parse(res)
+            if (data?.echo === echo) {
+                resolveFn(data?.data || data)
+                Bot.lain.wc.off("message", onMessage)
+            }
+        }
+
+        return new Promise((resolve) => {
+            resolveFn = resolve
+            Bot.lain.wc.on("message", onMessage)
+            Bot.lain.wc.send(JSON.stringify({ echo, action, params }))
+        })
     }
 }
 

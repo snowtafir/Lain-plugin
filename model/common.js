@@ -1,5 +1,21 @@
 import fs from "fs"
 import chalk from "chalk"
+
+/**
+ * 创建文件夹
+ * @param dirname
+ */
+function mkdirs(dirname) {
+    if (fs.existsSync(dirname)) {
+        return true
+    } else {
+        if (mkdirs(path.dirname(dirname))) {
+            fs.mkdirSync(dirname)
+            return true
+        }
+    }
+}
+
 /**
  * 休眠函数
  * @param ms 毫秒
@@ -14,14 +30,14 @@ function sleep(ms) {
  * @param log 日志内容
  * @param err 可选参数，日志转为错误日志
  */
-export function logModule(id, log, type = "info") {
-    const bot = id ? chalk.hex("#868ECC")(id === "ComWeChat" ? `[${id}]` : `[${Bot?.[id]?.nickname || "未知"}(${id})]`) : ""
+export function log(id, log, type = "info") {
+    id = id ? id = chalk.hex("#868ECC")(`[${Bot?.[id]?.nickname || "未知"}(${id})] `) : id = ""
     const list = {
-        info: function () { logger.info(`${bot} ${log}`) },
-        error: function () { logger.error(`${bot} ${log}`) },
-        mark: function () { logger.mark(`${bot} ${log}`) },
-        debug: function () { logger.debug(`${bot} ${log}`) },
-        warn: function () { logger.warn(`${bot} ${log}`) },
+        info: function () { logger.info(`${id}${log}`) },
+        error: function () { logger.error(`${id}${log}`) },
+        mark: function () { logger.mark(`${id}${log}`) },
+        debug: function () { logger.debug(`${id}${log}`) },
+        warn: function () { logger.warn(`${id}${log}`) },
     }
     return list[type]()
 }
@@ -108,7 +124,7 @@ export async function makeForwardMsg(forwardMsg, data = {}) {
             new_msg.push({ type: "forward", text: msg.replace(/^\\n{1,3}|\\n{1,3}$/g, "") })
         }
         else {
-            await logModule(this.id, `Bot无法在频道 ${qg.id} 中读取基础信息，请给予权限...错误信息：${err.message}`, "error")
+            await log(this.id, `Bot无法在频道 ${qg.id} 中读取基础信息，请给予权限...错误信息：${err.message}`, "error")
             logger.error("未知字段，请反馈至作者：", msg)
         }
     }
@@ -118,4 +134,4 @@ export async function makeForwardMsg(forwardMsg, data = {}) {
     return message
 }
 
-export default { sleep, logModule, array, makeForwardMsg }
+export default { sleep, log, mkdirs, array, makeForwardMsg }
