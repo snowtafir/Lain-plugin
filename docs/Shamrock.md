@@ -9,7 +9,7 @@
 - shamrock安装教程：[快速开始](https://whitechi73.github.io/OpenShamrock/guide/getting-started.html)
 - 安装好`Shamrock`并登录QQ之后，请打开`shamrock`，按照以下教程进行配置。
 - 启动`Shamrock`，打开`被动WebSocket`
-- 填写`被动WebSocket地址`：`ws://localhost:2956/Shamrock`
+- 填写`被动WebSocket地址`：`ws://localhost:2955/Shamrock`
 - 彻底关闭`QQ`，注意需要彻底关闭
 - 彻底关闭`Shamrock`，注意需要彻底关闭
 - 启动`Shamrock`
@@ -17,7 +17,7 @@
 - 启动喵崽即可
 
 
-解释一下`ws://localhost:2956/Shamrock`这个地址
+解释一下`ws://localhost:2955/Shamrock`这个地址
 - `ws://`这部分是固定的，无需更改
 - `localhost`这个是本地地址，如果你的喵崽在`云服务器`，请更换为云服务器的`公网IP地址`
 - `:2956`这部分是端口，需要使用`:`和`IP地址`连接起来，如需更改，请自行修改配置文件`config.yaml`或使用锅巴修改
@@ -34,7 +34,7 @@
 - [ ] 合并转发`(上游未实现)`
 - [√] 适配禁言
 - [√] 适配戳一戳
-- [ ] 适配点赞
-- [ ] 适配群踢人
+- [√] 适配点赞 `上游接口无响应`
+- [√] 适配群踢人
 - [ ] 适配群申请
 - [ ] 适配发送文件

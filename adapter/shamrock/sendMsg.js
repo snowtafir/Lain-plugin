@@ -58,20 +58,11 @@ export default class SendMsg {
                 case "file":
                     break
                 case "record":
-                    /** 不清楚是否可以发送魔法语音，暂不处理 */
-                    if (i.url) {
-                        CQ.push(`[CQ:record,url=${i.url}]`)
-                        content.push({
-                            type: "record",
-                            data: { url: i.url }
-                        })
-                    } else {
-                        CQ.push(`[CQ:record,file=${i.file}]`)
-                        content.push({
-                            type: "record",
-                            data: { file: i.file.replace("protobuf://", "base64://") }
-                        })
-                    }
+                    CQ.push(`[CQ:record,file=${i.file}]`)
+                    content.push({
+                        type: "record",
+                        data: { file: i.file }
+                    })
                     break
                 case "video":
                     CQ.push(`[CQ:video,file=${i.file}]`)

@@ -452,6 +452,19 @@ let api = {
         return await this.SendApi(id, "upload_private_file", params)
     },
 
+    /**
+     * 点赞(实测赞了个寂寞...)
+     * @param {string} id - 机器人QQ
+     * @param {number} user_id - 对方 QQ 号
+     * @param {number} times - 点赞次数
+     */
+    async send_like(id, user_id, times) {
+        times = Number(times)
+        times = times > 20 || times > 10 ? times = 20 : times = 10
+        const params = { user_id, times }
+        return await this.SendApi(id, "send_like", params)
+    },
+
 
 
     async SendApi(id, action, params) {
@@ -460,13 +473,18 @@ let api = {
         const echo = randomUUID()
         bot.socket.send(JSON.stringify({ echo, action, params }))
 
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i < 10; i++) {
             const data = await Bot.lain.on.get(echo)
             if (data) {
                 Bot.lain.on.delete(echo)
-                return data?.data || data
+                try {
+                    if (Object.keys(data?.data).length > 1 && data?.data) return data.data
+                    return data
+                } catch {
+                    return data
+                }
             } else {
-                await common.sleep(1000)
+                await common.sleep(500)
             }
         }
 
