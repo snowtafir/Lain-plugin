@@ -383,10 +383,10 @@ class Shamrock {
 
         await common.log(uin, "Shamrock加载资源成功")
 
-        /** 如果是免登陆启动的，直接代替icqq */
+        /* 如果是免登陆启动的，直接代替icqq 
         if (Bot.uin === "88888") {
             Bot["88888"] = Bot[uin]
-        }
+        }*/
     }
 }
 
