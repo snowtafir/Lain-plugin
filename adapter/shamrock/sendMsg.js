@@ -58,11 +58,19 @@ export default class SendMsg {
                 case "file":
                     break
                 case "record":
-                    CQ.push(`[CQ:record,file=${i.file}]`)
-                    content.push({
-                        type: "record",
-                        data: { file: i.file }
-                    })
+                    if (/^https?:\/\//.test(i.file)) {
+                        CQ.push(`[CQ:record,file=${i.file}]`)
+                        content.push({
+                            type: "record",
+                            data: { file: i.file, url: i.file }
+                        })
+                    } else {
+                        CQ.push(`[CQ:record,file=${i.file}]`)
+                        content.push({
+                            type: "record",
+                            data: { file: i.file }
+                        })
+                    }
                     break
                 case "video":
                     CQ.push(`[CQ:video,file=${i.file}]`)
