@@ -58,7 +58,7 @@ export default class SendMsg {
                 case "file":
                     break
                 case "record":
-                    if (/^https?:\/\//.test(i.file)) {
+                    if (/https?:\/\//.test(i.file)) {
                         CQ.push(`[CQ:record,file=${i.file}]`)
                         content.push({
                             type: "record",
