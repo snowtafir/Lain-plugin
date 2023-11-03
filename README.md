@@ -13,16 +13,11 @@ QQ交流群~欢迎加入：`884587317`
 
 ### 这里特别声明：
 
-不想登录ICQQ并继续使用本插件，`以下方法任选其一`：
+不想登录ICQQ并继续使用本插件：
 
-- 1.启动一次喵崽之后，本插件会在目录生成一个`apps.js`
-- 2.无法登录ICQQ：喵崽根目录执行以下命令来生成`apps.js`
-```
-node plugins/Lain-plugin/model/app.js
-```
-
-随后，你可以更改启动命令为`node apps`来跳过登录`ICQQ`。
-
+- 更新喵崽到最新
+- 打开喵崽的`config/config/bot.yaml`文件将 `skip_login: false` 修改为 `skip_login: true`
+- 如果不存在这个，自行加一行  `skip_login: true` 即可。
 
 #### 适配进度
 - [√] 标准输入

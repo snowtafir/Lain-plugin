@@ -57,7 +57,12 @@ export default new class zaiMsg {
 
         /** 构建场景对应的方法 */
         if (isGroup) {
-            e.group_name = Bot[self_id].gl.get(group_id)?.group_name || group_id
+            try {
+                e.group_name = Bot[self_id].gl.get(group_id)?.group_name || group_id
+            } catch {
+                e.group_name = group_id
+            }
+            
             /** 构建member */
             e.member = {
                 info: {
