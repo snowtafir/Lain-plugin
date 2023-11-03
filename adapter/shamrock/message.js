@@ -5,7 +5,7 @@ import api from "./api.js"
 export default new class zaiMsg {
     /** 转换格式给云崽 */
     async msg(data) {
-        const { self_id, user_id, group_id, message_type, message_id } = data
+        const { self_id, user_id, group_id, message_type, message_id, sender } = data
 
         let raw_message = data.raw_message
 
@@ -14,9 +14,6 @@ export default new class zaiMsg {
 
         /** 初始化e */
         let e = data
-
-        /** 添加适配器标识 */
-        e.adapter = "shamrock"
 
         if (data.post_type === "message") {
             /** 处理message，引用消息 */
@@ -38,9 +35,9 @@ export default new class zaiMsg {
         /** 先打印日志 */
         if (message_type === "private") {
             isGroup = false
-            await common.log(self_id, `好友消息：[${user_id}] ${raw_message}`)
+            await common.log(self_id, `好友消息：[${sender?.nickname || sender?.card}(${user_id})] ${raw_message}`)
         } else {
-            await common.log(self_id, `群消息：[${group_id}，${user_id}] ${raw_message}`)
+            await common.log(self_id, `群消息：[${Bot[self_id].gl.get(group_id)?.group_name || group_id}，${sender?.nickname || sender?.card}(${user_id})] ${raw_message}`)
         }
 
         /** 快速撤回 */
@@ -191,6 +188,9 @@ export default new class zaiMsg {
             return raw_message
         }
 
+        /** 添加适配器标识 */
+        e.adapter = "shamrock"
+
         return e
     }
 
@@ -206,6 +206,7 @@ export default new class zaiMsg {
                 /** id不存在滚犊子... */
                 if (!msg_id) continue
                 source = await api.get_msg(id, msg_id)
+                console.log(source)
                 const message = source.message.map(u => (u.type === "at" ? { type: u.type, qq: Number(u.data.qq) } : { type: u.type, ...u.data }))
                 source = {
                     ...source,
