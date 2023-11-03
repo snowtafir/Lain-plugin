@@ -28,8 +28,7 @@ class Shamrock {
             // console.log("app:", data)
             /** 带echo事件另外保存 */
             if (data?.echo) {
-                Bot.lain.on.set(data.echo, data)
-                return
+                return Bot.lain.on.set(data.echo, data)
             }
             const event = {
                 /** 产生连接 */

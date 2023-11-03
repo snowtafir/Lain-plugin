@@ -80,6 +80,12 @@ pnpm config set sharp_binary_host "https://npmmirror.com/mirrors/sharp" && pnpm 
 - 插件更新日志：[点击查看](./CHANGELOG.md)
 - `QQ频道适配器`更新日志：[点击查看](./CHANGELOG.md)
 
+如何识别哪个适配器的bot：
+- e.adapter
+- QQ频道：`QQGuild`
+- Shamrock：`shamrock`
+- PC微信：`WeChat`
+
 <details><summary>最后求个爱发电~您的支持是我更新的动力</summary>
 
 ![爱发电](https://cdn.jsdelivr.net/gh/Zyy955/imgs/img/202308271209508.jpeg)
