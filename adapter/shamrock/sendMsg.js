@@ -33,7 +33,7 @@ export default class SendMsg {
         /** chatgpt-plugin */
         if (msg?.[0].type === "xml") msg = msg?.[0].msg
 
-        for (const i of msg) {
+        for (let i of msg) {
             /** 加个延迟防止过快 */
             await common.sleep(200)
             switch (i.type) {
@@ -58,19 +58,12 @@ export default class SendMsg {
                 case "file":
                     break
                 case "record":
-                    if (/https?:\/\//.test(i.file)) {
-                        CQ.push(`[CQ:record,file=${i.file}]`)
-                        content.push({
-                            type: "record",
-                            data: { file: i.file, url: i.file }
-                        })
-                    } else {
-                        CQ.push(`[CQ:record,file=${i.file}]`)
-                        content.push({
-                            type: "record",
-                            data: { file: i.file }
-                        })
-                    }
+                    if (i?.url) i.file = i.url
+                    CQ.push(`[CQ:record,file=${i.file}]`)
+                    content.push({
+                        type: "record",
+                        data: { file: i.file }
+                    })
                     break
                 case "video":
                     CQ.push(`[CQ:video,file=${i.file}]`)
