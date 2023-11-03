@@ -37,7 +37,15 @@ export default new class zaiMsg {
             isGroup = false
             await common.log(self_id, `好友消息：[${sender?.nickname || sender?.card}(${user_id})] ${raw_message}`)
         } else {
-            await common.log(self_id, `群消息：[${Bot[self_id].gl.get(group_id)?.group_name || group_id}，${sender?.nickname || sender?.card}(${user_id})] ${raw_message}`)
+            let group_name
+
+            try {
+                group_name = Bot[self_id].gl.get(group_id)?.group_name
+            } catch {
+                group_name = group_id
+            }
+
+            await common.log(self_id, `群消息：[${group_name}，${sender?.nickname || sender?.card}(${user_id})] ${raw_message}`)
         }
 
         /** 快速撤回 */
@@ -62,7 +70,7 @@ export default new class zaiMsg {
             } catch {
                 e.group_name = group_id
             }
-            
+
             /** 构建member */
             e.member = {
                 info: {
