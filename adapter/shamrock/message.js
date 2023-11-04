@@ -100,7 +100,10 @@ export default new class zaiMsg {
                     } catch {
                         member.info = {}
                     }
-                    return member
+                    return {
+                        member,
+                        getAvatarUrl: () => `https://q1.qlogo.cn/g?b=qq&s=0&nk=${user_id}`
+                    }
                 },
                 getChatHistory: async (msg_id, num) => {
                     let source = await api.get_msg(self_id, msg_id)
