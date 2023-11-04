@@ -19,7 +19,10 @@ export default new class zaiMsg {
             /** 处理message，引用消息 */
             const { message, source } = await this.message(self_id, data.message)
             e.message = message
-            if (source) e.source = source
+            if (source) {
+                e.source = source
+                e.source.message = source.raw_message
+            }
         } else if (e.post_type === "notice" && e.sub_type === "poke") {
             e.action = "戳了戳"
             raw_message = `${e.operator_id} 戳了戳 ${e.user_id}`
@@ -102,7 +105,7 @@ export default new class zaiMsg {
                     }
                     return {
                         member,
-                        getAvatarUrl: () => `https://q1.qlogo.cn/g?b=qq&s=0&nk=${id}`
+                        getAvatarUrl: (userId = id) => `https://q1.qlogo.cn/g?b=qq&s=0&nk=${userId}`
                     }
                 },
                 getChatHistory: async (msg_id, num) => {
@@ -222,13 +225,29 @@ export default new class zaiMsg {
                 /** id不存在滚犊子... */
                 if (!msg_id) continue
                 source = await api.get_msg(id, msg_id)
-                console.log(source)
-                const message = source.message.map(u => (u.type === "at" ? { type: u.type, qq: Number(u.data.qq) } : { type: u.type, ...u.data }))
+                let reply = source.message.map(u => (u.type === "at" ? { type: u.type, qq: Number(u.data.qq) } : { type: u.type, ...u.data }))
+
+                const raw_message = []
+                for (let i of reply) {
+                    switch (i.type) {
+                        case "image":
+                            raw_message.push("[图片]")
+                            break
+                        case "text":
+                            i.texg ? raw_message.push(i.text) : ""
+                            break
+                        default:
+                            raw_message.push(JSON.stringify(i.data))
+                            break
+                    }
+                }
+
                 source = {
                     ...source,
-                    message,
+                    reply,
                     seq: source.message_id,
                     user_id: source.sender.user_id,
+                    raw_message: raw_message.join(" ")
                 }
             } else {
                 if (i.type === "at") {

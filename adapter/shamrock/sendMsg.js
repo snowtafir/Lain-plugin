@@ -29,6 +29,7 @@ export default class SendMsg {
         if (!Array.isArray(msg)) msg = [{ type: "text", text: msg }]
         const content = []
         const CQ = []
+        const image = []
         let forward = []
         /** chatgpt-plugin */
         if (msg?.[0].type === "xml") msg = msg?.[0].msg
@@ -74,7 +75,7 @@ export default class SendMsg {
                     break
                 case "image":
                     CQ.push(`[CQ:image,file=base64://...]`)
-                    content.push(await this.get_image(i))
+                    image.push(await this.get_image(i))
                     break
                 case "poke":
                     CQ.push(`[CQ:poke,id=${i.id}]`)
@@ -102,6 +103,7 @@ export default class SendMsg {
         }
         forward = forward.join("\n").trim()
         content.push({ type: "text", data: { text: forward } })
+        content.push(...image)
         return { content, CQ }
     }
 
