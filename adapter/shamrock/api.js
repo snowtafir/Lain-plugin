@@ -478,7 +478,7 @@ let api = {
             if (data) {
                 Bot.lain.on.delete(echo)
                 try {
-                    if (Object.keys(data?.data).length > 1 && data?.data) return data.data
+                    if (Object.keys(data?.data).length > 0 && data?.data) return data.data
                     return data
                 } catch {
                     return data
