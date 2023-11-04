@@ -228,6 +228,7 @@ export default new class zaiMsg {
                 let reply = source.message.map(u => (u.type === "at" ? { type: u.type, qq: Number(u.data.qq) } : { type: u.type, ...u.data }))
 
                 const raw_message = []
+                raw_message.push("[回复]")
                 for (let i of reply) {
                     switch (i.type) {
                         case "image":
@@ -236,8 +237,29 @@ export default new class zaiMsg {
                         case "text":
                             i.texg ? raw_message.push(i.text) : ""
                             break
+                        case "file":
+                            raw_message.push("[文件]")
+                            break
+                        case "record":
+                            raw_message.push("[语音]")
+                            break
+                        case "video":
+                            raw_message.push("[视频]")
+                            break
+                        case "music":
+                            raw_message.push("[音乐]")
+                            break
+                        case "weather":
+                            raw_message.push("[天气]")
+                            break
+                        case "json":
+                            raw_message.push("[json]")
+                            break
+                        case "at":
+                            raw_message.push(`[@${i?.qq}]`)
+                            break
                         default:
-                            raw_message.push(JSON.stringify(i.data))
+                            raw_message.push(JSON.stringify(i))
                             break
                     }
                 }
