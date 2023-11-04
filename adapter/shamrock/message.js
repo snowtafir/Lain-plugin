@@ -102,7 +102,7 @@ export default new class zaiMsg {
                     }
                     return {
                         member,
-                        getAvatarUrl: () => `https://q1.qlogo.cn/g?b=qq&s=0&nk=${user_id}`
+                        getAvatarUrl: (userId = user_id) => `https://q1.qlogo.cn/g?b=qq&s=0&nk=${userId}`
                     }
                 },
                 getChatHistory: async (msg_id, num) => {
