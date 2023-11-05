@@ -29,10 +29,12 @@ export default class SendMsg {
         if (!Array.isArray(msg)) msg = [{ type: "text", text: msg }]
         const content = []
         const CQ = []
+        const image = []
+        let forward = []
         /** chatgpt-plugin */
         if (msg?.[0].type === "xml") msg = msg?.[0].msg
 
-        for (const i of msg) {
+        for (let i of msg) {
             /** 加个延迟防止过快 */
             await common.sleep(200)
             switch (i.type) {
@@ -52,28 +54,17 @@ export default class SendMsg {
                     break
                 case "text":
                     CQ.push(`[CQ:text,text=${i.text}]`)
-                    content.push({
-                        type: "text",
-                        data: { text: i.text }
-                    })
+                    forward.push(i.text)
                     break
                 case "file":
                     break
                 case "record":
-                    /** 不清楚是否可以发送魔法语音，暂不处理 */
-                    if (i.url) {
-                        CQ.push(`[CQ:record,url=${i.url}]`)
-                        content.push({
-                            type: "record",
-                            data: { url: i.url }
-                        })
-                    } else {
-                        CQ.push(`[CQ:record,file=${i.file}]`)
-                        content.push({
-                            type: "record",
-                            data: { file: i.file.replace("protobuf://", "base64://") }
-                        })
-                    }
+                    if (i?.url) i.file = i.url
+                    CQ.push(`[CQ:record,file=${i.file}]`)
+                    content.push({
+                        type: "record",
+                        data: { file: i.file }
+                    })
                     break
                 case "video":
                     CQ.push(`[CQ:video,file=${i.file}]`)
@@ -84,17 +75,25 @@ export default class SendMsg {
                     break
                 case "image":
                     CQ.push(`[CQ:image,file=base64://...]`)
-                    content.push(await this.get_image(i))
+                    image.push(await this.get_image(i))
                     break
-                case "forward":
-                    CQ.push(`[CQ:text,url=${i.text}]`)
+                case "poke":
+                    CQ.push(`[CQ:poke,id=${i.id}]`)
                     content.push({
-                        type: "text",
-                        data: { text: i.text }
+                        type: "poke",
+                        data: { type: i.id, id: 0, strength: i?.strength || 0 }
                     })
                     break
+                case "touch":
+                    CQ.push(`[CQ:poke,id=${i.id}]`)
+                    content.push(i)
+                    break
+                case "forward":
+                    CQ.push(`[CQ:text,text=${i.text}]`)
+                    forward.push(forward.length > 0 ? `${i.text}\n` : i.text)
+                    break
                 default:
-                    CQ.push(`[CQ:text,url=${JSON.stringify(i)}]`)
+                    CQ.push(`[CQ:text,text=${JSON.stringify(i)}]`)
                     content.push({
                         type: "text",
                         data: { text: JSON.stringify(i) }
@@ -102,6 +101,9 @@ export default class SendMsg {
                     break
             }
         }
+        forward = forward.join("\n").trim()
+        content.push({ type: "text", data: { text: forward } })
+        content.push(...image)
         return { content, CQ }
     }
 
@@ -135,7 +137,7 @@ export default class SendMsg {
         }
         /** url图片 */
         else if (/^http(s)?:\/\//.test(file)) {
-            return { type: "image", data: { url: file } }
+            return { type: "image", data: { file, url: file } }
         }
         /** 留个容错防止炸了 */
         else {
@@ -154,8 +156,7 @@ export default class SendMsg {
         const echo = randomUUID()
         const action = this.isGroup ? "send_group_msg" : "send_private_msg"
         const params = { [this.isGroup ? "group_id" : "user_id"]: id, message: msg }
-
-        common.log(id, CQ.join(""))
+        common.log(this.id, `发送${this.isGroup ? "群" : "好友"}${CQ.join("")}`)
 
         return new Promise((resolve) => {
             bot.socket.once("message", (res) => {

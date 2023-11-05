@@ -4,7 +4,7 @@ import { fileTypeFromBuffer } from "file-type"
 import common from "../../model/common.js"
 import pluginsLoader from "../../../../lib/plugins/loader.js"
 
-const uin = "88888"
+const uin = "stdin"
 const name = "标准输入"
 const path = "data/stdin/"
 const user_id = 55555

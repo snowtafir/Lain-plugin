@@ -452,30 +452,44 @@ let api = {
         return await this.SendApi(id, "upload_private_file", params)
     },
 
+    /**
+     * 点赞(实测赞了个寂寞...)
+     * @param {string} id - 机器人QQ
+     * @param {number} user_id - 对方 QQ 号
+     * @param {number} times - 点赞次数
+     */
+    async send_like(id, user_id, times) {
+        times = Number(times)
+        times = times > 20 || times > 10 ? times = 20 : times = 10
+        const params = { user_id, times }
+        return await this.SendApi(id, "send_like", params)
+    },
 
 
-    /** 发送请求事件 */
+
     async SendApi(id, action, params) {
         const bot = Bot.shamrock.get(String(id))
         if (!bot) return common.log(id, "不存在此Bot")
         const echo = randomUUID()
+        bot.socket.send(JSON.stringify({ echo, action, params }))
 
-        let resolveFn
-        const onMessage = (res) => {
-            const data = JSON.parse(res)
-            // if (data?.echo && data.retcode != 0) logger.error("Shamrock发生错误", data)
-            if (data?.echo === echo) {
-                resolveFn(data?.data || data)
-                /** 在满足条件后，移除监听器 */
-                bot.socket.off("message", onMessage)
+        for (let i = 0; i < 10; i++) {
+            const data = await Bot.lain.on.get(echo)
+            if (data) {
+                Bot.lain.on.delete(echo)
+                try {
+                    if (Object.keys(data?.data).length > 0 && data?.data) return data.data
+                    return data
+                } catch {
+                    return data
+                }
+            } else {
+                await common.sleep(500)
             }
         }
 
-        return new Promise((resolve) => {
-            resolveFn = resolve
-            bot.socket.once("message", onMessage)
-            bot.socket.send(JSON.stringify({ echo, action, params }))
-        })
+        /** 获取失败 */
+        return "获取失败"
     }
 }
 
