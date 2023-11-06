@@ -131,7 +131,7 @@ const api = {
 
         Bot.lain.wc.send(JSON.stringify({ echo, action, params }))
 
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < 16; i++) {
             const data = await Bot.lain.on.get(echo)
             if (data) {
                 Bot.lain.on.delete(echo)
@@ -142,7 +142,7 @@ const api = {
                     return data
                 }
             } else {
-                await common.sleep(500)
+                await common.sleep(1000)
             }
         }
         /** 获取失败 */

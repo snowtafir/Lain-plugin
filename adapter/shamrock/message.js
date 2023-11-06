@@ -228,7 +228,6 @@ export default new class zaiMsg {
                 let reply = source.message.map(u => (u.type === "at" ? { type: u.type, qq: Number(u.data.qq) } : { type: u.type, ...u.data }))
 
                 const raw_message = []
-                raw_message.push("[回复]")
                 for (let i of reply) {
                     switch (i.type) {
                         case "image":
