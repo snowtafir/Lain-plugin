@@ -161,11 +161,15 @@ export default class SendMsg {
         bot.socket.send(JSON.stringify({ echo, action, params }))
 
         for (let i = 0; i < 10; i++) {
-            const data = await Bot.lain.on.get(echo)
+            let data = await Bot.lain.on.get(echo)
             if (data) {
                 Bot.lain.on.delete(echo)
                 try {
-                    if (Object.keys(data?.data).length > 0 && data?.data) return data.data
+                    if (Object.keys(data?.data).length > 0 && data?.data) {
+                        data.seq = data?.data?.message_id
+                        data.rand = 1
+                        return data?.data || data
+                    }
                     return data
                 } catch {
                     return data

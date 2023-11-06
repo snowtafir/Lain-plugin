@@ -21,7 +21,7 @@ export default new class zaiMsg {
             e.message = message
             if (source) {
                 e.source = source
-                e.source.message = source.raw_message
+                e.source?.message = source?.raw_message
             }
         } else if (e.post_type === "notice" && e.sub_type === "poke") {
             e.action = "戳了戳"
@@ -224,7 +224,28 @@ export default new class zaiMsg {
                 const msg_id = i.data.id
                 /** id不存在滚犊子... */
                 if (!msg_id) continue
-                source = await api.get_msg(id, msg_id)
+
+                try {
+                    let retryCount = 0
+
+                    while (retryCount < 2) {
+                        source = await api.get_msg(id, msg_id)
+
+                        if (typeof source === "string") {
+                            common.log(id, `获取引用消息内容失败，正在重试：第 ${retryCount} 次`)
+                            retryCount++
+                        } else {
+                            break
+                        }
+                    }
+                    if (typeof source === "string") {
+                        common.log(id, `获取引用消息内容失败，重试次数上限，已终止`)
+                        return { message, source }
+                    }
+                } catch (error) {
+                    logger.error(error)
+                }
+
                 let reply = source.message.map(u => (u.type === "at" ? { type: u.type, qq: Number(u.data.qq) } : { type: u.type, ...u.data }))
 
                 const raw_message = []

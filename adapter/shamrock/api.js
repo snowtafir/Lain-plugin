@@ -473,7 +473,7 @@ let api = {
         const echo = randomUUID()
         bot.socket.send(JSON.stringify({ echo, action, params }))
 
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < 40; i++) {
             const data = await Bot.lain.on.get(echo)
             if (data) {
                 Bot.lain.on.delete(echo)
