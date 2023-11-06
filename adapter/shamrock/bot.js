@@ -123,14 +123,9 @@ export default new class addBot {
     }
 
     async LoadList(uin) {
-        /** 注册uin */
-        if (!Bot?.adapter) {
-            Bot.adapter = [Bot.uin, uin]
-        } else {
-            Bot.adapter.push(uin)
-            /** 去重防止断连后出现多个重复的id */
-            Bot.adapter = Array.from(new Set(Bot.adapter.map(JSON.stringify))).map(JSON.parse)
-        }
+        Bot.adapter.push(uin)
+        /** 去重防止断连后出现多个重复的id */
+        Bot.adapter = Array.from(new Set(Bot.adapter.map(JSON.stringify))).map(JSON.parse)
 
         /** 获取bot自身信息 */
         const info = await api.get_login_info(uin)

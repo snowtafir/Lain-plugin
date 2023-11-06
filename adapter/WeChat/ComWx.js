@@ -23,6 +23,7 @@ class WeChat {
         Bot.lain.wc = bot
         bot.on("message", async (data) => {
             data = JSON.parse(data)
+            logger.debug(`WeChat:`, data)
             if (data?.echo) {
                 return Bot.lain.on.set(data.echo, data)
             }
@@ -224,14 +225,9 @@ class WeChat {
             }
         }
 
-        /** 注册uin */
-        if (!Bot?.adapter) {
-            Bot.adapter = [Bot.uin, this.id]
-        } else {
-            Bot.adapter.push(this.id)
-            /** 去重防止断连后出现多个重复的id */
-            Bot.adapter = Array.from(new Set(Bot.adapter.map(JSON.stringify))).map(JSON.parse)
-        }
+        Bot.adapter.push(this.id)
+        /** 去重防止断连后出现多个重复的id */
+        Bot.adapter = Array.from(new Set(Bot.adapter.map(JSON.stringify))).map(JSON.parse)
 
         await common.log(this.id, "状态更新：ComWeChat已连接，正在加载资源中...")
         await common.sleep(1000)

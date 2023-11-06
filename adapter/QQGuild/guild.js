@@ -127,16 +127,9 @@ export default class guild {
             }
         }
 
-
-        /** 注册uin */
-        if (!Bot?.adapter) {
-            Bot.adapter = [Bot.uin]
-            Bot.adapter.push(this.id)
-        } else {
-            Bot.adapter.push(this.id)
-            /** 去重防止断连后出现多个重复的id */
-            Bot.adapter = Array.from(new Set(Bot.adapter.map(JSON.stringify))).map(JSON.parse)
-        }
+        Bot.adapter.push(this.id)
+        /** 去重防止断连后出现多个重复的id */
+        Bot.adapter = Array.from(new Set(Bot.adapter.map(JSON.stringify))).map(JSON.parse)
     }
 
     /** 获取一些基本信息 */

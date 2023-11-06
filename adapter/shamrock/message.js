@@ -268,7 +268,7 @@ export default new class zaiMsg {
                     reply,
                     seq: source.message_id,
                     user_id: source.sender.user_id,
-                    raw_message: raw_message.join(" ")
+                    raw_message: raw_message.join("").trim()
                 }
             } else {
                 if (i.type === "at") {
