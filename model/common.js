@@ -3,8 +3,13 @@ import chalk from "chalk"
 
 /** 注册uin */
 if (!Bot?.adapter) {
-    Bot.adapter = ["stdin"]
-    Bot.uin = "stdin"
+    const uin = Bot.uin
+    if (uin == 88888) {
+        Bot.adapter = ["stdin"]
+        Bot.uin = "stdin"
+    } else {
+        Bot.adapter = [uin]
+    }
 }
 
 /**
