@@ -139,10 +139,19 @@ export default new class addBot {
             },
             getGroupMemberInfo: async function (group_id, user_id) {
                 /** 被自己坑了 */
-                if (user_id == "88888") user_id = uin
-                let member = await api.get_group_member_info(uin, group_id, user_id)
-                member.card = member.nickname
-                return member
+                if (user_id == "88888" || user_id == "stdin") user_id = uin
+                try {
+                    let member = await api.get_group_member_info(uin, group_id, user_id)
+                    member.card = member.nickname
+                    return member
+                } catch {
+                    let member = {
+                        card: "shamrock",
+                        nickname: "shamrock"
+                    }
+                    return member
+                }
+
             },
             pickFriend: (user_id) => {
                 return {
