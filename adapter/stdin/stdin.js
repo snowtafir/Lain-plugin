@@ -4,7 +4,7 @@ import common from "../../model/common.js"
 import pluginsLoader from "../../../../lib/plugins/loader.js"
 
 const uin = "stdin"
-const name = "标准输入"
+const name = Bot.lain.cfg.stdin_nickname || "标准输入"
 
 /** 自定义标准输入头像 */
 let avatar = "default_avatar.jpg"

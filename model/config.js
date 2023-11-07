@@ -31,6 +31,9 @@ if (!fs.existsSync(_path + "/config.yaml")) {
     if (!cfg.match(RegExp("name:"))) {
         cfg = cfg + `\n# 自定义椰奶状态名称\nname: ""`
     }
+    if (!cfg.match(RegExp("stdin_nickname:"))) {
+        cfg = cfg + `\n# 标准输入的昵称\nstdin_nickname: "标准输入"`
+    }
     fs.writeFileSync(_path + "/config.yaml", cfg, "utf8")
 }
 
