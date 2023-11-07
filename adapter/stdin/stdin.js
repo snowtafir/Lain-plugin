@@ -23,7 +23,7 @@ Bot[uin] = {
     nickname: name,
     avatar: `../../../../../plugins/Lain-plugin/resources/${avatar}`,
     stat: { start_time: Date.now() / 1000, recv_msg_cnt: 1 },
-    version: { id: "stdin", name: name, version: Bot.lain.adapter.stdin },
+    version: { id: "stdin", name: "标准输入", version: Bot.lain.adapter.stdin },
     /** 转发 */
     makeForwardMsg: async (forwardMsg) => {
         return await makeForwardMsg(forwardMsg)
