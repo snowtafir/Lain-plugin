@@ -4,7 +4,6 @@ import common from "../../model/common.js"
 import pluginsLoader from "../../../../lib/plugins/loader.js"
 
 const uin = "stdin"
-const name = Bot.lain.cfg.stdin_nickname || "标准输入"
 
 /** 自定义标准输入头像 */
 let avatar = "default_avatar.jpg"
@@ -18,9 +17,8 @@ Bot[uin] = {
     gl: new Map(),
     gml: new Map(),
     id: uin,
-    name: name,
-    uin: uin,
-    nickname: name,
+    name: Bot.lain.cfg.stdin_nickname,
+    nickname: Bot.lain.cfg.stdin_nickname,
     avatar: `../../../../../plugins/Lain-plugin/resources/${avatar}`,
     stat: { start_time: Date.now() / 1000, recv_msg_cnt: 1 },
     version: { id: "stdin", name: "标准输入", version: Bot.lain.adapter.stdin },
@@ -41,11 +39,10 @@ Bot[uin] = {
     }
 }
 
-/** 注册uin */
-if (!Bot?.adapter) {
-    Bot.adapter = [uin, Bot.uin]
-} else {
-    Bot.adapter.unshift(uin)
+Bot.adapter.unshift(uin)
+
+if (Bot.lain.cfg.YenaiState == 1 || Bot.lain.cfg.YenaiState == 6) {
+    Bot[uin].uin = uin
 }
 
 /** 监听控制台输入 */
@@ -85,8 +82,8 @@ function msg(msg) {
     }
     /** 用户个人信息 */
     e.sender = {
-        card: name,
-        nickname: name,
+        card: Bot.lain.cfg.stdin_nickname,
+        nickname: Bot.lain.cfg.stdin_nickname,
         role: "",
         user_id
     }
@@ -95,7 +92,7 @@ function msg(msg) {
     const member = {
         info: {
             user_id,
-            nickname: name,
+            nickname: Bot.lain.cfg.stdin_nickname,
             last_sent_time: time,
         },
         /** 获取头像 */

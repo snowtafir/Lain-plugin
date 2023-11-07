@@ -1,5 +1,12 @@
 import fs from "fs"
 import chalk from "chalk"
+
+/** 注册uin */
+if (!Bot?.adapter) {
+    Bot.adapter = ["stdin"]
+    Bot.uin = "stdin"
+}
+
 /**
  * 休眠函数
  * @param ms 毫秒

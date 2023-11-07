@@ -8,11 +8,6 @@ import WebSocket from "../adapter/WebSocket.js"
 
 const _path = process.cwd() + "/plugins/Lain-plugin/config"
 
-try {
-    /** 覆盖apps.js */
-    fs.copyFileSync(_path + "/defSet/apps.js", "./apps.js")
-} catch (err) { }
-
 /** 检查配置文件是否存在 */
 if (!fs.existsSync(_path + "/config.yaml")) {
     fs.copyFileSync(_path + "/defSet/config.yaml", _path + "/config.yaml")
@@ -33,6 +28,15 @@ if (!fs.existsSync(_path + "/config.yaml")) {
     }
     if (!cfg.match(RegExp("stdin_nickname:"))) {
         cfg = cfg + `\n# 标准输入的昵称\nstdin_nickname: "标准输入"`
+    }
+    if (!cfg.match(RegExp("YenaiState:"))) {
+        cfg = cfg + `\n# 椰奶状态显示 0:只显示触发适配器 1:显示全部 2:单显示频道 3:单显示PC微信 4:单显示网页微信 5:单显示shamrock 6:单显示标准输入\n# 修改后需要重启才可以重新加载资源\nYenaiState: 1"`
+    }
+    if (!cfg.match(RegExp("baseUrl:"))) {
+        cfg = cfg + `\n# shamrock主动http端口，例如http://localhost:5700。若填写将通过此端口进行文件上传等被动ws不支持的操作\nbaseUrl:`
+    }
+    if (!cfg.match(RegExp("token:"))) {
+        cfg = cfg + `\n# 鉴权token，如果开放公网强烈建议配置\ntoken:"`
     }
     fs.writeFileSync(_path + "/config.yaml", cfg, "utf8")
 }

@@ -350,6 +350,7 @@ export function supportGuoba() {
                             break
                         case "stdin_nickname":
                             cfg.setIn([key], String(value))
+                            Bot.lain.cfg.stdin_nickname = String(value)
                             break
                         default:
                             if (!value) break

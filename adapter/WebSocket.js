@@ -22,17 +22,6 @@ export default class WebSocket {
         /** 创建HTTP服务器 */
         this.Server = createServer(app)
 
-        /** 注册uin */
-        if (!Bot?.adapter) {
-            Bot.adapter = [Bot.uin]
-            const index = Bot.adapter.indexOf(88888)
-            if (index !== -1) Bot.adapter.splice(index, 1)
-        } else {
-            Bot.adapter = Array.from(new Set(Bot.adapter.map(JSON.stringify))).map(JSON.parse)
-            const index = Bot.adapter.indexOf(88888)
-            if (index !== -1) Bot.adapter.splice(index, 1)
-        }
-
         /** 解除端口占用api */
         app.get("/api/close-server", async (req, res) => {
             const ip = req.ip

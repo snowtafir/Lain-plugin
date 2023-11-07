@@ -2,7 +2,7 @@ import common from "../../model/common.js"
 import api from "./api.js"
 import SendMsg from "./sendMsg.js"
 import { init } from "../../index.js"
-import { message, toRaw } from "./message.js";
+import { message, toRaw } from "./message.js"
 
 export default new class addBot {
     /** 加载资源 */
@@ -186,9 +186,11 @@ export default new class addBot {
     }
 
     async LoadList(uin) {
-        Bot.adapter.push(uin)
-        /** 去重防止断连后出现多个重复的id */
-        Bot.adapter = Array.from(new Set(Bot.adapter.map(JSON.stringify))).map(JSON.parse)
+        if (Bot.lain.cfg.YenaiState == 1 || Bot.lain.cfg.YenaiState == 5) {
+            Bot.adapter.push(uin)
+            /** 去重防止断连后出现多个重复的id */
+            Bot.adapter = Array.from(new Set(Bot.adapter.map(JSON.stringify))).map(JSON.parse)
+        }
 
         /** 获取bot自身信息 */
         const info = await api.get_login_info(uin)
