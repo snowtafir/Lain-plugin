@@ -27,16 +27,16 @@ if (!fs.existsSync(_path + "/config.yaml")) {
         cfg = cfg + `\n# 自定义椰奶状态名称\nname: ""`
     }
     if (!cfg.match(RegExp("stdin_nickname:"))) {
-        cfg = cfg + `\n# 标准输入的昵称\nstdin_nickname: "标准输入"`
+        cfg = cfg + `\n\n# 标准输入的昵称\nstdin_nickname: "标准输入"`
     }
     if (!cfg.match(RegExp("YenaiState:"))) {
-        cfg = cfg + `\n# 椰奶状态显示 0:只显示触发适配器 1:显示全部 2:单显示频道 3:单显示PC微信 4:单显示网页微信 5:单显示shamrock 6:单显示标准输入\n# 修改后需要重启才可以重新加载资源\nYenaiState: 1"`
+        cfg = cfg + `\n\n# 椰奶状态显示 0:只显示触发适配器 1:显示全部 2:单显示频道 3:单显示PC微信 4:单显示网页微信 5:单显示shamrock 6:单显示标准输入\n# 修改后需要重启才可以重新加载资源\nYenaiState: 1`
     }
     if (!cfg.match(RegExp("baseUrl:"))) {
-        cfg = cfg + `\n# shamrock主动http端口，例如http://localhost:5700。若填写将通过此端口进行文件上传等被动ws不支持的操作\nbaseUrl:`
+        cfg = cfg + `\n\n# shamrock主动http端口，例如http://localhost:5700。若填写将通过此端口进行文件上传等被动ws不支持的操作\nbaseUrl:`
     }
     if (!cfg.match(RegExp("token:"))) {
-        cfg = cfg + `\n# 鉴权token，如果开放公网强烈建议配置\ntoken:"`
+        cfg = cfg + `\n\n# 鉴权token，如果开放公网强烈建议配置\ntoken:`
     }
     fs.writeFileSync(_path + "/config.yaml", cfg, "utf8")
 }
