@@ -564,7 +564,7 @@ let api = {
                     return data
                 }
             } else {
-                await common.sleep(500)
+                await common.sleep(1000)
             }
         }
 
