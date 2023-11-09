@@ -137,8 +137,8 @@ export default class SendMsg {
                         /** 转换的二维码连接是否撤回 */
                         const qr = Number(Bot.lain.cfg.recallQR) || 0
                         /** 构建请求参数、打印日志 */
-                        const Msg = await this.Construct_data(Api_msg)
-                        await this.SendMsg(Msg, qr)
+                        const SendMsg = await this.Construct_data(Api_msg, false)
+                        await this.SendMsg(SendMsg, qr)
                     })
 
                     return "{请扫码查看链接}"
@@ -220,7 +220,7 @@ export default class SendMsg {
             case "file_image":
                 logs += log
                 msg = new FormData()
-                if (this.msg_id) msg.append("msg_id", this.msg_id)
+                if (this.msg_id) msg.set("msg_id", this.msg_id)
                 try {
                     /** 检测大小 */
                     let sizeInMB = image?.byteLength / (1024 * 1024)
@@ -234,16 +234,16 @@ export default class SendMsg {
                             .jpeg({ quality: Bot.lain.cfg.quality })
                             .toBuffer()
                             .then(data => {
-                                msg.append("file_image", new Blob([data]))
+                                msg.set("file_image", new Blob([data]))
                             })
                     } else {
                         if (!sharp) logger.error("[Lain-plugin] 缺少 sharp 依赖，无法进行图片压缩，请运行 pnpm install -P 或 pnpm i 进行安装依赖~")
                         /** 如果图片大小不超过2.5MB，那么直接存入SendMsg */
-                        msg.append("file_image", new Blob([image]))
+                        msg.set("file_image", new Blob([image]))
                     }
                 } catch (err) {
                     /** 产生错误直接存入即可 */
-                    msg.append("file_image", new Blob([image]))
+                    msg.set("file_image", new Blob([image]))
                 }
                 break
             case "url":
@@ -271,7 +271,7 @@ export default class SendMsg {
         }
         /** 文本 */
         if (content) {
-            if (msg instanceof FormData) msg.append("content", content)
+            if (msg instanceof FormData) msg.set("content", content)
             else msg.content = content
             logs += content
         }
@@ -295,17 +295,15 @@ export default class SendMsg {
             logger.error(`${Bot[this.id].nickname} 发送消息错误，正在转成图片重新发送...\n错误信息：`, error)
             /** 转换为图片发送 */
             let image = new FormData()
-            if (this.msg_id) image.append("msg_id", this.msg_id)
+            if (this.msg_id) image.set("msg_id", this.msg_id)
 
             const content = typeof msg === "string" ? msg : "啊咧，图片发不出来"
-
-            let imgBuf = await this.rendering(content, error)
-            image.append("file_image", new Blob([ imgBuf ]))
+            image.set("file_image", new Blob([await this.rendering(content, error)]))
 
             /** 判断频道还是私聊 */
             this.eventType !== "DIRECT_MESSAGE_CREATE"
-                ? res = await Bot[this.id].client.messageApi.postMessage(this.channel_id, image)
-                : res = await Bot[this.id].client.directMessageApi.postDirectMessage(this.guild_id, image)
+                ? res = await Bot[this.id].client.messageApi.postMessage(this.channel_id, msg)
+                : res = await Bot[this.id].client.directMessageApi.postDirectMessage(this.guild_id, msg)
         }
 
         /** 连接转二维码撤回 */
@@ -339,11 +337,6 @@ export default class SendMsg {
             tplFile: './plugins/Lain-plugin/resources/index.html',
         }
         const msg = await puppeteer.screenshot(`Lain-plugin/Lain-plugin`, data)
-        /*
-        let path = `./plugins/Lain-plugin/resources/${(new Date).getTime()}.jpg`
-        fs.writeFileSync(path, Buffer.from(msg.file.replace(/^base64:\/\//, ""), "base64"))
-        logger.warn(`文件已保存到：${path}`)
-        */
         return msg.file
     }
 

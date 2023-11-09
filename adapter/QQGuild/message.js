@@ -210,7 +210,7 @@ export default class message {
         /** 先打印日志 */
         const { data } = await Bot[this.id].client.messageApi.message(channel_ID, msg_id)
         const { guild_id, channel_id, timestamp, author, content } = data.message
-        const msg = ""
+        let msg = ""
         msg += `撤回消息:\n频道ID：${guild_id}`
         msg += `\n子频道ID：${channel_id}`
         msg += `\n详细消息：`

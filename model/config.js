@@ -80,7 +80,9 @@ if (fs.existsSync(_path + "/bot.yaml")) {
 try {
     const filePath = _path + "/config.yaml"
     if (fs.existsSync(filePath)) {
-        const watcher = chokidar.watch(filePath)
+        const watcher = chokidar.watch(filePath, {
+            ignored: [/^[/\\]\./, /(^|[/\\])node_modules[/\\]/]
+        })
 
         watcher.on("change", async () => {
             await common.sleep(1500)
