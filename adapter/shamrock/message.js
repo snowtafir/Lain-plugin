@@ -17,11 +17,15 @@ export default new class zaiMsg {
 
         if (data.post_type === "message") {
             /** 处理message，引用消息 */
-            const { message, source } = await this.message(self_id, data.message)
+            const { message, source } = await this.message(self_id, data.message, group_id)
             e.message = message
             if (source) {
                 e.source = source
-                e.source.message = source.raw_message
+                if (typeof e.source === 'string') {
+                    common.log(user_id, e.source, 'error')
+                } else {
+                    e.source.message = source.raw_message
+                }
             }
         } else if (e.post_type === "notice" && e.sub_type === "poke") {
             e.action = "戳了戳"
@@ -34,14 +38,12 @@ export default new class zaiMsg {
                 e.notice_type = "group"
             }
         }
-
+        let group_name
         /** 先打印日志 */
         if (message_type === "private") {
             isGroup = false
             await common.log(self_id, `好友消息：[${sender?.nickname || sender?.card}(${user_id})] ${raw_message}`)
         } else {
-            let group_name
-
             try {
                 group_name = Bot[self_id].gl.get(group_id)?.group_name
             } catch {
@@ -108,20 +110,35 @@ export default new class zaiMsg {
                         getAvatarUrl: (userId = id) => `https://q1.qlogo.cn/g?b=qq&s=0&nk=${userId}`
                     }
                 },
-                getChatHistory: async (msg_id, num) => {
-                    let source = await api.get_msg(self_id, msg_id)
-                    if (source?.message) {
-                        const message = []
-                        source.message.forEach(i => {
-                            if (i.type === "at") {
-                                message.push({ type: "at", qq: Number(i.data.qq) })
-                            } else {
-                                message.push({ type: i.type, ...i.data })
-                            }
+                // shamrock目前只支持从当前往前数，所以msg_id实际未使用
+                getChatHistory: async (msg_id, num, reply) => {
+                    try {
+                        let { messages } = await api.get_group_msg_history(self_id, group_id, num)
+                        messages = messages.map(async m => {
+                            m.group_name = group_name
+                            m.atme = !!m.message.find(msg => msg.type === "at" && msg.data?.qq == self_id)
+                            m.raw_message = toRaw(m.message, self_id, group_id)
+                            let result = await this.message(self_id, m.message, group_id, reply)
+                            m = Object.assign(m, result)
+                            return m
                         })
-                        source.message = message
+                        return Promise.all(messages)
+                    } catch (err) {
+                        // 老版本Shamrock不支持获取历史消息
+                        let source = await api.get_msg(self_id, msg_id)
+                        if (source?.message) {
+                            const message = []
+                            source.message.forEach(i => {
+                                if (i.type === "at") {
+                                    message.push({ type: "at", qq: Number(i.data.qq) })
+                                } else {
+                                    message.push({ type: i.type, ...i.data })
+                                }
+                            })
+                            source.message = message
+                        }
+                        return [source]
                     }
-                    return [source]
                 },
                 recallMsg: async (msg_id) => {
                     return await api.delete_msg(self_id, msg_id)
@@ -135,8 +152,9 @@ export default new class zaiMsg {
                 },
                 /** 戳一戳 */
                 pokeMember: async (operator_id) => {
-                    const peer_id = group_id
-                    return await (new SendMsg(self_id, isGroup)).message({ type: "touch", data: { id: operator_id } }, peer_id)
+                    return await api.group_touch(self_id, group_id, operator_id)
+                    // const peer_id = group_id
+                    // return await (new SendMsg(self_id, isGroup)).message({ type: "touch", data: { id: operator_id } }, peer_id)
                 },
                 /** 禁言 */
                 muteMember: async (group_id, user_id, time) => {
@@ -167,7 +185,15 @@ export default new class zaiMsg {
                 /** 踢 */
                 kickMember: async (qq, reject_add_request = false) => {
                     return await api.set_group_kick(self_id, group_id, qq, reject_add_request)
-                }
+                },
+                /** 头衔 **/
+                setTitle: async (qq, title, duration) => {
+                    return await api.set_group_special_title(self_id, group_id, qq, title)
+                },
+                /** 修改群名片 **/
+                setCard: async (qq, card) => {
+                    return await api.set_group_card(self_id, group_id, qq, card)
+                },
             }
         } else {
             e.friend = {
@@ -181,20 +207,32 @@ export default new class zaiMsg {
                 makeForwardMsg: async (forwardMsg) => {
                     return await common.makeForwardMsg(forwardMsg)
                 },
-                getChatHistory: async (msg_id, num) => {
-                    let source = await api.get_msg(self_id, msg_id)
-                    if (source?.message) {
-                        const message = []
-                        source.message.forEach(i => {
-                            if (i.type === "at") {
-                                message.push({ type: "at", qq: Number(i.data.qq) })
-                            } else {
-                                message.push({ type: i.type, ...i.data })
-                            }
+                getChatHistory: async (msg_id, num, reply = true) => {
+                    try {
+                        let messages = await api.get_history_msg(self_id, "private", user_id, null, num)
+                        messages = messages.map(async m => {
+                            m.raw_message = toRaw(m.message, self_id, group_id)
+                            let result = await this.message(self_id, m.message, null, reply)
+                            m = Object.assign(m, result)
+                            return m
                         })
-                        source.message = message
+                        return Promise.all(messages)
+                    } catch (err) {
+                        // 老版本Shamrock不支持获取历史消息
+                        let source = await api.get_msg(self_id, msg_id)
+                        if (source?.message) {
+                            const message = []
+                            source.message.forEach(i => {
+                                if (i.type === "at") {
+                                    message.push({ type: "at", qq: Number(i.data.qq) })
+                                } else {
+                                    message.push({ type: i.type, ...i.data })
+                                }
+                            })
+                            source.message = message
+                        }
+                        return [source]
                     }
-                    return [source]
                 },
                 getAvatarUrl: async (userID = user_id) => {
                     return `https://q1.qlogo.cn/g?b=qq&s=0&nk=${userID}`
@@ -214,71 +252,121 @@ export default new class zaiMsg {
     }
 
 
-    /** 处理云崽的message */
-    async message(id, msg) {
-        const message = []
-        let source
-        for (const i of msg) {
-            if (i.type === "reply") {
-                /** 引用消息的id */
-                const msg_id = i.data.id
-                /** id不存在滚犊子... */
-                if (!msg_id) continue
-                source = await api.get_msg(id, msg_id)
-                let reply = source.message.map(u => (u.type === "at" ? { type: u.type, qq: Number(u.data.qq) } : { type: u.type, ...u.data }))
+    async message(id, msg, group_id, reply = true) {
+        return await message(id, msg, group_id, reply)
+    }
+}
 
-                const raw_message = []
-                raw_message.push("[回复]")
-                for (let i of reply) {
-                    switch (i.type) {
-                        case "image":
-                            raw_message.push("[图片]")
-                            break
-                        case "text":
-                            i.texg ? raw_message.push(i.text) : ""
-                            break
-                        case "file":
-                            raw_message.push("[文件]")
-                            break
-                        case "record":
-                            raw_message.push("[语音]")
-                            break
-                        case "video":
-                            raw_message.push("[视频]")
-                            break
-                        case "music":
-                            raw_message.push("[音乐]")
-                            break
-                        case "weather":
-                            raw_message.push("[天气]")
-                            break
-                        case "json":
-                            raw_message.push("[json]")
-                            break
-                        case "at":
-                            raw_message.push(`[@${i?.qq}]`)
-                            break
-                        default:
-                            raw_message.push(JSON.stringify(i))
-                            break
+/**
+ * 处理云崽的message
+ * @param id
+ * @param msg
+ * @param group_id
+ * @param reply 是否处理引用消息
+ * @return {Promise<{source: (*&{user_id, raw_message: string, reply: *, seq}), message: *[]}|{source: string, message: *[]}>}
+ */
+export async function message(id, msg, group_id, reply = true) {
+    const message = []
+    let source
+    for (const i of msg) {
+        if (i.type === "reply" && reply) {
+            /** 引用消息的id */
+            const msg_id = i.data.id
+            /** id不存在滚犊子... */
+            if (!msg_id) continue
+            try {
+                let retryCount = 0
+
+                while (retryCount < 2) {
+                    source = await api.get_msg(id, msg_id)
+
+                    if (typeof source === "string") {
+                        common.log(id, `获取引用消息内容失败，正在重试：第 ${retryCount} 次`)
+                        retryCount++
+                    } else {
+                        break
                     }
                 }
+                if (typeof source === "string") {
+                    common.log(id, `获取引用消息内容失败，重试次数上限，已终止`)
+                    return { message, source }
+                }
+            } catch (error) {
+                logger.error(error)
+            }
 
-                source = {
-                    ...source,
-                    reply,
-                    seq: source.message_id,
-                    user_id: source.sender.user_id,
-                    raw_message: raw_message.join(" ")
-                }
+            let reply = source.message.map(u => (u.type === "at" ? { type: u.type, qq: Number(u.data.qq) } : { type: u.type, ...u.data }))
+
+            let raw_message = toRaw(reply, id, group_id)
+            source = {
+                ...source,
+                reply,
+                seq: source.message_id,
+                user_id: source.sender.user_id,
+                raw_message: raw_message
+            }
+        } else {
+            if (i.type === "at") {
+                message.push({ type: "at", qq: Number(i.data.qq) })
             } else {
-                if (i.type === "at") {
-                    message.push({ type: "at", qq: Number(i.data.qq) })
-                } else {
-                    message.push({ type: i.type, ...i.data })
-                }
+                message.push({ type: i.type, ...i.data })
             }
         }
-        return { message, source }
     }
+    return { message, source }
+}
+
+/**
+ *
+ * @param msg 消息，yunzai的或shamrock格式的
+ * @param self_id 机器人qq
+ * @param group_id 群号
+ * @return {string}
+ */
+export function toRaw(msg = [], self_id, group_id) {
+    const raw_message = []
+    for (let i of msg) {
+        switch (i.type) {
+            case "image":
+                raw_message.push("[图片]")
+                break
+            case "text":
+                i.text ? raw_message.push(i.text) : raw_message.push(i.data?.text || "")
+                break
+            case "file":
+                raw_message.push("[文件]")
+                break
+            case "record":
+                raw_message.push("[语音]")
+                break
+            case "video":
+                raw_message.push("[视频]")
+                break
+            case "music":
+                raw_message.push("[音乐]")
+                break
+            case "weather":
+                raw_message.push("[天气]")
+                break
+            case "json":
+                raw_message.push("[json]")
+                break
+            case "at":
+                let qq = i?.qq || i?.data?.qq
+                try {
+                    let groupMemberList = Bot[self_id].gml.get(group_id)
+                    let at = groupMemberList?.[qq]
+                    raw_message.push(`[@${at.nickname || at.card || qq}]`)
+                } catch (err) {
+                    raw_message.push(`[@${qq}]`)
+                }
+                break
+            case "reply":
+                break
+            default:
+                raw_message.push(JSON.stringify(i))
+                break
+        }
+    }
+    return raw_message.join("").trim()
 }

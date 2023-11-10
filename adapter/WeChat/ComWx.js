@@ -22,6 +22,7 @@ class WeChat {
     async server(bot, request) {
         Bot.lain.wc = bot
         bot.on("message", async (data) => {
+            logger.debug(`WeChat：`, data)
             data = JSON.parse(data)
             if (data?.echo) {
                 return Bot.lain.on.set(data.echo, data)

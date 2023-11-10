@@ -128,10 +128,7 @@ export default class guild {
         }
 
 
-        /** 注册uin */
-        if (!Bot?.adapter)
-            Bot.adapter = [Bot.uin, this.id]
-        else
+        if (Bot.lain.cfg.YenaiState == 1 || Bot.lain.cfg.YenaiState == 2)
             if (!Bot.adapter.includes(this.id)) Bot.adapter.push(this.id)
     }
 
@@ -220,7 +217,7 @@ export default class guild {
 
     async permissions(data, type = "") {
         /** 解除私信 */
-        if (data.msg.content.includes("#QQ频道解除私信")) {
+        if (data.msg?.content.includes("#QQ频道解除私信")) {
             return await this.Sendprivate(data)
         }
         const cfg = Bot.lain.cfg

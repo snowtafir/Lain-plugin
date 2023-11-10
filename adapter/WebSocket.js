@@ -24,7 +24,6 @@ export default class WebSocket {
 
         /** 解除端口占用api */
         app.get("/api/close-server", async (req, res) => {
-            const time = new Date(Date.now()).toISOString()
             const ip = req.ip
             if (ip !== "::1" && ip !== "127.0.0.1") {
                 return res.status(401).json({ error: "未经授权的访问" })

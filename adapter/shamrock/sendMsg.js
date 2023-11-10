@@ -1,6 +1,7 @@
 import fs from "fs"
 import { randomUUID } from "crypto"
 import common from "../../model/common.js"
+import api from "./api.js";
 
 export default class SendMsg {
     /** 传入基本配置 */
@@ -59,7 +60,17 @@ export default class SendMsg {
                 case "file":
                     break
                 case "record":
-                    if (i?.url) i.file = i.url
+                    if (Bot.lain.cfg.baseUrl && i.file && !i.file.includes('http')) {
+                        // 本地文件
+                        try {
+                            const { file } = await api.upload_file(this.id, i.file)
+                            i.file = `file://${file}`
+                        } catch (err) {
+                            common.log(this.id, err, "error")
+                        }
+                    } else {
+                        if (i?.url) i.file = i.url
+                    }
                     CQ.push(`[CQ:record,file=${i.file}]`)
                     content.push({
                         type: "record",
@@ -67,6 +78,17 @@ export default class SendMsg {
                     })
                     break
                 case "video":
+                    if (i.file && !i.file.includes("protobuf://") && !i.file.includes("base64://")) {
+                        if (Bot.lain.cfg.baseUrl && i.file && !i.file.includes('http')) {
+                            // 本地文件
+                            try {
+                                const { file } = await api.upload_file(this.id, i.file)
+                                i.file = `file://${file}`
+                            } catch (err) {
+                                common.log(this.id, err, "error")
+                            }
+                        }
+                    }
                     CQ.push(`[CQ:video,file=${i.file}]`)
                     content.push({
                         type: "video",
@@ -158,19 +180,28 @@ export default class SendMsg {
         const params = { [this.isGroup ? "group_id" : "user_id"]: id, message: msg }
         common.log(this.id, `发送${this.isGroup ? "群" : "好友"}${CQ.join("")}`)
 
-        return new Promise((resolve) => {
-            bot.socket.once("message", (res) => {
-                const data = JSON.parse(res)
-                const msg_id = data?.data?.message_id
-                /** 返回消息id给撤回用？ */
-                resolve({
-                    seq: msg_id,
-                    rand: 1,
-                    time: data?.data?.time,
-                    message_id: msg_id
-                })
-            })
-            bot.socket.send(JSON.stringify({ echo, action, params }))
-        })
+        bot.socket.send(JSON.stringify({ echo, action, params }))
+
+        for (let i = 0; i < 10; i++) {
+            let data = await Bot.lain.on.get(echo)
+            if (data) {
+                Bot.lain.on.delete(echo)
+                try {
+                    if (Object.keys(data?.data).length > 0 && data?.data) {
+                        data.seq = data?.data?.message_id
+                        data.rand = 1
+                        return data?.data || data
+                    }
+                    return data
+                } catch {
+                    return data
+                }
+            } else {
+                await common.sleep(500)
+            }
+        }
+
+        /** 获取失败 */
+        return "获取失败"
     }
 }

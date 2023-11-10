@@ -24,8 +24,8 @@ class Shamrock {
         })
 
         bot.on("message", async (data) => {
+            logger.debug(`shamrock(${uin})：`, data)
             data = JSON.parse(data)
-            // console.log("app:", data)
             /** 带echo事件另外保存 */
             if (data?.echo) {
                 return Bot.lain.on.set(data.echo, data)
@@ -88,7 +88,7 @@ shamrock.on("error", async error => {
         const msg = `Shamrock：启动WS服务器失败，端口${this.port}已被占用，请自行解除端口`
         return await common.log(this.id, msg, "error")
     }
-    const msg = `Shamrock-发生错误：${error.message}`
+    const msg = `Shamrock - 发生错误：${error.message}`
     await common.log(this.id, msg, "error")
     return await common.log(this.id, msg, "debug")
 })

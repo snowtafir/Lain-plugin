@@ -265,6 +265,44 @@ export function supportGuoba() {
                         options: channels
                     }
                 },
+                {
+                    component: "Divider",
+                    label: "Shamrock设置"
+                },
+                {
+                    field: "baseUrl",
+                    label: "主动http端口",
+                    bottomHelpMessage: "Shamrock主动http端口，例如http://localhost:5700。若填写将通过此端口进行文件上传等被动ws不支持的操作。未开启端口不要填写",
+                    component: "Input",
+                    required: false,
+                    componentProps: {
+                        placeholder: "请输入shamrock主动http端口",
+                    },
+                },
+                {
+                    field: "token",
+                    label: "鉴权token",
+                    bottomHelpMessage: "Shamrock鉴权token，如果开放公网强烈建议配置",
+                    component: "InputPassword",
+                    required: false,
+                    componentProps: {
+                        placeholder: "请输入shamrock鉴权token",
+                    },
+                },
+                {
+                    component: "Divider",
+                    label: "标准输入设置"
+                },
+                {
+                    field: "stdin_nickname",
+                    label: "标准输入昵称",
+                    bottomHelpMessage: "自定义标准输入的椰奶状态名称",
+                    component: "Input",
+                    required: true,
+                    componentProps: {
+                        placeholder: "请输入自定义标准输入昵称",
+                    },
+                },
             ],
             // 获取配置数据方法（用于前端填充显示数据）
             getConfigData() {
@@ -309,6 +347,10 @@ export function supportGuoba() {
                             break
                         case "recallQR":
                             cfg.setIn([key], Number(value))
+                            break
+                        case "stdin_nickname":
+                            cfg.setIn([key], String(value))
+                            Bot.lain.cfg.stdin_nickname = String(value)
                             break
                         default:
                             if (!value) break

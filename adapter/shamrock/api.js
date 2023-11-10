@@ -1,5 +1,6 @@
 import { randomUUID } from "crypto"
 import common from "../../model/common.js"
+import fetch, { fileFromSync, FormData } from "node-fetch";
 
 let api = {
     /**
@@ -466,6 +467,85 @@ let api = {
     },
 
 
+    /**
+     * 获取历史消息
+     * @param {string} id - 机器人QQ
+     * @param {string} message_type - 消息 类型 必填 （private或group）
+     * @param {number} user_id - 私聊QQ
+     * @param {number} group_id - 群号
+     * @param {number} count - 获取的消息数量（默认为20）
+     */
+    async get_history_msg(id, message_type, user_id, group_id, count) {
+        const params = { message_type, user_id, group_id, count }
+        return await this.SendApi(id, "get_history_msg", params)
+    },
+
+    /**
+     * 获取群聊历史消息
+     * @param {string} id - 机器人QQ
+     * @param {number} group_id - 群号
+     * @param {number} count - 获取的消息数量（默认为20）
+     */
+    async get_group_msg_history(id, group_id, count) {
+        const params = { group_id, count }
+        return await this.SendApi(id, "get_group_msg_history", params)
+    },
+
+    /**
+     * 清除本地缓存消息
+     * @param {string} id - 机器人QQ
+     * @param {string} message_type - 消息 类型 必填
+     * @param {number} user_id - 私聊QQ
+     * @param {number} group_id - 群号
+     */
+    async clear_msgs(id, message_type, user_id, group_id) {
+        const params = { user_id, message_type, group_id }
+        return await this.SendApi(id, "clear_msgs", params)
+    },
+
+    /**
+     * 上传文件到缓存目录
+     * @param {string} id - 机器人QQ
+     * @param {string} file - 文件本地地址
+     * @return {Promise<{file, md5}>} file为文件在shamrock端的本地路径，可用于发送文件、语音、视频等
+     */
+    async upload_file(id, file) {
+        let formData = new FormData()
+        formData.append('file', fileFromSync(file))
+        let data = await this.httpApi(id, 'upload_file', {}, formData)
+        return data
+    },
+
+    async httpApi(id, action, headers, data, query = "") {
+        if (!Bot.lain.cfg.baseUrl || !Bot.lain.cfg.baseUrl.startsWith('http')) {
+            return common.log(id, "未配置Shamrock主动http端口")
+        }
+        if (!headers) {
+            headers = {}
+        }
+        headers['User-Agent'] = 'Lain-Plugin/1.3.3'
+        let baseUrl = Bot.lain.cfg.baseUrl
+        let token = Bot.lain.cfg.token
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`
+        }
+        const bot = Bot.shamrock.get(String(id))
+        if (!bot) return common.log(id, "不存在此Bot")
+        const echo = randomUUID()
+        let res = await fetch(baseUrl + '/' + action + query, {
+            headers,
+            body: data,
+            method: "post"
+        })
+        if (res.ok) {
+            let result = await res.json()
+            return result.data
+        } else {
+            let result = await res.json()
+            common.log(id, result, "error")
+            return {}
+        }
+    },
 
     async SendApi(id, action, params) {
         const bot = Bot.shamrock.get(String(id))
@@ -473,7 +553,7 @@ let api = {
         const echo = randomUUID()
         bot.socket.send(JSON.stringify({ echo, action, params }))
 
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < 40; i++) {
             const data = await Bot.lain.on.get(echo)
             if (data) {
                 Bot.lain.on.delete(echo)
@@ -484,7 +564,7 @@ let api = {
                     return data
                 }
             } else {
-                await common.sleep(500)
+                await common.sleep(1000)
             }
         }
 
