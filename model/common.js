@@ -43,9 +43,8 @@ export function log(id, log, type = "info") {
 export function array(data) {
     let msg = []
     /** 将格式统一为对象 随后进行转换成api格式 */
-    if (data?.[1]?.data?.type === "test") {
-        msg.push({ type: "forward", text: data[0] })
-        msg.push(...data[1].msg)
+    if (data?.[0]?.data?.type === "test" || data?.[1]?.data?.type === "test") {
+        msg.push(...(data?.[0].msg || data?.[1].msg))
     }
     else if (data?.data?.type === "test") {
         msg.push(...data.msg)
@@ -81,7 +80,7 @@ export async function makeForwardMsg(forwardMsg, data = {}) {
     const new_msg = []
     /** 防止报错 */
     if (!Array.isArray(forwardMsg)) forwardMsg = [forwardMsg]
-
+    
     for (const i_msg of forwardMsg) {
         const msg = i_msg.message
         /** 处理无限套娃 */

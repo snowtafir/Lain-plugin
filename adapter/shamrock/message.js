@@ -153,8 +153,6 @@ export default new class zaiMsg {
                 /** 戳一戳 */
                 pokeMember: async (operator_id) => {
                     return await api.group_touch(self_id, group_id, operator_id)
-                    // const peer_id = group_id
-                    // return await (new SendMsg(self_id, isGroup)).message({ type: "touch", data: { id: operator_id } }, peer_id)
                 },
                 /** 禁言 */
                 muteMember: async (group_id, user_id, time) => {
@@ -298,6 +296,9 @@ export async function message(id, msg, group_id, reply = true) {
             let reply = source.message.map(u => (u.type === "at" ? { type: u.type, qq: Number(u.data.qq) } : { type: u.type, ...u.data }))
 
             let raw_message = toRaw(reply, id, group_id)
+
+            /** 覆盖原先的message */
+            source.message = source.reply
             source = {
                 ...source,
                 reply,
