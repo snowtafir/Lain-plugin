@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto"
 import common from "../../model/common.js"
-import fetch, { fileFromSync, FormData } from "node-fetch";
+import fetch, { fileFromSync, FormData } from "node-fetch"
 
 let api = {
     /**
@@ -547,10 +547,69 @@ let api = {
         }
     },
 
+    /**
+     * 下载文件到缓存目录
+     * @param {string} id - 机器人QQ
+     * @param {string} file - 可传入url或base64，请注意必须为 http(s)?:// 或 base64:// 开头
+     * @param {number} thread_cnt - (可选)下载的线程数量
+     * @param {string | array} headers - (可选)请求头
+     */
+    async download_file(id, file, thread_cnt, headers) {
+        if (typeof file !== "string") return
+        let type
+        if (/https?:\/\//.test(file)) {
+            type = "url"
+        }
+        else if (/base64:\/\//.test(file)) {
+            type = "base64"
+            file = file.replace("base64://", "")
+        }
+        else {
+            return common.log(id, `下载文件到缓存目录Api：未适配的格式，${file}`)
+        }
+        let params = { [type]: file }
+        headers ? params.headers = headers : ""
+        thread_cnt ? params.thread_cnt = thread_cnt : ""
+        return await this.SendApi(id, "download_file", params)
+    },
+
+    /**
+     * 获取合并转发消息内容
+     * @param {string} id - 机器人QQ
+     * @param {string} msg_id - 消息资源ID（卡片消息里面的resId）
+     */
+    async get_forward_msg(id, msg_id) {
+        const params = { msg_id }
+        return await this.SendApi(id, "get_forward_msg", params)
+    },
+
+    /**
+     * 发送群聊合并转发
+     * @param {string} id - 机器人QQ
+     * @param {number} group_id - 发送到的目标群号
+     * @param {foward message[]} message  - 合并转发消息集
+     */
+    async send_group_forward_msg(id, group_id, message) {
+        const params = { group_id, message }
+        return await this.SendApi(id, "send_group_forward_msg", params)
+    },
+
+    /**
+     * 发送私聊合并转发
+     * @param {string} id - 机器人QQ
+     * @param {number} user_id - 发送到的目标群号
+     * @param {foward message[]} message  - 合并转发消息集
+     */
+    async send_private_forward_msg(id, user_id, message) {
+        const params = { user_id, message }
+        return await this.SendApi(id, "send_private_forward_msg", params)
+    },
+
     async SendApi(id, action, params) {
         const bot = Bot.shamrock.get(String(id))
         if (!bot) return common.log(id, "不存在此Bot")
         const echo = randomUUID()
+        // console.log("发送请求，接口：", action, "参数：", params)
         bot.socket.send(JSON.stringify({ echo, action, params }))
 
         for (let i = 0; i < 40; i++) {

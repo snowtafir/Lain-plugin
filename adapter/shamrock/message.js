@@ -17,7 +17,7 @@ export default new class zaiMsg {
 
         if (data.post_type === "message") {
             /** 处理message，引用消息 */
-            const { message, source } = await this.message(self_id, data.message, group_id)
+            const { message, source } = await this.message(self_id, data.message, group_id, "e")
             e.message = message
             if (source) {
                 e.source = source
@@ -293,15 +293,17 @@ export async function message(id, msg, group_id, reply = true) {
                 logger.error(error)
             }
 
-            let reply = source.message.map(u => (u.type === "at" ? { type: u.type, qq: Number(u.data.qq) } : { type: u.type, ...u.data }))
+            let source_reply = source.message.map(u => (u.type === "at" ? { type: u.type, qq: Number(u.data.qq) } : { type: u.type, ...u.data }))
 
-            let raw_message = toRaw(reply, id, group_id)
+            let raw_message = toRaw(source_reply, id, group_id)
 
             /** 覆盖原先的message */
-            source.message = source.reply
+            source.message = source_reply
+            if (reply != "e") message.push(...source_reply)
+            
             source = {
                 ...source,
-                reply,
+                reply: source_reply,
                 seq: source.message_id,
                 user_id: source.sender.user_id,
                 raw_message: raw_message

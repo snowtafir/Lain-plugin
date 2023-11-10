@@ -1,7 +1,7 @@
 import fs from "fs"
 import { randomUUID } from "crypto"
 import common from "../../model/common.js"
-import api from "./api.js";
+import api from "./api.js"
 
 export default class SendMsg {
     /** 传入基本配置 */
@@ -10,6 +10,8 @@ export default class SendMsg {
         this.id = id
         /** 是否群聊 */
         this.isGroup = isGroup
+        /** 机器人名称 */
+        this.name = Bot?.[id]?.nickname || "未知"
     }
 
     /** 发送消息 */
@@ -17,12 +19,29 @@ export default class SendMsg {
         /** 将云崽过来的消息统一为数组 */
         msg = common.array(msg)
         /** 转为shamrock可以使用的格式 */
-        const { content, CQ } = await this.msg(msg)
-        msg = content
-        /** 引用消息 */
-        if (quote) msg.unshift({ type: "reply", data: { id: quote } })
-        /** 发送消息 */
-        return await this.SendMsg(id, msg, CQ)
+        let { content, CQ, forward } = await this.msg(msg)
+        if (forward.length > 0) {
+            forward = [
+                {
+                    type: "node",
+                    data: {
+                        name: this.name,
+                        content: [...forward]
+                    }
+                }
+            ]
+            if (this.isGroup) {
+                return await api.send_group_forward_msg(this.id, id, forward)
+            } else {
+                return await api.send_private_forward_msg(this.id, id, forward)
+            }
+        } else {
+            msg = content
+            /** 引用消息 */
+            if (quote) msg.unshift({ type: "reply", data: { id: quote } })
+            /** 发送消息 */
+            return await this.SendMsg(id, msg, CQ)
+        }
     }
 
     /** 转为shamrock可以使用的格式 */
@@ -31,7 +50,7 @@ export default class SendMsg {
         const content = []
         const CQ = []
         const image = []
-        let forward = []
+        const forward = []
         /** chatgpt-plugin */
         if (msg?.[0].type === "xml") msg = msg?.[0].msg
 
@@ -55,16 +74,20 @@ export default class SendMsg {
                     break
                 case "text":
                     CQ.push(`[CQ:text,text=${i.text}]`)
-                    forward.push(i.text)
+                    content.push({
+                        type: "text",
+                        data: { text: i.text }
+                    })
                     break
                 case "file":
                     break
                 case "record":
-                    if (Bot.lain.cfg.baseUrl && i.file && !i.file.includes('http')) {
-                        // 本地文件
+                    if (i.file && fs.existsSync(i.file)) {
+                        /** 上传文件 */
                         try {
-                            const { file } = await api.upload_file(this.id, i.file)
-                            i.file = `file://${file}`
+                            const base64 = "base64://" + fs.readFileSync(i.file).toString("base64")
+                            i.file = (await api.download_file(this.id, base64))?.file
+                            i.file = `file://${i.file}`
                         } catch (err) {
                             common.log(this.id, err, "error")
                         }
@@ -78,21 +101,24 @@ export default class SendMsg {
                     })
                     break
                 case "video":
-                    if (i.file && !i.file.includes("protobuf://") && !i.file.includes("base64://")) {
-                        if (Bot.lain.cfg.baseUrl && i.file && !i.file.includes('http')) {
-                            // 本地文件
-                            try {
-                                const { file } = await api.upload_file(this.id, i.file)
-                                i.file = `file://${file}`
-                            } catch (err) {
-                                common.log(this.id, err, "error")
-                            }
+                    /** 只支持本地文件 */
+                    if (i.file && fs.existsSync(i.file)) {
+                        /** 上传文件 */
+                        try {
+                            const base64 = "base64://" + fs.readFileSync(i.file).toString("base64")
+                            i.file = (await api.download_file(this.id, base64))?.file
+                            i.file = `file://${i.file}`
+                        } catch (err) {
+                            common.log(this.id, err, "error")
                         }
+                    } else {
+                        await common.log(this.id, `不支持的文件：${i}`, "error")
+                        break
                     }
                     CQ.push(`[CQ:video,file=${i.file}]`)
                     content.push({
                         type: "video",
-                        data: { file: i.file.replace("protobuf://", "base64://") }
+                        data: { file: i.file }
                     })
                     break
                 case "image":
@@ -111,8 +137,7 @@ export default class SendMsg {
                     content.push(i)
                     break
                 case "forward":
-                    CQ.push(`[CQ:text,text=${i.text}]`)
-                    forward.push(forward.length > 0 ? `${i.text}\n` : i.text)
+                    forward.push({ type: "text", data: { text: i.text } })
                     break
                 default:
                     CQ.push(`[CQ:text,text=${JSON.stringify(i)}]`)
@@ -123,10 +148,15 @@ export default class SendMsg {
                     break
             }
         }
-        forward = forward.join("\n").trim()
-        content.push({ type: "text", data: { text: forward } })
-        content.push(...image)
-        return { content, CQ }
+
+        if (forward.length > 0) {
+            forward.push(...image)
+            return { content, CQ, forward }
+        } else {
+            content.push(...image)
+            forward.length = 0
+            return { content, CQ, forward }
+        }
     }
 
     /** 统一图片格式 */
