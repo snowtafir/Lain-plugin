@@ -587,9 +587,9 @@ let api = {
      * 发送群聊合并转发
      * @param {string} id - 机器人QQ
      * @param {number} group_id - 发送到的目标群号
-     * @param {foward message[]} message  - 合并转发消息集
+     * @param {foward message[]} messages  - 合并转发消息集
      */
-    async send_group_forward_msg(id, group_id, message) {
+    async send_group_forward_msg(id, group_id, messages) {
         const params = { group_id, message }
         return await this.SendApi(id, "send_group_forward_msg", params)
     },
@@ -598,9 +598,9 @@ let api = {
      * 发送私聊合并转发
      * @param {string} id - 机器人QQ
      * @param {number} user_id - 发送到的目标群号
-     * @param {foward message[]} message  - 合并转发消息集
+     * @param {foward message[]} messages  - 合并转发消息集
      */
-    async send_private_forward_msg(id, user_id, message) {
+    async send_private_forward_msg(id, user_id, messages) {
         const params = { user_id, message }
         return await this.SendApi(id, "send_private_forward_msg", params)
     },
