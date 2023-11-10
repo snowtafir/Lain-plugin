@@ -590,7 +590,7 @@ let api = {
      * @param {foward message[]} messages  - 合并转发消息集
      */
     async send_group_forward_msg(id, group_id, messages) {
-        const params = { group_id, message }
+        const params = { group_id, messages }
         return await this.SendApi(id, "send_group_forward_msg", params)
     },
 
@@ -601,7 +601,7 @@ let api = {
      * @param {foward message[]} messages  - 合并转发消息集
      */
     async send_private_forward_msg(id, user_id, messages) {
-        const params = { user_id, message }
+        const params = { user_id, messages }
         return await this.SendApi(id, "send_private_forward_msg", params)
     },
 
