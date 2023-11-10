@@ -103,8 +103,17 @@ export default class message {
                     return await common.makeForwardMsg(forwardMsg)
                 },
                 pickMember: (id) => {
+                    let info = {
+                        group_id,
+                        user_id: id,
+                    }
                     if (id === user_id) {
-                        return member
+                        info = member.info
+                    }
+                    return {
+                        ...info,
+                        info,
+                        getAvatarUrl: async () => (await api.get_group_member_info(group_id, id))?.['wx.avatar']
                     }
                 },
             }
