@@ -110,10 +110,9 @@ export default new class zaiMsg {
                         getAvatarUrl: (userId = id) => `https://q1.qlogo.cn/g?b=qq&s=0&nk=${userId}`
                     }
                 },
-                // shamrock目前只支持从当前往前数，所以msg_id实际未使用
                 getChatHistory: async (msg_id, num, reply) => {
                     try {
-                        let { messages } = await api.get_group_msg_history(self_id, group_id, num)
+                        let { messages } = await api.get_group_msg_history(self_id, group_id, num, msg_id)
                         messages = messages.map(async m => {
                             m.group_name = group_name
                             m.atme = !!m.message.find(msg => msg.type === "at" && msg.data?.qq == self_id)
@@ -207,7 +206,7 @@ export default new class zaiMsg {
                 },
                 getChatHistory: async (msg_id, num, reply = true) => {
                     try {
-                        let messages = await api.get_history_msg(self_id, "private", user_id, null, num)
+                        let messages = await api.get_history_msg(self_id, "private", user_id, null, num, msg_id)
                         messages = messages.map(async m => {
                             m.raw_message = toRaw(m.message, self_id, group_id)
                             let result = await this.message(self_id, m.message, null, reply)

@@ -80,14 +80,14 @@ export default new class addBot {
                         return await api.set_group_kick(uin, groupID, qq, reject_add_request)
                     },
                     /**
-                     * shamrock目前只支持从当前往前数，所以msg_id实际未使用
-                     * @param msg_id 当前无用
+                     * 获取聊天历史记录
+                     * @param msg_id 起始消息的message_id（默认为0，表示从最后一条发言往前）
                      * @param num 数量
                      * @param reply 是否展开回复引用的消息(source)（实测数量大的时候耗时且可能出错）
                      * @return {Promise<Awaited<unknown>[]>}
                      */
                     getChatHistory: async (msg_id, num, reply) => {
-                        let { messages } = await api.get_group_msg_history(uin, groupID, num)
+                        let { messages } = await api.get_group_msg_history(uin, groupID, num, msg_id)
                         let group = Bot[uin].gl.get(groupID)
                         messages = messages.map(async m => {
                             m.group_name = group?.group_name || groupID
@@ -119,14 +119,14 @@ export default new class addBot {
                         return await common.makeForwardMsg(forwardMsg)
                     },
                     /**
-                     * shamrock目前只支持从当前往前数，所以msg_id实际未使用
-                     * @param msg_id 当前无用
+                     * 获取私聊聊天记录
+                     * @param msg_id 起始消息的message_id（默认为0，表示从最后一条发言往前）
                      * @param num 数量
                      * @param reply 是否展开回复引用的消息(source)（实测数量大的时候耗时且可能出错）
                      * @return {Promise<Awaited<unknown>[]>}
                      */
                     getChatHistory: async (msg_id, num, reply) => {
-                        let { messages } = await api.get_history_msg(uin, "private", user_id, null, num)
+                        let { messages } = await api.get_history_msg(uin, "private", user_id, null, num, msg_id)
                         messages = messages.map(async m => {
                             m.raw_message = toRaw(m.message, uin)
                             let result = await message(uin, m.message, null, reply)
@@ -163,14 +163,14 @@ export default new class addBot {
                         return await common.makeForwardMsg(forwardMsg)
                     },
                     /**
-                     * shamrock目前只支持从当前往前数，所以msg_id实际未使用
-                     * @param msg_id 当前无用
+                     * 获取私聊聊天记录
+                     * @param msg_id 起始消息的message_id（默认为0，表示从最后一条发言往前）
                      * @param num 数量
                      * @param reply 是否展开回复引用的消息(source)（实测数量大的时候耗时且可能出错）
                      * @return {Promise<Awaited<unknown>[]>}
                      */
                     getChatHistory: async (msg_id, num, reply) => {
-                        let { messages } = await api.get_history_msg(uin, "private", user_id, null, num)
+                        let { messages } = await api.get_history_msg(uin, "private", user_id, null, num, msg_id)
                         messages = messages.map(async m => {
                             m.raw_message = toRaw(m.message, uin)
                             let result = await message(uin, m.message, null, reply)

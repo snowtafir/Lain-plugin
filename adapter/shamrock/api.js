@@ -474,9 +474,10 @@ let api = {
      * @param {number} user_id - 私聊QQ
      * @param {number} group_id - 群号
      * @param {number} count - 获取的消息数量（默认为20）
+     * @param {number} message_seq - 起始消息的message_id（默认为0，表示从最后一条发言往前）
      */
-    async get_history_msg(id, message_type, user_id, group_id, count) {
-        const params = { message_type, user_id, group_id, count }
+    async get_history_msg(id, message_type, user_id, group_id, count, message_seq) {
+        const params = { message_type, user_id, group_id, count, message_seq }
         return await this.SendApi(id, "get_history_msg", params)
     },
 
@@ -485,9 +486,10 @@ let api = {
      * @param {string} id - 机器人QQ
      * @param {number} group_id - 群号
      * @param {number} count - 获取的消息数量（默认为20）
+     * @param {number} message_seq - 起始消息的message_id（默认为0，表示从最后一条发言往前）
      */
-    async get_group_msg_history(id, group_id, count) {
-        const params = { group_id, count }
+    async get_group_msg_history(id, group_id, count, message_seq) {
+        const params = { group_id, count, message_seq }
         return await this.SendApi(id, "get_group_msg_history", params)
     },
 
