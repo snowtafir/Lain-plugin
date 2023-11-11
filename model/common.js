@@ -80,7 +80,7 @@ export async function makeForwardMsg(forwardMsg, data = {}) {
     const new_msg = []
     /** 防止报错 */
     if (!Array.isArray(forwardMsg)) forwardMsg = [forwardMsg]
-    
+
     for (const i_msg of forwardMsg) {
         const msg = i_msg.message
         /** 处理无限套娃 */
@@ -119,12 +119,12 @@ export async function makeForwardMsg(forwardMsg, data = {}) {
             new_msg.push({ type: "forward", text: msg.replace(/^\\n{1,3}|\\n{1,3}$/g, "") })
         }
         else {
-            await log(this.id, `Bot无法在频道 ${qg.id} 中读取基础信息，请给予权限...错误信息：${err.message}`, "error")
-            logger.error("未知字段，请反馈至作者：", msg)
+            await log("未兼容的字段：", msg)
         }
     }
     /** 对一些重复元素进行去重 */
     message.msg = Array.from(new Set(new_msg.map(JSON.stringify))).map(JSON.parse)
+    /** 添加字段，用于兼容chatgpt-plugin的转发 */
     message.data = { type: "test", text: "forward", app: "com.tencent.multimsg", meta: { detail: { news: [{ text: "1" }] }, resid: "", uniseq: "", summary: "" } }
     return message
 }

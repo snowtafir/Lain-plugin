@@ -15,66 +15,49 @@ export default class SendMsg {
     }
 
     /** 发送消息 */
-    async message(msg, id, quote = false) {
+    async message(data, id, quote = false) {
         /** 将云崽过来的消息统一为数组 */
-        msg = common.array(msg)
+        data = common.array(data)
         /** 转为shamrock可以使用的格式 */
-        let { content, CQ, forward } = await this.msg(msg)
-        if (forward.length > 0) {
-            forward = [
-                {
-                    type: "node",
-                    data: {
-                        name: this.name,
-                        content: [...forward]
-                    }
-                }
-            ]
-            if (this.isGroup) {
-                return await api.send_group_forward_msg(this.id, id, forward)
-            } else {
-                return await api.send_private_forward_msg(this.id, id, forward)
-            }
-        } else {
-            msg = content
-            /** 引用消息 */
-            if (quote) msg.unshift({ type: "reply", data: { id: quote } })
-            /** 发送消息 */
-            return await this.SendMsg(id, msg, CQ)
-        }
+        let { msg, CQ, node } = await this.msg(data)
+
+        /** 引用消息 */
+        if (quote && !node) msg.unshift({ type: "reply", data: { id: quote } })
+        if (node) CQ = ["[转发消息]"]
+
+        /** 发送消息 */
+        return await this.SendMsg(id, msg, CQ, node)
     }
 
     /** 转为shamrock可以使用的格式 */
-    async msg(msg) {
-        if (!Array.isArray(msg)) msg = [{ type: "text", text: msg }]
-        const content = []
+    async msg(data) {
+        if (!Array.isArray(data)) data = [{ type: "text", text: data }]
         const CQ = []
-        const image = []
-        const forward = []
-        /** chatgpt-plugin */
-        if (msg?.[0].type === "xml") msg = msg?.[0].msg
+        const msg = []
+        let node = false
 
-        for (let i of msg) {
-            /** 加个延迟防止过快 */
-            await common.sleep(200)
+        /** chatgpt-plugin */
+        if (data?.[0].type === "xml") data = data?.[0].msg
+
+        for (let i of data) {
             switch (i.type) {
                 case "at":
-                    CQ.push(`[CQ:at,qq=${Number(i.qq) == 0 ? i.id : i.qq}]`)
-                    content.push({
+                    CQ.push(`{at:${Number(i.qq) == 0 ? i.id : i.qq}}`)
+                    msg.push({
                         type: "at",
                         data: { qq: Number(i.qq) == 0 ? i.id : i.qq }
                     })
                     break
                 case "face":
-                    CQ.push(`[CQ:face,id=${i.text}]`)
-                    content.push({
+                    CQ.push(`{face:${i.text}}`)
+                    msg.push({
                         type: "face",
                         data: { id: i.text }
                     })
                     break
                 case "text":
-                    CQ.push(`[CQ:text,text=${i.text}]`)
-                    content.push({
+                    CQ.push(i.text)
+                    msg.push({
                         type: "text",
                         data: { text: i.text }
                     })
@@ -94,8 +77,8 @@ export default class SendMsg {
                     } else {
                         if (i?.url) i.file = i.url
                     }
-                    CQ.push(`[CQ:record,file=${i.file}]`)
-                    content.push({
+                    CQ.push(`{record:${i.file}}`)
+                    msg.push({
                         type: "record",
                         data: { file: i.file }
                     })
@@ -115,48 +98,47 @@ export default class SendMsg {
                         await common.log(this.id, `不支持的文件：${i}`, "error")
                         break
                     }
-                    CQ.push(`[CQ:video,file=${i.file}]`)
-                    content.push({
+                    CQ.push(`{video:${i.file}}`)
+                    msg.push({
                         type: "video",
                         data: { file: i.file }
                     })
                     break
                 case "image":
-                    CQ.push(`[CQ:image,file=base64://...]`)
-                    image.push(await this.get_image(i))
+                    CQ.push(`{image:base64://...}`)
+                    msg.push(await this.get_image(i))
                     break
                 case "poke":
                     CQ.push(`[CQ:poke,id=${i.id}]`)
-                    content.push({
+                    msg.push({
                         type: "poke",
                         data: { type: i.id, id: 0, strength: i?.strength || 0 }
                     })
                     break
                 case "touch":
-                    CQ.push(`[CQ:poke,id=${i.id}]`)
-                    content.push(i)
+                    CQ.push(`{poke:${i.id}}`)
+                    msg.push(i)
                     break
                 case "forward":
-                    forward.push({ type: "text", data: { text: i.text } })
+                    node ? "" : node = true
+                    msg.push({
+                        type: "node",
+                        data: {
+                            name: this.name,
+                            content: [{ type: "text", data: { text: i.text } }]
+                        }
+                    })
                     break
                 default:
-                    CQ.push(`[CQ:text,text=${JSON.stringify(i)}]`)
-                    content.push({
+                    CQ.push(JSON.stringify(i))
+                    msg.push({
                         type: "text",
                         data: { text: JSON.stringify(i) }
                     })
                     break
             }
         }
-
-        if (forward.length > 0) {
-            forward.push(...image)
-            return { content, CQ, forward }
-        } else {
-            content.push(...image)
-            forward.length = 0
-            return { content, CQ, forward }
-        }
+        return { msg, CQ, node }
     }
 
     /** 统一图片格式 */
@@ -201,17 +183,31 @@ export default class SendMsg {
     }
 
     /** 发送消息 */
-    async SendMsg(id, msg, CQ) {
+    async SendMsg(id, msg, CQ, node) {
+        /** 打印日志 */
+        common.log(this.id, `发送${this.isGroup ? "群" : "好友"}消息：[${id}]${CQ.join("")}`)
+
+        /** 处理合并转发 */
+        if (node) {
+            if (this.isGroup) {
+                return await api.send_group_forward_msg(this.id, id, msg)
+            } else {
+                return await api.send_private_forward_msg(this.id, id, msg)
+            }
+        }
+
+        /** 非合并转发 */
         const bot = Bot.shamrock.get(String(this.id))
         if (!bot) return common.log(this.id, "不存在此Bot")
 
         const echo = randomUUID()
+        /** 判断群聊、私聊 */
         const action = this.isGroup ? "send_group_msg" : "send_private_msg"
         const params = { [this.isGroup ? "group_id" : "user_id"]: id, message: msg }
-        common.log(this.id, `发送${this.isGroup ? "群" : "好友"}${CQ.join("")}`)
-
+        /** 发送消息 */
         bot.socket.send(JSON.stringify({ echo, action, params }))
 
+        /** 等待返回结果 */
         for (let i = 0; i < 10; i++) {
             let data = await Bot.lain.on.get(echo)
             if (data) {
