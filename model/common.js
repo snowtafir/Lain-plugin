@@ -72,33 +72,43 @@ export function array(data) {
 
 /**
  * 制作转发消息
- * @param forwardMsg 转发内容
- * @param data 特殊处理日志
+ * @param data 转发内容
+ * @param node 开启后将转为shamrock格式的转发
+ * @param e 特殊处理日志
  */
-export async function makeForwardMsg(forwardMsg, data = {}) {
+export async function makeForwardMsg(data, node = false, e = {}) {
     const message = {}
-    const new_msg = []
+    const allMsg = []
     /** 防止报错 */
-    if (!Array.isArray(forwardMsg)) forwardMsg = [forwardMsg]
+    if (!Array.isArray(data)) data = [data]
 
-    for (const i_msg of forwardMsg) {
-        const msg = i_msg.message
-        /** 处理无限套娃 */
+    /** 把无限套娃拆出来 */
+    for (let i = 0; i < data.length; i++) {
+        let msg = data[i].message
         if (typeof msg === "object" && (msg?.data?.type === "test" || msg?.type === "xml")) {
-            new_msg.push(...msg.msg)
+            /** 拆出来 */
+            data.splice(i, 1, ...msg.msg)
+            i--
         }
+    }
+
+
+
+    for (let msg in data) {
+        msg = data[msg]?.message || data[msg]
+        if (!msg && msg?.type) continue
         /** 兼容喵崽更新抽卡记录 */
-        else if (Array.isArray(msg)) {
+        if (Array.isArray(msg)) {
             msg.forEach(i => {
                 if (typeof i === "string") {
-                    new_msg.push({ type: "forward", text: i.trim().replace(/^\\n{1,3}|\\n{1,3}$/g, "") })
+                    allMsg.push({ type: "forward", text: i.trim().replace(/^\\n{1,3}|\\n{1,3}$/g, "") })
                 } else {
-                    new_msg.push(i)
+                    allMsg.push(i)
                 }
             })
         }
         /** 优先处理日志 */
-        else if (typeof msg === "object" && /^#.*日志$/.test(data?.msg?.content)) {
+        else if (typeof msg === "object" && /^#.*日志$/.test(e?.msg?.content)) {
             const splitMsg = msg.split("\n").map(i => {
                 if (!i || i.trim() === "") return
                 if (Bot.lain.cfg.forwar) {
@@ -107,23 +117,24 @@ export async function makeForwardMsg(forwardMsg, data = {}) {
                     return { type: "forward", text: i.substring(0, 100).trim().replace(/^\\n{1,3}|\\n{1,3}$/g, "") }
                 }
             })
-            new_msg.push(...splitMsg.slice(0, 50))
+            allMsg.push(...splitMsg.slice(0, 50))
         }
         /** AT 表情包 */
         else if (typeof msg === "object") {
-            new_msg.push(msg)
+            if (node) msg.node = true
+            allMsg.push(msg)
         }
         /** 普通文本 */
         else if (typeof msg === "string") {
             /** 正常文本 */
-            new_msg.push({ type: "forward", text: msg.replace(/^\\n{1,3}|\\n{1,3}$/g, "") })
+            allMsg.push({ type: "forward", text: msg.replace(/^\\n{1,3}|\\n{1,3}$/g, "") })
         }
         else {
             await log("未兼容的字段：", msg)
         }
     }
     /** 对一些重复元素进行去重 */
-    message.msg = Array.from(new Set(new_msg.map(JSON.stringify))).map(JSON.parse)
+    message.msg = Array.from(new Set(allMsg.map(JSON.stringify))).map(JSON.parse)
     /** 添加字段，用于兼容chatgpt-plugin的转发 */
     message.data = { type: "test", text: "forward", app: "com.tencent.multimsg", meta: { detail: { news: [{ text: "1" }] }, resid: "", uniseq: "", summary: "" } }
     return message

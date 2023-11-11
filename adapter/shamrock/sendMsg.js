@@ -37,29 +37,29 @@ export default class SendMsg {
         let node = false
 
         /** chatgpt-plugin */
-        if (data?.[0].type === "xml") data = data?.[0].msg
+        if (data?.[0]?.type === "xml") data = data?.[0].msg
 
         for (let i of data) {
             switch (i.type) {
                 case "at":
                     CQ.push(`{at:${Number(i.qq) == 0 ? i.id : i.qq}}`)
                     msg.push({
-                        type: "at",
-                        data: { qq: Number(i.qq) == 0 ? i.id : i.qq }
+                        type: i?.node ? "node" : "at",
+                        data: i?.node ? { name: this.name, content: [{ type: "at", data: { qq: Number(i.qq) == 0 ? i.id : i.qq } }] } : { qq: Number(i.qq) == 0 ? i.id : i.qq }
                     })
                     break
                 case "face":
                     CQ.push(`{face:${i.text}}`)
                     msg.push({
-                        type: "face",
-                        data: { id: i.text }
+                        type: i?.node ? "node" : "face",
+                        data: i?.node ? { name: this.name, content: [{ type: "face", data: { id: i.text } }] } : { id: i.text }
                     })
                     break
                 case "text":
                     CQ.push(i.text)
                     msg.push({
-                        type: "text",
-                        data: { text: i.text }
+                        type: i?.node ? "node" : "text",
+                        data: i?.node ? { name: this.name, content: [{ type: "text", data: { text: i.text } }] } : { text: i.text }
                     })
                     break
                 case "file":
@@ -79,8 +79,8 @@ export default class SendMsg {
                     }
                     CQ.push(`{record:${i.file}}`)
                     msg.push({
-                        type: "record",
-                        data: { file: i.file }
+                        type: i?.node ? "node" : "record",
+                        data: i?.node ? { name: this.name, content: [{ type: "record", data: { file: i.file } }] } : { file: i.file }
                     })
                     break
                 case "video":
@@ -100,13 +100,13 @@ export default class SendMsg {
                     }
                     CQ.push(`{video:${i.file}}`)
                     msg.push({
-                        type: "video",
-                        data: { file: i.file }
+                        type: i?.node ? "node" : "video",
+                        data: i?.node ? { name: this.name, content: [{ type: "video", data: { file: i.file } }] } : { file: i.file }
                     })
                     break
                 case "image":
                     CQ.push(`{image:base64://...}`)
-                    msg.push(await this.get_image(i))
+                    msg.push(i?.node ? { type: "node", data: { name: this.name, content: [await this.get_image(i)] } } : await this.get_image(i))
                     break
                 case "poke":
                     CQ.push(`[CQ:poke,id=${i.id}]`)

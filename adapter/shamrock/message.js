@@ -152,7 +152,7 @@ export default new class zaiMsg {
                     return await (new SendMsg(self_id, isGroup)).message(msg, peer_id, quote ? message_id : false)
                 },
                 makeForwardMsg: async (forwardMsg) => {
-                    return await common.makeForwardMsg(forwardMsg)
+                    return await common.makeForwardMsg(forwardMsg, true)
                 },
                 /** 戳一戳 */
                 pokeMember: async (operator_id) => {
@@ -207,7 +207,7 @@ export default new class zaiMsg {
                     return await api.delete_msg(self_id, msg_id)
                 },
                 makeForwardMsg: async (forwardMsg) => {
-                    return await common.makeForwardMsg(forwardMsg)
+                    return await common.makeForwardMsg(forwardMsg, true)
                 },
                 getChatHistory: async (msg_id, num, reply = true) => {
                     try {

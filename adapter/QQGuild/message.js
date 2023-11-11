@@ -127,7 +127,7 @@ export default class message {
                     return await recallMsg(msg.channel_id, msg_id)
                 },
                 makeForwardMsg: async (forwardMsg) => {
-                    return await common.makeForwardMsg(forwardMsg, this.data)
+                    return await common.makeForwardMsg(forwardMsg, false, this.data)
                 },
                 getChatHistory: async (msg_id, num) => {
                     const source = await this.getChatHistory(msg.channel_id, msg_id)
@@ -157,7 +157,7 @@ export default class message {
                     return await this.reply(msg, quote, group_name)
                 },
                 makeForwardMsg: async (forwardMsg) => {
-                    return await common.makeForwardMsg(forwardMsg, this.data)
+                    return await common.makeForwardMsg(forwardMsg, false, this.data)
                 }
             }
         }

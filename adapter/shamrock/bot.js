@@ -23,7 +23,7 @@ export default new class addBot {
             version: { id: "QQ", name: "Shamrock", version: bot["user-agent"].replace("Shamrock/", "") },
             /** 转发 */
             makeForwardMsg: async (forwardMsg) => {
-                return await common.makeForwardMsg(forwardMsg)
+                return await common.makeForwardMsg(forwardMsg, true)
             },
             pickGroup: (groupID) => {
                 const is_admin = Bot[uin].gml.get(groupID)?.[uin]?.role === "admin" ? true : false
@@ -36,7 +36,7 @@ export default new class addBot {
                     },
                     /** 转发 */
                     makeForwardMsg: async (forwardMsg) => {
-                        return await common.makeForwardMsg(forwardMsg)
+                        return await common.makeForwardMsg(forwardMsg, true)
                     },
                     pickMember: (id) => {
                         /** 取缓存！！！别问为什么，因为傻鸟同步 */
@@ -116,7 +116,7 @@ export default new class addBot {
                     },
                     /** 转发 */
                     makeForwardMsg: async (forwardMsg) => {
-                        return await common.makeForwardMsg(forwardMsg)
+                        return await common.makeForwardMsg(forwardMsg, true)
                     },
                     /**
                      * 获取私聊聊天记录
@@ -139,7 +139,7 @@ export default new class addBot {
             },
             getGroupMemberInfo: async function (group_id, user_id) {
                 /** 被自己坑了 */
-                if (user_id == "88888" || user_id == "stdin") user_id = uin
+                if (user_id == "88888" || user_id == "stdin") user_id = Number(uin)
                 try {
                     let member = await api.get_group_member_info(uin, group_id, user_id)
                     member.card = member.nickname
@@ -160,7 +160,7 @@ export default new class addBot {
                     },
                     /** 转发 */
                     makeForwardMsg: async (forwardMsg) => {
-                        return await common.makeForwardMsg(forwardMsg)
+                        return await common.makeForwardMsg(forwardMsg, true)
                     },
                     /**
                      * 获取私聊聊天记录
