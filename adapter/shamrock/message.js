@@ -113,6 +113,11 @@ export default new class zaiMsg {
                 getChatHistory: async (msg_id, num, reply) => {
                     try {
                         let { messages } = await api.get_group_msg_history(self_id, group_id, num, msg_id)
+
+                        /** 获取一下消息本身 */
+                        let source = await api.get_msg(self_id, msg_id)
+                        messages.push(source)
+
                         messages = messages.map(async m => {
                             m.group_name = group_name
                             m.atme = !!m.message.find(msg => msg.type === "at" && msg.data?.qq == self_id)
@@ -299,7 +304,7 @@ export async function message(id, msg, group_id, reply = true) {
             /** 覆盖原先的message */
             source.message = source_reply
             if (reply != "e") message.push(...source_reply)
-            
+
             source = {
                 ...source,
                 reply: source_reply,
