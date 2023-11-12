@@ -7,6 +7,7 @@ import { update } from "../other/update.js"
 import yaml from "./model/yaml.js"
 import "./adapter/stdin/stdin.js"
 import { createRequire } from 'module'
+import common from "./model/common.js"
 
 const require = createRequire(import.meta.url)
 const { exec } = require('child_process')
@@ -250,11 +251,13 @@ export class Restart extends plugin {
             dsc: '#重启',
             event: 'message',
             priority: 0,
-            rule: [{
-                reg: '^#重启$',
-                fnc: 'restart',
-                permission: 'master'
-            }]
+            rule: [
+                {
+                    reg: '^#重启$',
+                    fnc: 'restart',
+                    permission: 'master'
+                }
+            ]
         })
 
         if (e) this.e = e
@@ -288,24 +291,22 @@ export class Restart extends plugin {
         let npm = await this.checkPnpm()
 
         try {
+            /** 直接删除 */
+            try { execSync('pnpm pm2 delete Miao-Yunzai') } catch { }
             await redis.set(this.key, data, { EX: 120 })
-            let cm = `${npm} start`
-            if (process.argv[1].includes('pm2')) {
-                cm = `${npm} run restart`
+            let cm = `${npm} pm2 start ./config/pm2/pm2.json`
+            try {
+                execSync(cm)
+                logger.mark('重启成功，运行已由前台转为后台')
+                logger.mark(`查看日志请用命令：${npm} run log`)
+                logger.mark(`停止后台运行命令：${npm} stop`)
+                await common.sleep(2000)
+                process.exit()
+            } catch (error) {
+                redis.del(this.key)
+                this.e.reply(`操作失败！\n${error}`)
+                logger.error(`重启失败\n${error}`)
             }
-
-            exec(cm, { windowsHide: true }, (error, stdout, stderr) => {
-                if (error) {
-                    redis.del(this.key)
-                    this.e.reply(`操作失败！\n${error.stack}`)
-                    logger.error(`重启失败\n${error.stack}`)
-                } else if (stdout) {
-                    logger.mark('重启成功，运行已由前台转为后台')
-                    logger.mark(`查看日志请用命令：${npm} run log`)
-                    logger.mark(`停止后台运行命令：${npm} stop`)
-                    process.exit()
-                }
-            })
         } catch (error) {
             redis.del(this.key)
             let e = error.stack ?? error
@@ -327,25 +328,6 @@ export class Restart extends plugin {
             exec(cmd, { windowsHide: true }, (error, stdout, stderr) => {
                 resolve({ error, stdout, stderr })
             })
-        })
-    }
-
-    async stop() {
-        if (!process.argv[1].includes('pm2')) {
-            logger.mark('关机成功，已停止运行')
-            await this.e.reply('关机成功，已停止运行')
-            process.exit()
-        }
-
-        logger.mark('关机成功，已停止运行')
-        await this.e.reply('关机成功，已停止运行')
-
-        let npm = await this.checkPnpm()
-        exec(`${npm} stop`, { windowsHide: true }, (error, stdout, stderr) => {
-            if (error) {
-                this.e.reply(`操作失败！\n${error.stack}`)
-                logger.error(`关机失败\n${error.stack}`)
-            }
         })
     }
 }

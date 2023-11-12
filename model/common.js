@@ -5,8 +5,9 @@ import chalk from "chalk"
 if (!Bot?.adapter) {
     const uin = Bot.uin
     if (uin == 88888) {
-        Bot.adapter = ["stdin"]
-        Bot.uin = "stdin"
+        Bot.adapter = [88888]
+        /** 不理解我加这个干嘛...icqq已经无了 */
+        Bot[88888] = {}
     } else {
         Bot.adapter = [uin]
     }
