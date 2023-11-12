@@ -315,6 +315,10 @@ export async function message(id, msg, group_id, reply = true) {
                 user_id: source.sender.user_id,
                 raw_message: raw_message
             }
+        }
+        /** 不理解为啥为啥不是node... */
+        else if (i.type === "forward") {
+            message.push({ type: "node", ...i.data })
         } else {
             if (i.type === "at") {
                 message.push({ type: "at", qq: Number(i.data.qq) })

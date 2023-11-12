@@ -130,6 +130,13 @@ export default class SendMsg {
                         }
                     })
                     break
+                case "node":
+                    node ? "" : node = true
+                    msg.push({
+                        type: "node",
+                        data: { ...i }
+                    })
+                    break
                 default:
                     CQ.push(JSON.stringify(i))
                     msg.push({
