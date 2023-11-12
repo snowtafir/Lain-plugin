@@ -118,14 +118,17 @@ export default new class zaiMsg {
                         let source = await api.get_msg(self_id, msg_id)
                         messages.push(source)
 
-                        messages = messages.map(async m => {
-                            m.group_name = group_name
-                            m.atme = !!m.message.find(msg => msg.type === "at" && msg.data?.qq == self_id)
-                            m.raw_message = toRaw(m.message, self_id, group_id)
-                            let result = await this.message(self_id, m.message, group_id, reply)
-                            m = Object.assign(m, result)
-                            return m
-                        })
+                        messages = messages
+                            // 如果source获取失败，会报错
+                            .filter(m => Array.isArray(m?.message))
+                            .map(async m => {
+                                m.group_name = group_name
+                                m.atme = !!m.message.find(msg => msg.type === "at" && msg.data?.qq == self_id)
+                                m.raw_message = toRaw(m.message, self_id, group_id)
+                                let result = await this.message(self_id, m.message, group_id, reply)
+                                m = Object.assign(m, result)
+                                return m
+                            })
                         return Promise.all(messages)
                     } catch (err) {
                         // 老版本Shamrock不支持获取历史消息
