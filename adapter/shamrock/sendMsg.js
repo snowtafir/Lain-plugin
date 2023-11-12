@@ -40,6 +40,7 @@ export default class SendMsg {
         if (data?.[0]?.type === "xml") data = data?.[0].msg
 
         for (let i of data) {
+            node = node || i.node
             switch (i.type) {
                 case "at":
                     CQ.push(`{at:${Number(i.qq) == 0 ? i.id : i.qq}}`)
