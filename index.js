@@ -8,7 +8,6 @@ import { createRequire } from 'module'
 import { execSync } from "child_process"
 import { update } from "../other/update.js"
 import guild from "./adapter/QQGuild/guild.js"
-import PM2Data from "../../config/pm2/pm2.json" assert { type: "json" }
 
 const require = createRequire(import.meta.url)
 const { exec } = require('child_process')
@@ -302,6 +301,7 @@ export class Restart extends plugin {
                     if (err) {
                         logger.error(err)
                     } else {
+                        const PM2Data = JSON.parse(fs.readFileSync('./config/pm2/pm2.json'))
                         const processExists = processList.some(processInfo => processInfo.name === PM2Data.apps[0].name)
                         const cm = processExists ? `${npm} run restart` : `${npm} start`
                         pm2.disconnect()
