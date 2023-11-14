@@ -50,7 +50,7 @@ export default new class addBot {
                     },
                     /** 禁言 */
                     muteMember: async (user_id, time) => {
-                        return await api.set_group_ban(uin, groupID, user_id, time)
+                        return await api.set_group_ban(uin, groupID, Number(user_id), Number(time))
                     },
                     /** 获取群成员列表 */
                     getMemberMap: async () => {

@@ -1,13 +1,14 @@
 import fs from "fs"
+import pm2 from "pm2"
 import "./model/config.js"
-import guild from "./adapter/QQGuild/guild.js"
 import crypto from "crypto"
+import "./adapter/stdin/stdin.js"
+import yaml from "./model/yaml.js"
+import { createRequire } from 'module'
 import { execSync } from "child_process"
 import { update } from "../other/update.js"
-import yaml from "./model/yaml.js"
-import "./adapter/stdin/stdin.js"
-import { createRequire } from 'module'
-import common from "./model/common.js"
+import guild from "./adapter/QQGuild/guild.js"
+import PM2Data from "../../config/pm2/pm2.json" assert { type: "json" }
 
 const require = createRequire(import.meta.url)
 const { exec } = require('child_process')
@@ -16,7 +17,7 @@ const { exec } = require('child_process')
 let sign = {}
 const _path = "./plugins/Lain-plugin/config"
 
-export class QQGuildBot extends plugin {
+export class Lain extends plugin {
     constructor() {
         super({
             name: "Lain-plugin",
@@ -268,49 +269,62 @@ export class Restart extends plugin {
     async restart() {
         if (!this.e?.adapter) return false
 
-        if (this.e.adapter == "shamrock") {
-            this.key = 'Lain:restart:shamrock'
+        const adapters = {
+            shamrock: 'Lain:restart:shamrock',
+            QQGuild: 'Lain:restart:QQGuild',
+            WeChat: 'Lain:restart:WeChat'
         }
-        else if (this.e.adapter == "QQGuild") {
-            this.key = 'Lain:restart:QQGuild'
-        }
-        else if (this.e.adapter == "WeChat") {
-            this.key = 'Lain:restart:WeChat'
-        }
+
+        this.key = adapters[this.e.adapter]
+
+        if (!this.key) return false
 
         await this.e.reply('开始执行重启，请稍等...')
         logger.mark(`${this.e.logFnc} 开始执行重启，请稍等...`)
 
-        let data = JSON.stringify({
+        const data = JSON.stringify({
             uin: this.e?.self_id || this.e.bot.uin,
             isGroup: !!this.e.isGroup,
             id: this.e.isGroup ? this.e.group_id : this.e.user_id,
-            time: new Date().getTime()
+            time: new Date().getTime(),
+            msg_id: this.e.message_id
         })
 
-        let npm = await this.checkPnpm()
+        const npm = await this.checkPnpm()
 
         try {
-            /** 直接删除 */
-            try { execSync('pnpm pm2 delete Miao-Yunzai') } catch { }
             await redis.set(this.key, data, { EX: 120 })
-            let cm = `${npm} pm2 start ./config/pm2/pm2.json`
-            try {
-                execSync(cm)
-                logger.mark('重启成功，运行已由前台转为后台')
-                logger.mark(`查看日志请用命令：${npm} run log`)
-                logger.mark(`停止后台运行命令：${npm} stop`)
-                await common.sleep(2000)
-                process.exit()
-            } catch (error) {
-                redis.del(this.key)
-                this.e.reply(`操作失败！\n${error}`)
-                logger.error(`重启失败\n${error}`)
-            }
+
+            pm2.connect((err) => {
+                if (err) return logger.error(err)
+
+                pm2.list((err, processList) => {
+                    if (err) {
+                        logger.error(err)
+                    } else {
+                        const processExists = processList.some(processInfo => processInfo.name === PM2Data.apps[0].name)
+                        const cm = processExists ? `${npm} run restart` : `${npm} start`
+                        pm2.disconnect()
+                        exec(cm, { windowsHide: true }, (error, stdout) => {
+                            if (error) {
+                                redis.del(this.key)
+                                this.e.reply(`操作失败！\n${error.stack}`)
+                                logger.error(`重启失败\n${error.stack}`)
+                            } else if (stdout) {
+                                logger.mark('重启成功，运行已由前台转为后台')
+                                logger.mark(`查看日志请用命令：${npm} run log`)
+                                logger.mark(`停止后台运行命令：${npm} stop`)
+                                process.exit()
+                            }
+                        })
+                    }
+                })
+            })
         } catch (error) {
             redis.del(this.key)
-            let e = error.stack ?? error
-            this.e.reply(`操作失败！\n${e}`)
+            const errorMessage = error.stack ?? error
+            this.e.reply(`操作失败！\n${errorMessage}`)
+            logger.error(`重启失败\n${errorMessage}`)
         }
 
         return true
@@ -338,12 +352,13 @@ async function init(key = "Lain:restart") {
         restart = JSON.parse(restart)
         const uin = restart?.uin || Bot.uin
         let time = restart.time || new Date().getTime()
+        const msg_id = restart?.msg_id || false
         time = (new Date().getTime() - time) / 1000
         console.log(typeof uin)
         let msg = `重启成功：耗时${time.toFixed(2)}秒`
         try {
             if (restart.isGroup) {
-                Bot[uin].pickGroup(restart.id).sendMsg(msg)
+                Bot[uin].pickGroup(restart.id, msg_id).sendMsg(msg)
             } else {
                 Bot[uin].pickUser(restart.id).sendMsg(msg)
             }
@@ -352,9 +367,9 @@ async function init(key = "Lain:restart") {
             await new Promise((resolve) => setTimeout(resolve, 5000))
             msg = `重启成功：耗时${(time + 5).toFixed(2)}秒`
             if (restart.isGroup) {
-                Bot[uin].pickGroup(restart.id).sendMsg(msg)
+                Bot[uin].pickGroup(restart.id, msg_id).sendMsg(msg)
             } else {
-                Bot[uin].pickUser(restart.id).sendMsg(msg)
+                Bot[uin].pickUser(restart.id, msg_id).sendMsg(msg)
             }
         }
         redis.del(key)
