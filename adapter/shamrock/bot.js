@@ -290,7 +290,14 @@ export default new class addBot {
         let domains = ["aq.qq.com", "buluo.qq.com", "connect.qq.com", "docs.qq.com", "game.qq.com", "gamecenter.qq.com", "haoma.qq.com", "id.qq.com", "kg.qq.com", "mail.qq.com", "mma.qq.com", "office.qq.com", "openmobile.qq.com", "qqweb.qq.com", "qun.qq.com", "qzone.qq.com", "ti.qq.com", "v.qq.com", "vip.qq.com", "y.qq.com", ""]
         for (let domain of domains) {
             api.get_cookies(uin, domain).then(ck => {
-                Bot[uin].cookies[domain] = ck?.cookies
+                ck = ck?.cookies
+                if (ck) {
+                    try {
+                        // 适配椰奶逆天的ck转JSON方法
+                        ck = ck.trim().replace(/\w+=;/g, '').replace(/\w+=$/g, '')
+                    } catch (err) {}
+                }
+                Bot[uin].cookies[domain] = ck
             }).catch(error => {
                 common.log(uin, `${domain} 获取cookie失败：${error}`, "debug")
             })
