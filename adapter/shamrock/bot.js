@@ -10,6 +10,7 @@ export default new class addBot {
         const bot = Bot.shamrock.get(String(uin))
         /** 构建基本参数 */
         Bot[uin] = {
+            bkn: 0,
             /** 好友列表 */
             fl: new Map(),
             /** 群列表 */
@@ -265,6 +266,36 @@ export default new class addBot {
                 Bot[uin].gml.set(i.group_id, gml)
             } catch (error) { }
         })
+
+        // let { token } = await api.get_csrf_token(uin, "qun.qq.com")
+        try {
+            let { cookies } = await api.get_cookies(uin)
+            if (cookies) {
+                let match = cookies.match(/skey=([^;]+)/)
+                if (match) {
+                    let skey = match[1]
+                    let n = 5381
+                    for (let e = skey || '', r = 0, o = e.length; r < o; ++r) {
+                          n += (n << 5) + e.charAt(r).charCodeAt(0)
+                    }
+                    Bot[uin].bkn = 2147483647 & n
+                }
+            }
+        } catch (err) {
+            await common.log(uin, `Shamrock获取bkn失败。`, "warn")
+        }
+
+
+        Bot[uin].cookies = {}
+        let domains = ["aq.qq.com", "buluo.qq.com", "connect.qq.com", "docs.qq.com", "game.qq.com", "gamecenter.qq.com", "haoma.qq.com", "id.qq.com", "kg.qq.com", "mail.qq.com", "mma.qq.com", "office.qq.com", "openmobile.qq.com", "qqweb.qq.com", "qun.qq.com", "qzone.qq.com", "ti.qq.com", "v.qq.com", "vip.qq.com", "y.qq.com", ""]
+        for (let domain of domains) {
+            api.get_cookies(uin, domain).then(ck => {
+                Bot[uin].cookies[domain] = ck?.cookies
+            }).catch(error => {
+                common.log(uin, `${domain} 获取cookie失败：${error}`, "debug")
+            })
+        }
+
 
         await common.log(uin, `Shamrock加载资源成功：加载了${Bot[uin].fl.size}个好友，${Bot[uin].gl.size}个群。`)
 

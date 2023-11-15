@@ -506,6 +506,28 @@ let api = {
     },
 
     /**
+     * 获取token
+     * @param id
+     * @param domain
+     * @return {Promise<*|string>}
+     */
+    async get_cookies(id, domain = "") {
+        const params = { domain }
+        return await this.SendApi(id, "get_cookies", params)
+    },
+
+    /**
+     * 获取csrf_token
+     * @param id
+     * @param domain
+     * @return {Promise<*|string>}
+     */
+    async get_csrf_token(id, domain = "") {
+        const params = { domain }
+        return await this.SendApi(id, "get_csrf_token", params)
+    },
+
+    /**
      * 上传文件到缓存目录
      * @param {string} id - 机器人QQ
      * @param {string} file - 文件本地地址
