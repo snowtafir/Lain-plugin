@@ -8,7 +8,7 @@ import { createRequire } from 'module'
 import { execSync } from "child_process"
 import { update } from "../other/update.js"
 import guild from "./adapter/QQGuild/guild.js"
-
+import { ShamrockPlugin } from "./adapter/shamrock/plugin.js"
 const require = createRequire(import.meta.url)
 const { exec } = require('child_process')
 
@@ -376,4 +376,4 @@ async function init(key = "Lain:restart") {
     }
 }
 
-export { init }
+export { init, ShamrockPlugin }
