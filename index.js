@@ -1,16 +1,15 @@
 import fs from "fs"
 import pm2 from "pm2"
 import "./model/config.js"
-import createAndStartBot from "./adapter/QQBot/index.js"
 import crypto from "crypto"
 import "./adapter/stdin/stdin.js"
-import "./adapter/QQBot/index.js"
 import yaml from "./model/yaml.js"
 import { createRequire } from "module"
 import { execSync } from "child_process"
 import { update } from "../other/update.js"
 import guild from "./adapter/QQGuild/guild.js"
 import { ShamrockPlugin } from "./adapter/shamrock/plugin.js"
+import createAndStartBot from "./adapter/QQBot/index.js"
 
 const require = createRequire(import.meta.url)
 const { exec } = require('child_process')

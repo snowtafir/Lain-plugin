@@ -153,8 +153,3 @@ async function LoadBot(bot) {
     if (!Bot.adapter?.[String(id)]) Bot.adapter.push(String(id))
 }
 
-const config = Yaml.parse(fs.readFileSync(Bot.lain._path + "/QQBot.yaml", "utf8"))
-Object.entries(config).forEach(async ([appid, cfg]) => {
-    if (Object.keys(cfg).length === 0) return
-    await createAndStartBot(cfg)
-})

@@ -6,6 +6,7 @@ import chokidar from "chokidar"
 import common from "../model/common.js"
 import guild from "../adapter/QQGuild/guild.js"
 import WebSocket from "../adapter/WebSocket.js"
+import createAndStartBot from "../adapter/QQBot/index.js"
 
 const _path = process.cwd() + "/plugins/Lain-plugin/config"
 
@@ -106,7 +107,15 @@ try {
     logger.error(err)
 }
 
+/** shamrock 微信 */
 await (new WebSocket()).server()
+
+/** QQBot */
+
+Object.entries(Yaml.parse(fs.readFileSync(Bot.lain._path + "/QQBot.yaml", "utf8"))).forEach(async ([appid, cfg]) => {
+    if (Object.keys(cfg).length === 0) return
+    await createAndStartBot(cfg)
+})
 
 logger.info(chalk.hex("#868ECC")(`Lain-plugin插件${Bot.lain.version}全部初始化完成~`))
 logger.info(chalk.hex("#868ECC")("https://gitee.com/Zyy955/Lain-plugin"))
