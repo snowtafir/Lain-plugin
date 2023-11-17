@@ -3,12 +3,15 @@ import pm2 from "pm2"
 import "./model/config.js"
 import crypto from "crypto"
 import "./adapter/stdin/stdin.js"
+import "./adapter/QQBot/index.js"
 import yaml from "./model/yaml.js"
 import { createRequire } from 'module'
 import { execSync } from "child_process"
 import { update } from "../other/update.js"
 import guild from "./adapter/QQGuild/guild.js"
+import createAndStartBot from "./adapter/QQBot/index.js"
 import { ShamrockPlugin } from "./adapter/shamrock/plugin.js"
+
 const require = createRequire(import.meta.url)
 const { exec } = require('child_process')
 
@@ -25,6 +28,11 @@ export class Lain extends plugin {
                 {
                     reg: /^#QQ频道设置.+$/gi,
                     fnc: "QQGuildCfg",
+                    permission: "master"
+                },
+                {
+                    reg: /^#QQ(群|群机器人|机器人)设置.+$/gi,
+                    fnc: "QQBBot",
                     permission: "master"
                 },
                 {
@@ -66,9 +74,61 @@ export class Lain extends plugin {
             const msg = `分片转发已${cfg.get("forwar") ? '开启' : '关闭'}`
             return await e.reply(msg, true, { at: true })
         } else {
-            const msg = await apps.addBot(e)
-            return await e.reply(msg)
+            const msg = async (e) => {
+                const cmd = e.msg.replace(/^#QQ频道设置/gi, "").replace(/：/g, ":").trim().split(':')
+                if (!/^1\d{8}$/.test(cmd[2])) return "appID 错误！"
+                if (!/^[0-9a-zA-Z]{32}$/.test(cmd[3])) return "token 错误！"
+
+                let bot
+                const cfg = new yaml(_path + "/bot.yaml")
+                /** 重复的appID，删除 */
+                if (cfg.hasIn(cmd[2])) {
+                    cfg.del(cmd[2])
+                    return `Bot：${Bot[cmd[2]].nickname}${cmd[2]} 删除成功...重启后生效...`
+                } else {
+                    bot = { appID: cmd[2], token: cmd[3], sandbox: cmd[0] === "1", allMsg: cmd[1] === "1" }
+                }
+
+                /** 保存新配置 */
+                cfg.addIn(cmd[2], bot)
+                try {
+                    await (new guild(bot)).monitor()
+                    return `Bot：${Bot[cmd[2]].nickname}(${cmd[2]}) 已连接...`
+                } catch (err) {
+                    return err
+                }
+
+            }
+            return await e.reply(await msg(e))
         }
+    }
+
+    async QQBBot(e) {
+        const msg = async (e) => {
+            const cmd = e.msg.replace(/^#QQ(群|群机器人|机器人)设置/gi, "").replace(/：/g, ":").trim().split(':')
+            if (cmd.length !== 6) return "格式错误..."
+            let bot
+            const cfg = new yaml(_path + "/QQBot.yaml")
+            /** 重复的appID，删除 */
+            if (cfg.hasIn(cmd[3])) {
+                cfg.del(cmd[3])
+                return `QQBot：${cmd[3]} 删除成功...重启后生效...`
+            } else {
+                // 沙盒:私域:移除at:appID:appToken:secret 是=1 否=0
+                bot = { appid: cmd[3], token: cmd[4], sandbox: cmd[0] === "1", allMsg: cmd[1] === "1", removeAt: cmd[2] === "1", secret: cmd[5] }
+            }
+
+            /** 保存新配置 */
+            cfg.addIn(cmd[3], bot)
+            try {
+                await createAndStartBot(bot)
+                return `QQBot：${cmd[3]} 已连接...`
+            } catch (err) {
+                return err
+            }
+
+        }
+        return await e.reply(await msg(e))
     }
 
     async QQGuildAccount(e) {
@@ -183,33 +243,6 @@ let apps = {
         const cfg = new yaml("./config/config/other.yaml")
         cfg.addVal("masterQQ", user_id)
         return [segment.at(user_id), "新主人好~(*/ω＼*)"]
-    },
-
-    /** 添加Bot */
-    async addBot(e) {
-        const cmd = e.msg.replace(/^#QQ频道设置/gi, "").replace(/：/g, ":").trim().split(':')
-        if (!/^1\d{8}$/.test(cmd[2])) return "appID 错误！"
-        if (!/^[0-9a-zA-Z]{32}$/.test(cmd[3])) return "token 错误！"
-
-        let bot
-        const cfg = new yaml(_path + "/bot.yaml")
-        /** 重复的appID，删除 */
-        if (cfg.hasIn(cmd[2])) {
-            cfg.del(cmd[2])
-            return `Bot：${Bot[cmd[2]].nickname}${cmd[2]} 删除成功...重启后生效...`
-        } else {
-            bot = { appID: cmd[2], token: cmd[3], sandbox: cmd[0] === "1", allMsg: cmd[1] === "1" }
-        }
-
-        /** 保存新配置 */
-        cfg.addIn(cmd[2], bot)
-        try {
-            await (new guild(bot)).monitor()
-            return `Bot：${Bot[cmd[2]].nickname}(${cmd[2]}) 已连接...`
-        } catch (err) {
-            return err
-        }
-
     }
 }
 
