@@ -5,6 +5,10 @@
 - 如果您对这个项目感到满意并认为它对你有所帮助，请给我一个`Star`！
 - 您的认可是我持续更新的动力~非常感谢您的支持！
 
+# 前言
+
+`Lain-plugin`是一个围绕喵崽`Miao-Yunzai`开发的多适配器插件，让喵崽可使用`QQ频道`、`微信`、`shamrock`等三方平台~，不再局限于QQ。
+
 ### 这里特别声明：
 
 不想登录ICQQ并继续使用本插件：
@@ -48,6 +52,7 @@ pnpm config set sharp_binary_host "https://npmmirror.com/mirrors/sharp" && pnpm 
 - [QQ频道](./docs/QQGuild.md)
 - [PC微信](./docs/WeChat.md)
 - [Shamrock](./docs/Shamrock.md)
+- [QQBot](./docs/QQBot.md)
 
 ## 4.设置主人
 

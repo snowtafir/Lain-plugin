@@ -10,6 +10,7 @@ export default new class addBot {
         const bot = Bot.shamrock.get(String(uin))
         /** 构建基本参数 */
         Bot[uin] = {
+            bkn: 0,
             /** 好友列表 */
             fl: new Map(),
             /** 群列表 */
@@ -23,7 +24,7 @@ export default new class addBot {
             version: { id: "QQ", name: "Shamrock", version: bot["user-agent"].replace("Shamrock/", "") },
             /** 转发 */
             makeForwardMsg: async (forwardMsg) => {
-                return await common.makeForwardMsg(forwardMsg)
+                return await common.makeForwardMsg(forwardMsg, true)
             },
             pickGroup: (groupID) => {
                 const is_admin = Bot[uin].gml.get(groupID)?.[uin]?.role === "admin" ? true : false
@@ -36,7 +37,7 @@ export default new class addBot {
                     },
                     /** 转发 */
                     makeForwardMsg: async (forwardMsg) => {
-                        return await common.makeForwardMsg(forwardMsg)
+                        return await common.makeForwardMsg(forwardMsg, true)
                     },
                     pickMember: (id) => {
                         /** 取缓存！！！别问为什么，因为傻鸟同步 */
@@ -50,7 +51,7 @@ export default new class addBot {
                     },
                     /** 禁言 */
                     muteMember: async (user_id, time) => {
-                        return await api.set_group_ban(uin, groupID, user_id, time)
+                        return await api.set_group_ban(uin, groupID, Number(user_id), Number(time))
                     },
                     /** 获取群成员列表 */
                     getMemberMap: async () => {
@@ -80,14 +81,14 @@ export default new class addBot {
                         return await api.set_group_kick(uin, groupID, qq, reject_add_request)
                     },
                     /**
-                     * shamrock目前只支持从当前往前数，所以msg_id实际未使用
-                     * @param msg_id 当前无用
+                     * 获取聊天历史记录
+                     * @param msg_id 起始消息的message_id（默认为0，表示从最后一条发言往前）
                      * @param num 数量
                      * @param reply 是否展开回复引用的消息(source)（实测数量大的时候耗时且可能出错）
                      * @return {Promise<Awaited<unknown>[]>}
                      */
                     getChatHistory: async (msg_id, num, reply) => {
-                        let { messages } = await api.get_group_msg_history(uin, groupID, num)
+                        let { messages } = await api.get_group_msg_history(uin, groupID, num, msg_id)
                         let group = Bot[uin].gl.get(groupID)
                         messages = messages.map(async m => {
                             m.group_name = group?.group_name || groupID
@@ -116,17 +117,17 @@ export default new class addBot {
                     },
                     /** 转发 */
                     makeForwardMsg: async (forwardMsg) => {
-                        return await common.makeForwardMsg(forwardMsg)
+                        return await common.makeForwardMsg(forwardMsg, true)
                     },
                     /**
-                     * shamrock目前只支持从当前往前数，所以msg_id实际未使用
-                     * @param msg_id 当前无用
+                     * 获取私聊聊天记录
+                     * @param msg_id 起始消息的message_id（默认为0，表示从最后一条发言往前）
                      * @param num 数量
                      * @param reply 是否展开回复引用的消息(source)（实测数量大的时候耗时且可能出错）
                      * @return {Promise<Awaited<unknown>[]>}
                      */
                     getChatHistory: async (msg_id, num, reply) => {
-                        let { messages } = await api.get_history_msg(uin, "private", user_id, null, num)
+                        let { messages } = await api.get_history_msg(uin, "private", user_id, null, num, msg_id)
                         messages = messages.map(async m => {
                             m.raw_message = toRaw(m.message, uin)
                             let result = await message(uin, m.message, null, reply)
@@ -139,7 +140,7 @@ export default new class addBot {
             },
             getGroupMemberInfo: async function (group_id, user_id) {
                 /** 被自己坑了 */
-                if (user_id == "88888" || user_id == "stdin") user_id = uin
+                if (user_id == "88888" || user_id == "stdin") user_id = Number(uin)
                 try {
                     let member = await api.get_group_member_info(uin, group_id, user_id)
                     member.card = member.nickname
@@ -160,17 +161,17 @@ export default new class addBot {
                     },
                     /** 转发 */
                     makeForwardMsg: async (forwardMsg) => {
-                        return await common.makeForwardMsg(forwardMsg)
+                        return await common.makeForwardMsg(forwardMsg, true)
                     },
                     /**
-                     * shamrock目前只支持从当前往前数，所以msg_id实际未使用
-                     * @param msg_id 当前无用
+                     * 获取私聊聊天记录
+                     * @param msg_id 起始消息的message_id（默认为0，表示从最后一条发言往前）
                      * @param num 数量
                      * @param reply 是否展开回复引用的消息(source)（实测数量大的时候耗时且可能出错）
                      * @return {Promise<Awaited<unknown>[]>}
                      */
                     getChatHistory: async (msg_id, num, reply) => {
-                        let { messages } = await api.get_history_msg(uin, "private", user_id, null, num)
+                        let { messages } = await api.get_history_msg(uin, "private", user_id, null, num, msg_id)
                         messages = messages.map(async m => {
                             m.raw_message = toRaw(m.message, uin)
                             let result = await message(uin, m.message, null, reply)
@@ -195,8 +196,7 @@ export default new class addBot {
     }
 
     async LoadList(uin) {
-        if (Bot.lain.cfg.YenaiState == 1 || Bot.lain.cfg.YenaiState == 5)
-            if (!Bot.adapter.includes(uin)) Bot.adapter.push(uin)
+        if (!Bot.adapter.includes(uin)) Bot.adapter.push(uin)
 
         /** 获取bot自身信息 */
         const info = await api.get_login_info(uin)
@@ -262,6 +262,43 @@ export default new class addBot {
                 Bot[uin].gml.set(i.group_id, gml)
             } catch (error) { }
         })
+
+        // let { token } = await api.get_csrf_token(uin, "qun.qq.com")
+        try {
+            let { cookies } = await api.get_cookies(uin)
+            if (cookies) {
+                let match = cookies.match(/skey=([^;]+)/)
+                if (match) {
+                    let skey = match[1]
+                    let n = 5381
+                    for (let e = skey || '', r = 0, o = e.length; r < o; ++r) {
+                        n += (n << 5) + e.charAt(r).charCodeAt(0)
+                    }
+                    Bot[uin].bkn = 2147483647 & n
+                }
+            }
+        } catch (err) {
+            await common.log(uin, `Shamrock获取bkn失败。`, "warn")
+        }
+
+
+        Bot[uin].cookies = {}
+        let domains = ["aq.qq.com", "buluo.qq.com", "connect.qq.com", "docs.qq.com", "game.qq.com", "gamecenter.qq.com", "haoma.qq.com", "id.qq.com", "kg.qq.com", "mail.qq.com", "mma.qq.com", "office.qq.com", "openmobile.qq.com", "qqweb.qq.com", "qun.qq.com", "qzone.qq.com", "ti.qq.com", "v.qq.com", "vip.qq.com", "y.qq.com", ""]
+        for (let domain of domains) {
+            api.get_cookies(uin, domain).then(ck => {
+                ck = ck?.cookies
+                if (ck) {
+                    try {
+                        // 适配椰奶逆天的ck转JSON方法
+                        ck = ck.trim().replace(/\w+=;/g, '').replace(/\w+=$/g, '')
+                    } catch (err) { }
+                }
+                Bot[uin].cookies[domain] = ck
+            }).catch(error => {
+                common.log(uin, `${domain} 获取cookie失败：${error}`, "debug")
+            })
+        }
+
 
         await common.log(uin, `Shamrock加载资源成功：加载了${Bot[uin].fl.size}个好友，${Bot[uin].gl.size}个群。`)
 

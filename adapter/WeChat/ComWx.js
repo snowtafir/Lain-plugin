@@ -227,11 +227,7 @@ class WeChat {
             }
         }
 
-        /** 注册uin */
-        if (!Bot?.adapter)
-            Bot.adapter = [Bot.uin, this.id]
-        else
-            if (!Bot.adapter.includes(this.id)) Bot.adapter.push(this.id)
+        if (!Bot.adapter.includes(this.id)) Bot.adapter.push(this.id)
 
         await common.log(this.id, "状态更新：ComWeChat已连接，正在加载资源中...")
         await common.sleep(1000)

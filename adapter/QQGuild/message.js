@@ -95,6 +95,7 @@ export default class message {
                 user_id: user_id,
                 nickname: nickname,
                 last_sent_time: time,
+				join_time: Date.parse(msg.member.joined_at) / 1000,
             },
             group_id: group_id,
             is_admin: is_admin,
@@ -127,7 +128,7 @@ export default class message {
                     return await this.recallMsg(msg.channel_id, msg_id)
                 },
                 makeForwardMsg: async (forwardMsg) => {
-                    return await common.makeForwardMsg(forwardMsg, this.data)
+                    return await common.makeForwardMsg(forwardMsg, false, this.data)
                 },
                 getChatHistory: async (msg_id, num) => {
                     const source = await this.getChatHistory(msg.channel_id, msg_id)
@@ -142,7 +143,7 @@ export default class message {
                 is_admin: is_admin,
                 is_owner: is_owner,
                 pickMember: (id) => {
-                    if (id === msg.author.id) {
+                    if (id.replace("qg_", "") === msg.author.id) {
                         return member
                     }
                 },
@@ -177,9 +178,10 @@ export default class message {
 
         /** 引用消息 */
         if (msg?.message_reference?.message_id) {
-            const reply = (await Bot[this.id].client.messageApi.message(msg.channel_id, msg.message_reference.message_id)).message
+            const reply = await Bot[this.id].client.messageApi.message(msg.channel_id, msg.message_reference.message_id)
+            logger.warn(reply)
             let message = []
-            if (reply.attachments) {
+            if (reply?.attachments) {
                 for (let i of reply.attachments) {
                     message.push({ type: "image", url: `https://${i.url}` })
                 }

@@ -93,11 +93,11 @@ export default class guild {
             makeForwardMsg: async (forwardMsg) => {
                 return await common.makeForwardMsg(forwardMsg)
             },
-            pickGroup: (groupId) => {
+            pickGroup: (groupId, msg_id = false) => {
                 const [guild_id, channel_id] = groupId.replace("qg_", "").split('-')
                 return {
                     sendMsg: async (msg, quote = false) => {
-                        return await (new SendMsg(this.id, { guild_id, channel_id }, "MESSAGE_CREATE")).message(msg, quote)
+                        return await (new SendMsg(this.id, { guild_id, channel_id }, "MESSAGE_CREATE", msg_id)).message(msg, quote)
                     },
                     /** 转发 */
                     makeForwardMsg: async (forwardMsg) => {
@@ -127,9 +127,7 @@ export default class guild {
             }
         }
 
-
-        if (Bot.lain.cfg.YenaiState == 1 || Bot.lain.cfg.YenaiState == 2)
-            if (!Bot.adapter.includes(this.id)) Bot.adapter.push(this.id)
+        if (!Bot.adapter.includes(this.id)) Bot.adapter.push(this.id)
     }
 
     /** 获取一些基本信息 */
@@ -217,7 +215,7 @@ export default class guild {
 
     async permissions(data, type = "") {
         /** 解除私信 */
-        if (data.msg?.content.includes("#QQ频道解除私信")) {
+        if (data.msg?.content?.includes("#QQ频道解除私信")) {
             return await this.Sendprivate(data)
         }
         const cfg = Bot.lain.cfg

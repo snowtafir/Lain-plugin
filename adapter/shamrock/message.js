@@ -17,7 +17,7 @@ export default new class zaiMsg {
 
         if (data.post_type === "message") {
             /** 处理message，引用消息 */
-            const { message, source } = await this.message(self_id, data.message, group_id)
+            const { message, source } = await this.message(self_id, data.message, group_id, "e")
             e.message = message
             if (source) {
                 e.source = source
@@ -110,18 +110,25 @@ export default new class zaiMsg {
                         getAvatarUrl: (userId = id) => `https://q1.qlogo.cn/g?b=qq&s=0&nk=${userId}`
                     }
                 },
-                // shamrock目前只支持从当前往前数，所以msg_id实际未使用
                 getChatHistory: async (msg_id, num, reply) => {
                     try {
-                        let { messages } = await api.get_group_msg_history(self_id, group_id, num)
-                        messages = messages.map(async m => {
-                            m.group_name = group_name
-                            m.atme = !!m.message.find(msg => msg.type === "at" && msg.data?.qq == self_id)
-                            m.raw_message = toRaw(m.message, self_id, group_id)
-                            let result = await this.message(self_id, m.message, group_id, reply)
-                            m = Object.assign(m, result)
-                            return m
-                        })
+                        let { messages } = await api.get_group_msg_history(self_id, group_id, num, msg_id)
+
+                        /** 获取一下消息本身 */
+                        let source = await api.get_msg(self_id, msg_id)
+                        messages.push(source)
+
+                        messages = messages
+                            // 如果source获取失败，会报错
+                            .filter(m => Array.isArray(m?.message))
+                            .map(async m => {
+                                m.group_name = group_name
+                                m.atme = !!m.message.find(msg => msg.type === "at" && msg.data?.qq == self_id)
+                                m.raw_message = toRaw(m.message, self_id, group_id)
+                                let result = await this.message(self_id, m.message, group_id, reply)
+                                m = Object.assign(m, result)
+                                return m
+                            })
                         return Promise.all(messages)
                     } catch (err) {
                         // 老版本Shamrock不支持获取历史消息
@@ -148,13 +155,11 @@ export default new class zaiMsg {
                     return await (new SendMsg(self_id, isGroup)).message(msg, peer_id, quote ? message_id : false)
                 },
                 makeForwardMsg: async (forwardMsg) => {
-                    return await common.makeForwardMsg(forwardMsg)
+                    return await common.makeForwardMsg(forwardMsg, true)
                 },
                 /** 戳一戳 */
                 pokeMember: async (operator_id) => {
                     return await api.group_touch(self_id, group_id, operator_id)
-                    // const peer_id = group_id
-                    // return await (new SendMsg(self_id, isGroup)).message({ type: "touch", data: { id: operator_id } }, peer_id)
                 },
                 /** 禁言 */
                 muteMember: async (group_id, user_id, time) => {
@@ -205,11 +210,11 @@ export default new class zaiMsg {
                     return await api.delete_msg(self_id, msg_id)
                 },
                 makeForwardMsg: async (forwardMsg) => {
-                    return await common.makeForwardMsg(forwardMsg)
+                    return await common.makeForwardMsg(forwardMsg, true)
                 },
                 getChatHistory: async (msg_id, num, reply = true) => {
                     try {
-                        let messages = await api.get_history_msg(self_id, "private", user_id, null, num)
+                        let messages = await api.get_history_msg(self_id, "private", user_id, null, num, msg_id)
                         messages = messages.map(async m => {
                             m.raw_message = toRaw(m.message, self_id, group_id)
                             let result = await this.message(self_id, m.message, null, reply)
@@ -295,16 +300,25 @@ export async function message(id, msg, group_id, reply = true) {
                 logger.error(error)
             }
 
-            let reply = source.message.map(u => (u.type === "at" ? { type: u.type, qq: Number(u.data.qq) } : { type: u.type, ...u.data }))
+            let source_reply = source.message.map(u => (u.type === "at" ? { type: u.type, qq: Number(u.data.qq) } : { type: u.type, ...u.data }))
 
-            let raw_message = toRaw(reply, id, group_id)
+            let raw_message = toRaw(source_reply, id, group_id)
+
+            /** 覆盖原先的message */
+            source.message = source_reply
+            if (reply != "e") message.push(...source_reply)
+
             source = {
                 ...source,
-                reply,
+                reply: source_reply,
                 seq: source.message_id,
                 user_id: source.sender.user_id,
                 raw_message: raw_message
             }
+        }
+        /** 不理解为啥为啥不是node... */
+        else if (i.type === "forward") {
+            message.push({ type: "node", ...i.data })
         } else {
             if (i.type === "at") {
                 message.push({ type: "at", qq: Number(i.data.qq) })

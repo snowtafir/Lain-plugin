@@ -1,7 +1,7 @@
 import fs from "fs"
 import { randomUUID } from "crypto"
 import common from "../../model/common.js"
-import api from "./api.js";
+import api from "./api.js"
 
 export default class SendMsg {
     /** 传入基本配置 */
@@ -10,128 +10,150 @@ export default class SendMsg {
         this.id = id
         /** 是否群聊 */
         this.isGroup = isGroup
+        /** 机器人名称 */
+        this.name = Bot?.[id]?.nickname || "未知"
     }
 
     /** 发送消息 */
-    async message(msg, id, quote = false) {
+    async message(data, id, quote = false) {
         /** 将云崽过来的消息统一为数组 */
-        msg = common.array(msg)
+        data = common.array(data)
         /** 转为shamrock可以使用的格式 */
-        const { content, CQ } = await this.msg(msg)
-        msg = content
+        let { msg, CQ, node } = await this.msg(data)
+
         /** 引用消息 */
-        if (quote) msg.unshift({ type: "reply", data: { id: quote } })
+        if (quote && !node) msg.unshift({ type: "reply", data: { id: quote } })
+        if (node) CQ = ["[转发消息]"]
+
         /** 发送消息 */
-        return await this.SendMsg(id, msg, CQ)
+        return await this.SendMsg(id, msg, CQ, node)
     }
 
     /** 转为shamrock可以使用的格式 */
-    async msg(msg) {
-        if (!Array.isArray(msg)) msg = [{ type: "text", text: msg }]
-        const content = []
+    async msg(data) {
+        if (!Array.isArray(data)) data = [{ type: "text", text: data }]
         const CQ = []
-        const image = []
-        let forward = []
-        /** chatgpt-plugin */
-        if (msg?.[0].type === "xml") msg = msg?.[0].msg
+        const msg = []
+        let node = false
 
-        for (let i of msg) {
-            /** 加个延迟防止过快 */
-            await common.sleep(200)
+        /** chatgpt-plugin */
+        if (data?.[0]?.type === "xml") data = data?.[0].msg
+
+        for (let i of data) {
+            node = node || i.node
             switch (i.type) {
                 case "at":
-                    CQ.push(`[CQ:at,qq=${Number(i.qq) == 0 ? i.id : i.qq}]`)
-                    content.push({
-                        type: "at",
-                        data: { qq: Number(i.qq) == 0 ? i.id : i.qq }
+                    CQ.push(`{at:${Number(i.qq) == 0 ? i.id : i.qq}}`)
+                    msg.push({
+                        type: i?.node ? "node" : "at",
+                        data: i?.node ? { name: this.name, content: [{ type: "at", data: { qq: Number(i.qq) == 0 ? i.id : i.qq } }] } : { qq: Number(i.qq) == 0 ? i.id : i.qq }
                     })
                     break
                 case "face":
-                    CQ.push(`[CQ:face,id=${i.text}]`)
-                    content.push({
-                        type: "face",
-                        data: { id: i.text }
+                    CQ.push(`{face:${i.text}}`)
+                    msg.push({
+                        type: i?.node ? "node" : "face",
+                        data: i?.node ? { name: this.name, content: [{ type: "face", data: { id: i.text } }] } : { id: i.text }
                     })
                     break
                 case "text":
-                    CQ.push(`[CQ:text,text=${i.text}]`)
-                    forward.push(i.text)
+                    CQ.push(i.text)
+                    msg.push({
+                        type: i?.node ? "node" : "text",
+                        data: i?.node ? { name: this.name, content: [{ type: "text", data: { text: i.text } }] } : { text: i.text }
+                    })
                     break
                 case "file":
                     break
                 case "record":
-                    if (Bot.lain.cfg.baseUrl && i.file && !i.file.includes('http')) {
-                        // 本地文件
+                    if (i.file && fs.existsSync(i.file)) {
+                        /** 上传文件 */
                         try {
-                            const { file } = await api.upload_file(this.id, i.file)
-                            i.file = `file://${file}`
+                            const base64 = "base64://" + fs.readFileSync(i.file).toString("base64")
+                            i.file = (await api.download_file(this.id, base64))?.file
+                            i.file = `file://${i.file}`
                         } catch (err) {
                             common.log(this.id, err, "error")
                         }
                     } else {
                         if (i?.url) i.file = i.url
                     }
-                    CQ.push(`[CQ:record,file=${i.file}]`)
-                    content.push({
-                        type: "record",
-                        data: { file: i.file }
+                    CQ.push(`{record:${i.file}}`)
+                    msg.push({
+                        type: i?.node ? "node" : "record",
+                        data: i?.node ? { name: this.name, content: [{ type: "record", data: { file: i.file } }] } : { file: i.file }
                     })
                     break
                 case "video":
-                    if (i.file && !i.file.includes("protobuf://") && !i.file.includes("base64://")) {
-                        if (Bot.lain.cfg.baseUrl && i.file && !i.file.includes('http')) {
-                            // 本地文件
-                            try {
-                                const { file } = await api.upload_file(this.id, i.file)
-                                i.file = `file://${file}`
-                            } catch (err) {
-                                common.log(this.id, err, "error")
-                            }
+                    /** 只支持本地文件 */
+                    if (i.file && fs.existsSync(i.file)) {
+                        /** 上传文件 */
+                        try {
+                            const base64 = "base64://" + fs.readFileSync(i.file).toString("base64")
+                            i.file = (await api.download_file(this.id, base64))?.file
+                            i.file = `file://${i.file}`
+                        } catch (err) {
+                            common.log(this.id, err, "error")
                         }
+                    } else {
+                        await common.log(this.id, `不支持的文件：${i}`, "error")
+                        break
                     }
-                    CQ.push(`[CQ:video,file=${i.file}]`)
-                    content.push({
-                        type: "video",
-                        data: { file: i.file.replace("protobuf://", "base64://") }
+                    CQ.push(`{video:${i.file}}`)
+                    msg.push({
+                        type: i?.node ? "node" : "video",
+                        data: i?.node ? { name: this.name, content: [{ type: "video", data: { file: i.file } }] } : { file: i.file }
                     })
                     break
                 case "image":
-                    CQ.push(`[CQ:image,file=base64://...]`)
-                    image.push(await this.get_image(i))
+                    CQ.push(`{image:base64://...}`)
+                    msg.push(i?.node ? { type: "node", data: { name: this.name, content: [await this.get_image(i)] } } : await this.get_image(i))
                     break
                 case "poke":
                     CQ.push(`[CQ:poke,id=${i.id}]`)
-                    content.push({
+                    msg.push({
                         type: "poke",
                         data: { type: i.id, id: 0, strength: i?.strength || 0 }
                     })
                     break
                 case "touch":
-                    CQ.push(`[CQ:poke,id=${i.id}]`)
-                    content.push(i)
+                    CQ.push(`{poke:${i.id}}`)
+                    msg.push(i)
                     break
                 case "forward":
-                    CQ.push(`[CQ:text,text=${i.text}]`)
-                    forward.push(forward.length > 0 ? `${i.text}\n` : i.text)
+                    node ? "" : node = true
+                    msg.push({
+                        type: "node",
+                        data: {
+                            name: this.name,
+                            content: [{ type: "text", data: { text: i.text } }]
+                        }
+                    })
+                    break
+                case "node":
+                    node ? "" : node = true
+                    msg.push({
+                        type: "node",
+                        data: { ...i }
+                    })
                     break
                 default:
-                    CQ.push(`[CQ:text,text=${JSON.stringify(i)}]`)
-                    content.push({
+                    CQ.push(JSON.stringify(i))
+                    msg.push({
                         type: "text",
                         data: { text: JSON.stringify(i) }
                     })
                     break
             }
         }
-        forward = forward.join("\n").trim()
-        content.push({ type: "text", data: { text: forward } })
-        content.push(...image)
-        return { content, CQ }
+        return { msg, CQ, node }
     }
 
     /** 统一图片格式 */
     async get_image(i) {
         let file
+        if (i?.url && i.url.includes("gchat.qpic.cn") && !i.url.startsWith("https://"))
+            i.file = "https://" + i.url
         /** 特殊格式？... */
         if (i.file?.type === "Buffer") {
             file = `base64://${Buffer.from(i.file.data).toString("base64")}`
@@ -171,17 +193,31 @@ export default class SendMsg {
     }
 
     /** 发送消息 */
-    async SendMsg(id, msg, CQ) {
+    async SendMsg(id, msg, CQ, node) {
+        /** 打印日志 */
+        common.log(this.id, `发送${this.isGroup ? "群" : "好友"}消息：[${id}]${CQ.join("")}`)
+
+        /** 处理合并转发 */
+        if (node) {
+            if (this.isGroup) {
+                return await api.send_group_forward_msg(this.id, id, msg)
+            } else {
+                return await api.send_private_forward_msg(this.id, id, msg)
+            }
+        }
+
+        /** 非合并转发 */
         const bot = Bot.shamrock.get(String(this.id))
         if (!bot) return common.log(this.id, "不存在此Bot")
 
         const echo = randomUUID()
+        /** 判断群聊、私聊 */
         const action = this.isGroup ? "send_group_msg" : "send_private_msg"
         const params = { [this.isGroup ? "group_id" : "user_id"]: id, message: msg }
-        common.log(this.id, `发送${this.isGroup ? "群" : "好友"}${CQ.join("")}`)
-
+        /** 发送消息 */
         bot.socket.send(JSON.stringify({ echo, action, params }))
 
+        /** 等待返回结果 */
         for (let i = 0; i < 10; i++) {
             let data = await Bot.lain.on.get(echo)
             if (data) {

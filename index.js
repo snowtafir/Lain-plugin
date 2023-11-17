@@ -1,17 +1,22 @@
 import fs from "fs"
+import pm2 from "pm2"
 import "./model/config.js"
-import guild from "./adapter/QQGuild/guild.js"
 import crypto from "crypto"
-import { exec, execSync } from "child_process"
-import { update } from "../other/update.js"
-import yaml from "./model/yaml.js"
 import "./adapter/stdin/stdin.js"
+import "./adapter/QQBot/index.js"
+import yaml from "./model/yaml.js"
+import { createRequire } from 'module'
+import { execSync, exec } from "child_process"
+import { update } from "../other/update.js"
+import guild from "./adapter/QQGuild/guild.js"
+import createAndStartBot from "./adapter/QQBot/index.js"
+import { ShamrockPlugin } from "./adapter/shamrock/plugin.js"
 
 /** 设置主人 */
 let sign = {}
 const _path = "./plugins/Lain-plugin/config"
 
-export class QQGuildBot extends plugin {
+export class Lain extends plugin {
     constructor() {
         super({
             name: "Lain-plugin",
@@ -20,6 +25,11 @@ export class QQGuildBot extends plugin {
                 {
                     reg: /^#QQ频道设置.+$/gi,
                     fnc: "QQGuildCfg",
+                    permission: "master"
+                },
+                {
+                    reg: /^#QQ(群|群机器人|机器人)设置.+$/gi,
+                    fnc: "QQBBot",
                     permission: "master"
                 },
                 {
@@ -61,9 +71,61 @@ export class QQGuildBot extends plugin {
             const msg = `分片转发已${cfg.get("forwar") ? '开启' : '关闭'}`
             return await e.reply(msg, true, { at: true })
         } else {
-            const msg = await apps.addBot(e)
-            return await e.reply(msg)
+            const msg = async (e) => {
+                const cmd = e.msg.replace(/^#QQ频道设置/gi, "").replace(/：/g, ":").trim().split(':')
+                if (!/^1\d{8}$/.test(cmd[2])) return "appID 错误！"
+                if (!/^[0-9a-zA-Z]{32}$/.test(cmd[3])) return "token 错误！"
+
+                let bot
+                const cfg = new yaml(_path + "/bot.yaml")
+                /** 重复的appID，删除 */
+                if (cfg.hasIn(cmd[2])) {
+                    cfg.del(cmd[2])
+                    return `Bot：${Bot[cmd[2]].nickname}${cmd[2]} 删除成功...重启后生效...`
+                } else {
+                    bot = { appID: cmd[2], token: cmd[3], sandbox: cmd[0] === "1", allMsg: cmd[1] === "1" }
+                }
+
+                /** 保存新配置 */
+                cfg.addIn(cmd[2], bot)
+                try {
+                    await (new guild(bot)).monitor()
+                    return `Bot：${Bot[cmd[2]].nickname}(${cmd[2]}) 已连接...`
+                } catch (err) {
+                    return err
+                }
+
+            }
+            return await e.reply(await msg(e))
         }
+    }
+
+    async QQBBot(e) {
+        const msg = async (e) => {
+            const cmd = e.msg.replace(/^#QQ(群|群机器人|机器人)设置/gi, "").replace(/：/g, ":").trim().split(':')
+            if (cmd.length !== 6) return "格式错误..."
+            let bot
+            const cfg = new yaml(_path + "/QQBot.yaml")
+            /** 重复的appID，删除 */
+            if (cfg.hasIn(cmd[3])) {
+                cfg.del(cmd[3])
+                return `QQBot：${cmd[3]} 删除成功...重启后生效...`
+            } else {
+                // 沙盒:私域:移除at:appID:appToken:secret 是=1 否=0
+                bot = { appid: cmd[3], token: cmd[4], sandbox: cmd[0] === "1", allMsg: cmd[1] === "1", removeAt: cmd[2] === "1", secret: cmd[5] }
+            }
+
+            /** 保存新配置 */
+            cfg.addIn(cmd[3], bot)
+            try {
+                createAndStartBot(bot)
+                return `QQBot：${cmd[3]} 已连接...`
+            } catch (err) {
+                return err
+            }
+
+        }
+        return await e.reply(await msg(e))
     }
 
     async QQGuildAccount(e) {
@@ -178,33 +240,6 @@ let apps = {
         const cfg = new yaml("./config/config/other.yaml")
         cfg.addVal("masterQQ", user_id)
         return [segment.at(user_id), "新主人好~(*/ω＼*)"]
-    },
-
-    /** 添加Bot */
-    async addBot(e) {
-        const cmd = e.msg.replace(/^#QQ频道设置/gi, "").replace(/：/g, ":").trim().split(':')
-        if (!/^1\d{8}$/.test(cmd[2])) return "appID 错误！"
-        if (!/^[0-9a-zA-Z]{32}$/.test(cmd[3])) return "token 错误！"
-
-        let bot
-        const cfg = new yaml(_path + "/bot.yaml")
-        /** 重复的appID，删除 */
-        if (cfg.hasIn(cmd[2])) {
-            cfg.del(cmd[2])
-            return `Bot：${Bot[cmd[2]].nickname}${cmd[2]} 删除成功...重启后生效...`
-        } else {
-            bot = { appID: cmd[2], token: cmd[3], sandbox: cmd[0] === "1", allMsg: cmd[1] === "1" }
-        }
-
-        /** 保存新配置 */
-        cfg.addIn(cmd[2], bot)
-        try {
-            await (new guild(bot)).monitor()
-            return `Bot：${Bot[cmd[2]].nickname}(${cmd[2]}) 已连接...`
-        } catch (err) {
-            return err
-        }
-
     }
 }
 
@@ -246,11 +281,13 @@ export class Restart extends plugin {
             dsc: '#重启',
             event: 'message',
             priority: 0,
-            rule: [{
-                reg: '^#重启$',
-                fnc: 'restart',
-                permission: 'master'
-            }]
+            rule: [
+                {
+                    reg: '^#重启$',
+                    fnc: 'restart',
+                    permission: 'master'
+                }
+            ]
         })
 
         if (e) this.e = e
@@ -261,51 +298,63 @@ export class Restart extends plugin {
     async restart() {
         if (!this.e?.adapter) return false
 
-        if (this.e.adapter == "shamrock") {
-            this.key = 'Lain:restart:shamrock'
+        const adapters = {
+            shamrock: 'Lain:restart:shamrock',
+            QQGuild: 'Lain:restart:QQGuild',
+            WeChat: 'Lain:restart:WeChat'
         }
-        else if (this.e.adapter == "QQGuild") {
-            this.key = 'Lain:restart:QQGuild'
-        }
-        else if (this.e.adapter == "WeChat") {
-            this.key = 'Lain:restart:WeChat'
-        }
+
+        this.key = adapters[this.e.adapter]
+
+        if (!this.key) return false
 
         await this.e.reply('开始执行重启，请稍等...')
         logger.mark(`${this.e.logFnc} 开始执行重启，请稍等...`)
 
-        let data = JSON.stringify({
+        const data = JSON.stringify({
             uin: this.e?.self_id || this.e.bot.uin,
             isGroup: !!this.e.isGroup,
             id: this.e.isGroup ? this.e.group_id : this.e.user_id,
-            time: new Date().getTime()
+            time: new Date().getTime(),
+            msg_id: this.e.message_id
         })
 
-        let npm = await this.checkPnpm()
+        const npm = await this.checkPnpm()
 
         try {
             await redis.set(this.key, data, { EX: 120 })
-            let cm = `${npm} start`
-            if (process.argv[1].includes('pm2')) {
-                cm = `${npm} run restart`
-            }
 
-            exec(cm, { windowsHide: true }, (error, stdout, stderr) => {
-                if (error) {
-                    redis.del(this.key)
-                    this.e.reply(`操作失败！\n${error.stack}`)
-                    logger.error(`重启失败\n${error.stack}`)
-                } else if (stdout) {
-                    logger.mark('重启成功，运行已由前台转为后台')
-                    logger.mark(`查看日志请用命令：${npm} run log`)
-                    logger.mark(`停止后台运行命令：${npm} stop`)
-                    process.exit()
-                }
+            pm2.connect((err) => {
+                if (err) return logger.error(err)
+
+                pm2.list((err, processList) => {
+                    if (err) {
+                        logger.error(err)
+                    } else {
+                        const PM2Data = JSON.parse(fs.readFileSync('./config/pm2/pm2.json'))
+                        const processExists = processList.some(processInfo => processInfo.name === PM2Data.apps[0].name)
+                        const cm = processExists ? `${npm} run restart` : `${npm} start`
+                        pm2.disconnect()
+                        exec(cm, { windowsHide: true }, (error, stdout) => {
+                            if (error) {
+                                redis.del(this.key)
+                                this.e.reply(`操作失败！\n${error.stack}`)
+                                logger.error(`重启失败\n${error.stack}`)
+                            } else if (stdout) {
+                                logger.mark('重启成功，运行已由前台转为后台')
+                                logger.mark(`查看日志请用命令：${npm} run log`)
+                                logger.mark(`停止后台运行命令：${npm} stop`)
+                                process.exit()
+                            }
+                        })
+                    }
+                })
             })
         } catch (error) {
             redis.del(this.key)
-            let e = error.stack ?? error
-            this.e.reply(`操作失败！\n${e}`)
+            const errorMessage = error.stack ?? error
+            this.e.reply(`操作失败！\n${errorMessage}`)
+            logger.error(`重启失败\n${errorMessage}`)
         }
 
         return true
@@ -325,25 +374,6 @@ export class Restart extends plugin {
             })
         })
     }
-
-    async stop() {
-        if (!process.argv[1].includes('pm2')) {
-            logger.mark('关机成功，已停止运行')
-            await this.e.reply('关机成功，已停止运行')
-            process.exit()
-        }
-
-        logger.mark('关机成功，已停止运行')
-        await this.e.reply('关机成功，已停止运行')
-
-        let npm = await this.checkPnpm()
-        exec(`${npm} stop`, { windowsHide: true }, (error, stdout, stderr) => {
-            if (error) {
-                this.e.reply(`操作失败！\n${error.stack}`)
-                logger.error(`关机失败\n${error.stack}`)
-            }
-        })
-    }
 }
 
 async function init(key = "Lain:restart") {
@@ -352,12 +382,13 @@ async function init(key = "Lain:restart") {
         restart = JSON.parse(restart)
         const uin = restart?.uin || Bot.uin
         let time = restart.time || new Date().getTime()
+        const msg_id = restart?.msg_id || false
         time = (new Date().getTime() - time) / 1000
-        logger.warn(typeof uin)
+        console.log(typeof uin)
         let msg = `重启成功：耗时${time.toFixed(2)}秒`
         try {
             if (restart.isGroup) {
-                Bot[uin].pickGroup(restart.id).sendMsg(msg)
+                Bot[uin].pickGroup(restart.id, msg_id).sendMsg(msg)
             } else {
                 Bot[uin].pickUser(restart.id).sendMsg(msg)
             }
@@ -366,13 +397,13 @@ async function init(key = "Lain:restart") {
             await new Promise((resolve) => setTimeout(resolve, 5000))
             msg = `重启成功：耗时${(time + 5).toFixed(2)}秒`
             if (restart.isGroup) {
-                Bot[uin].pickGroup(restart.id).sendMsg(msg)
+                Bot[uin].pickGroup(restart.id, msg_id).sendMsg(msg)
             } else {
-                Bot[uin].pickUser(restart.id).sendMsg(msg)
+                Bot[uin].pickUser(restart.id, msg_id).sendMsg(msg)
             }
         }
         redis.del(key)
     }
 }
 
-export { init }
+export { init, ShamrockPlugin }
