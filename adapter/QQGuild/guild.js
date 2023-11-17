@@ -215,7 +215,7 @@ export default class guild {
 
     async permissions(data, type = "") {
         /** 解除私信 */
-        if (data.msg.content.includes("#QQ频道解除私信")) {
+        if (data?.msg?.content?.includes("#QQ频道解除私信")) {
             return await this.Sendprivate(data)
         }
         const cfg = Bot.lain.cfg

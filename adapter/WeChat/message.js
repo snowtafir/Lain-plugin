@@ -191,9 +191,7 @@ export default class message {
                     try {
                         const res = JSON.parse(await redis.get(i.data.message_id) || { id: "", user_id: "" })
                         source = { message: res.id, rand: 0, seq: 0, time: 0, user_id: res.user_id }
-                    } catch (err) {
-                        logger.error(err)
-                    }
+                    } catch (err) { }
                     break
                 case "wx.emoji":
                     message.push({ type: "emoji", text: data.file_id })

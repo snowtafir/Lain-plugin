@@ -18,8 +18,6 @@ export default class WebSocket {
         Bot.shamrock = new Map()
         /** 保存监听器返回 */
         Bot.lain.on = new Map()
-        /** 限制访问地址 */
-        const accessCache = new Map()
         /** 创建Express应用程序 */
         const app = express()
         /** 创建HTTP服务器 */
@@ -47,13 +45,9 @@ export default class WebSocket {
         app.get("/api/QQBot", (req, res) => {
             const { token, name } = req.query
             /** 检查令牌有效性 */
-            if (token !== Bot.lain.cfg.QQBotImgToken) return res.status(401).send("令牌无效")
-            const time = Date.now()
-            /** 访问频率 */
-            if (accessCache.has(name) && time - accessCache.get(name) < 60000) return res.status(429).send("同一个地址每分钟只能访问一次")
+            if (token !== Bot.lain.cfg.QQBotImgToken) return res.status(401).send("令牌无效")    
             const _path = process.cwd() + `/plugins/Lain-plugin/resources/image/${name}`
             if (!fs.existsSync(_path)) return res.status(404).send("啊咧，图片不存在捏")
-            accessCache.set(name, time)
             /** 返回图片 */
             res.sendFile(_path, {}, (err) => {
                 if (err) {
