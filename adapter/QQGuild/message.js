@@ -124,7 +124,7 @@ export default class message {
                     return await this.reply(msg, quote, group_name)
                 },
                 recallMsg: async (msg_id) => {
-                    return await recallMsg(msg.channel_id, msg_id)
+                    return await this.recallMsg(msg.channel_id, msg_id)
                 },
                 makeForwardMsg: async (forwardMsg) => {
                     return await common.makeForwardMsg(forwardMsg, false, this.data)
@@ -151,7 +151,7 @@ export default class message {
                     return [source]
                 },
                 recallMsg: async (msg_id) => {
-                    return await recallMsg(msg.channel_id, msg_id)
+                    return await this.recallMsg(msg.channel_id, msg_id)
                 },
                 sendMsg: async (msg, quote) => {
                     return await this.reply(msg, quote, group_name)
@@ -164,7 +164,7 @@ export default class message {
 
         /** 快速撤回 */
         e.recall = async () => {
-            return await recallMsg(msg.channel_id, msg.id)
+            return await this.recallMsg(msg.channel_id, msg.id)
         }
         /** 快速回复 */
         e.reply = async (msg, quote) => {
