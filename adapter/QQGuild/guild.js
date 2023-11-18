@@ -167,6 +167,7 @@ export default class guild {
                         group_name: `${qg.name || i.guild_id}-${i.name || i.id}`,
                         guild_id: i.guild_id,
                         guild_name: qg.name,
+                        guild_type: i.type,
                         channel_id: i.id,
                         channel_name: i.name
                     })
@@ -177,6 +178,7 @@ export default class guild {
                         group_name: `${qg.name || i.guild_id}-${i.name || i.id}`,
                         guild_id: i.guild_id,
                         guild_name: qg.name,
+                        guild_type: i.type,
                         channel_id: i.id,
                         channel_name: i.name
                     })
