@@ -26,7 +26,7 @@ function sleep(ms) {
  * @param err 可选参数，日志转为错误日志
  */
 export function log(id, log, type = "info") {
-    id = chalk.hex("#868ECC")(Bot?.[id]?.nickname ? `[${Bot?.[id]?.nickname}(${id})] ` : `[${id}] `)
+    id = chalk.hex("#868ECC")(Bot?.[id]?.nickname ? `[${Bot?.[id]?.nickname}(${id})] ` : (id ? `[${id}] ` : ""))
     const list = {
         info: function () { logger.info(`${id}${log}`) },
         error: function () { logger.error(`${id}${log}`) },
@@ -34,7 +34,7 @@ export function log(id, log, type = "info") {
         debug: function () { logger.debug(`${id}${log}`) },
         warn: function () { logger.warn(`${id}${log}`) },
     }
-    return list[type]() || list["info"]()
+    return list[type]()
 }
 
 
