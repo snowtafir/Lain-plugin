@@ -108,6 +108,13 @@ export default new class addBot {
                     setCard: async (qq, card) => {
                         return await api.set_group_card(uin, groupID, qq, card)
                     },
+                    /** 
+                     * 撤回消息
+                     * @param msg_id
+                     */
+                    recallMsg: async (msg_id) => {
+                        return await api.delete_msg(uin, msg_id)
+                    }
                 }
             },
             pickUser: (user_id) => {
@@ -135,6 +142,13 @@ export default new class addBot {
                             return m
                         })
                         return Promise.all(messages)
+                    },
+                    /** 
+                     * 撤回消息
+                     * @param msg_id
+                     */
+                    recallMsg: async (msg_id) => {
+                        return await api.delete_msg(uin, msg_id)
                     }
                 }
             },
@@ -179,6 +193,13 @@ export default new class addBot {
                             return m
                         })
                         return Promise.all(messages)
+                    },
+                    /** 
+                     * 撤回消息
+                     * @param msg_id
+                     */
+                    recallMsg: async (msg_id) => {
+                        return await api.delete_msg(uin, msg_id)
                     }
                 }
             },

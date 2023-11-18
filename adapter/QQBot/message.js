@@ -5,21 +5,26 @@ import common from "../../model/common.js"
 export default new class message {
     /** 转换格式给云崽 */
     async msg(e, isGroup) {
+        e.bot.stat = { start_time: Date.now() / 1000, recv_msg_cnt: 0 }
         const _reply = e.reply
         /** 回复 */
-        const reply = (msg, quote) => {
+        const reply = async (msg, quote) => {
             try {
                 if (typeof msg === "object" && msg?.type == "image") {
-                    msg = this.get_image(msg)
+                    msg = await this.get_image(msg)
                 }
                 else if (Array.isArray(msg)) for (let i in msg) {
-                    if (msg[i].type === "image") msg[i] = this.get_image(msg[i])
+                    if (msg[i].type === "image") msg[i] = await this.get_image(msg[i])
                 }
             } catch (error) {
-                common.log(e.self_id, error, "erroe")
+                common.log(e.self_id, error, "error")
             }
 
-            _reply.call(e, msg, quote)
+            try {
+                _reply.call(e, msg, quote)
+            } catch (error) {
+                common.log(e.self_id, error.data, "error")
+            }
         }
 
         e.reply = reply
@@ -143,7 +148,7 @@ export default new class message {
 
 
     /** 统一图片格式 */
-    get_image(i) {
+    async get_image(i) {
         let filePath
         const folderPath = process.cwd() + `/plugins/Lain-plugin/resources/image`
         if (i?.url) i.url.includes("gchat.qpic.cn") && !i.url.startsWith("https://") ? i.file = "https://" + i.url : i.file = i.url
@@ -191,8 +196,30 @@ export default new class message {
 
         // 返回名称
         if (fs.existsSync(filePath)) {
-            const { port, QQBotImgIP, QQBotImgToken } = Bot.lain.cfg
-            const url = `http://${QQBotImgIP}:${port}/api/QQBot?token=${QQBotImgToken}&name=${path.basename(filePath)}`
+            const { FigureBed, port, QQBotImgIP, QQBotPort, QQBotImgToken } = Bot.lain.cfg
+            let url
+            // 先调用三方图床
+            try {
+                const res = await common.uploadFile(filePath, FigureBed)
+                if (res.ok) {
+                    const { result } = await res.json()
+                    url = FigureBed.replace("/uploadimg", "") + result.path
+                    common.log("QQBot图床", `[上传成功] ${url}`)
+                    return { type: "image", file: url }
+                } else {
+                    const data = await res.json()
+                    common.log("", `QQBot图床发生错误，将调用下一个方法：${data}`, "error")
+                }
+            } catch {
+                common.log("", `QQBot图床发生错误，将调用下一个方法`, "error")
+            }
+
+            // 公网，反正都要返回东西，先赋值吧
+            url = `http://${QQBotImgIP}:${QQBotPort || port}/api/QQBot?token=${QQBotImgToken}&name=${path.basename(filePath)}`
+
+            // 使用QQ图床
+            const botList = Bot.adapter.filter(item => typeof item === "number")
+            if (botList.length > 0) url = await common.uploadQQ(filePath, botList[0])
             common.log("QQBotApi", `[生成文件] url：${url}`, "debug")
             return { type: "image", file: url }
         } else {

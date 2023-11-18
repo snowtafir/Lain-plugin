@@ -1,5 +1,7 @@
 import fs from "fs"
 import chalk from "chalk"
+import crypto from "crypto"
+import fetch, { FormData, Blob } from "node-fetch"
 
 /** 注册uin */
 if (!Bot?.adapter) {
@@ -156,4 +158,34 @@ export async function base64(path) {
     }
 }
 
-export default { sleep, log, array, makeForwardMsg, base64 }
+/**
+ * 三方图床
+ * @param file 文件路径地址
+ * @param url 上传接口
+ * @return url地址
+ */
+async function uploadFile(file, url) {
+    const formData = new FormData()
+    formData.append("imgfile", new Blob([fs.readFileSync(file)], { type: "image/jpeg" }), "image.jpg")
+    return await fetch(url, {
+        method: "POST",
+        body: formData,
+    })
+}
+
+/**
+ * QQ图床
+ * @param file 文件路径地址
+ * @param uin botQQ
+ * @return url地址
+ */
+async function uploadQQ(file, uin) {
+    const base64 = fs.readFileSync(file).toString("base64")
+    const { message_id } = await Bot[uin].pickUser(uin).sendMsg([segment.image(`base64://${base64}`)])
+    await Bot[uin].pickUser(uin).recallMsg(message_id)
+    const md5 = crypto.createHash("md5").update(Buffer.from(base64, "base64")).digest("hex")
+    await sleep(1000)
+    return `https://gchat.qpic.cn/gchatpic_new/0/0-0-${md5.toUpperCase()}/0?term=2&is_origin=0`
+}
+
+export default { sleep, log, array, makeForwardMsg, base64, uploadFile, uploadQQ }

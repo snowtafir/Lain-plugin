@@ -53,9 +53,6 @@ export default class WebSocket {
             res.sendFile(_path, {}, (err) => {
                 if (err) {
                     common.log("QQBotApi", err, "error")
-                } else {
-                    /** 1分钟后删除图片文件 */
-                    setTimeout(() => { fs.unlink(_path, (err) => { if (err) common.log("QQBotApi", err, "error") }) }, 60000)
                 }
             })
         })

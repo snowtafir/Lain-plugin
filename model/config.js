@@ -19,12 +19,17 @@ const configItems = [
     { key: 'baseUrl', value: '', comment: '# shamrock主动http端口，例如http://localhost:5700。若填写将通过此端口进行文件上传等被动ws不支持的操作' },
     { key: 'token', value: '', comment: '# 鉴权token，如果开放公网强烈建议配置' },
     { key: 'QQBotImgIP', value: '127.0.0.1', comment: '# 图片Api的IP或者域名' },
-    { key: 'QQBotImgToken', value: crypto.createHash("sha256").update(crypto.randomBytes(32)).digest("hex"), comment: '# 图片Api的token 随机生成 无特殊需求不建议更改' }
+    { key: 'QQBotImgToken', value: crypto.createHash("sha256").update(crypto.randomBytes(32)).digest("hex"), comment: '# 图片Api的token 随机生成 无特殊需求不建议更改' },
+    { key: 'FigureBed', value: "http://206.233.128.146/uploadimg", comment: '# 方法1：图床API 从网上收集的，非本人所属，侵权删~' },
+    { key: 'QQBotPort', value: 0, comment: '# QQBot图片Api公网IP实际端口。实际占用的是HTTP端口，此配置适用于内网和公网端口不一致用户。' }
 ]
 
 /** 检查配置文件是否存在 */
 if (!fs.existsSync(_path + "/config.yaml")) {
     fs.copyFileSync(_path + "/defSet/config.yaml", _path + "/config.yaml")
+    let cfg = fs.readFileSync(_path + "/config.yaml", "utf8")
+    cfg = cfg.replace(`QQBotImgToken: ""`, `QQBotImgToken: "${crypto.createHash("sha256").update(crypto.randomBytes(32)).digest("hex")}"`)
+    fs.writeFileSync(_path + "/config.yaml", cfg, "utf8")
 } else {
     /** 兼容旧配置文件 */
     let cfg = fs.readFileSync(_path + "/config.yaml", "utf8")
@@ -33,6 +38,12 @@ if (!fs.existsSync(_path + "/config.yaml")) {
             cfg += `\n${item.comment}\n${item.key}: ${item.value}`
         }
     })
+    /** 处理token */
+    if (cfg.match(RegExp(`QQBotImgToken: "test"`))) {
+        cfg = cfg.replace(`QQBotImgToken: "test"`, `QQBotImgToken: "${crypto.createHash("sha256").update(crypto.randomBytes(32)).digest("hex")}"`)
+    } else if (cfg.match(RegExp(`QQBotImgToken: ""`))) {
+        cfg = cfg.replace(`QQBotImgToken: ""`, `QQBotImgToken: "${crypto.createHash("sha256").update(crypto.randomBytes(32)).digest("hex")}"`)
+    }
     fs.writeFileSync(_path + "/config.yaml", cfg, "utf8")
 }
 
