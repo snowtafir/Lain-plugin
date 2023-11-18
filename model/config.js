@@ -111,7 +111,6 @@ try {
 await (new WebSocket()).server()
 
 /** QQBot */
-
 Object.entries(Yaml.parse(fs.readFileSync(Bot.lain._path + "/QQBot.yaml", "utf8"))).forEach(async ([appid, cfg]) => {
     if (Object.keys(cfg).length === 0) return
     await createAndStartBot(cfg)

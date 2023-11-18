@@ -26,7 +26,7 @@ function sleep(ms) {
  * @param err 可选参数，日志转为错误日志
  */
 export function log(id, log, type = "info") {
-    id = id ? id = chalk.hex("#868ECC")(`[${Bot?.[id]?.nickname || "未知"}(${id})] `) : id = ""
+    id = chalk.hex("#868ECC")(Bot?.[id]?.nickname ? `[${Bot?.[id]?.nickname}(${id})] ` : `[${id}] `)
     const list = {
         info: function () { logger.info(`${id}${log}`) },
         error: function () { logger.error(`${id}${log}`) },
@@ -90,8 +90,6 @@ export async function makeForwardMsg(data, node = false, e = {}) {
             i--
         }
     }
-
-
 
     for (let msg in data) {
         msg = data[msg]?.message || data[msg]
