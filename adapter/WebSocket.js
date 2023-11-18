@@ -1,10 +1,10 @@
-import shamrock from "./shamrock/app.js"
-import ComWeChat from "./WeChat/ComWx.js"
+import fs from "fs"
 import express from "express"
+import fetch from "node-fetch"
 import { createServer } from "http"
 import common from "../model/common.js"
-import fetch from "node-fetch"
-import fs from "fs"
+import shamrock from "./shamrock/app.js"
+import ComWeChat from "./WeChat/ComWx.js"
 
 export default class WebSocket {
     constructor() {
@@ -41,20 +41,21 @@ export default class WebSocket {
             }
         })
 
-        /** QQBot图片Api */
+        /** QQBotApi */
         app.get("/api/QQBot", (req, res) => {
             const { token, name } = req.query
+            common.log("QQBotApi", `[收到请求] 访问文件：${name}`, "debug")
             /** 检查令牌有效性 */
-            if (token !== Bot.lain.cfg.QQBotImgToken) return res.status(401).send("令牌无效")    
+            if (token !== Bot.lain.cfg.QQBotImgToken) return res.status(401).send("令牌无效")
             const _path = process.cwd() + `/plugins/Lain-plugin/resources/image/${name}`
             if (!fs.existsSync(_path)) return res.status(404).send("啊咧，图片不存在捏")
             /** 返回图片 */
             res.sendFile(_path, {}, (err) => {
                 if (err) {
-                    common.log("QQBot图片Api", err, "error")
+                    common.log("QQBotApi", err, "error")
                 } else {
                     /** 1分钟后删除图片文件 */
-                    setTimeout(() => { fs.unlink(_path, (err) => { if (err) common.log("QQBot图片Api", err, "error") }) }, 60000)
+                    setTimeout(() => { fs.unlink(_path, (err) => { if (err) common.log("QQBotApi", err, "error") }) }, 60000)
                 }
             })
         })
@@ -79,6 +80,8 @@ export default class WebSocket {
         })
 
         this.Server.listen(this.port, async () => {
+            await common.log("", `HTTP服务器：${logger.blue(`http://localhost:${this.port}`)}`)
+            await common.log("", `QQBotApi：${logger.blue(`http://localhost:${this.port}/api/QQBot`)}`)
             await common.log("", `本地 Shamrock 连接地址：${logger.blue(`ws://localhost:${this.port}${this.path}`)}`)
             await common.log("", `本地 ComWeChat 连接地址：${logger.blue(`ws://localhost:${this.port}${this.path_wx}`)}`)
         })

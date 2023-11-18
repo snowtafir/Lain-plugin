@@ -34,7 +34,7 @@ export function log(id, log, type = "info") {
         debug: function () { logger.debug(`${id}${log}`) },
         warn: function () { logger.warn(`${id}${log}`) },
     }
-    return list[type]()
+    return list[type]() || list["info"]()
 }
 
 

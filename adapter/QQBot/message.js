@@ -16,7 +16,7 @@ export default new class message {
                     if (msg[i].type === "image") msg[i] = this.get_image(msg[i])
                 }
             } catch (error) {
-                console.error("🚀 ~ file: message.js:19 ~ message ~ reply ~ error:", error)
+                common.log(e.self_id, error, "erroe")
             }
 
             _reply.call(e, msg, quote)
@@ -179,13 +179,13 @@ export default new class message {
                 filePath = path.join(folderPath, `${Date.now()}${path.extname(localPath)}`)
                 fs.copyFileSync(localPath, filePath)
             } else {
-                common.log(this.id, i, "error")
+                common.log("QQBotApi", `本地文件不存在：${i}`, "error")
                 return { type: "text", text: "本地文件不存在..." }
             }
         }
         // 留个容错
         else {
-            common.log(this.id, i, "error")
+            common.log("QQBotApi", `未知格式：${i}`, "error")
             return { type: "text", text: "未知格式...请寻找作者适配..." }
         }
 
@@ -193,9 +193,10 @@ export default new class message {
         if (fs.existsSync(filePath)) {
             const { port, QQBotImgIP, QQBotImgToken } = Bot.lain.cfg
             const url = `http://${QQBotImgIP}:${port}/api/QQBot?token=${QQBotImgToken}&name=${path.basename(filePath)}`
+            common.log("QQBotApi", `[生成文件] url：${url}`, "debug")
             return { type: "image", file: url }
         } else {
-            common.log(this.id, i, "error")
+            common.log("QQBotApi", `文件保存失败:${i}`, "error")
             return { type: "text", text: "文件保存失败..." }
         }
     }
