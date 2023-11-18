@@ -294,26 +294,26 @@ export async function message(id, msg, group_id, reply = true) {
                 }
                 if (typeof source === "string") {
                     common.log(id, `获取引用消息内容失败，重试次数上限，已终止`)
-                    return { message, source }
+                    continue
+                }
+                common.log("", source, "debug")
+                let source_reply = source.message.map(u => (u.type === "at" ? { type: u.type, qq: Number(u.data.qq) } : { type: u.type, ...u.data }))
+
+                let raw_message = toRaw(source_reply, id, group_id)
+
+                /** 覆盖原先的message */
+                source.message = source_reply
+                if (reply != "e") message.push(...source_reply)
+
+                source = {
+                    ...source,
+                    reply: source_reply,
+                    seq: source.message_id,
+                    user_id: source.sender.user_id,
+                    raw_message: raw_message
                 }
             } catch (error) {
                 logger.error(error)
-            }
-
-            let source_reply = source.message.map(u => (u.type === "at" ? { type: u.type, qq: Number(u.data.qq) } : { type: u.type, ...u.data }))
-
-            let raw_message = toRaw(source_reply, id, group_id)
-
-            /** 覆盖原先的message */
-            source.message = source_reply
-            if (reply != "e") message.push(...source_reply)
-
-            source = {
-                ...source,
-                reply: source_reply,
-                seq: source.message_id,
-                user_id: source.sender.user_id,
-                raw_message: raw_message
             }
         }
         /** 不理解为啥为啥不是node... */

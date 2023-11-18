@@ -177,14 +177,14 @@ export default class message {
 
         /** 引用消息 */
         if (msg?.message_reference?.message_id) {
-            const reply = (await Bot[this.id].client.messageApi.message(msg.channel_id, msg.message_reference.message_id)).message
+            const reply = (await Bot[this.id].client.messageApi.message(msg.channel_id, msg.message_reference.message_id)).data.message
             let message = []
-            if (reply.attachments) {
+            if (reply?.attachments) {
                 for (let i of reply.attachments) {
                     message.push({ type: "image", url: `https://${i.url}` })
                 }
             }
-            if (reply.content) {
+            if (reply?.content) {
                 /** 暂不处理...懒 */
                 message.push({ type: "text", text: reply.content })
             }
@@ -208,19 +208,23 @@ export default class message {
     /** 撤回消息 */
     async recallMsg(channel_ID, msg_id) {
         /** 先打印日志 */
-        const { data } = await Bot[this.id].client.messageApi.message(channel_ID, msg_id)
-        const { guild_id, channel_id, timestamp, author, content } = data.message
-        const msg = ""
-        msg += `撤回消息:\n频道ID：${guild_id}`
-        msg += `\n子频道ID：${channel_id}`
-        msg += `\n详细消息：`
-        msg += `\n  时间：${timestamp}`
-        msg += `\n  用户ID：${author.id}`
-        msg += `\n  用户昵称：${author.username}`
-        msg += `\n  用户是否为机器人：${author.bot}`
-        msg += `\n  消息内容：${content || "未知内容"}`
-        /** 打印日志 */
-        await common.log(this.id, msg)
+        try {
+            const { data } = await Bot[this.id].client.messageApi.message(channel_ID, msg_id)
+            const { guild_id, channel_id, timestamp, author, content } = data.message
+            let msg = ""
+            msg += `撤回消息:\n频道ID：${guild_id}`
+            msg += `\n子频道ID：${channel_id}`
+            msg += `\n详细消息：`
+            msg += `\n时间：${timestamp}`
+            msg += `\n用户ID：${author.id}`
+            msg += `\n用户昵称：${author.username}`
+            msg += `\n用户是否为机器人：${author.bot}`
+            msg += `\n消息内容：${content || "未知内容"}`
+            /** 打印日志 */
+            await common.log(this.id, msg)
+        } catch (error) {
+            common.log(this.id, error, "error")
+        }
         /** 撤回消息 */
         return (await Bot[this.id].client.messageApi.deleteMessage(channel_ID, msg_id, false)).data
     }
@@ -292,7 +296,7 @@ export default class message {
     /** 获取聊天记录 */
     async getChatHistory(channelID, msg_id) {
         const source = await Bot[this.id].client.messageApi.message(channelID, msg_id)
-        const { id, content, author, guild_id, channel_id, timestamp, member } = source.message
+        const { id, content, author, guild_id, channel_id, timestamp, member } = source.data.message
         const time = (new Date(timestamp)).getTime() / 1000
 
         /** 获取用户的身份组信息 */
