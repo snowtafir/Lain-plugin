@@ -64,8 +64,8 @@ export default new class zaiMsg {
         }
 
         /** 获取对应用户头像 */
-        e.getAvatarUrl = (id = user_id) => {
-            return `https://q1.qlogo.cn/g?b=qq&s=0&nk=${id}`
+        e.getAvatarUrl = (size = 0, id = user_id) => {
+            return `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${id}`
         }
 
         /** 构建场景对应的方法 */
@@ -88,8 +88,8 @@ export default new class zaiMsg {
                 is_admin: data?.sender?.role === "admin" || false,
                 is_owner: data?.sender?.role === "owner" || false,
                 /** 获取头像 */
-                getAvatarUrl: () => {
-                    return `https://q1.qlogo.cn/g?b=qq&s=0&nk=${user_id}`
+                getAvatarUrl: (size = 0) => {
+                    return `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${user_id}`
                 },
                 /** 椰奶禁言 */
                 mute: async (time) => {
@@ -107,7 +107,7 @@ export default new class zaiMsg {
                     }
                     return {
                         member,
-                        getAvatarUrl: (userId = id) => `https://q1.qlogo.cn/g?b=qq&s=0&nk=${userId}`
+                        getAvatarUrl: (size = 0, userId = id) => `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${userId}`
                     }
                 },
                 getChatHistory: async (msg_id, num, reply) => {
@@ -239,8 +239,8 @@ export default new class zaiMsg {
                         return [source]
                     }
                 },
-                getAvatarUrl: async (userID = user_id) => {
-                    return `https://q1.qlogo.cn/g?b=qq&s=0&nk=${userID}`
+                getAvatarUrl: async (size = 0, userID = user_id) => {
+                    return `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${userID}`
                 }
             }
         }

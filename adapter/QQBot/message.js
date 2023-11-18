@@ -27,8 +27,8 @@ export default new class message {
         e.recall = async () => { return }
 
         /** 获取对应用户头像 */
-        e.getAvatarUrl = (id = user_id) => {
-            return `https://q1.qlogo.cn/g?b=qq&s=0&nk=${id}`
+        e.getAvatarUrl = (size = 0, id = user_id) => {
+            return `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${id}`
         }
 
         /** 构建场景对应的方法 */
@@ -44,8 +44,8 @@ export default new class message {
                 is_admin: false,
                 is_owner: false,
                 /** 获取头像 */
-                getAvatarUrl: () => {
-                    return `https://q1.qlogo.cn/g?b=qq&s=0&nk=${e.user_id}`
+                getAvatarUrl: (size = 0) => {
+                    return `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${e.user_id}`
                 },
                 mute: async (time) => {
                     return
@@ -59,7 +59,7 @@ export default new class message {
                 pickMember: (id) => {
                     return {
                         member,
-                        getAvatarUrl: (userId = id) => `https://q1.qlogo.cn/g?b=qq&s=0&nk=${userId}`
+                        getAvatarUrl: (size = 0, userId = id) => `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${userId}`
                     }
                 },
                 getChatHistory: async (msg_id, num, reply) => {
@@ -124,8 +124,8 @@ export default new class message {
                 getChatHistory: async (msg_id, num, reply = true) => {
                     return ["test"]
                 },
-                getAvatarUrl: async (userID = user_id) => {
-                    return `https://q1.qlogo.cn/g?b=qq&s=0&nk=${userID}`
+                getAvatarUrl: async (size = 0, userID = user_id) => {
+                    return `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${userID}`
                 }
             }
         }
