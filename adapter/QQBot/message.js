@@ -1,6 +1,8 @@
 import fs from "fs"
 import path from "path"
+import { execSync } from "child_process"
 import common from "../../model/common.js"
+import { encode as encodeSilk } from "silk-wasm"
 
 export default new class message {
     /** 转换格式给云崽 */
@@ -138,7 +140,7 @@ export default new class message {
     }
 
 
-    /** 统一图片格式 */
+    /** 处理图片 */
     async get_image(i) {
         let filePath
         const folderPath = process.cwd() + `/plugins/Lain-plugin/resources/image`
@@ -187,34 +189,61 @@ export default new class message {
 
         // 返回名称
         if (fs.existsSync(filePath)) {
-            const { FigureBed, port, QQBotImgIP, QQBotPort, QQBotImgToken } = Bot.lain.cfg
-            let url
-            // 先调用三方图床
-            try {
-                const res = await common.uploadFile(filePath, FigureBed)
-                if (res.ok) {
-                    const { result } = await res.json()
-                    url = FigureBed.replace("/uploadimg", "") + result.path
-                    common.log("QQBot图床", `[上传成功] ${url}`)
-                    return { type: "image", file: url }
-                } else {
-                    const data = await res.json()
-                    common.log("", `QQBot图床发生错误，将调用下一个方法：${data}`, "error")
-                }
-            } catch {
-                common.log("", `QQBot图床发生错误，将调用下一个方法`, "error")
-            }
+            return await this.Upload_File(filePath, "image")
+        } else {
+            common.log("QQBotApi", `文件保存失败:${i}`, "error")
+            return { type: "text", text: "文件保存失败..." }
+        }
+    }
 
-            // 公网，反正都要返回东西，先赋值吧
-            url = `http://${QQBotImgIP}:${QQBotPort || port}/api/QQBot?token=${QQBotImgToken}&name=${path.basename(filePath)}`
+    /** 处理视频 */
+    async get_video(i) {
+        let filePath
+        const folderPath = process.cwd() + `/plugins/Lain-plugin/resources/image`
 
-            // 使用QQ图床
-            if (QQBotImgIP == "127.0.0.1") {
-                const botList = Bot.adapter.filter(item => typeof item === "number")
-                if (botList.length > 0) url = await common.uploadQQ(filePath, botList[0])
-            }
-            common.log("QQBotApi", `[生成文件] url：${url}`, "debug")
-            return { type: "image", file: url }
+        if (typeof i.file === "string" && /^http(s)?:\/\//.test(i.file)) return i
+        else if (fs.existsSync(i.file)) {
+            filePath = path.join(folderPath, `${Date.now()}${path.extname(i.file)}`)
+            fs.copyFileSync(i.file, filePath)
+        } else {
+            common.log("QQBotApi", `本地文件不存在：${i}`, "error")
+            return { type: "text", text: "本地文件不存在..." }
+        }
+
+        // 返回名称
+        if (fs.existsSync(filePath)) {
+            return await this.Upload_File(filePath, "video")
+        } else {
+            common.log("QQBotApi", `文件保存失败:${i}`, "error")
+            return { type: "text", text: "文件保存失败..." }
+        }
+    }
+
+    /** 处理语音... */
+    async get_audio(i) {
+        let filePath
+        const folderPath = process.cwd() + `/plugins/Lain-plugin/resources/image`
+        if (typeof i.file === "string" && /^http(s)?:\/\//.test(i.file)) return i
+        else if (fs.existsSync(i.file)) {
+            const newFilePath = path.join(folderPath, `${Date.now()}.pcm`)
+            await execSync(`ffmpeg -i "${i.file}" -f s16le -ar 48000 -ac 1 "${newFilePath}"`)
+            filePath = path.join(folderPath, `${Date.now()}.silk`)
+            await encodeSilk(fs.readFileSync(newFilePath), 48000)
+                .then((silkData) => {
+                    fs.writeFileSync(filePath, silkData)
+                })
+                .catch((err) => {
+                    common.log("QQBot", `转码失败${err}`, "error")
+                })
+
+        } else {
+            common.log("QQBotApi", `本地文件不存在：${i}`, "error")
+            return { type: "text", text: "本地文件不存在..." }
+        }
+
+        // 返回名称
+        if (fs.existsSync(filePath)) {
+            return await this.Upload_File(filePath, "audio")
         } else {
             common.log("QQBotApi", `文件保存失败:${i}`, "error")
             return { type: "text", text: "文件保存失败..." }
@@ -237,20 +266,28 @@ export default new class message {
                     break
                 case "object":
                     try {
-                        if (e[i].type === "image") {
-                            message.push(await this.get_image(e[i]))
-                        }
-                        else if (e[i].type === "text") {
-                            if (!msg && t && Bot.lain.cfg.QQBotPrefix) {
-                                msg = true
-                                e[i].text = e[i].text.trim().replace(/^\//, "#")
+                        switch (e[i].type) {
+                            case "image":
+                                message.push(await this.get_image(e[i]))
+                                break
+                            case "text":
+                                if (!msg && t && Bot.lain.cfg.QQBotPrefix) {
+                                    msg = true
+                                    e[i].text = e[i].text.trim().replace(/^\//, "#")
+                                    message.push(e[i])
+                                } else {
+                                    message.push(e[i])
+                                }
+                                break
+                            case "video":
+                                message.push(await this.get_video(e[i]))
+                                break
+                            case "record":
+                                message.push(await this.get_audio(e[i]))
+                                break
+                            default:
                                 message.push(e[i])
-                            } else {
-                                message.push(e[i])
-                            }
-                        }
-                        else {
-                            message.push(e[i])
+                                break
                         }
                     } catch (err) {
                         message.push(e[i])
@@ -262,5 +299,38 @@ export default new class message {
 
         }
         return message
+    }
+
+    async Upload_File(filePath, type) {
+        const { FigureBed, port, QQBotImgIP, QQBotPort, QQBotImgToken } = Bot.lain.cfg
+        let url
+        // 先调用三方图床
+        try {
+            if (FigureBed && type === "image") {
+                const res = await common.uploadFile(filePath, FigureBed)
+                if (res.ok) {
+                    const { result } = await res.json()
+                    url = FigureBed.replace("/uploadimg", "") + result.path
+                    common.log("QQBot图床", `[上传成功] ${url}`)
+                    return { type, file: url }
+                } else {
+                    const data = await res.json()
+                    common.log("", `QQBot图床发生错误，将调用下一个方法：${data}`, "error")
+                }
+            }
+        } catch {
+            common.log("", `QQBot图床发生错误，将调用下一个方法`, "error")
+        }
+
+        // 公网，反正都要返回东西，先赋值吧
+        url = `http://${QQBotImgIP}:${QQBotPort || port}/api/QQBot?token=${QQBotImgToken}&name=${path.basename(filePath)}`
+
+        // 使用QQ图床
+        if (QQBotImgIP == "127.0.0.1" && type === "image") {
+            const botList = Bot.adapter.filter(item => typeof item === "number")
+            if (botList.length > 0) url = await common.uploadQQ(filePath, botList[0])
+        }
+        common.log("QQBotApi", `[生成文件] url：${url}`, "debug")
+        return { type, file: url }
     }
 }
