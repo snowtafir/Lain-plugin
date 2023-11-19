@@ -218,8 +218,10 @@ export default new class message {
             url = `http://${QQBotImgIP}:${QQBotPort || port}/api/QQBot?token=${QQBotImgToken}&name=${path.basename(filePath)}`
 
             // 使用QQ图床
-            const botList = Bot.adapter.filter(item => typeof item === "number")
-            if (botList.length > 0) url = await common.uploadQQ(filePath, botList[0])
+            if(QQBotImgIP =="127.0.0.1"){
+                const botList = Bot.adapter.filter(item => typeof item === "number")
+                if (botList.length > 0) url = await common.uploadQQ(filePath, botList[0])
+            }
             common.log("QQBotApi", `[生成文件] url：${url}`, "debug")
             return { type: "image", file: url }
         } else {
