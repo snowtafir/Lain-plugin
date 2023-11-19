@@ -26,7 +26,7 @@
 
 <details><summary>展开/收起</summary>
 
-是否沙盒：`是`
+是否沙盒：`否`
 
 是否私域：`是`
 
@@ -41,16 +41,37 @@ secret：`abcdefghijklmnopqrstuvwxyz`
 
 添加机器人：
 ```
-#QQ群设置 1:1:1:123456789:abcdefghijklmnopqrstuvwxyz123456:abcdefghijklmnopqrstuvwxyz
+#QQ群设置 0:1:1:123456789:abcdefghijklmnopqrstuvwxyz123456:abcdefghijklmnopqrstuvwxyz
 ```
 
 删除机器人：
 ```
-#QQ群设置 1:1:1:123456789:abcdefghijklmnopqrstuvwxyz123456:abcdefghijklmnopqrstuvwxyz
+#QQ群设置 0:1:1:123456789:abcdefghijklmnopqrstuvwxyz123456:abcdefghijklmnopqrstuvwxyz
 ```
 
 </details>
 
 ## 其他
 
-- 如果需要发送自定义图片，请自行更改配置文件中的公网ip，服务器放行http端口！
+目前由于官方API的限制，需要使用在线url，我准备了3种方法，请注意查看以下
+
+- 方法1：图床，不需要依赖公网。缺点是稳定性未知，随机可能寄。
+
+- 方法2：将喵崽搭在有公网的服务器上，使用服务器的公网放出API，可兼容图片、语音、视频等文件。缺点是需要公网。
+
+- 方法3：登录一个QQ机器人，使用QQ图床。备用方案，你只需要登录，ICQQ、shamrock、ntqq都可。
+
+## 配置图片Api
+
+<details><summary>展开/收起</summary>
+
+- 图床API 从网上收集的，非本人所属，侵权删~
+
+- 优先尝试内置图床发图，失败后如有配置公网IP则使用公网IP发图，否则通过方法3给自己发图的方式上传图片。
+
+- 可通过锅巴配置填写公网IP，支持端口映射。
+
+- 暂时只适配了一个图床，如希望禁用内置图床，可自行将配置文件中的图床地址留空。
+
+</details>
+

@@ -26,7 +26,7 @@
 
 <details><summary>展开/收起</summary>
 
-是否沙盒：`是`
+是否沙盒：`否`
 
 是否私域：`是`
 
@@ -37,12 +37,12 @@
 
 添加机器人：
 ```
-#QQ频道设置 1:1:123456789:abcdefghijklmnopqrstuvwxyz123456
+#QQ频道设置 0:1:123456789:abcdefghijklmnopqrstuvwxyz123456
 ```
 
 删除机器人：
 ```
-#QQ频道设置 1:1:123456789:abcdefghijklmnopqrstuvwxyz123456
+#QQ频道设置 0:1:123456789:abcdefghijklmnopqrstuvwxyz123456
 ```
 
 查看机器人：
