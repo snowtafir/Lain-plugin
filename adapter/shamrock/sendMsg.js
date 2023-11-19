@@ -85,7 +85,7 @@ export default class SendMsg {
                     })
                     break
                 case "video":
-                    /** 只支持本地文件 */
+                    /** 本地文件 */
                     if (i.file && fs.existsSync(i.file)) {
                         /** 上传文件 */
                         try {
@@ -95,9 +95,6 @@ export default class SendMsg {
                         } catch (err) {
                             common.log(this.id, err, "error")
                         }
-                    } else {
-                        await common.log(this.id, `不支持的文件：${i}`, "error")
-                        break
                     }
                     CQ.push(`{video:${i.file}}`)
                     msg.push({
