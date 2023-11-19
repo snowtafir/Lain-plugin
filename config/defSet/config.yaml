@@ -26,8 +26,12 @@ QQBotImgIP: 127.0.0.1
 QQBotPort: 0
 # 图片Api的token
 QQBotImgToken: ""
+# QQBot指令前缀转换 /转#
+QQBotPrefix: true
 
 #-------- 以下是标准输入配置 --------
+# 标准输入开关
+stdinSwitch: true
 # 标准输入的昵称
 stdin_nickname: "标准输入"
 

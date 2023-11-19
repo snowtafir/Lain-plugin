@@ -96,11 +96,17 @@ export default new class zaiMsg {
                     return await api.set_group_ban(self_id, group_id, user_id, time)
                 },
             }
-            /** 取机器人自身信息 */
-            const get_bot_info = await Bot[self_id].gml.get(group_id)
+            /** 获取bot是否为ow或者admin */
+            let is_admin = false
+            let is_owner = false
+            try {
+                const get_bot_info = await Bot[self_id].gml.get(group_id)
+                is_admin = get_bot_info?.[self_id]?.role === "admin" || false
+                is_owner = get_bot_info?.[self_id]?.role === "owner" || false
+            } catch (err) { }
             e.group = {
-                is_admin: get_bot_info?.[self_id]?.role === "admin" || false,
-                is_owner: get_bot_info?.[self_id]?.role === "owner" || false,
+                is_admin,
+                is_owner,
                 pickMember: (id) => {
                     /** 取缓存！！！别问为什么，因为傻鸟同步 */
                     let member = Bot[self_id].gml.get(group_id)?.[id]

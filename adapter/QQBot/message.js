@@ -5,21 +5,12 @@ import common from "../../model/common.js"
 export default new class message {
     /** 转换格式给云崽 */
     async msg(e, isGroup) {
-        e.bot.stat = { start_time: Date.now() / 1000, recv_msg_cnt: 0 }
+        e.bot.stat = Bot?.[e.self_id]?.stat
         const _reply = e.reply
+        e.message = await this.message(e.message, true)
         /** 回复 */
         const reply = async (msg, quote) => {
-            try {
-                if (typeof msg === "object" && msg?.type == "image") {
-                    msg = await this.get_image(msg)
-                }
-                else if (Array.isArray(msg)) for (let i in msg) {
-                    if (msg[i].type === "image") msg[i] = await this.get_image(msg[i])
-                }
-            } catch (error) {
-                common.log(e.self_id, error, "error")
-            }
-
+            msg = await this.message(msg)
             try {
                 _reply.call(e, msg, quote)
             } catch (error) {
@@ -218,7 +209,7 @@ export default new class message {
             url = `http://${QQBotImgIP}:${QQBotPort || port}/api/QQBot?token=${QQBotImgToken}&name=${path.basename(filePath)}`
 
             // 使用QQ图床
-            if(QQBotImgIP =="127.0.0.1"){
+            if (QQBotImgIP == "127.0.0.1") {
                 const botList = Bot.adapter.filter(item => typeof item === "number")
                 if (botList.length > 0) url = await common.uploadQQ(filePath, botList[0])
             }
@@ -228,5 +219,48 @@ export default new class message {
             common.log("QQBotApi", `文件保存失败:${i}`, "error")
             return { type: "text", text: "文件保存失败..." }
         }
+    }
+
+    async message(e, t = false) {
+        if (!Array.isArray(e)) e = [e]
+        let msg = false
+        const message = []
+        for (let i in e) {
+            switch (typeof e[i]) {
+                case "string":
+                    if (!msg && t && Bot.lain.cfg.QQBotPrefix) {
+                        msg = true
+                        message.push({ type: "text", text: e[i].trim().replace(/^\//, "#") })
+                    } else {
+                        message.push({ type: "text", text: e[i] })
+                    }
+                    break
+                case "object":
+                    try {
+                        if (e[i].type === "image") {
+                            message.push(await this.get_image(e[i]))
+                        }
+                        else if (e[i].type === "text") {
+                            if (!msg && t && Bot.lain.cfg.QQBotPrefix) {
+                                msg = true
+                                e[i].text = e[i].text.trim().replace(/^\//, "#")
+                                message.push(e[i])
+                            } else {
+                                message.push(e[i])
+                            }
+                        }
+                        else {
+                            message.push(e[i])
+                        }
+                    } catch (err) {
+                        message.push(e[i])
+                    }
+                    break
+                default:
+                    message.push(e[i])
+            }
+
+        }
+        return message
     }
 }
