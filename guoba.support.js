@@ -123,12 +123,25 @@ export function supportGuoba() {
                 },
                 {
                     field: "QQBotImgIP",
-                    label: "公网IP/域名",
-                    bottomHelpMessage: "如果需要发送自定义图片，请在此填入QQBot的公网IP，服务器放行http端口",
+                    label: "方法2： 公网API",
+                    bottomHelpMessage: "请输入QQBot的公网IP，服务器放行http端口",
                     component: "Input",
                     required: false,
                     componentProps: {
-                        placeholder: "请输入QQBot的公网IP或者域名",
+                        placeholder: "请输入公网IP",
+                    },
+                },
+                {
+                    field: "QQBotPort",
+                    label: "公网IP实际端口",
+                    bottomHelpMessage: "实际占用的是HTTP端口，此配置适用于内网和公网端口不一致用户。",
+                    component: "InputNumber",
+                    required: false,
+                    componentProps: {
+                        type: "number",
+                        placeholder: "请输入公网端口",
+                        min: 1,
+                        max: 65535,
                     },
                 },
                 {
@@ -379,6 +392,10 @@ export function supportGuoba() {
                         case "QQBotImgIP":
                             cfg.setIn([key], String(value))
                             Bot.lain.cfg.QQBotImgIP = String(value)
+                            break
+                        case "QQBotPort":
+                            cfg.setIn([key], Number(value))
+                            Bot.lain.cfg.QQBotPort = Number(value)
                             break
                         case "QQBotImgToken":
                             cfg.setIn([key], String(value))
