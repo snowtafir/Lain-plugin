@@ -257,7 +257,7 @@ let api = {
     },
 
     /**
-     * 设置精华消息（未实现）
+     * 设置精华消息
      * @param {string} id - 机器人QQ
      * @param {number} message_id - 消息ID
      */
@@ -267,7 +267,7 @@ let api = {
     },
 
     /**
-     * 移出精华消息（未实现）
+     * 移出精华消息
      * @param {string} id - 机器人QQ
      * @param {number} message_id - 消息ID
      */

@@ -108,13 +108,30 @@ export default new class addBot {
                     setCard: async (qq, card) => {
                         return await api.set_group_card(uin, groupID, qq, card)
                     },
-                    /** 
+                    /**
                      * 撤回消息
                      * @param msg_id
                      */
                     recallMsg: async (msg_id) => {
                         return await api.delete_msg(uin, msg_id)
-                    }
+                    },
+                    setEssenceMessage: async(msg_id) => {
+                        let res = await api.set_essence_msg(uin, msg_id)
+                        if (res?.message === '成功') {
+                            return "加精成功"
+                        } else {
+                            return res?.message
+                        }
+                    },
+                    /** 移除群精华消息 **/
+                    removeEssenceMessage: async(msg_id) => {
+                        let res = await api.delete_essence_msg(uin, msg_id)
+                        if (res?.message === '成功') {
+                            return "移除精华成功"
+                        } else {
+                            return res?.message
+                        }
+                    },
                 }
             },
             pickUser: (user_id) => {
@@ -143,7 +160,7 @@ export default new class addBot {
                         })
                         return Promise.all(messages)
                     },
-                    /** 
+                    /**
                      * 撤回消息
                      * @param msg_id
                      */
@@ -194,13 +211,30 @@ export default new class addBot {
                         })
                         return Promise.all(messages)
                     },
-                    /** 
+                    /**
                      * 撤回消息
                      * @param msg_id
                      */
                     recallMsg: async (msg_id) => {
                         return await api.delete_msg(uin, msg_id)
                     }
+                }
+            },
+            setEssenceMessage: async(msg_id) => {
+                let res = await api.set_essence_msg(uin, msg_id)
+                if (res?.message === '成功') {
+                  return "加精成功"
+                } else {
+                  return res?.message
+                }
+            },
+            /** 移除群精华消息 **/
+            removeEssenceMessage: async(msg_id) => {
+                let res = await api.delete_essence_msg(uin, msg_id)
+                if (res?.message === '成功') {
+                    return "移除精华成功"
+                } else {
+                    return res?.message
                 }
             },
             /** 上游暂未实现此函数，现伪造给椰奶使用 */

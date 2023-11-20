@@ -209,6 +209,23 @@ export default new class zaiMsg {
                 setCard: async (qq, card) => {
                     return await api.set_group_card(self_id, group_id, qq, card)
                 },
+                setEssenceMessage: async(msg_id) => {
+                    let res = await api.set_essence_msg(uin, msg_id)
+                    if (res?.message === '成功') {
+                        return "加精成功"
+                    } else {
+                        return res?.message
+                    }
+                },
+                /** 移除群精华消息 **/
+                removeEssenceMessage: async(msg_id) => {
+                    let res = await api.delete_essence_msg(uin, msg_id)
+                    if (res?.message === '成功') {
+                        return "移除精华成功"
+                    } else {
+                        return res?.message
+                    }
+                },
             }
         } else {
             e.friend = {
