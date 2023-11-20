@@ -115,7 +115,7 @@ export default new class addBot {
                     recallMsg: async (msg_id) => {
                         return await api.delete_msg(uin, msg_id)
                     },
-                    setEssenceMessage: async(msg_id) => {
+                    setEssenceMessage: async (msg_id) => {
                         let res = await api.set_essence_msg(uin, msg_id)
                         if (res?.message === '成功') {
                             return "加精成功"
@@ -124,7 +124,7 @@ export default new class addBot {
                         }
                     },
                     /** 移除群精华消息 **/
-                    removeEssenceMessage: async(msg_id) => {
+                    removeEssenceMessage: async (msg_id) => {
                         let res = await api.delete_essence_msg(uin, msg_id)
                         if (res?.message === '成功') {
                             return "移除精华成功"
@@ -220,16 +220,16 @@ export default new class addBot {
                     }
                 }
             },
-            setEssenceMessage: async(msg_id) => {
+            setEssenceMessage: async (msg_id) => {
                 let res = await api.set_essence_msg(uin, msg_id)
                 if (res?.message === '成功') {
-                  return "加精成功"
+                    return "加精成功"
                 } else {
-                  return res?.message
+                    return res?.message
                 }
             },
             /** 移除群精华消息 **/
-            removeEssenceMessage: async(msg_id) => {
+            removeEssenceMessage: async (msg_id) => {
                 let res = await api.delete_essence_msg(uin, msg_id)
                 if (res?.message === '成功') {
                     return "移除精华成功"
@@ -251,7 +251,7 @@ export default new class addBot {
     }
 
     async LoadList(uin) {
-        if (!Bot.adapter?.[Number(uin)]) Bot.adapter.push(Number(uin))
+        if (!Bot.adapter.includes(Number(uin))) Bot.adapter.push(Number(uin))
 
         /** 获取bot自身信息 */
         const info = await api.get_login_info(uin)

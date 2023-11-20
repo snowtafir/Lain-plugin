@@ -1,6 +1,7 @@
 import fs from "fs"
 import path from "path"
-import { execSync } from "child_process"
+import ffmpeg from "fluent-ffmpeg"
+import ffmpegPath from "ffmpeg-static"
 import common from "../../model/common.js"
 import { encode as encodeSilk } from "silk-wasm"
 
@@ -168,7 +169,7 @@ export default new class message {
         }
         // 如果是url，则直接返回url
         else if (typeof i.file === "string" && /^http(s)?:\/\//.test(i.file)) {
-            return { type: "image", file: i.file }
+            return { ...i, type: "image", file: i.file }
         }
         // 检查是否是字符串类型，且不是url
         else if (typeof i.file === "string") {
@@ -178,21 +179,22 @@ export default new class message {
                 fs.copyFileSync(localPath, filePath)
             } else {
                 common.log("QQBotApi", `本地文件不存在：${i}`, "error")
-                return { type: "text", text: "本地文件不存在..." }
+                return { ...i, type: "text", text: "本地文件不存在..." }
             }
         }
         // 留个容错
         else {
             common.log("QQBotApi", `未知格式：${i}`, "error")
-            return { type: "text", text: "未知格式...请寻找作者适配..." }
+            return { ...i, type: "text", text: "未知格式...请寻找作者适配..." }
         }
 
         // 返回名称
         if (fs.existsSync(filePath)) {
-            return await this.Upload_File(filePath, "image")
+            const obj = await this.Upload_File(filePath, "image")
+            return { ...i, ...obj }
         } else {
             common.log("QQBotApi", `文件保存失败:${i}`, "error")
-            return { type: "text", text: "文件保存失败..." }
+            return { ...i, type: "text", text: "文件保存失败..." }
         }
     }
 
@@ -221,16 +223,45 @@ export default new class message {
 
     /** 处理语音... */
     async get_audio(i) {
-        let filePath
         const folderPath = process.cwd() + `/plugins/Lain-plugin/resources/image`
-        if (typeof i.file === "string" && /^http(s)?:\/\//.test(i.file)) return i
-        else if (fs.existsSync(i.file)) {
-            const newFilePath = path.join(folderPath, `${Date.now()}.pcm`)
-            await execSync(`ffmpeg -i "${i.file}" -f s16le -ar 48000 -ac 1 "${newFilePath}"`)
-            filePath = path.join(folderPath, `${Date.now()}.silk`)
-            await encodeSilk(fs.readFileSync(newFilePath), 48000)
+        const file = `${folderPath}/${Date.now()}${path.extname(i.file) || ".mp3"}`
+        const pcm = path.join(folderPath, `${Date.now()}.pcm`)
+        const silk = path.join(folderPath, `${Date.now()}.silk`)
+
+        if (typeof i.file === "string" && /^http(s)?:\/\//.test(i.file)) {
+            try {
+                /** 下载 */
+                const res = await fetch(i.file)
+                if (res.ok) {
+                    /** 将响应数据转为二进制流并写入文件 */
+                    const buffer = await res.arrayBuffer()
+                    fs.writeFileSync(file, Buffer.from(buffer))
+                    common.log("QQBot", "语音文件下载成功", "mark")
+                } else {
+                    common.log("QQBot", "语音文件下载成功", "mark")
+                }
+            } catch (error) {
+                common.error("QQBot", error.message, "errror")
+            }
+            i.file = file
+        }
+        if (fs.existsSync(i.file)) {
+            try {
+                /** mp3 转 pcm */
+                await this.runFfmpeg(i.file, pcm)
+            } catch (error) {
+                console.error(`执行错误: ${error}`)
+            }
+            /** pcm 转 silk */
+            await encodeSilk(fs.readFileSync(pcm), 48000)
                 .then((silkData) => {
-                    fs.writeFileSync(filePath, silkData)
+                    /** 转silk完成，保存 */
+                    fs.writeFileSync(silk, silkData)
+                    /** 删除初始mp3文件 */
+                    fs.unlink(file, (err) => { })
+                    /** 删除pcm文件 */
+                    fs.unlink(pcm, (err) => { })
+                    common.log("QQBot", `silk转码完成${silk}`, "mark")
                 })
                 .catch((err) => {
                     common.log("QQBot", `转码失败${err}`, "error")
@@ -242,12 +273,37 @@ export default new class message {
         }
 
         // 返回名称
-        if (fs.existsSync(filePath)) {
-            return await this.Upload_File(filePath, "audio")
+        if (fs.existsSync(silk)) {
+            return await this.Upload_File(silk, "audio")
         } else {
             common.log("QQBotApi", `文件保存失败:${i}`, "error")
             return { type: "text", text: "文件保存失败..." }
         }
+    }
+
+    runFfmpeg(input, output) {
+        /** 指定ffmpeg */
+        ffmpeg.setFfmpegPath(ffmpegPath)
+        return new Promise((resolve, reject) => {
+            ffmpeg(input)
+                .outputOptions("-f", "s16le")
+                .outputOptions("-ar", "48000")
+                .outputOptions("-ac", "1")
+                .saveToFile(output)
+                .on("progress", (progress) => {
+                    if (progress.percent) {
+                        common.log("QQBot", `处理中: ${Math.floor(progress.percent)}% 完成`, "mark")
+                    }
+                })
+                .on("end", () => {
+                    common.log("QQBot", "ffmpeg转码完成")
+                    resolve()
+                })
+                .on("error", (error) => {
+                    common.log("QQBot", `执行错误: ${error}`, "error")
+                    reject(error)
+                })
+        })
     }
 
     async message(e, t = false) {
@@ -284,6 +340,8 @@ export default new class message {
                                 break
                             case "record":
                                 message.push(await this.get_audio(e[i]))
+                                break
+                            case "at":
                                 break
                             default:
                                 message.push(e[i])

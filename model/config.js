@@ -96,6 +96,11 @@ if (fs.existsSync(_path + "/bot.yaml")) {
     }
 }
 
+/** 清空资源 */
+fs.readdir(`${_path}/../resources/image`, (err, files) => {
+    files.forEach(file => { fs.unlink(`${_path}/../resources/image/${file}`, (err) => { }) })
+})
+
 /** 热重载~ */
 try {
     const filePath = _path + "/config.yaml"
@@ -123,10 +128,12 @@ try {
 await (new WebSocket()).server()
 
 /** QQBot */
-Object.entries(Yaml.parse(fs.readFileSync(Bot.lain._path + "/QQBot.yaml", "utf8"))).forEach(async ([appid, cfg]) => {
-    if (Object.keys(cfg).length === 0) return
-    await createAndStartBot(cfg)
-})
+try {
+    Object.entries(Yaml.parse(fs.readFileSync(Bot.lain._path + "/QQBot.yaml", "utf8"))).forEach(async ([appid, cfg]) => {
+        if (Object.keys(cfg).length === 0) return
+        await createAndStartBot(cfg)
+    })
+} catch (err) { common.log("QQBot", `QQBot适配器加载失败,${err}`, "error") }
 
 logger.info(chalk.hex("#868ECC")(`Lain-plugin插件${Bot.lain.version}全部初始化完成~`))
 logger.info(chalk.hex("#868ECC")("https://gitee.com/Zyy955/Lain-plugin"))

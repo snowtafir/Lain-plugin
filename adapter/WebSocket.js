@@ -48,11 +48,14 @@ export default class WebSocket {
             /** 检查令牌有效性 */
             if (token !== Bot.lain.cfg.QQBotImgToken) return res.status(401).send("令牌无效")
             const _path = process.cwd() + `/plugins/Lain-plugin/resources/image/${name}`
-            if (!fs.existsSync(_path)) return res.status(404).send("啊咧，图片不存在捏")
-            /** 返回图片 */
+            if (!fs.existsSync(_path)) return res.status(404).send("啊咧，文件不存在捏")
+            /** 返回文件 */
             res.sendFile(_path, {}, (err) => {
                 if (err) {
                     common.log("QQBotApi", err, "error")
+                } else {
+                    /** 10s后删除图片文件 */
+                    setTimeout(() => { fs.unlink(_path, (err) => { if (err) common.log("QQBotApi", err, "error") }) }, 10000)
                 }
             })
         })

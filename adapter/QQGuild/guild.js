@@ -127,7 +127,7 @@ export default class guild {
             }
         }
 
-        if (!Bot.adapter?.[this.id]) Bot.adapter.push(this.id)
+        if (!Bot.adapter.includes(this.id)) Bot.adapter.push(this.id)
     }
 
     /** 获取一些基本信息 */

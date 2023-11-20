@@ -7,53 +7,54 @@ import loader from "../../plugins/loader.js"
 import pluginsLoader from "../../../../lib/plugins/loader.js"
 
 export default async function createAndStartBot(cfg) {
-    const bot = new QQBot.Bot({
-        appid: cfg.appid,
-        token: cfg.token,
-        secret: cfg.secret,
-        sandbox: cfg.sandbox || false,
-        removeAt: cfg.removeAt || true,
-        logLevel: Yaml.parse(fs.readFileSync("./config/config/bot.yaml", "utf8")).log_level,
-        maxRetry: 10,
-        intents: [
-            // 我的意思是，频道建议直接用我的频道适配器单独处理。
-            'GROUP_AT_MESSAGE_CREATE', // 群聊@消息事件 没有群权限请注释
-            'C2C_MESSAGE_CREATE', // 私聊事件 没有私聊权限请注释
-            // 'GUILD_MESSAGES', // 私域机器人频道消息事件 公域机器人请注释
-            // 'PUBLIC_GUILD_MESSAGES', // 公域机器人频道消息事件 私域机器人请注释
-            // 'DIRECT_MESSAGE', // 频道私信事件
-            // 'GUILD_MESSAGE_REACTIONS', // 频道消息表态事件
-            // 'GUILDS', // 频道变更事件
-            // 'GUILD_MEMBERS', // 频道成员变更事件
-            // 'DIRECT_MESSAGE', // 频道私信事件
-        ], // (必填)
-    })
-
-    // 群聊被动回复
-    bot.on("message.group", async (e) => {
-        await loader.deal.call(pluginsLoader, await message.msg(e, true))
-    })
-
-    // 私聊被动回复
-    bot.on("message.private", async (e) => {
-        await loader.deal.call(pluginsLoader, await message.msg(e, false))
-    })
-
-    // 频道被动回复
-    bot.on('message.guild', async (e) => {
-        await loader.deal.call(pluginsLoader, await message.msg(e, true))
-    })
-    // 频道私信被动回复
-    bot.on('message.direct', async (e) => {
-        await loader.deal.call(pluginsLoader, await message.msg(e, false))
-    })
-
     try {
+        const bot = new QQBot.Bot({
+            appid: cfg.appid,
+            token: cfg.token,
+            secret: cfg.secret,
+            sandbox: cfg.sandbox || false,
+            removeAt: cfg.removeAt || true,
+            logLevel: Yaml.parse(fs.readFileSync("./config/config/bot.yaml", "utf8")).log_level,
+            maxRetry: 10,
+            intents: [
+                // 我的意思是，频道建议直接用我的频道适配器单独处理。
+                'GROUP_AT_MESSAGE_CREATE', // 群聊@消息事件 没有群权限请注释
+                'C2C_MESSAGE_CREATE', // 私聊事件 没有私聊权限请注释
+                // 'GUILD_MESSAGES', // 私域机器人频道消息事件 公域机器人请注释
+                // 'PUBLIC_GUILD_MESSAGES', // 公域机器人频道消息事件 私域机器人请注释
+                // 'DIRECT_MESSAGE', // 频道私信事件
+                // 'GUILD_MESSAGE_REACTIONS', // 频道消息表态事件
+                // 'GUILDS', // 频道变更事件
+                // 'GUILD_MEMBERS', // 频道成员变更事件
+                // 'DIRECT_MESSAGE', // 频道私信事件
+            ], // (必填)
+        })
+
+        // 群聊被动回复
+        bot.on("message.group", async (e) => {
+            await loader.deal.call(pluginsLoader, await message.msg(e, true))
+        })
+
+        // 私聊被动回复
+        bot.on("message.private", async (e) => {
+            await loader.deal.call(pluginsLoader, await message.msg(e, false))
+        })
+
+        // 频道被动回复
+        bot.on('message.guild', async (e) => {
+            await loader.deal.call(pluginsLoader, await message.msg(e, true))
+        })
+        // 频道私信被动回复
+        bot.on('message.direct', async (e) => {
+            await loader.deal.call(pluginsLoader, await message.msg(e, false))
+        })
         // 开始连接
         await bot.start()
         // 注册Bot
         await LoadBot(bot)
-    } catch { }
+    } catch (err) {
+        common.log(bot.appid, err, "error")
+    }
 }
 
 async function LoadBot(bot) {
@@ -150,6 +151,6 @@ async function LoadBot(bot) {
             }
         }
     }
-    if (!Bot.adapter?.[String(id)]) Bot.adapter.push(String(id))
+    if (!Bot.adapter.includes(String(id))) Bot.adapter.push(String(id))
 }
 
