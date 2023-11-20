@@ -1,7 +1,7 @@
 import fs from "fs"
 import path from "path"
-import ffmpeg from "fluent-ffmpeg"
-import ffmpegPath from "ffmpeg-static"
+import Yaml from "yaml"
+import { exec } from "child_process"
 import common from "../../model/common.js"
 import { encode as encodeSilk } from "silk-wasm"
 
@@ -281,28 +281,34 @@ export default new class message {
         }
     }
 
-    runFfmpeg(input, output) {
-        /** 指定ffmpeg */
-        ffmpeg.setFfmpegPath(ffmpegPath)
-        return new Promise((resolve, reject) => {
-            ffmpeg(input)
-                .outputOptions("-f", "s16le")
-                .outputOptions("-ar", "48000")
-                .outputOptions("-ac", "1")
-                .saveToFile(output)
-                .on("progress", (progress) => {
-                    if (progress.percent) {
-                        common.log("QQBot", `处理中: ${Math.floor(progress.percent)}% 完成`, "mark")
-                    }
-                })
-                .on("end", () => {
-                    common.log("QQBot", "ffmpeg转码完成")
-                    resolve()
-                })
-                .on("error", (error) => {
+    async runFfmpeg(input, output) {
+        return new Promise(async (resolve, reject) => {
+            let cm
+            let ret = await this.execSync("ffmpeg -version")
+            if (ret.stdout) {
+                cm = `ffmpeg`
+            } else {
+                const cfg = Yaml.parse(fs.readFileSync("./config/config/bot.yaml", "utf8"))
+                cm = `"${cfg.ffmpeg_path}"`
+            }
+            exec(`${cm} -i "${input}" -f s16le -ar 48000 -ac 1 "${output}"`, async (error, stdout, stderr) => {
+                if (error) {
                     common.log("QQBot", `执行错误: ${error}`, "error")
                     reject(error)
-                })
+                    return
+                }
+                common.log("QQBot", "ffmpeg转码完成")
+                resolve()
+            }
+            )
+        })
+    }
+
+    async execSync(cmd) {
+        return new Promise((resolve, reject) => {
+            exec(cmd, { windowsHide: true }, (error, stdout, stderr) => {
+                resolve({ error, stdout, stderr })
+            })
         })
     }
 
