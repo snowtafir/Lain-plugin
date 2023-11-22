@@ -114,6 +114,8 @@ export default new class zaiMsg {
                     nickname: data?.sender?.card,
                     last_sent_time: data?.time,
                 },
+                card: data?.sender?.card,
+                nickname: data?.sender?.nickname,
                 group_id: data?.group_id,
                 is_admin: data?.sender?.role === "admin" || false,
                 is_owner: data?.sender?.role === "owner" || false,
