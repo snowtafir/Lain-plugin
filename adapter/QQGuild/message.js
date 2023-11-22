@@ -33,12 +33,19 @@ export default class message {
         const role = is_owner ? "owner" : (is_admin ? "admin" : "member")
         /** 群聊id */
         const group_id = `qg_${msg.guild_id}-${msg.channel_id}`
-        /** 从gl中取出当前频道信息 */
-        const gl = Bot[this.id].gl.get(group_id)
-        /** 频道名称 */
-        const guild_name = gl ? gl.guild_name : (Bot.lain.guilds?.[msg?.src_guild_id || msg.guild_id]?.name || msg.guild_id)
-        /** 子频道名称 */
-        const channel_name = type === "私信" ? "私信" : (gl ? gl.channel_name : msg.channel_id)
+
+        let gl
+        let guild_name = msg?.src_guild_id || msg.guild_id
+        let channel_name = msg.channel_id
+        try {
+            /** 从gl中取出当前频道信息 还是不理解为什么这里有问题？ 难看死了... */
+            gl = Bot?.[this.id]?.gl?.get(group_id) || false
+            /** 频道名称 */
+            guild_name = gl ? gl.guild_name : (Bot.lain.guilds?.[msg?.src_guild_id || msg.guild_id]?.name || msg.guild_id)
+            /** 子频道名称 */
+            channel_name = type === "私信" ? "私信" : (gl ? gl.channel_name : msg.channel_id)
+        } catch { }
+
         /**  群聊名称 */
         const group_name = guild_name + "-" + channel_name
         /** 用户id */
@@ -350,7 +357,7 @@ export default class message {
     async log(e) {
         let group_name = e.guild_name + "-私信"
         e.message_type === "group" ? group_name = e.group_name : ""
-        return await common.log(this.id, `频道消息：[${group_name}，${e.sender?.card || e.sender?.nickname}] ${e.raw_message}`, Bot.lain.cfg.isLog ? "info" : "debug")
+        return await common.log(this.id, `频道消息：[${group_name}，${e.sender?.card || e.sender?.nickname}(${e.user_id})] ${e.raw_message}`, Bot.lain.cfg.isLog ? "info" : "debug")
     }
 
     /** 处理消息、转换格式 */
