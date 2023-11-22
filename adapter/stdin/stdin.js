@@ -57,7 +57,7 @@ function getInput() {
 }
 getInput()
 
-function msg(msg) {
+export default function msg(msg) {
     const user_id = 55555
     const time = Date.now() / 1000
 

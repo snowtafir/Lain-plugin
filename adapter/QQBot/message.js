@@ -1,6 +1,7 @@
 import fs from "fs"
 import path from "path"
 import Yaml from "yaml"
+import qrcode from "qrcode"
 import { exec } from "child_process"
 import common from "../../model/common.js"
 import { encode as encodeSilk } from "silk-wasm"
@@ -159,6 +160,63 @@ export default new class message {
         }
 
         return e
+    }
+
+    async message(e, t = false) {
+        if (!Array.isArray(e)) e = [e]
+        e = common.array(e)
+        let msg = false
+        const message = []
+        for (let i in e) {
+            switch (typeof e[i]) {
+                case "string":
+                    if (!msg && t && Bot.lain.cfg.QQBotPrefix) {
+                        msg = true
+                        message.push({ type: "text", text: e[i].trim().replace(/^\//, "#") })
+                    } else {
+                        message.push(...await this.HandleURL(e[i]))
+                    }
+                    break
+                case "object":
+                    try {
+                        switch (e[i].type) {
+                            case "image":
+                                message.push(await this.get_image(e[i]))
+                                break
+                            case "text":
+                                if (!msg && t && Bot.lain.cfg.QQBotPrefix) {
+                                    msg = true
+                                    e[i].text = e[i].text.trim().replace(/^\//, "#")
+                                    message.push(e[i])
+                                } else {
+                                    message.push(...await this.HandleURL(e[i]))
+                                }
+                                break
+                            case "video":
+                                message.push(await this.get_video(e[i]))
+                                break
+                            case "record":
+                                message.push(await this.get_audio(e[i]))
+                                break
+                            case "at":
+                                break
+                            case "forward":
+                                message.push(...await this.HandleURL(e[i]))
+                                break
+                            default:
+                                message.push(e[i])
+                                break
+                        }
+                    } catch (err) {
+                        message.push(e[i])
+                    }
+                    break
+                default:
+                    message.push(e[i])
+            }
+
+        }
+        return message
     }
 
 
@@ -333,62 +391,6 @@ export default new class message {
         })
     }
 
-    async message(e, t = false) {
-        if (!Array.isArray(e)) e = [e]
-        e = common.array(e)
-        let msg = false
-        const message = []
-        for (let i in e) {
-            switch (typeof e[i]) {
-                case "string":
-                    if (!msg && t && Bot.lain.cfg.QQBotPrefix) {
-                        msg = true
-                        message.push({ type: "text", text: e[i].trim().replace(/^\//, "#") })
-                    } else {
-                        message.push({ type: "text", text: e[i] })
-                    }
-                    break
-                case "object":
-                    try {
-                        switch (e[i].type) {
-                            case "image":
-                                message.push(await this.get_image(e[i]))
-                                break
-                            case "text":
-                                if (!msg && t && Bot.lain.cfg.QQBotPrefix) {
-                                    msg = true
-                                    e[i].text = e[i].text.trim().replace(/^\//, "#")
-                                    message.push(e[i])
-                                } else {
-                                    message.push(e[i])
-                                }
-                                break
-                            case "video":
-                                message.push(await this.get_video(e[i]))
-                                break
-                            case "record":
-                                message.push(await this.get_audio(e[i]))
-                                break
-                            case "at":
-                                break
-                            case "forward":
-                                message.push({ type: "text", text: e[i].text })
-                                break
-                            default:
-                                message.push(e[i])
-                                break
-                        }
-                    } catch (err) {
-                        message.push(e[i])
-                    }
-                    break
-                default:
-                    message.push(e[i])
-            }
-
-        }
-        return message
-    }
 
     async Upload_File(filePath, type) {
         const { FigureBed, port, QQBotImgIP, QQBotPort, QQBotImgToken } = Bot.lain.cfg
@@ -421,5 +423,50 @@ export default new class message {
         }
         common.log("QQBotApi", `[生成文件] url：${url}`, "debug")
         return { type, file: url }
+    }
+
+    /** 处理URL */
+    async HandleURL(msg) {
+        const message = []
+        if (msg?.text) msg = msg.text
+        if (typeof msg !== "string") return msg
+        /** 白名单url */
+        const whitelist_Url = Bot.lain.cfg.whitelist_Url
+
+        /** 需要处理的url */
+        let urls = await common.getUrls(msg) || []
+
+        if (urls.length > 0) {
+            /** 检查url是否包含在白名单中的任何一个url */
+            urls = urls.filter(url => {
+                return !whitelist_Url.some(whitelistUrl => url.includes(whitelistUrl))
+            })
+
+            let promises = urls.map(i => {
+                return new Promise((resolve, reject) => {
+                    common.log("QQBot", `url替换：${i}`, "mark")
+                    qrcode.toBuffer(i, {
+                        errorCorrectionLevel: "H",
+                        type: "png",
+                        margin: 4,
+                        text: i
+                    }, async (err, buffer) => {
+                        if (err) reject(err)
+                        const base64 = "base64://" + buffer.toString("base64")
+                        const Uint8Array = await common.rendering(base64, i)
+                        message.push(await this.get_image({ type: "image", file: Uint8Array }))
+                        msg = msg.replace(i, "[链接(请扫码查看)]")
+                        msg = msg.replace(i.replace(/^http:\/\//g, ""), "[链接(请扫码查看)]")
+                        msg = msg.replace(i.replace(/^https:\/\//g, ""), "[链接(请扫码查看)]")
+                        resolve()
+                    })
+                })
+            })
+
+            await Promise.all(promises)
+            message.unshift({ type: "text", text: msg })
+            return message
+        }
+        return [{ type: "text", text: msg }]
     }
 }
