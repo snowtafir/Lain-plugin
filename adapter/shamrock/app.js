@@ -145,7 +145,7 @@ class Shamrock {
                         case "notify":
                             switch (data.sub_type) {
                                 case "poke": {
-                                    await common.log(uin, `[${data.operator_id}]戳了戳[${data.target_id}]好友`)
+                                    await common.log(uin, `[${data.operator_id}]戳了戳[${data.target_id}]`)
                                     break
                                 }
                                 default:

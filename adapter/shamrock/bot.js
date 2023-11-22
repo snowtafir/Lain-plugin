@@ -220,6 +220,9 @@ export default new class addBot {
                     }
                 }
             },
+            sendPrivateMsg: async (user_id, msg) => {
+                return await (new SendMsg(uin, false)).message(msg, user_id)
+            },
             setEssenceMessage: async (msg_id) => {
                 let res = await api.set_essence_msg(uin, msg_id)
                 if (res?.message === '成功') {

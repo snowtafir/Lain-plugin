@@ -37,6 +37,36 @@ export default new class zaiMsg {
             } else {
                 e.notice_type = "group"
             }
+        } else if (e.post_type === "notice" && (e.sub_type === "group_apply") || (e.sub_type === "friend_apply") || (e.sub_type === "friend_add")) {
+            switch (e.sub_type) {
+                case "friend_apply":
+                case "friend_add": {
+                    e.approve = async (approve = true) => {
+                        if (e.flag) {
+                            return await api.set_friend_add_request(self_id, e.flag, approve)
+                        } else {
+                            await common.log(self_id, `处理好友申请失败：缺少flag参数`, "error")
+                            return false
+                        }
+
+                    }
+                    break
+                }
+                case "group_apply": {
+                    e.approve = async (approve = true) => {
+                        if (e.flag) {
+                            return await api.set_group_add_request(self_id, e.flag, "", approve)
+                        } else {
+                            await common.log(self_id, `处理入群申请失败：缺少flag参数`, "error")
+                            return false
+                        }
+
+                    }
+                    break
+                }
+                default:
+            }
+
         }
         let group_name
         /** 先打印日志 */
