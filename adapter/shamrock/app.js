@@ -16,10 +16,7 @@ class Shamrock {
         }
 
         const MapBot = Bot.shamrock.get(uin)
-        if (MapBot && MapBot.state) {
-            await common.log("shamrock", "重复的链接", "error")
-            return bot.close()
-        }
+        if (MapBot && MapBot.state) return
 
         /** 保存当前bot */
         Bot.shamrock.set(uin, {
@@ -29,6 +26,13 @@ class Shamrock {
             "qq-ver": request.headers["x-qq-version"],
             "user-agent": request.headers["user-agent"]
         })
+
+        /** 创建一个定时器，每隔5秒发送一个心跳消息 */
+        const interval = setInterval(() => {
+            bot.send(JSON.stringify({ type: "heartbeat", message: "ping" }), (err) => {
+                if (err) ws.emit("close")
+            })
+        }, 5000)
 
         bot.on("message", async (data) => {
             data = JSON.parse(data)
@@ -156,6 +160,7 @@ class Shamrock {
                     }
                 }
             }
+
             try {
                 await event[data?.meta_event_type || data?.post_type]()
             } catch (error) {
@@ -167,6 +172,7 @@ class Shamrock {
         bot.on("close", async () => {
             Bot.shamrock.set(uin, { ...Bot.shamrock.get(uin), state: false })
             await common.log(uin, "连接已关闭", "error")
+            clearInterval(interval)
             // Bot.shamrock.delete(uin)
         })
     }

@@ -137,6 +137,27 @@ export default new class message {
         /** 添加适配器标识 */
         e.adapter = "QQBot"
 
+        e.bot.getGroupMemberInfo = async function (group_id, user_id) {
+            return {
+                group_id,
+                user_id,
+                nickname: "QQBot",
+                card: "QQBot",
+                sex: "female",
+                age: 6,
+                join_time: "",
+                last_sent_time: "",
+                level: 1,
+                role: "member",
+                title: "",
+                title_expire_time: "",
+                shutup_time: 0,
+                update_time: "",
+                area: "南极洲",
+                rank: "潜水",
+            }
+        }
+
         return e
     }
 
@@ -314,6 +335,7 @@ export default new class message {
 
     async message(e, t = false) {
         if (!Array.isArray(e)) e = [e]
+        e = common.array(e)
         let msg = false
         const message = []
         for (let i in e) {
@@ -348,6 +370,9 @@ export default new class message {
                                 message.push(await this.get_audio(e[i]))
                                 break
                             case "at":
+                                break
+                            case "forward":
+                                message.push({ type: "text", text: e[i].text })
                                 break
                             default:
                                 message.push(e[i])
