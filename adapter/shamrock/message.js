@@ -37,10 +37,9 @@ export default new class zaiMsg {
             } else {
                 e.notice_type = "group"
             }
-        } else if (e.post_type === "notice" && (e.sub_type === "group_apply") || (e.sub_type === "friend_apply") || (e.sub_type === "friend_add")) {
-            switch (e.sub_type) {
-                case "friend_apply":
-                case "friend_add": {
+        } else if (e.post_type === "request") {
+            switch (e.request_type) {
+                case "friend": {
                     e.approve = async (approve = true) => {
                         if (e.flag) {
                             return await api.set_friend_add_request(self_id, e.flag, approve)
@@ -48,19 +47,22 @@ export default new class zaiMsg {
                             await common.log(self_id, `处理好友申请失败：缺少flag参数`, "error")
                             return false
                         }
-
                     }
                     break
                 }
-                case "group_apply": {
+                case "group": {
                     e.approve = async (approve = true) => {
                         if (e.flag) {
-                            return await api.set_group_add_request(self_id, e.flag, "", approve)
+                            return await api.set_group_add_request(self_id, e.flag, e.sub_type, approve)
                         } else {
-                            await common.log(self_id, `处理入群申请失败：缺少flag参数`, "error")
+                            if (e.sub_type === "add") {
+                                await common.log(self_id, "处理入群申请失败：缺少flag参数")
+                            } else {
+                                // invite
+                                await common.log(self_id, "处理邀请机器人入群失败：缺少flag参数")
+                            }
                             return false
                         }
-
                     }
                     break
                 }

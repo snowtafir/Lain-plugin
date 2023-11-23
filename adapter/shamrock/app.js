@@ -130,6 +130,17 @@ class Shamrock {
                             }
                             return await loader.deal.call(pluginsLoader, await zaiMsg.msg(data))
                         }
+                        case "notify":
+                            switch (data.sub_type) {
+                                case "poke": {
+                                    await common.log(uin, `[${data.operator_id}]戳了戳[${data.target_id}]`)
+                                    break
+                                }
+                                default:
+                            }
+                            return await loader.deal.call(pluginsLoader, await zaiMsg.msg(data))
+
+                        // deprecated: 兼容老版本无request类型事件的shamrock,一段时间后删
                         case "group_apply": {
                             data.post_type = "request"
                             data.request_type = "group"
@@ -146,17 +157,27 @@ class Shamrock {
                             await common.log(uin, `[${data.user_id}]申请加机器人[${data.self_id}]好友: ${data.tips}`)
                             return await loader.deal.call(pluginsLoader, await zaiMsg.msg(data))
                         }
-                        case "notify":
-                            switch (data.sub_type) {
-                                case "poke": {
-                                    await common.log(uin, `[${data.operator_id}]戳了戳[${data.target_id}]`)
-                                    break
-                                }
-                                default:
-                            }
-                            return await loader.deal.call(pluginsLoader, await zaiMsg.msg(data))
                         default:
                             return
+                    }
+                },
+                request: async () => {
+                    data.post_type = "request"
+                    switch (data.request_type) {
+                        case "group": {
+                            data.tips = data.comment
+                            if (data.sub_type === "add") {
+                                await common.log(uin, `[${data.user_id}]申请入群[${data.group_id}]: ${data.tips}`)
+                            } else {
+                                // invite
+                                await common.log(uin, `[${data.user_id}]邀请机器人入群[${data.group_id}]: ${data.tips}`)
+                            }
+                            return await loader.deal.call(pluginsLoader, await zaiMsg.msg(data))
+                        }
+                        case "friend": {
+                            await common.log(uin, `[${data.user_id}]申请加机器人[${data.self_id}]好友: ${data.comment}`)
+                            return await loader.deal.call(pluginsLoader, await zaiMsg.msg(data))
+                        }
                     }
                 }
             }
