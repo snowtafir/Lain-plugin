@@ -206,6 +206,7 @@ export class Lain extends plugin {
 
     async user_id(e) {
         const msg = []
+        if (e.isMaster) msg.push(`Bot：${e.self_id}`)
         msg.push(`您的个人ID：${e.user_id}`)
         e.guild_id ? msg.push(`当前频道ID：${e.guild_id}`) : ""
         e.channel_id ? msg.push(`当前子频道ID：${e.channel_id}`) : ""
