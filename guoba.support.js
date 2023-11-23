@@ -59,7 +59,7 @@ export function supportGuoba() {
     return {
         pluginInfo: {
             name: "铃音插件",
-            title: "Lian-plugin",
+            title: "Lain-plugin",
             author: "@Lain.",
             authorLink: "https://gitee.com/Zyy955",
             link: "https://gitee.com/Zyy955/Lain-plugin",
