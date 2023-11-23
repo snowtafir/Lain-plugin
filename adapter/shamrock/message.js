@@ -204,8 +204,8 @@ export default new class zaiMsg {
                     return await api.group_touch(self_id, group_id, operator_id)
                 },
                 /** 禁言 */
-                muteMember: async (group_id, user_id, time) => {
-                    return await api.set_group_ban(self_id, group_id, user_id, time)
+                muteMember: async (groupID, qq, time) => {
+                    return await api.set_group_ban(self_id, groupID, qq, time)
                 },
                 /** 全体禁言 */
                 muteAll: async (type) => {
