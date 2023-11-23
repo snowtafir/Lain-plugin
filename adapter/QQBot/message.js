@@ -9,20 +9,15 @@ import { encode as encodeSilk } from "silk-wasm"
 export default new class message {
     /** 转换格式给云崽 */
     async msg(e, isGroup) {
+        e.sendMsg = e.reply
         e.bot.stat = Bot?.[e.self_id]?.stat
-        const _reply = e.reply
         e.message = await this.message(e.message, true)
-        /** 回复 */
-        const reply = async (msg, quote) => {
-            msg = await this.message(msg)
-            try {
-                _reply.call(e, msg, quote)
-            } catch (error) {
-                common.log(e.self_id, error.data, "error")
-            }
+
+        /** 重新构建快速回复消息 */
+        e.reply = async (msg, quote) => {
+            return await this.reply(e, msg, quote)
         }
 
-        e.reply = reply
         /** 快速撤回 */
         e.recall = async () => { return }
 
@@ -162,6 +157,7 @@ export default new class message {
         return e
     }
 
+    /** 处理message */
     async message(e, t = false) {
         if (!Array.isArray(e)) e = [e]
         e = common.array(e)
@@ -219,6 +215,17 @@ export default new class message {
         return message
     }
 
+    /** 快速回复 */
+    async reply(e, msg) {
+        msg = await this.message(msg)
+        try {
+            return await e.sendMsg(msg)
+        } catch (error) {
+            common.log(e.self_id, `发送消息失败：${error?.data || error?.message || error}`, "error")
+            common.log(e.self_id, error, "debug")
+            return error?.data || error?.message || error
+        }
+    }
 
     /** 处理图片 */
     async get_image(i) {

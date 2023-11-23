@@ -4,7 +4,6 @@ import qrcode from "qrcode"
 import fetch from "node-fetch"
 import { FormData, Blob } from "node-fetch"
 import common from "../../model/common.js"
-import puppeteer from "../../../../lib/puppeteer/puppeteer.js"
 
 export default class SendMsg {
     /** 传入基本配置 */

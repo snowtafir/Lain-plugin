@@ -52,6 +52,19 @@ export default async function createAndStartBot(cfg) {
         await bot.start()
         // 注册Bot
         await LoadBot(bot)
+
+        const { id } = await bot.getSelfInfo()
+
+        bot.logger = {
+            trace: log => common.log(id, log, "trace"),
+            debug: log => common.log(id, log, "debug"),
+            info: log => common.log(id, logInfo(log), "info"),
+            mark: log => common.log(id, log, "mark"),
+            warn: log => common.log(id, log, "warn"),
+            error: log => common.log(id, log, "error"),
+            fatal: log => common.log(id, log, "fatal")
+        }
+
     } catch (err) {
         common.log(bot.appid, err, "error")
     }
@@ -154,3 +167,23 @@ async function LoadBot(bot) {
     if (!Bot.adapter.includes(String(id))) Bot.adapter.push(String(id))
 }
 
+function logInfo(e) {
+    if (typeof e !== "string") return e
+    e = e.trim()
+    try {
+        if (/^recv from Group/.test(e)) {
+            e = e.replace(/^recv from Group\([^)]+\): /, `群消息：[${e.match(/\(([^)]+)\)/)[1]}]`)
+        }
+        else if (/^send to Group/.test(e)) {
+            e = e.replace(/^send to Group\([^)]+\): /, `发送群消息：[${e.match(/\(([^)]+)\)/)[1]}]`)
+        }
+    } catch { }
+    return e
+}
+
+// 原始字符串
+const text = "recv from Group(8EB5925E74CE8588DAF144BE83A2D1C6):  2"
+
+// 使用正则表达式提取括号内的内容
+const result = text.match(/\(([^)]+)\)/)[1]
+console.log(result) // 输出结果：8EB5925E74CE8588DAF144BE83A2D1C6
