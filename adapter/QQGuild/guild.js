@@ -167,6 +167,7 @@ export default class guild {
                         group_name: `${qg.name || i.guild_id}-${i.name || i.id}`,
                         guild_id: i.guild_id,
                         guild_name: qg.name,
+                        guild_type: i.type,
                         channel_id: i.id,
                         channel_name: i.name
                     })
@@ -177,6 +178,7 @@ export default class guild {
                         group_name: `${qg.name || i.guild_id}-${i.name || i.id}`,
                         guild_id: i.guild_id,
                         guild_name: qg.name,
+                        guild_type: i.type,
                         channel_id: i.id,
                         channel_name: i.name
                     })
@@ -193,6 +195,7 @@ export default class guild {
 
     /** 根据对应事件进行对应处理 */
     async event(data) {
+        logger.debug(data)
         switch (data.eventType) {
             /** 私域 */
             case "MESSAGE_CREATE":
@@ -215,7 +218,7 @@ export default class guild {
 
     async permissions(data, type = "") {
         /** 解除私信 */
-        if (data.msg?.content?.includes("#QQ频道解除私信")) {
+        if (data?.msg?.content?.includes("#QQ频道解除私信")) {
             return await this.Sendprivate(data)
         }
         const cfg = Bot.lain.cfg

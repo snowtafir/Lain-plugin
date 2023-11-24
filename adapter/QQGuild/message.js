@@ -33,12 +33,19 @@ export default class message {
         const role = is_owner ? "owner" : (is_admin ? "admin" : "member")
         /** 群聊id */
         const group_id = `qg_${msg.guild_id}-${msg.channel_id}`
-        /** 从gl中取出当前频道信息 */
-        const gl = Bot[this.id].gl.get(group_id)
-        /** 频道名称 */
-        const guild_name = gl ? gl.guild_name : (Bot.lain.guilds?.[msg?.src_guild_id || msg.guild_id]?.name || msg.guild_id)
-        /** 子频道名称 */
-        const channel_name = type === "私信" ? "私信" : (gl ? gl.channel_name : msg.channel_id)
+
+        let gl
+        let guild_name = msg?.src_guild_id || msg.guild_id
+        let channel_name = msg.channel_id
+        try {
+            /** 从gl中取出当前频道信息 还是不理解为什么这里有问题？ 难看死了... */
+            gl = Bot?.[this.id]?.gl?.get(group_id) || false
+            /** 频道名称 */
+            guild_name = gl ? gl.guild_name : (Bot.lain.guilds?.[msg?.src_guild_id || msg.guild_id]?.name || msg.guild_id)
+            /** 子频道名称 */
+            channel_name = type === "私信" ? "私信" : (gl ? gl.channel_name : msg.channel_id)
+        } catch { }
+
         /**  群聊名称 */
         const group_name = guild_name + "-" + channel_name
         /** 用户id */
@@ -158,7 +165,7 @@ export default class message {
                     return await this.reply(msg, quote, group_name)
                 },
                 makeForwardMsg: async (forwardMsg) => {
-                    return await common.makeForwardMsg(forwardMsg, this.data)
+                    return await common.makeForwardMsg(forwardMsg, false, this.data)
                 }
             }
         }
@@ -178,15 +185,16 @@ export default class message {
 
         /** 引用消息 */
         if (msg?.message_reference?.message_id) {
-            const reply = await Bot[this.id].client.messageApi.message(msg.channel_id, msg.message_reference.message_id)
+            let reply = await Bot[this.id].client.messageApi.message(msg.channel_id, msg.message_reference.message_id)
             logger.warn(reply)
+            reply = reply.data.message
             let message = []
             if (reply?.attachments) {
                 for (let i of reply.attachments) {
                     message.push({ type: "image", url: `https://${i.url}` })
                 }
             }
-            if (reply.content) {
+            if (reply?.content) {
                 /** 暂不处理...懒 */
                 message.push({ type: "text", text: reply.content })
             }
@@ -210,19 +218,23 @@ export default class message {
     /** 撤回消息 */
     async recallMsg(channel_ID, msg_id) {
         /** 先打印日志 */
-        const { data } = await Bot[this.id].client.messageApi.message(channel_ID, msg_id)
-        const { guild_id, channel_id, timestamp, author, content } = data.message
-        let msg = ""
-        msg += `撤回消息:\n频道ID：${guild_id}`
-        msg += `\n子频道ID：${channel_id}`
-        msg += `\n详细消息：`
-        msg += `\n  时间：${timestamp}`
-        msg += `\n  用户ID：${author.id}`
-        msg += `\n  用户昵称：${author.username}`
-        msg += `\n  用户是否为机器人：${author.bot}`
-        msg += `\n  消息内容：${content || "未知内容"}`
-        /** 打印日志 */
-        await common.log(this.id, msg)
+        try {
+            const { data } = await Bot[this.id].client.messageApi.message(channel_ID, msg_id)
+            const { guild_id, channel_id, timestamp, author, content } = data.message
+            let msg = ""
+            msg += `撤回消息:\n频道ID：${guild_id}`
+            msg += `\n子频道ID：${channel_id}`
+            msg += `\n详细消息：`
+            msg += `\n时间：${timestamp}`
+            msg += `\n用户ID：${author.id}`
+            msg += `\n用户昵称：${author.username}`
+            msg += `\n用户是否为机器人：${author.bot}`
+            msg += `\n消息内容：${content || "未知内容"}`
+            /** 打印日志 */
+            await common.log(this.id, msg)
+        } catch (error) {
+            common.log(this.id, error, "error")
+        }
         /** 撤回消息 */
         return (await Bot[this.id].client.messageApi.deleteMessage(channel_ID, msg_id, false)).data
     }
@@ -294,7 +306,7 @@ export default class message {
     /** 获取聊天记录 */
     async getChatHistory(channelID, msg_id) {
         const source = await Bot[this.id].client.messageApi.message(channelID, msg_id)
-        const { id, content, author, guild_id, channel_id, timestamp, member } = source.message
+        const { id, content, author, guild_id, channel_id, timestamp, member } = source.data.message
         const time = (new Date(timestamp)).getTime() / 1000
 
         /** 获取用户的身份组信息 */
@@ -348,7 +360,7 @@ export default class message {
     async log(e) {
         let group_name = e.guild_name + "-私信"
         e.message_type === "group" ? group_name = e.group_name : ""
-        return await common.log(this.id, `频道消息：[${group_name}，${e.sender?.card || e.sender?.nickname}] ${e.raw_message}`, Bot.lain.cfg.isLog ? "info" : "debug")
+        return await common.log(this.id, `频道消息：[${group_name}，${e.sender?.card || e.sender?.nickname}(${e.user_id})] ${e.raw_message}`, Bot.lain.cfg.isLog ? "info" : "debug")
     }
 
     /** 处理消息、转换格式 */

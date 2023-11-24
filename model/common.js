@@ -1,5 +1,8 @@
 import fs from "fs"
 import chalk from "chalk"
+import crypto from "crypto"
+import fetch, { FormData, Blob } from "node-fetch"
+import puppeteer from "../../../lib/puppeteer/puppeteer.js"
 
 /**
  * 创建文件夹
@@ -30,8 +33,8 @@ function sleep(ms) {
  * @param log 日志内容
  * @param err 可选参数，日志转为错误日志
  */
-export function log(id, log, type = "info") {
-    id = id ? id = chalk.hex("#868ECC")(`[${Bot?.[id]?.nickname || "未知"}(${id})] `) : id = ""
+function log(id, log, type = "info") {
+    id = chalk.hex("#868ECC")(Bot?.[id]?.nickname ? `[${Bot?.[id]?.nickname}(${id})] ` : (id ? `[${id}] ` : ""))
     const list = {
         info: function () { logger.info(`${id}${log}`) },
         error: function () { logger.error(`${id}${log}`) },
@@ -44,7 +47,7 @@ export function log(id, log, type = "info") {
 
 
 /** 将云崽过来的消息全部统一格式存放到数组里面 */
-export function array(data) {
+function array(data) {
     let msg = []
     /** 将格式统一为对象 随后进行转换成api格式 */
     if (data?.[0]?.data?.type === "test" || data?.[1]?.data?.type === "test") {
@@ -80,7 +83,7 @@ export function array(data) {
  * @param node 开启后将转为shamrock格式的转发
  * @param e 特殊处理日志
  */
-export async function makeForwardMsg(data, node = false, e = {}) {
+async function makeForwardMsg(data, node = false, e = {}) {
     const message = {}
     const allMsg = []
     /** 防止报错 */
@@ -95,8 +98,6 @@ export async function makeForwardMsg(data, node = false, e = {}) {
             i--
         }
     }
-
-
 
     for (let msg in data) {
         msg = data[msg]?.message || data[msg]
@@ -145,7 +146,7 @@ export async function makeForwardMsg(data, node = false, e = {}) {
 }
 
 /** 传入路径 返回字符串格式的base64 */
-export async function base64(path) {
+async function base64(path) {
     let file = path
     try {
         if (!fs.existsSync(file)) {
@@ -163,4 +164,81 @@ export async function base64(path) {
     }
 }
 
-export default { sleep, log, mkdirs, array, makeForwardMsg, base64 }
+/**
+ * 三方图床
+ * @param file 文件路径地址
+ * @param url 上传接口
+ * @return url地址
+ */
+async function uploadFile(file, url) {
+    const formData = new FormData()
+    formData.append("imgfile", new Blob([fs.readFileSync(file)], { type: "image/jpeg" }), "image.jpg")
+    return await fetch(url, {
+        method: "POST",
+        body: formData,
+    })
+}
+
+/**
+ * QQ图床
+ * @param file 文件路径地址
+ * @param uin botQQ
+ * @return url地址
+ */
+async function uploadQQ(file, uin) {
+    const base64 = fs.readFileSync(file).toString("base64")
+    const { message_id } = await Bot[uin].pickUser(uin).sendMsg([segment.image(`base64://${base64}`)])
+    await Bot[uin].pickUser(uin).recallMsg(message_id)
+    const md5 = crypto.createHash("md5").update(Buffer.from(base64, "base64")).digest("hex")
+    await sleep(1000)
+    return `https://gchat.qpic.cn/gchatpic_new/0/0-0-${md5.toUpperCase()}/0?term=2&is_origin=0`
+}
+
+/** 
+ * 传入字符串 提取url 返回数组
+ * @param url 
+ */
+async function getUrls(url) {
+    let urls = []
+    /** 中文不符合url规范 */
+    url = url.replace(/[\u4e00-\u9fa5]/g, "|")
+    const get_urls = (await import("get-urls")).default
+    try {
+        urls = [...get_urls(url, { normalizeProtocol: false })]
+    } catch {
+        log("Lain-plugin", "没有安装 get-urls 模块，建议执行pnpm install -P 进行安装使用更精准的替换url")
+        const urlRegex = /(https?:\/\/)?(([0-9a-z.-]+\.[a-z]+)|(([0-9]{1,3}\.){3}[0-9]{1,3}))(:[0-9]+)?(\/[0-9a-z%/.\-_#]*)?(\?[0-9a-z=&%_\-.]*)?(\#[0-9a-z=&%_\-]*)?/ig
+        urls = str.match(urlRegex)
+        if (!urls) urls = []
+        return urls
+    }
+    return urls
+}
+
+/** 渲染图片 */
+async function rendering(content, error) {
+    const data = {
+        Yz: Bot.lain,
+        error: error,
+        guild: Bot.lain.version,
+        msg: content,
+        saveId: 'Lain-plugin',
+        _plugin: 'Lain-plugin',
+        tplFile: './plugins/Lain-plugin/resources/index.html',
+    }
+    const msg = await puppeteer.screenshot(`Lain-plugin/Lain-plugin`, data)
+    return msg.file
+}
+
+export default {
+    sleep,
+    log,
+    array,
+    mkdirs,
+    makeForwardMsg,
+    base64,
+    uploadFile,
+    uploadQQ,
+    getUrls,
+    rendering
+}

@@ -37,6 +37,38 @@ export default new class zaiMsg {
             } else {
                 e.notice_type = "group"
             }
+        } else if (e.post_type === "request") {
+            switch (e.request_type) {
+                case "friend": {
+                    e.approve = async (approve = true) => {
+                        if (e.flag) {
+                            return await api.set_friend_add_request(self_id, e.flag, approve)
+                        } else {
+                            await common.log(self_id, `处理好友申请失败：缺少flag参数`, "error")
+                            return false
+                        }
+                    }
+                    break
+                }
+                case "group": {
+                    e.approve = async (approve = true) => {
+                        if (e.flag) {
+                            return await api.set_group_add_request(self_id, e.flag, e.sub_type, approve)
+                        } else {
+                            if (e.sub_type === "add") {
+                                await common.log(self_id, "处理入群申请失败：缺少flag参数")
+                            } else {
+                                // invite
+                                await common.log(self_id, "处理邀请机器人入群失败：缺少flag参数")
+                            }
+                            return false
+                        }
+                    }
+                    break
+                }
+                default:
+            }
+
         }
         let group_name
         /** 先打印日志 */
@@ -64,8 +96,8 @@ export default new class zaiMsg {
         }
 
         /** 获取对应用户头像 */
-        e.getAvatarUrl = (id = user_id) => {
-            return `https://q1.qlogo.cn/g?b=qq&s=0&nk=${id}`
+        e.getAvatarUrl = (size = 0, id = user_id) => {
+            return `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${id}`
         }
 
         /** 构建场景对应的方法 */
@@ -84,19 +116,31 @@ export default new class zaiMsg {
                     nickname: data?.sender?.card,
                     last_sent_time: data?.time,
                 },
+                card: data?.sender?.card,
+                nickname: data?.sender?.nickname,
                 group_id: data?.group_id,
                 is_admin: data?.sender?.role === "admin" || false,
                 is_owner: data?.sender?.role === "owner" || false,
                 /** 获取头像 */
-                getAvatarUrl: () => {
-                    return `https://q1.qlogo.cn/g?b=qq&s=0&nk=${user_id}`
+                getAvatarUrl: (size = 0) => {
+                    return `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${user_id}`
                 },
                 /** 椰奶禁言 */
                 mute: async (time) => {
                     return await api.set_group_ban(self_id, group_id, user_id, time)
                 },
             }
+            /** 获取bot是否为ow或者admin */
+            let is_admin = false
+            let is_owner = false
+            try {
+                const get_bot_info = await Bot[self_id].gml.get(group_id)
+                is_admin = get_bot_info?.[self_id]?.role === "admin" || false
+                is_owner = get_bot_info?.[self_id]?.role === "owner" || false
+            } catch (err) { }
             e.group = {
+                is_admin,
+                is_owner,
                 pickMember: (id) => {
                     /** 取缓存！！！别问为什么，因为傻鸟同步 */
                     let member = Bot[self_id].gml.get(group_id)?.[id]
@@ -107,7 +151,7 @@ export default new class zaiMsg {
                     }
                     return {
                         member,
-                        getAvatarUrl: (userId = id) => `https://q1.qlogo.cn/g?b=qq&s=0&nk=${userId}`
+                        getAvatarUrl: (size = 0, userId = id) => `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${userId}`
                     }
                 },
                 getChatHistory: async (msg_id, num, reply) => {
@@ -162,8 +206,8 @@ export default new class zaiMsg {
                     return await api.group_touch(self_id, group_id, operator_id)
                 },
                 /** 禁言 */
-                muteMember: async (group_id, user_id, time) => {
-                    return await api.set_group_ban(self_id, group_id, user_id, time)
+                muteMember: async (qq, time) => {
+                    return await api.set_group_ban(self_id, group_id, qq, time)
                 },
                 /** 全体禁言 */
                 muteAll: async (type) => {
@@ -198,6 +242,23 @@ export default new class zaiMsg {
                 /** 修改群名片 **/
                 setCard: async (qq, card) => {
                     return await api.set_group_card(self_id, group_id, qq, card)
+                },
+                setEssenceMessage: async(msg_id) => {
+                    let res = await api.set_essence_msg(uin, msg_id)
+                    if (res?.message === '成功') {
+                        return "加精成功"
+                    } else {
+                        return res?.message
+                    }
+                },
+                /** 移除群精华消息 **/
+                removeEssenceMessage: async(msg_id) => {
+                    let res = await api.delete_essence_msg(uin, msg_id)
+                    if (res?.message === '成功') {
+                        return "移除精华成功"
+                    } else {
+                        return res?.message
+                    }
                 },
             }
         } else {
@@ -239,8 +300,8 @@ export default new class zaiMsg {
                         return [source]
                     }
                 },
-                getAvatarUrl: async (userID = user_id) => {
-                    return `https://q1.qlogo.cn/g?b=qq&s=0&nk=${userID}`
+                getAvatarUrl: async (size = 0, userID = user_id) => {
+                    return `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${userID}`
                 }
             }
         }
@@ -294,26 +355,26 @@ export async function message(id, msg, group_id, reply = true) {
                 }
                 if (typeof source === "string") {
                     common.log(id, `获取引用消息内容失败，重试次数上限，已终止`)
-                    return { message, source }
+                    continue
+                }
+                common.log("", source, "debug")
+                let source_reply = source.message.map(u => (u.type === "at" ? { type: u.type, qq: Number(u.data.qq) } : { type: u.type, ...u.data }))
+
+                let raw_message = toRaw(source_reply, id, group_id)
+
+                /** 覆盖原先的message */
+                source.message = source_reply
+                if (reply != "e") message.push(...source_reply)
+
+                source = {
+                    ...source,
+                    reply: source_reply,
+                    seq: source.message_id,
+                    user_id: source.sender.user_id,
+                    raw_message: raw_message
                 }
             } catch (error) {
                 logger.error(error)
-            }
-
-            let source_reply = source.message.map(u => (u.type === "at" ? { type: u.type, qq: Number(u.data.qq) } : { type: u.type, ...u.data }))
-
-            let raw_message = toRaw(source_reply, id, group_id)
-
-            /** 覆盖原先的message */
-            source.message = source_reply
-            if (reply != "e") message.push(...source_reply)
-
-            source = {
-                ...source,
-                reply: source_reply,
-                seq: source.message_id,
-                user_id: source.sender.user_id,
-                raw_message: raw_message
             }
         }
         /** 不理解为啥为啥不是node... */

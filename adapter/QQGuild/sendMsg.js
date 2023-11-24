@@ -1,11 +1,9 @@
 import fs from "fs"
-import { URL } from "url"
 import lodash from "lodash"
 import qrcode from "qrcode"
 import fetch from "node-fetch"
 import { FormData, Blob } from "node-fetch"
 import common from "../../model/common.js"
-import puppeteer from "../../../../lib/puppeteer/puppeteer.js"
 
 export default class SendMsg {
     /** 传入基本配置 */
@@ -104,50 +102,48 @@ export default class SendMsg {
 
     /** 处理URL */
     async HandleURL(msg) {
-        if (typeof msg !== 'string') return msg
-        const urls = Bot.lain.cfg.whitelist_Url
-        const whiteRegex = new RegExp(`\\b(${urls.map(url => url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'g')
-        /** 将url转二维码 */
-        if (!msg.match(whiteRegex)) {
-            const urlRegex = /(https?:\/\/)?(([0-9a-z.-]+\.[a-z]+)|(([0-9]{1,3}\.){3}[0-9]{1,3}))(:[0-9]+)?(\/[0-9a-z%/.\-_#]*)?(\?[0-9a-z=&%_\-.]*)?(\#[0-9a-z=&%_\-]*)?/ig
-            if (urlRegex.test(msg)) {
-                /** 二次检测 防止奇怪的url */
-                const url_a = (s, protocols = ["http", "https"]) => {
-                    try {
-                        new URL(s.match(/^[a-zA-Z]+:\/\//) ? s : `${protocols[0]}://${s}`)
-                        return true
-                    } catch (err) {
-                        return protocols.length > 1 ? url_a(s, protocols.slice(1)) : false
-                    }
-                }
-                return msg.replace(urlRegex, url => {
-                    /** 二次确认当前是否为url */
-                    if (!url_a(url)) return url
-                    logger.info(logger.green(`未通过url白名单，正在转为二维码发送...\n初始URL：${url}`))
-                    qrcode.toBuffer(url, {
+        if (typeof msg !== "string") return msg
+        /** 白名单url */
+        const whitelist_Url = Bot.lain.cfg.whitelist_Url
+
+        /** 需要处理的url */
+        let urls = await common.getUrls(msg) || []
+
+        if (urls.length > 0) {
+            /** 检查url是否包含在白名单中的任何一个url */
+            urls = urls.filter(url => {
+                return !whitelist_Url.some(whitelistUrl => url.includes(whitelistUrl))
+            })
+
+            let promises = urls.map(i => {
+                return new Promise((resolve, reject) => {
+                    common.log("QQ频道", `url替换：${i}`, "mark")
+                    qrcode.toBuffer(i, {
                         errorCorrectionLevel: "H",
                         type: "png",
                         margin: 4,
-                        text: url
+                        text: i
                     }, async (err, buffer) => {
-                        if (err) throw err
+                        if (err) reject(err)
                         const base64 = "base64://" + buffer.toString("base64")
-                        const Uint8Array = await this.rendering(base64, url)
+                        const Uint8Array = await common.rendering(base64, i)
                         const Api_msg = { content: "", type: "file_image", image: Uint8Array, log: "{image：base64://...}" }
                         /** 转换的二维码连接是否撤回 */
                         const qr = Number(Bot.lain.cfg.recallQR) || 0
                         /** 构建请求参数、打印日志 */
-                        const Msg = await this.Construct_data(Api_msg)
-                        await this.SendMsg(Msg, qr)
+                        const SendMsg = await this.Construct_data(Api_msg, false)
+                        await this.SendMsg(SendMsg, qr)
+                        msg = msg.replace(i, "[链接(请扫码查看)]")
+                        msg = msg.replace(i.replace(/^http:\/\//g, ""), "[链接(请扫码查看)]")
+                        msg = msg.replace(i.replace(/^https:\/\//g, ""), "[链接(请扫码查看)]")
+                        resolve()
                     })
-
-                    return "{请扫码查看链接}"
                 })
-            }
-            return msg
-        } else {
+            })
+            await Promise.all(promises)
             return msg
         }
+        return msg
     }
 
     /** 处理各种牛马格式的图片 返回二进制base64 { type, image: base64, log } TMD */
@@ -220,7 +216,7 @@ export default class SendMsg {
             case "file_image":
                 logs += log
                 msg = new FormData()
-                if (this.msg_id) msg.append("msg_id", this.msg_id)
+                if (this.msg_id) msg.set("msg_id", this.msg_id)
                 try {
                     /** 检测大小 */
                     let sizeInMB = image?.byteLength / (1024 * 1024)
@@ -234,16 +230,16 @@ export default class SendMsg {
                             .jpeg({ quality: Bot.lain.cfg.quality })
                             .toBuffer()
                             .then(data => {
-                                msg.append("file_image", new Blob([data]))
+                                msg.set("file_image", new Blob([data]))
                             })
                     } else {
                         if (!sharp) logger.error("[Lain-plugin] 缺少 sharp 依赖，无法进行图片压缩，请运行 pnpm install -P 或 pnpm i 进行安装依赖~")
                         /** 如果图片大小不超过2.5MB，那么直接存入SendMsg */
-                        msg.append("file_image", new Blob([image]))
+                        msg.set("file_image", new Blob([image]))
                     }
                 } catch (err) {
                     /** 产生错误直接存入即可 */
-                    msg.append("file_image", new Blob([image]))
+                    msg.set("file_image", new Blob([image]))
                 }
                 break
             case "url":
@@ -271,7 +267,7 @@ export default class SendMsg {
         }
         /** 文本 */
         if (content) {
-            if (msg instanceof FormData) msg.append("content", content)
+            if (msg instanceof FormData) msg.set("content", content)
             else msg.content = content
             logs += content
         }
@@ -295,21 +291,19 @@ export default class SendMsg {
             logger.error(`${Bot[this.id].nickname} 发送消息错误，正在转成图片重新发送...\n错误信息：`, error)
             /** 转换为图片发送 */
             let image = new FormData()
-            if (this.msg_id) image.append("msg_id", this.msg_id)
+            if (this.msg_id) image.set("msg_id", this.msg_id)
 
             const content = typeof msg === "string" ? msg : "啊咧，图片发不出来"
-
-            let imgBuf = await this.rendering(content, error)
-            image.append("file_image", new Blob([ imgBuf ]))
+            image.set("file_image", new Blob([await common.rendering(content, error)]))
 
             /** 判断频道还是私聊 */
             this.eventType !== "DIRECT_MESSAGE_CREATE"
-                ? res = await Bot[this.id].client.messageApi.postMessage(this.channel_id, image)
-                : res = await Bot[this.id].client.directMessageApi.postDirectMessage(this.guild_id, image)
+                ? res = await Bot[this.id].client.messageApi.postMessage(this.channel_id, msg)
+                : res = await Bot[this.id].client.directMessageApi.postDirectMessage(this.guild_id, msg)
         }
 
         /** 连接转二维码撤回 */
-        if (res.data.id && qr && qr > 0) this.recallQR(res, qr)
+        if (res.data.id && qr && qr > 0) this.recallQR(this.id, res, qr)
 
         /** 返回消息id给撤回用？ */
         return {
@@ -321,30 +315,9 @@ export default class SendMsg {
     }
 
     /** 撤回消息 */
-    async recallQR(res, qr) {
+    async recallQR(id, res, qr) {
         setTimeout(async function () {
-            await Bot[this.id].client.messageApi.deleteMessage(res.channel_id, res.id, false)
+            await Bot[id].client.messageApi.deleteMessage(res.data.channel_id, res.data.id, false)
         }, qr * 1000)
     }
-
-    /** 渲染图片 */
-    async rendering(content, error) {
-        const data = {
-            Yz: Bot.lain,
-            error: error,
-            guild: Bot.lain.guild.ver,
-            msg: content,
-            saveId: 'Lain-plugin',
-            _plugin: 'Lain-plugin',
-            tplFile: './plugins/Lain-plugin/resources/index.html',
-        }
-        const msg = await puppeteer.screenshot(`Lain-plugin/Lain-plugin`, data)
-        /*
-        let path = `./plugins/Lain-plugin/resources/${(new Date).getTime()}.jpg`
-        fs.writeFileSync(path, Buffer.from(msg.file.replace(/^base64:\/\//, ""), "base64"))
-        logger.warn(`文件已保存到：${path}`)
-        */
-        return msg.file
-    }
-
 }

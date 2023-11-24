@@ -55,12 +55,7 @@ Bot[uin] = {
     }
 }
 
-/** 注册uin */
-if (!Bot?.adapter) {
-    Bot.adapter = [uin, Bot.uin]
-} else {
-    if (!Bot.adapter.includes(uin)) Bot.adapter.unshift(uin)
-}
+if (!Bot.adapter.includes(uin)) Bot.adapter.unshift(uin)
 
 /** 监听控制台输入 */
 const rl = createInterface({
@@ -173,7 +168,7 @@ async function sendMsg(msg) {
     if (!Array.isArray(msg)) msg = [msg]
     for (let i of msg) {
         if (typeof i != "object")
-            i = { type: "text", data: { text: i } }
+            i = { type: "text", data: { text: i }}
         else if (!i.data)
             i = { type: i.type, data: { ...i, type: undefined } }
 
@@ -183,10 +178,10 @@ async function sendMsg(msg) {
 
         switch (i.type) {
             case "text":
-                i.text = String(i.text).trim()
+                i.data.text = String(i.data.text).trim()
                 if (!i.data.text) break
                 if (i.data.text.match("\n"))
-                    i.data.text = `\n${i.data.text}`
+                    i.data.text = `\n${i.text}`
                 await common.log(uin, `发送文本：${i.data.text}`)
                 break
             case "image":

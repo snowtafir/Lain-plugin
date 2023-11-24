@@ -6,6 +6,7 @@ import chokidar from "chokidar"
 import common from "../model/common.js"
 import guild from "../adapter/QQGuild/guild.js"
 import WebSocket from "../adapter/WebSocket.js"
+import createAndStartBot from "../adapter/QQBot/index.js"
 
 const _path = process.cwd() + "/plugins/Lain-plugin/config"
 
@@ -18,12 +19,18 @@ const configItems = [
     { key: 'baseUrl', value: '', comment: '# shamrock主动http端口，例如http://localhost:5700。若填写将通过此端口进行文件上传等被动ws不支持的操作' },
     { key: 'token', value: '', comment: '# 鉴权token，如果开放公网强烈建议配置' },
     { key: 'QQBotImgIP', value: '127.0.0.1', comment: '# 图片Api的IP或者域名' },
-    { key: 'QQBotImgToken', value: crypto.createHash("sha256").update(crypto.randomBytes(32)).digest("hex"), comment: '# 图片Api的token 随机生成 无特殊需求不建议更改' }
+    { key: 'QQBotImgToken', value: crypto.createHash("sha256").update(crypto.randomBytes(32)).digest("hex"), comment: '# 图片Api的token 随机生成 无特殊需求不建议更改' },
+    { key: 'FigureBed', value: "http://206.233.128.146/uploadimg", comment: '# 方法1：图床API 从网上收集的，非本人所属，侵权删~' },
+    { key: 'QQBotPort', value: 0, comment: '# QQBot图片Api公网IP实际端口。实际占用的是HTTP端口，此配置适用于内网和公网端口不一致用户。' },
+    { key: 'QQBotPrefix', value: true, comment: '# QQBot指令前缀转换 /转#' }
 ]
 
 /** 检查配置文件是否存在 */
 if (!fs.existsSync(_path + "/config.yaml")) {
     fs.copyFileSync(_path + "/defSet/config.yaml", _path + "/config.yaml")
+    let cfg = fs.readFileSync(_path + "/config.yaml", "utf8")
+    cfg = cfg.replace(`QQBotImgToken: ""`, `QQBotImgToken: "${crypto.createHash("sha256").update(crypto.randomBytes(32)).digest("hex")}"`)
+    fs.writeFileSync(_path + "/config.yaml", cfg, "utf8")
 } else {
     /** 兼容旧配置文件 */
     let cfg = fs.readFileSync(_path + "/config.yaml", "utf8")
@@ -32,6 +39,12 @@ if (!fs.existsSync(_path + "/config.yaml")) {
             cfg += `\n${item.comment}\n${item.key}: ${item.value}`
         }
     })
+    /** 处理token */
+    if (cfg.match(RegExp(`QQBotImgToken: "test"`))) {
+        cfg = cfg.replace(`QQBotImgToken: "test"`, `QQBotImgToken: "${crypto.createHash("sha256").update(crypto.randomBytes(32)).digest("hex")}"`)
+    } else if (cfg.match(RegExp(`QQBotImgToken: ""`))) {
+        cfg = cfg.replace(`QQBotImgToken: ""`, `QQBotImgToken: "${crypto.createHash("sha256").update(crypto.randomBytes(32)).digest("hex")}"`)
+    }
     fs.writeFileSync(_path + "/config.yaml", cfg, "utf8")
 }
 
@@ -83,6 +96,11 @@ if (fs.existsSync(_path + "/bot.yaml")) {
     }
 }
 
+/** 清空资源 */
+fs.readdir(`${_path}/../resources/image`, (err, files) => {
+    files.forEach(file => { fs.unlink(`${_path}/../resources/image/${file}`, (err) => { }) })
+})
+
 /** 热重载~ */
 try {
     const filePath = _path + "/config.yaml"
@@ -106,7 +124,16 @@ try {
     logger.error(err)
 }
 
+/** shamrock 微信 */
 await (new WebSocket()).server()
+
+/** QQBot */
+try {
+    Object.entries(Yaml.parse(fs.readFileSync(Bot.lain._path + "/QQBot.yaml", "utf8"))).forEach(async ([appid, cfg]) => {
+        if (Object.keys(cfg).length === 0) return
+        await createAndStartBot(cfg)
+    })
+} catch (err) { common.log("QQBot", `QQBot适配器加载失败,${err}`, "error") }
 
 logger.info(chalk.hex("#868ECC")(`Lain-plugin插件${Bot.lain.version}全部初始化完成~`))
 logger.info(chalk.hex("#868ECC")("https://gitee.com/sky-summer/Lain-plugin"))

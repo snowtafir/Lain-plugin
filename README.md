@@ -24,6 +24,7 @@
 - [√] PC微信适配器
 - [ ] 网页版微信适配器
 - [√] `shamrock适配器`
+- [√] QQBot适配器
 
 ## 1.安装插件
 
@@ -78,6 +79,7 @@ pnpm config set sharp_binary_host "https://npmmirror.com/mirrors/sharp" && pnpm 
 - QQ频道：`QQGuild`
 - Shamrock：`shamrock`
 - PC微信：`WeChat`
+- QQBot：`QQBot`
 
 <details><summary>最后求个爱发电~您的支持是我更新的动力</summary>
 

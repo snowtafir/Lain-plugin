@@ -61,7 +61,7 @@ export function supportGuoba() {
             name: "铃音插件",
             title: "Lian-plugin",
             author: "@sky-summer @Lain.",
-            authorLink: "https://gitee.com/sky-summer/",
+            authorLink: "https://gitee.com/sky-summer",
             link: "https://gitee.com/sky-summer/Lain-plugin",
             isV3: true,
             isV2: false,
@@ -85,12 +85,12 @@ export function supportGuoba() {
                 {
                     field: "port",
                     label: "端口",
-                    bottomHelpMessage: "请输入HTTP服务器端口(Shamrock共用)",
+                    bottomHelpMessage: "请输入HTTP服务器端口(Shamrock、QQBot共用)",
                     component: "InputNumber",
                     required: true,
                     componentProps: {
                         type: "number",
-                        placeholder: "请输入HTTP服务器端口(Shamrock共用)",
+                        placeholder: "请输入HTTP服务器端口(Shamrock、QQBot共用)",
                         min: 1,
                         max: 65535,
                     },
@@ -110,11 +110,48 @@ export function supportGuoba() {
                 {
                     field: "name",
                     label: "椰奶状态名称",
-                    bottomHelpMessage: "自定义椰奶状态名称",
+                    bottomHelpMessage: "自定义微信椰奶状态名称",
                     component: "Input",
-                    required: true,
+                    required: false,
                     componentProps: {
-                        placeholder: "请输入自定义椰奶状态名称",
+                        placeholder: "请输入椰奶状态名称",
+                    },
+                },
+                {
+                    component: "Divider",
+                    label: "QQBot设置"
+                },
+                {
+                    field: "QQBotImgIP",
+                    label: "方法2： 公网API",
+                    bottomHelpMessage: "请输入QQBot的公网IP，服务器放行http端口",
+                    component: "Input",
+                    required: false,
+                    componentProps: {
+                        placeholder: "请输入公网IP",
+                    },
+                },
+                {
+                    field: "QQBotPort",
+                    label: "公网IP实际端口",
+                    bottomHelpMessage: "实际占用的是HTTP端口，此配置适用于内网和公网端口不一致用户。",
+                    component: "InputNumber",
+                    required: false,
+                    componentProps: {
+                        type: "number",
+                        placeholder: "请输入公网端口",
+                        min: 1,
+                        max: 65535,
+                    },
+                },
+                {
+                    field: "QQBotImgToken",
+                    label: "图片Api的token",
+                    bottomHelpMessage: "随机生成 无特殊需求不建议更改",
+                    component: "InputPassword",
+                    required: false,
+                    componentProps: {
+                        placeholder: "请输入自定义的token",
                     },
                 },
                 {
@@ -351,6 +388,18 @@ export function supportGuoba() {
                         case "stdin_nickname":
                             cfg.setIn([key], String(value))
                             Bot.lain.cfg.stdin_nickname = String(value)
+                            break
+                        case "QQBotImgIP":
+                            cfg.setIn([key], String(value))
+                            Bot.lain.cfg.QQBotImgIP = String(value)
+                            break
+                        case "QQBotPort":
+                            cfg.setIn([key], Number(value))
+                            Bot.lain.cfg.QQBotPort = Number(value)
+                            break
+                        case "QQBotImgToken":
+                            cfg.setIn([key], String(value))
+                            Bot.lain.cfg.QQBotImgToken = String(value)
                             break
                         default:
                             if (!value) break

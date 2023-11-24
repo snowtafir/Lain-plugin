@@ -1,10 +1,10 @@
-import shamrock from "./shamrock/app.js"
-import ComWeChat from "./WeChat/ComWx.js"
+import fs from "fs"
 import express from "express"
+import fetch from "node-fetch"
 import { createServer } from "http"
 import common from "../model/common.js"
-import fetch from "node-fetch"
-import fs from "fs"
+import shamrock from "./shamrock/app.js"
+import ComWeChat from "./WeChat/ComWx.js"
 
 export default class WebSocket {
     constructor() {
@@ -18,8 +18,6 @@ export default class WebSocket {
         Bot.shamrock = new Map()
         /** 保存监听器返回 */
         Bot.lain.on = new Map()
-        /** 限制访问地址 */
-        const accessCache = new Map()
         /** 创建Express应用程序 */
         const app = express()
         /** 创建HTTP服务器 */
@@ -43,24 +41,21 @@ export default class WebSocket {
             }
         })
 
-        /** QQBot图片Api */
-        app.get("/api/image", (req, res) => {
+        /** QQBotApi */
+        app.get("/api/QQBot", (req, res) => {
             const { token, name } = req.query
+            common.log("QQBotApi", `[收到请求] 访问文件：${name}`, "debug")
             /** 检查令牌有效性 */
             if (token !== Bot.lain.cfg.QQBotImgToken) return res.status(401).send("令牌无效")
-            const time = Date.now()
-            /** 访问频率 */
-            if (accessCache.has(name) && time - accessCache.get(name) < 60000) return res.status(429).send("同一个地址每分钟只能访问一次")
             const _path = process.cwd() + `/plugins/Lain-plugin/resources/image/${name}`
-            if (!fs.existsSync(_path)) return res.status(404).send("啊咧，图片不存在捏")
-            accessCache.set(name, time)
-            /** 返回图片 */
+            if (!fs.existsSync(_path)) return res.status(404).send("啊咧，文件不存在捏")
+            /** 返回文件 */
             res.sendFile(_path, {}, (err) => {
                 if (err) {
-                    common.log("QQBot图片Api", err, "error")
+                    common.log("QQBotApi", err, "error")
                 } else {
-                    /** 1分钟后删除图片文件 */
-                    setTimeout(() => { fs.unlink(_path, (err) => { if (err) common.log("QQBot图片Api", err, "error") }) }, 60000)
+                    /** 10s后删除图片文件 */
+                    setTimeout(() => { fs.unlink(_path, (err) => { if (err) common.log("QQBotApi", err, "error") }) }, 10000)
                 }
             })
         })
@@ -85,6 +80,8 @@ export default class WebSocket {
         })
 
         this.Server.listen(this.port, async () => {
+            await common.log("", `HTTP服务器：${logger.blue(`http://localhost:${this.port}`)}`)
+            await common.log("", `QQBotApi：${logger.blue(`http://localhost:${this.port}/api/QQBot`)}`)
             await common.log("", `本地 Shamrock 连接地址：${logger.blue(`ws://localhost:${this.port}${this.path}`)}`)
             await common.log("", `本地 ComWeChat 连接地址：${logger.blue(`ws://localhost:${this.port}${this.path_wx}`)}`)
         })

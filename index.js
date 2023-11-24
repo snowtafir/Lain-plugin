@@ -3,14 +3,12 @@ import pm2 from "pm2"
 import "./model/config.js"
 import crypto from "crypto"
 import "./adapter/stdin/stdin.js"
-import "./adapter/QQBot/index.js"
 import yaml from "./model/yaml.js"
-import { createRequire } from 'module'
 import { execSync, exec } from "child_process"
 import { update } from "../other/update.js"
 import guild from "./adapter/QQGuild/guild.js"
-import createAndStartBot from "./adapter/QQBot/index.js"
 import { ShamrockPlugin } from "./adapter/shamrock/plugin.js"
+import createAndStartBot from "./adapter/QQBot/index.js"
 
 /** 设置主人 */
 let sign = {}
@@ -118,7 +116,7 @@ export class Lain extends plugin {
             /** 保存新配置 */
             cfg.addIn(cmd[3], bot)
             try {
-                createAndStartBot(bot)
+                await createAndStartBot(bot)
                 return `QQBot：${cmd[3]} 已连接...`
             } catch (err) {
                 return err
@@ -204,6 +202,7 @@ export class Lain extends plugin {
 
     async user_id(e) {
         const msg = []
+        if (e.isMaster) msg.push(`Bot：${e.self_id}`)
         msg.push(`您的个人ID：${e.user_id}`)
         e.guild_id ? msg.push(`当前频道ID：${e.guild_id}`) : ""
         e.channel_id ? msg.push(`当前子频道ID：${e.channel_id}`) : ""

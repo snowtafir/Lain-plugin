@@ -85,7 +85,7 @@ export default class SendMsg {
                     })
                     break
                 case "video":
-                    /** 只支持本地文件 */
+                    /** 本地文件 */
                     if (i.file && fs.existsSync(i.file)) {
                         /** 上传文件 */
                         try {
@@ -95,9 +95,6 @@ export default class SendMsg {
                         } catch (err) {
                             common.log(this.id, err, "error")
                         }
-                    } else {
-                        await common.log(this.id, `不支持的文件：${i}`, "error")
-                        break
                     }
                     CQ.push(`{video:${i.file}}`)
                     msg.push({
@@ -152,8 +149,7 @@ export default class SendMsg {
     /** 统一图片格式 */
     async get_image(i) {
         let file
-        if (i?.url && i.url.includes("gchat.qpic.cn") && !i.url.startsWith("https://"))
-            i.file = "https://" + i.url
+        if (i?.url) i.url.includes("gchat.qpic.cn") && !i.url.startsWith("https://") ? i.file = "https://" + i.url : i.file = i.url
         /** 特殊格式？... */
         if (i.file?.type === "Buffer") {
             file = `base64://${Buffer.from(i.file.data).toString("base64")}`

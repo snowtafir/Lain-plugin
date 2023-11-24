@@ -16,10 +16,7 @@ class Shamrock {
         }
 
         const MapBot = Bot.shamrock.get(uin)
-        if (MapBot && MapBot.state) {
-            await common.log("shamrock", "重复的链接", "error")
-            return bot.close()
-        }
+        if (MapBot && MapBot.state) return
 
         /** 保存当前bot */
         Bot.shamrock.set(uin, {
@@ -30,8 +27,14 @@ class Shamrock {
             "user-agent": request.headers["user-agent"]
         })
 
+        /** 创建一个定时器，每隔5秒发送一个心跳消息 */
+        const interval = setInterval(() => {
+            bot.send(JSON.stringify({ type: "heartbeat", message: "ping" }), (err) => {
+                if (err) ws.emit("close")
+            })
+        }, 5000)
+
         bot.on("message", async (data) => {
-            logger.debug(`shamrock(${uin})：`, data)
             data = JSON.parse(data)
             /** 带echo事件另外保存 */
             if (data?.echo) {
@@ -127,6 +130,17 @@ class Shamrock {
                             }
                             return await loader.deal.call(pluginsLoader, await zaiMsg.msg(data))
                         }
+                        case "notify":
+                            switch (data.sub_type) {
+                                case "poke": {
+                                    await common.log(uin, `[${data.operator_id}]戳了戳[${data.target_id}]`)
+                                    break
+                                }
+                                default:
+                            }
+                            return await loader.deal.call(pluginsLoader, await zaiMsg.msg(data))
+
+                        // deprecated: 兼容老版本无request类型事件的shamrock,一段时间后删
                         case "group_apply": {
                             data.post_type = "request"
                             data.request_type = "group"
@@ -143,20 +157,31 @@ class Shamrock {
                             await common.log(uin, `[${data.user_id}]申请加机器人[${data.self_id}]好友: ${data.tips}`)
                             return await loader.deal.call(pluginsLoader, await zaiMsg.msg(data))
                         }
-                        case "notify":
-                            switch (data.sub_type) {
-                                case "poke": {
-                                    await common.log(uin, `[${data.operator_id}]戳了戳[${data.target_id}]好友`)
-                                    break
-                                }
-                                default:
-                            }
-                            return await loader.deal.call(pluginsLoader, await zaiMsg.msg(data))
                         default:
                             return
                     }
+                },
+                request: async () => {
+                    data.post_type = "request"
+                    switch (data.request_type) {
+                        case "group": {
+                            data.tips = data.comment
+                            if (data.sub_type === "add") {
+                                await common.log(uin, `[${data.user_id}]申请入群[${data.group_id}]: ${data.tips}`)
+                            } else {
+                                // invite
+                                await common.log(uin, `[${data.user_id}]邀请机器人入群[${data.group_id}]: ${data.tips}`)
+                            }
+                            return await loader.deal.call(pluginsLoader, await zaiMsg.msg(data))
+                        }
+                        case "friend": {
+                            await common.log(uin, `[${data.user_id}]申请加机器人[${data.self_id}]好友: ${data.comment}`)
+                            return await loader.deal.call(pluginsLoader, await zaiMsg.msg(data))
+                        }
+                    }
                 }
             }
+
             try {
                 await event[data?.meta_event_type || data?.post_type]()
             } catch (error) {
@@ -168,6 +193,7 @@ class Shamrock {
         bot.on("close", async () => {
             Bot.shamrock.set(uin, { ...Bot.shamrock.get(uin), state: false })
             await common.log(uin, "连接已关闭", "error")
+            clearInterval(interval)
             // Bot.shamrock.delete(uin)
         })
     }
