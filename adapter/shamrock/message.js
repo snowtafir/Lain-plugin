@@ -1,6 +1,8 @@
 import common from "../../model/common.js"
 import SendMsg from "./sendMsg.js"
 import api from "./api.js"
+import fs from "fs"
+import path from "path"
 
 export default new class zaiMsg {
     /** 转换格式给云崽 */
@@ -243,8 +245,8 @@ export default new class zaiMsg {
                 setCard: async (qq, card) => {
                     return await api.set_group_card(self_id, group_id, qq, card)
                 },
-                setEssenceMessage: async(msg_id) => {
-                    let res = await api.set_essence_msg(uin, msg_id)
+                setEssenceMessage: async (msg_id) => {
+                    let res = await api.set_essence_msg(self_id, msg_id)
                     if (res?.message === '成功') {
                         return "加精成功"
                     } else {
@@ -252,14 +254,22 @@ export default new class zaiMsg {
                     }
                 },
                 /** 移除群精华消息 **/
-                removeEssenceMessage: async(msg_id) => {
-                    let res = await api.delete_essence_msg(uin, msg_id)
+                removeEssenceMessage: async (msg_id) => {
+                    let res = await api.delete_essence_msg(self_id, msg_id)
                     if (res?.message === '成功') {
                         return "移除精华成功"
                     } else {
                         return res?.message
                     }
                 },
+                sendFile: async (filePath) => {
+                    if (!fs.existsSync(filePath)) return true
+                    /** 先传到shamrock... */
+                    const base64 = "base64://" + fs.readFileSync(filePath).toString("base64")
+                    const { file } = await api.download_file(self_id, base64)
+                    let name = path.basename(filePath)
+                    return await api.upload_group_file(self_id, group_id, file, name.replace(/^\./, ""))
+                }
             }
         } else {
             e.friend = {
@@ -302,6 +312,14 @@ export default new class zaiMsg {
                 },
                 getAvatarUrl: async (size = 0, userID = user_id) => {
                     return `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${userID}`
+                },
+                sendFile: async (filePath) => {
+                    if (!fs.existsSync(filePath)) return true
+                    /** 先传到shamrock... */
+                    const base64 = "base64://" + fs.readFileSync(filePath).toString("base64")
+                    const { file } = await api.download_file(self_id, base64)
+                    let name = path.basename(filePath)
+                    return await api.upload_private_file(self_id, user_id, file, name.replace(/^\./, ""))
                 }
             }
         }
