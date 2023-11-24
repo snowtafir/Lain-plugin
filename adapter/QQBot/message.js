@@ -315,16 +315,18 @@ export default new class message {
         const silk = path.join(folderPath, `${Date.now()}.silk`)
 
         if (typeof i.file === "string" && /^http(s)?:\/\//.test(i.file)) {
+
             try {
                 /** 下载 */
-                const res = await fetch(i.file)
+                const res = await fetch(decodeURIComponent(i.file))
                 if (res.ok) {
                     /** 将响应数据转为二进制流并写入文件 */
                     const buffer = await res.arrayBuffer()
                     fs.writeFileSync(file, Buffer.from(buffer))
                     common.log("QQBot", "语音文件下载成功", "mark")
                 } else {
-                    common.log("QQBot", "语音文件下载成功", "mark")
+                    common.log("QQBot", `语音文件下载失败：${res.status}，${res.statusText}`, "error")
+                    return { type: "text", text: `语音文件下载失败：${res.status}，${res.statusText}` }
                 }
             } catch (error) {
                 common.error("QQBot", error.message, "errror")
