@@ -10,13 +10,13 @@ export default new class message {
     /** 转换格式给云崽 */
     async msg(e, isGroup) {
         e.sendMsg = e.reply
-        e.bot.stat = Bot?.[e.self_id]?.stat
+        e.bot = Object.assign(e.bot, Bot[e.self_id])
         e.message = await this.message(e.message, true)
 
         /** 重新构建快速回复消息 */
         e.reply = async (msg, quote) => {
             let ret = await this.reply(e, msg, quote)
-            common.log(e.self_id, `发送返回：${JSON.stringify(ret)}`, "warn")
+            common.log(e.self_id, `发送返回：${JSON.stringify(ret)}`, "debug")
             return {
                 seq: 10000000,
                 rand: 10000000,
@@ -173,6 +173,7 @@ export default new class message {
         for (let i in e) {
             switch (typeof e[i]) {
                 case "string":
+                    if (!e[i].trim()) break
                     if (!msg && t && Bot.lain.cfg.QQBotPrefix) {
                         msg = true
                         message.push({ type: "text", text: e[i].trim().replace(/^\//, "#") })
@@ -229,7 +230,7 @@ export default new class message {
             return await e.sendMsg(msg)
         } catch (error) {
             common.log(e.self_id, `发送消息失败：${error?.data || error?.message || error}`, "error")
-            common.log(e.self_id, error, "debug")
+            logger.error(error)
             return error?.data || error?.message || error
         }
     }
@@ -324,14 +325,15 @@ export default new class message {
         if (typeof i.file === "string" && /^http(s)?:\/\//.test(i.file)) {
             try {
                 /** 下载 */
-                const res = await fetch(i.file)
+                const res = await fetch(decodeURIComponent(i.file))
                 if (res.ok) {
                     /** 将响应数据转为二进制流并写入文件 */
                     const buffer = await res.arrayBuffer()
                     fs.writeFileSync(file, Buffer.from(buffer))
                     common.log("QQBot", "语音文件下载成功", "mark")
                 } else {
-                    common.log("QQBot", "语音文件下载成功", "mark")
+                    common.log("QQBot", `语音文件下载失败：${res.status}，${res.statusText}`, "error")
+                    return { type: "text", text: `语音文件下载失败：${res.status}，${res.statusText}` }
                 }
             } catch (error) {
                 common.error("QQBot", error.message, "errror")

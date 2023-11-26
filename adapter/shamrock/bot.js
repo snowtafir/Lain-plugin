@@ -1,3 +1,5 @@
+import fs from "fs"
+import path from "path"
 import common from "../../model/common.js"
 import api from "./api.js"
 import SendMsg from "./sendMsg.js"
@@ -132,6 +134,14 @@ export default new class addBot {
                             return res?.message
                         }
                     },
+                    sendFile: async (filePath) => {
+                        if (!fs.existsSync(filePath)) return true
+                        /** 先传到shamrock... */
+                        const base64 = "base64://" + fs.readFileSync(filePath).toString("base64")
+                        const { file } = await api.download_file(uin, base64)
+                        let name = path.extname(filePath)
+                        return await api.upload_group_file(uin, groupID, file, name.replace(/^\./, ""))
+                    }
                 }
             },
             pickUser: (user_id) => {

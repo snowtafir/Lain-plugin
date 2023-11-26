@@ -40,14 +40,6 @@ export default async function createAndStartBot(cfg) {
             await loader.deal.call(pluginsLoader, await message.msg(e, false))
         })
 
-        // 频道被动回复
-        bot.on('message.guild', async (e) => {
-            await loader.deal.call(pluginsLoader, await message.msg(e, true))
-        })
-        // 频道私信被动回复
-        bot.on('message.direct', async (e) => {
-            await loader.deal.call(pluginsLoader, await message.msg(e, false))
-        })
         // 开始连接
         await bot.start()
         // 注册Bot
@@ -164,7 +156,7 @@ async function LoadBot(bot) {
         pickFriend: (user_id) => {
             return {
                 sendMsg: async (msg) => {
-                    return await (new SendMsg(uin, false)).message(msg, user_id)
+                    return await message.message(msg, user_id)
                 },
                 /** 转发 */
                 makeForwardMsg: async (forwardMsg) => {

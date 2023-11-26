@@ -29,6 +29,7 @@ export class ShamrockPlugin extends plugin {
       let target = (e.at && e.msg.includes('他', '她', '它', 'TA', 'ta', 'Ta')) ? e.at : e.user_id
       let lock = await redis.get(`lain:thumbup:${e.self_id}_${target}`)
       let _this = this
+      const originalThumbUp = YenaiQQApi.prototype.thumbUp
       YenaiQQApi.prototype.thumbUp = async (uid, times) => {
         // shamrock不管点没点上一律返回ok。。只好自己伪造了，不然椰奶会死循环，暂不考虑svip的情况。
         try {
@@ -51,9 +52,8 @@ export class ShamrockPlugin extends plugin {
           return { code: 0, msg: '点赞成功' }
         }
       }
-      const originalThumbUp = YenaiFun.prototype.thumbUp
       try {
-        const tu = originalThumbUp.bind(this)
+        const tu = YenaiFun.prototype.thumbUp.bind(this)
         await tu(e)
       } finally {
         // 恢复
