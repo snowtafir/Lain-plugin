@@ -11,7 +11,7 @@ import crypto from 'crypto'
 
 let Config, Data, Version, Plugin_Path
 try {
-    let index = await import('../../../../xiaofei-plugin111/components/index.js')
+    let index = await import('../../../../xiaofei-plugin/components/index.js')
     Config = index.Config
     Data = index.Data
     Version = index.Version
