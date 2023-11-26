@@ -46,7 +46,7 @@ class Shamrock {
                     if (Bot.shamrock.get(uin)?.state) return
                     Bot.shamrock.set(uin, { ...Bot.shamrock.get(uin), state: true })
                     await common.log(uin, `建立连接成功，正在加载资源：${request.headers["user-agent"]}`)
-                    return await addBot.loadRes(uin)
+                    return new addBot(uin)
                 },
                 /** 心跳 */
                 heartbeat: async () => {
@@ -54,10 +54,11 @@ class Shamrock {
                 },
                 /** 消息事件 */
                 message: async () => {
-                    return await loader.deal.call(pluginsLoader, await zaiMsg.msg(data))
+                    return await Bot.emit("message", await zaiMsg.msg(data))
                 },
                 /** 戳一戳 */
                 notice: async () => {
+                    // Bot.emit(data.post_type, await zaiMsg.msg(data))
                     data.post_type = "notice"
                     switch (data.notice_type) {
                         case "group_recall":
@@ -160,6 +161,10 @@ class Shamrock {
                         default:
                             return
                     }
+                },
+                /** Bot自身消息 先不做处理 */
+                message_sent: async () => {
+                    return
                 },
                 request: async () => {
                     data.post_type = "request"
