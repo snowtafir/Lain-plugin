@@ -672,6 +672,16 @@ let api = {
         return await this.SendApi(id, "send_private_forward_msg", params)
     },
 
+    /**
+     * 获取被禁言的群成员列表
+     * @param {string} id - 机器人QQ
+     * @param {number} group_id - 发送到的目标群号
+     */
+    async get_prohibited_member_list(id, group_id) {
+        const params = { group_id }
+        return await this.SendApi(id, "get_prohibited_member_list", params)
+    },
+
     async SendApi(id, action, params) {
         const bot = Bot.shamrock.get(String(id))
         if (!bot) return common.log(id, "不存在此Bot")
