@@ -19,8 +19,11 @@ export default new class zaiMsg {
 
         if (data.post_type === "message") {
             /** 处理message，引用消息 */
-            const { message, source } = await this.message(self_id, data.message, group_id, "e")
+            const { message, source, file } = await this.message(self_id, data.message, group_id, "e")
             e.message = message
+            /** 特殊处理文件 */
+            if (file) e.file = file
+            /** 引用消息 */
             if (source) {
                 e.source = source
                 if (typeof e.source === 'string') {
@@ -352,6 +355,7 @@ export default new class zaiMsg {
 export async function message(id, msg, group_id, reply = true) {
     const message = []
     let source
+    let file
     for (const i of msg) {
         if (i.type === "reply" && reply) {
             /** 引用消息的id */
@@ -398,6 +402,10 @@ export async function message(id, msg, group_id, reply = true) {
         /** 不理解为啥为啥不是node... */
         else if (i.type === "forward") {
             message.push({ type: "node", ...i.data })
+        }
+        /** 文件 */
+        else if (i.type === "file") {
+            file = i.data
         } else {
             if (i.type === "at") {
                 message.push({ type: "at", qq: Number(i.data.qq) })
@@ -406,7 +414,7 @@ export async function message(id, msg, group_id, reply = true) {
             }
         }
     }
-    return { message, source }
+    return { message, source, file }
 }
 
 /**
