@@ -2076,7 +2076,7 @@ export class xiaofei_music extends plugin {
     /** 接受到消息都会先执行一次 */
     accept() {
         if (/^#?(小飞语音|小飞高清语音|小飞歌词|语音|高清语音|歌词|下载音乐)?(\d+)?$/.test(this.e.msg)) {
-            factory.music_message(this.e)
+            try { factory.music_message(this.e) } catch { }
         }
     }
 }
