@@ -9,6 +9,7 @@ import { execSync } from "child_process"
 import { update } from "../other/update.js"
 import guild from "./adapter/QQGuild/guild.js"
 import { ShamrockPlugin } from "./adapter/shamrock/plugin.js"
+import { xiaofei_music } from "./adapter/shamrock/xiaofei/music.js"
 import createAndStartBot from "./adapter/QQBot/index.js"
 
 const require = createRequire(import.meta.url)
@@ -409,4 +410,4 @@ async function init(key = "Lain:restart") {
     }
 }
 
-export { init, ShamrockPlugin }
+export { init, ShamrockPlugin, xiaofei_music }

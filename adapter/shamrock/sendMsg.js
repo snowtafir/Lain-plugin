@@ -26,7 +26,7 @@ export default class SendMsg {
         if (node) CQ = ["[转发消息]"]
 
         /** 发送消息 */
-        return await this.SendMsg(id, msg, CQ, node)
+        return await this.sendMsg(id, msg, CQ, node)
     }
 
     /** 转为shamrock可以使用的格式 */
@@ -117,6 +117,57 @@ export default class SendMsg {
                     CQ.push(`{poke:${i.id}}`)
                     msg.push(i)
                     break
+                case "weather":
+                    CQ.push(`[CQ=weather,${i.city?('city='+i.city) : ('code='+i.code)}]`)
+                    msg.push({
+                        type: "weather",
+                        data: {
+                            code: i.code,
+                            city: i.city
+                        }
+                    })
+                    break
+                case "json":
+                    let json = JSON.stringify(i.data)
+                    CQ.push(`[CQ=json,data=${json}]`)
+                    msg.push({
+                        type: "json",
+                        data: {
+                            data: json
+                        }
+                    })
+                    break
+                case "music":
+                    CQ.push(`[CQ=music,type=${i.data.type},id=${i.data.id}]`)
+                    msg.push({
+                        type: "music",
+                        data: i.data
+                    })
+                    break
+                case "location":
+                    const {lat, lng: lon} = data
+                    CQ.push(`[CQ=json,lat=${lat},lon=${lon}]`)
+                    msg.push({
+                        type: "location",
+                        data: {
+                            lat,
+                            lon
+                        }
+                    })
+                    break
+                case "share":
+                    const {url, title, image, content} = data
+                    CQ.push(`[CQ=json,url=${url},title=${title},image=${image},content=${content}]`)
+                    msg.push({
+                        type: "share",
+                        data: {
+                            url,
+                            title,
+                            content,
+                            image
+                        }
+                    })
+                    break
                 case "forward":
                     node ? "" : node = true
                     msg.push({
@@ -189,7 +240,7 @@ export default class SendMsg {
     }
 
     /** 发送消息 */
-    async SendMsg(id, msg, CQ, node) {
+    async sendMsg(id, msg, CQ, node) {
         /** 打印日志 */
         common.log(this.id, `发送${this.isGroup ? "群" : "好友"}消息：[${id}]${CQ.join("")}`)
 
