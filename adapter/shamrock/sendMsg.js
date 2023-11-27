@@ -128,7 +128,12 @@ export default class SendMsg {
                     })
                     break
                 case "json":
-                    let json = JSON.stringify(i.data)
+                    let json
+                    if (typeof i.data !== "string") {
+                      json = JSON.stringify(i.data)
+                    } else {
+                      json = i.data
+                    }
                     CQ.push(`[CQ=json,data=${json}]`)
                     msg.push({
                         type: "json",
