@@ -10,6 +10,7 @@ import { update } from "../other/update.js"
 import guild from "./adapter/QQGuild/guild.js"
 import { ShamrockPlugin } from "./adapter/shamrock/plugin.js"
 import { xiaofei_music } from "./adapter/shamrock/xiaofei/music.js"
+import { xiaofei_weather } from "./adapter/shamrock/xiaofei/weather.js"
 import createAndStartBot from "./adapter/QQBot/index.js"
 
 const require = createRequire(import.meta.url)
@@ -410,4 +411,4 @@ async function init(key = "Lain:restart") {
     }
 }
 
-export { init, ShamrockPlugin, xiaofei_music }
+export { init, ShamrockPlugin, xiaofei_music, xiaofei_weather }
