@@ -33,7 +33,7 @@ const music_source = {
     QQ: 'qq',
     qq: 'qq'
 }
-const music_reg = '^#?(小飞)?(' + Object.keys(music_source).join('|') + ')?(' + Object.keys(music_source).join('|') + ')?(点播音乐|点播|点歌|播放|放一?首|来一?首|下一页|个性电台|每日推荐|每日30首|日推|我的收藏|我喜欢的歌)(.*)$'
+const music_reg = '^#?(小飞)?(' + Object.keys(music_source).join('|') + '|多选)?(' + Object.keys(music_source).join('|') + '|多选)?(点播音乐|点播|点歌|播放|放一?首|来一?首|下一页|个性电台|每日推荐|每日30首|日推|我的收藏|我喜欢的歌)(.*)$'
 
 function getCookieMap(cookie) {
     let cookiePattern = /^(\S+)=(\S+)$/
@@ -300,7 +300,7 @@ if (Config) {
                 let music = data.data[index]
 
                 if (!reg[1]?.includes('歌词')) {
-                    let music_json = await CreateMusicShareJSON(music)
+                    let music_json = await factory.CreateMusicShareJSON(music)
                     if (reg[1] && (reg[1].includes('语音') || reg[1]?.includes('下载音乐'))) {
                         if (!music_json.meta.music || !music_json.meta.music?.musicUrl) {
                             await e.reply('[' + music.name + '-' + music.artist + ']获取下载地址失败！')
@@ -729,6 +729,10 @@ if (Config) {
             tips: '请在一分钟内发送序号进行点歌' + (next_page ? '，发送【#下一页】查看更多' : '') + '！',
             sub_title: `Created By Yunzai-Bot ${Version.yunzai} & xiaofei-Plugin ${Version.ver}`,
             list: new_list
+        }
+
+        if (!xiaofei_plugin_shamrock.puppeteer) {
+            xiaofei_plugin_shamrock.puppeteer = xiaofei_plugin.puppeteer
         }
 
         let img = await xiaofei_plugin_shamrock.puppeteer.screenshot('xiaofei-plugin/music_list', {
@@ -2000,7 +2004,7 @@ export class xiaofei_music extends plugin {
     constructor() {
         super({
             /** 功能名称 */
-            name: '小飞插件_点歌',
+            name: '小飞插件_点歌_Shamrock',
             /** 功能描述 */
             dsc: '',
             /** https://oicqjs.github.io/oicq/#events */
