@@ -689,7 +689,7 @@ let api = {
         // console.log("发送请求，接口：", action, "参数：", params)
         bot.socket.send(JSON.stringify({ echo, action, params }))
 
-        for (let i = 0; i < 40; i++) {
+        for (let i = 0; i < 60; i++) {
             const data = await Bot.lain.on.get(echo)
             if (data) {
                 Bot.lain.on.delete(echo)

@@ -31,7 +31,8 @@ export default class SendMsg {
 
     /** 转为shamrock可以使用的格式 */
     async msg(data) {
-        if (!Array.isArray(data)) data = [{ type: "text", text: data }]
+        if (typeof data == "string") data = [{ type: "text", text: data }]
+        if (!Array.isArray(data)) data = [data]
         const CQ = []
         const msg = []
         let node = false
@@ -118,7 +119,7 @@ export default class SendMsg {
                     msg.push(i)
                     break
                 case "weather":
-                    CQ.push(`[CQ=weather,${i.city?('city='+i.city) : ('code='+i.code)}]`)
+                    CQ.push(`[CQ=weather,${i.city ? ('city=' + i.city) : ('code=' + i.code)}]`)
                     msg.push({
                         type: "weather",
                         data: {
@@ -130,9 +131,9 @@ export default class SendMsg {
                 case "json":
                     let json
                     if (typeof i.data !== "string") {
-                      json = JSON.stringify(i.data)
+                        json = JSON.stringify(i.data)
                     } else {
-                      json = i.data
+                        json = i.data
                     }
                     CQ.push(`[CQ=json,data=${json}]`)
                     msg.push({
@@ -150,7 +151,7 @@ export default class SendMsg {
                     })
                     break
                 case "location":
-                    const {lat, lng: lon} = data
+                    const { lat, lng: lon } = data
                     CQ.push(`[CQ=json,lat=${lat},lon=${lon}]`)
                     msg.push({
                         type: "location",
@@ -161,7 +162,7 @@ export default class SendMsg {
                     })
                     break
                 case "share":
-                    const {url, title, image, content} = data
+                    const { url, title, image, content } = data
                     CQ.push(`[CQ=json,url=${url},title=${title},image=${image},content=${content}]`)
                     msg.push({
                         type: "share",
@@ -233,7 +234,7 @@ export default class SendMsg {
         }
         /** url图片 */
         else if (/^http(s)?:\/\//.test(file)) {
-            return { type: "image", data: { file, url: file } }
+            return { type: "image", data: { file } }
         }
         /** 留个容错防止炸了 */
         else {

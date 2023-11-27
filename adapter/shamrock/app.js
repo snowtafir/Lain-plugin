@@ -84,12 +84,14 @@ class Shamrock {
                 data.post_type = "notice"
                 switch (data.notice_type) {
                     case "group_recall":
+                        data.notice_type = "group"
+                        data.sub_type = "recall"
                         if (data.operator_id === data.user_id) {
                             await common.log(id, `群消息撤回：[${data.group_id}，${data.user_id}] ${data.message_id}`)
                         } else {
                             await common.log(id, `群消息撤回：[${data.group_id}]${data.operator_id} 撤回 ${data.user_id}的消息 ${data.message_id} `)
                         }
-                        return await this.message(data)
+                        return await Bot.emit("notice.group", await message.msg(data))
                     case "group_increase": {
                         data.notice_type = "group"
                         let sub_type = data.sub_type

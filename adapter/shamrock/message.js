@@ -156,6 +156,7 @@ export default new class zaiMsg {
                     }
                     return {
                         member,
+                        ...member,
                         getAvatarUrl: (size = 0, userId = id) => `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${userId}`
                     }
                 },

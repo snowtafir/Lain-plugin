@@ -108,6 +108,7 @@ export default class bot {
                 let gml = {}
                 let member_list = await api.get_group_member_list(this.id, i.group_id)
                 member_list.forEach(user => {
+                    user.card = user.nickname
                     gml[user.user_id] = user
 
                 })
