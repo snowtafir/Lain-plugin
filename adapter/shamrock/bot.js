@@ -5,6 +5,9 @@ import api from "./api.js"
 import { init } from "../../index.js"
 import { message, toRaw } from "./message.js"
 
+/** 加载资源状态 */
+let resList = false
+
 export default class bot {
     constructor(id) {
         /** 机器人QQ号 */
@@ -48,6 +51,8 @@ export default class bot {
     }
 
     async LoadList() {
+        if (resList) return "目前以有任务事件在加载中，请勿重复加载"
+        resList = true
         if (!Bot.adapter.includes(Number(this.id))) Bot.adapter.push(Number(this.id))
 
         /** 获取bot自身信息 */
@@ -158,7 +163,10 @@ export default class bot {
             })
         }
 
-        await common.log(this.id, `Shamrock加载资源成功：加载了${Bot[this.id].fl.size}个好友，${Bot[this.id].gl.size}个群。`)
+        const log = `Shamrock加载资源成功：加载了${Bot[this.id].fl.size}个好友，${Bot[this.id].gl.size}个群。`
+        await common.log(this.id, log)
+        resList = false
+        return log
     }
 
     /** 群对象 */

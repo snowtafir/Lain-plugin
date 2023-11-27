@@ -62,6 +62,11 @@ export class Lain extends plugin {
                     reg: /^#微信修改名称.+/,
                     fnc: "ComName",
                     permission: "master"
+                },
+                {
+                    reg: /^#(重载|重新加载)资源/,
+                    fnc: "loadRes",
+                    permission: "master"
                 }
             ]
         })
@@ -234,6 +239,15 @@ export class Lain extends plugin {
         } else {
             return this.reply([segment.at(this.e.user_id), "验证码错误"])
         }
+    }
+
+    /** shamrock重载资源 */
+    async loadRes(e) {
+        await e.reply("开始重载，请稍等...", true)
+        let res = (await import("./adapter/shamrock/bot.js")).default
+        res = new res(e.self_id)
+        const msg = await res.LoadList()
+        return await e.reply(msg, true)
     }
 }
 
