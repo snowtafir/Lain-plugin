@@ -219,7 +219,7 @@ export default class bot {
                 })
                 return Promise.all(messages)
             },
-            ssenceMessage: async (msg_id) => {
+            setEssenceMessage: async (msg_id) => {
                 let res = await api.set_essence_msg(this.id, msg_id)
                 if (res?.message === '成功') {
                     return "加精成功"
