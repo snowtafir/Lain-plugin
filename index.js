@@ -8,7 +8,6 @@ import { createRequire } from "module"
 import { execSync } from "child_process"
 import { update } from "../other/update.js"
 import guild from "./adapter/QQGuild/guild.js"
-import { ShamrockPlugin } from "./adapter/shamrock/plugin.js"
 import { xiaofei_music } from "./adapter/shamrock/xiaofei/music.js"
 import { xiaofei_weather } from "./adapter/shamrock/xiaofei/weather.js"
 import createAndStartBot from "./adapter/QQBot/index.js"
@@ -249,7 +248,7 @@ let apps = {
 }
 
 /** 还是修改一下，不然cvs这边没法用...  */
-if (!fs.existsSync("./plugins/ws-plugin/model/dlc/index.js")) {
+if (!fs.existsSync("./plugins/ws-plugin/model/dlc/index.js") && !fs.existsSync("./plugins/ws-plugin/model/red/index.js")) {
     const getGroupMemberInfo = Bot.getGroupMemberInfo
     Bot.getGroupMemberInfo = async function (group_id, user_id) {
         try {
@@ -411,4 +410,4 @@ async function init(key = "Lain:restart") {
     }
 }
 
-export { init, ShamrockPlugin, xiaofei_music, xiaofei_weather }
+export { init, xiaofei_music, xiaofei_weather }

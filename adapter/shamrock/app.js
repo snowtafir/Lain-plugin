@@ -130,11 +130,27 @@ class Shamrock {
                         data.sub_type = "admin"
                         data.user_id = data.target_id
                         if (data.self_id === data.user_id) {
-                            await common.log(id, data.set ? `机器人[${data.self_id}]在群[${data.group_id}]被设置为管理员` :
-                                `机器人[${data.self_id}]在群[${data.group_id}]被取消管理员`)
+                            let gml = await Bot[id].gml.get(data.group_id)
+                            gml[data.self_id] = { ...gml[data.self_id] }
+                            if (data.set) {
+                                gml[data.self_id].role = "admin"
+                                await common.log(id, `机器人[${data.self_id}]在群[${data.group_id}]被设置为管理员`)
+                            } else {
+                                gml[data.self_id].role = "member"
+                                await common.log(id, `机器人[${data.self_id}]在群[${data.group_id}]被取消管理员`)
+                            }
+                            Bot[id].gml.set(data.group_id, { ...gml })
                         } else {
-                            await common.log(id, data.set ? `成员[${data.user_id}]在群[${data.group_id}]被设置为管理员` :
-                                `成员[${data.user_id}]在群[${data.group_id}]被取消管理员`)
+                            let gml = await Bot[id].gml.get(data.group_id)
+                            gml[data.target_id] = { ...gml[data.target_id] }
+                            if (data.set) {
+                                gml[data.target_id].role = "admin"
+                                await common.log(id, `成员[${data.target_id}]在群[${data.group_id}]被设置为管理员`)
+                            } else {
+                                gml[data.target_id].role = "member"
+                                await common.log(id, `成员[${data.target_id}]在群[${data.group_id}]被取消管理员`)
+                            }
+                            Bot[id].gml.set(data.group_id, { ...gml })
                         }
                         return await this.message(data)
                     }

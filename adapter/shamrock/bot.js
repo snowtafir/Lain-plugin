@@ -70,7 +70,9 @@ export default class bot {
         }
 
         if (group_list && typeof group_list === "object") {
-            group_list.forEach(i => {
+            group_list.forEach(async i => {
+                /** 延迟一下 */
+                await common.sleep(50)
                 /** 给锅巴用 */
                 Bot.gl.set(i.group_id, i)
                 /** 自身参数 */
@@ -94,7 +96,9 @@ export default class bot {
         }
 
         if (friend_list && typeof friend_list === "object") {
-            friend_list.forEach(i => {
+            friend_list.forEach(async i => {
+                /** 延迟一下 */
+                await common.sleep(50)
                 /** 给锅巴用 */
                 Bot.fl.set(i.user_id, i)
                 /** 自身参数 */
@@ -107,7 +111,9 @@ export default class bot {
             try {
                 let gml = {}
                 let member_list = await api.get_group_member_list(this.id, i.group_id)
-                member_list.forEach(user => {
+                member_list.forEach(async user => {
+                    /** 延迟一下 */
+                    await common.sleep(50)
                     user.card = user.nickname
                     gml[user.user_id] = user
 
