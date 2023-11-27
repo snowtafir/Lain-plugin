@@ -214,7 +214,9 @@ class Shamrock {
             return await event[data?.meta_event_type || data?.post_type]()
         } catch (error) {
             /** 未知事件 */
-            return common.log("[Shamrock]未知事件：", error?.message || error)
+            common.log("未知事件详情：", data, "debug")
+            common.log("错误信息详情：", error, "debug")
+            return common.log(id, `未知事件：${data?.meta_event_type || data?.post_type}`, "error")
         }
     }
 }
