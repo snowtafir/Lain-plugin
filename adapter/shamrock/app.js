@@ -1,26 +1,26 @@
 import { WebSocketServer } from "ws"
 import common from "../../model/common.js"
 import addBot from "./bot.js"
-import zaiMsg from "./message.js"
+import message from "./message.js"
 import loader from "../../plugins/loader.js"
 import pluginsLoader from "../../../../lib/plugins/loader.js"
 
 class Shamrock {
     async server(bot, request) {
         /** 获取机器人uin */
-        const uin = request.headers["x-self-id"]
+        const id = request.headers["x-self-id"]
 
-        if (!uin) {
+        if (!id) {
             await common.log("shamrock", "没有提供机器人标识", "error")
             return bot.close()
         }
 
-        const MapBot = Bot.shamrock.get(uin)
+        const MapBot = Bot.shamrock.get(id)
         if (MapBot && MapBot.state) return
 
         /** 保存当前bot */
-        Bot.shamrock.set(uin, {
-            id: uin,
+        Bot.shamrock.set(id, {
+            id: id,
             socket: bot,
             state: false,
             "qq-ver": request.headers["x-qq-version"],
@@ -37,170 +37,185 @@ class Shamrock {
         bot.on("message", async (data) => {
             data = JSON.parse(data)
             /** 带echo事件另外保存 */
-            if (data?.echo) {
-                return Bot.lain.on.set(data.echo, data)
-            }
-            const event = {
-                /** 产生连接 */
-                lifecycle: async () => {
-                    if (Bot.shamrock.get(uin)?.state) return
-                    Bot.shamrock.set(uin, { ...Bot.shamrock.get(uin), state: true })
-                    await common.log(uin, `建立连接成功，正在加载资源：${request.headers["user-agent"]}`)
-                    return new addBot(uin)
-                },
-                /** 心跳 */
-                heartbeat: async () => {
-                    return await common.log(uin, `心跳：${data.status["qq.status"]}`, "debug")
-                },
-                /** 消息事件 */
-                message: async () => {
-                    return await Bot.emit("message", await zaiMsg.msg(data))
-                },
-                /** 戳一戳 */
-                notice: async () => {
-                    // Bot.emit(data.post_type, await zaiMsg.msg(data))
-                    data.post_type = "notice"
-                    switch (data.notice_type) {
-                        case "group_recall":
-                            if (data.operator_id === data.user_id) {
-                                await common.log(uin, `群消息撤回：[${data.group_id}，${data.user_id}] ${data.message_id}`)
-                            } else {
-                                await common.log(uin, `群消息撤回：[${data.group_id}]${data.operator_id} 撤回 ${data.user_id}的消息 ${data.message_id} `)
-                            }
-                            return await loader.deal.call(pluginsLoader, await zaiMsg.msg(data))
-                        case "group_increase": {
-                            data.notice_type = "group"
-                            let sub_type = data.sub_type
-                            data.sub_type = "increase"
-                            data.user_id = data.target_id
-                            if (data.self_id === data.user_id) {
-                                await common.log(uin, `机器人加入群聊：[${data.group_id}}]`)
-                            } else {
-                                switch (sub_type) {
-                                    case "invite": {
-                                        await common.log(uin, `[${data.operator_id}]邀请[${data.user_id}]加入了群聊[${data.group_id}] `)
-                                    }
-                                    default: {
-                                        await common.log(uin, `新人${data.user_id}加入群聊[${data.group_id}] `)
-                                    }
-                                }
-                            }
-                            return await loader.deal.call(pluginsLoader, await zaiMsg.msg(data))
-                        }
-                        case "group_decrease": {
-                            data.notice_type = "group"
-                            data.sub_type = "decrease"
-                            data.user_id = data.target_id
-                            if (data.self_id === data.user_id) {
-                                await common.log(uin, data.operator_id ? `机器人被[${data.operator_id}]踢出群聊：[${data.group_id}}]`
-                                    : `机器人退出群聊：[${data.group_id}}]`)
-                            } else {
-                                await common.log(uin, data.operator_id ? `成员[${data.user_id}]被[${data.operator_id}]踢出群聊：[${data.group_id}}]`
-                                    : `成员[${data.user_id}]退出群聊[${data.group_id}}]`)
-                            }
-                            return await loader.deal.call(pluginsLoader, await zaiMsg.msg(data))
-                        }
-                        case "group_admin": {
-                            data.notice_type = "group"
-                            data.set = data.sub_type === 'set'
-                            data.sub_type = "admin"
-                            data.user_id = data.target_id
-                            if (data.self_id === data.user_id) {
-                                await common.log(uin, data.set ? `机器人[${data.self_id}]在群[${data.group_id}]被设置为管理员` :
-                                    `机器人[${data.self_id}]在群[${data.group_id}]被取消管理员`)
-                            } else {
-                                await common.log(uin, data.set ? `成员[${data.user_id}]在群[${data.group_id}]被设置为管理员` :
-                                    `成员[${data.user_id}]在群[${data.group_id}]被取消管理员`)
-                            }
-                            return await loader.deal.call(pluginsLoader, await zaiMsg.msg(data))
-                        }
-                        case "group_ban": {
-                            data.notice_type = "group"
-                            if (data.sub_type === 'lift_ban') {
-                                data.sub_type = "ban"
-                                data.duration = 0
-                            } else {
-                                data.sub_type = "ban"
-                            }
-                            if (data.self_id === data.target_id) {
-                                await common.log(uin, data.duration === 0 ? `机器人[${data.self_id}]在群[${data.group_id}]被解除禁言` :
-                                    `机器人[${data.self_id}]在群[${data.group_id}]被禁言${data.duration}秒`)
-                            } else {
-                                await common.log(uin, data.duration === 0 ? `成员[${data.target_id}]在群[${data.group_id}]被解除禁言` :
-                                    `成员[${data.target_id}]在群[${data.group_id}]被禁言${data.duration}秒`)
-                            }
-                            return await loader.deal.call(pluginsLoader, await zaiMsg.msg(data))
-                        }
-                        case "notify":
-                            switch (data.sub_type) {
-                                case "poke": {
-                                    await common.log(uin, `[${data.operator_id}]戳了戳[${data.target_id}]`)
-                                    break
-                                }
-                                default:
-                            }
-                            return await loader.deal.call(pluginsLoader, await zaiMsg.msg(data))
-
-                        // deprecated: 兼容老版本无request类型事件的shamrock,一段时间后删
-                        case "group_apply": {
-                            data.post_type = "request"
-                            data.request_type = "group"
-                            data.user_id = data.operator_id
-                            data.tips = data.tips || data.comment || data.tip
-                            await common.log(uin, `[${data.user_id}]申请入群[${data.group_id}]: ${data.tips}`)
-                            return await loader.deal.call(pluginsLoader, await zaiMsg.msg(data))
-                        }
-                        case "friend_apply":
-                        case "friend_add": {
-                            data.post_type = "request"
-                            data.request_type = "friend"
-                            data.comment = data.comment || data.tip
-                            await common.log(uin, `[${data.user_id}]申请加机器人[${data.self_id}]好友: ${data.tips}`)
-                            return await loader.deal.call(pluginsLoader, await zaiMsg.msg(data))
-                        }
-                        default:
-                            return
-                    }
-                },
-                /** Bot自身消息 先不做处理 */
-                message_sent: async () => {
-                    return
-                },
-                request: async () => {
-                    data.post_type = "request"
-                    switch (data.request_type) {
-                        case "group": {
-                            data.tips = data.comment
-                            if (data.sub_type === "add") {
-                                await common.log(uin, `[${data.user_id}]申请入群[${data.group_id}]: ${data.tips}`)
-                            } else {
-                                // invite
-                                await common.log(uin, `[${data.user_id}]邀请机器人入群[${data.group_id}]: ${data.tips}`)
-                            }
-                            return await loader.deal.call(pluginsLoader, await zaiMsg.msg(data))
-                        }
-                        case "friend": {
-                            await common.log(uin, `[${data.user_id}]申请加机器人[${data.self_id}]好友: ${data.comment}`)
-                            return await loader.deal.call(pluginsLoader, await zaiMsg.msg(data))
-                        }
-                    }
-                }
-            }
+            if (data?.echo) return Bot.lain.on.set(data.echo, data)
 
             try {
-                await event[data?.meta_event_type || data?.post_type]()
+                await this.event(id, data)
             } catch (error) {
                 logger.error(error)
-                logger.mark("未知事件：", data)
+                logger.mark("[Shamrock]事件处理错误", data)
             }
         })
 
         bot.on("close", async () => {
-            Bot.shamrock.set(uin, { ...Bot.shamrock.get(uin), state: false })
-            await common.log(uin, "连接已关闭", "error")
+            Bot.shamrock.set(id, { ...Bot.shamrock.get(id), state: false })
+            await common.log(id, "连接已关闭", "error")
             clearInterval(interval)
             // Bot.shamrock.delete(uin)
         })
+    }
+
+    /** 转换为喵崽可处理的格式，随后交给喵崽处理 */
+    async message(data) {
+        return await loader.deal.call(pluginsLoader, await message.msg(data))
+    }
+
+    async event(id, data) {
+        const event = {
+            /** 产生连接 */
+            lifecycle: async () => {
+                if (Bot.shamrock.get(id)?.state) return
+                Bot.shamrock.set(id, { ...Bot.shamrock.get(id), state: true })
+                await common.log(id, `建立连接成功，正在加载资源：${request.headers["user-agent"]}`)
+                return new addBot(id)
+            },
+            /** 心跳 */
+            heartbeat: async () => {
+                return await common.log(id, `心跳：${data.status["qq.status"]}`, "debug")
+            },
+            /** 消息事件 */
+            message: async () => {
+                return await Bot.emit("message", await message.msg(data))
+            },
+            /** 戳一戳 */
+            notice: async () => {
+                // Bot.emit(data.post_type, await zaiMsg.msg(data))
+                data.post_type = "notice"
+                switch (data.notice_type) {
+                    case "group_recall":
+                        if (data.operator_id === data.user_id) {
+                            await common.log(id, `群消息撤回：[${data.group_id}，${data.user_id}] ${data.message_id}`)
+                        } else {
+                            await common.log(id, `群消息撤回：[${data.group_id}]${data.operator_id} 撤回 ${data.user_id}的消息 ${data.message_id} `)
+                        }
+                        return await this.message(data)
+                    case "group_increase": {
+                        data.notice_type = "group"
+                        let sub_type = data.sub_type
+                        data.sub_type = "increase"
+                        data.user_id = data.target_id
+                        if (data.self_id === data.user_id) {
+                            await common.log(id, `机器人加入群聊：[${data.group_id}}]`)
+                        } else {
+                            switch (sub_type) {
+                                case "invite": {
+                                    await common.log(id, `[${data.operator_id}]邀请[${data.user_id}]加入了群聊[${data.group_id}] `)
+                                }
+                                default: {
+                                    await common.log(id, `新人${data.user_id}加入群聊[${data.group_id}] `)
+                                }
+                            }
+                        }
+                        return await this.message(data)
+                    }
+                    case "group_decrease": {
+                        data.notice_type = "group"
+                        data.sub_type = "decrease"
+                        data.user_id = data.target_id
+                        if (data.self_id === data.user_id) {
+                            await common.log(id, data.operator_id ? `机器人被[${data.operator_id}]踢出群聊：[${data.group_id}}]`
+                                : `机器人退出群聊：[${data.group_id}}]`)
+                        } else {
+                            await common.log(id, data.operator_id ? `成员[${data.user_id}]被[${data.operator_id}]踢出群聊：[${data.group_id}}]`
+                                : `成员[${data.user_id}]退出群聊[${data.group_id}}]`)
+                        }
+                        return await this.message(data)
+                    }
+                    case "group_admin": {
+                        data.notice_type = "group"
+                        data.set = data.sub_type === 'set'
+                        data.sub_type = "admin"
+                        data.user_id = data.target_id
+                        if (data.self_id === data.user_id) {
+                            await common.log(id, data.set ? `机器人[${data.self_id}]在群[${data.group_id}]被设置为管理员` :
+                                `机器人[${data.self_id}]在群[${data.group_id}]被取消管理员`)
+                        } else {
+                            await common.log(id, data.set ? `成员[${data.user_id}]在群[${data.group_id}]被设置为管理员` :
+                                `成员[${data.user_id}]在群[${data.group_id}]被取消管理员`)
+                        }
+                        return await this.message(data)
+                    }
+                    case "group_ban": {
+                        data.notice_type = "group"
+                        if (data.sub_type === 'lift_ban') {
+                            data.sub_type = "ban"
+                            data.duration = 0
+                        } else {
+                            data.sub_type = "ban"
+                        }
+                        if (data.self_id === data.target_id) {
+                            await common.log(id, data.duration === 0 ? `机器人[${data.self_id}]在群[${data.group_id}]被解除禁言` :
+                                `机器人[${data.self_id}]在群[${data.group_id}]被禁言${data.duration}秒`)
+                        } else {
+                            await common.log(id, data.duration === 0 ? `成员[${data.target_id}]在群[${data.group_id}]被解除禁言` :
+                                `成员[${data.target_id}]在群[${data.group_id}]被禁言${data.duration}秒`)
+                        }
+                        return await this.message(data)
+                    }
+                    case "notify":
+                        switch (data.sub_type) {
+                            case "poke": {
+                                await common.log(id, `[${data.operator_id}]戳了戳[${data.target_id}]`)
+                                break
+                            }
+                            default:
+                        }
+                        return await this.message(data)
+
+                    // deprecated: 兼容老版本无request类型事件的shamrock,一段时间后删
+                    case "group_apply": {
+                        data.post_type = "request"
+                        data.request_type = "group"
+                        data.user_id = data.operator_id
+                        data.tips = data.tips || data.comment || data.tip
+                        await common.log(id, `[${data.user_id}]申请入群[${data.group_id}]: ${data.tips}`)
+                        return await this.message(data)
+                    }
+                    case "friend_apply":
+                    case "friend_add": {
+                        data.post_type = "request"
+                        data.request_type = "friend"
+                        data.comment = data.comment || data.tip
+                        await common.log(id, `[${data.user_id}]申请加机器人[${data.self_id}]好友: ${data.tips}`)
+                        return await this.message(data)
+                    }
+                    default:
+                        return
+                }
+            },
+            /** Bot自身消息 先不做处理 */
+            message_sent: async () => {
+                data.post_type = "message"
+                return await Bot.emit("message", await message.msg(data))
+            },
+            request: async () => {
+                data.post_type = "request"
+                switch (data.request_type) {
+                    case "group": {
+                        data.tips = data.comment
+                        if (data.sub_type === "add") {
+                            await common.log(id, `[${data.user_id}]申请入群[${data.group_id}]: ${data.tips}`)
+                        } else {
+                            // invite
+                            await common.log(id, `[${data.user_id}]邀请机器人入群[${data.group_id}]: ${data.tips}`)
+                        }
+                        return await this.message(data)
+                    }
+                    case "friend": {
+                        await common.log(id, `[${data.user_id}]申请加机器人[${data.self_id}]好友: ${data.comment}`)
+                        return await this.message(data)
+                    }
+                }
+            }
+        }
+
+        /** 处理事件 */
+        try {
+            return await event[data?.meta_event_type || data?.post_type]()
+        } catch (error) {
+            /** 未知事件 */
+            return common.log("[Shamrock]未知事件：", error?.message || error)
+        }
     }
 }
 

@@ -75,7 +75,7 @@ export default new class zaiMsg {
             }
 
         }
-        let group_name
+        let group_name = group_id
         /** 先打印日志 */
         if (message_type === "private") {
             isGroup = false

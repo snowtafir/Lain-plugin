@@ -326,7 +326,7 @@ export class Restart extends plugin {
         const npm = await this.checkPnpm()
 
         try {
-            await redis.set(this.key, data, { EX: 120 })
+            await redis.set(this.key, data, { EX: 240 })
 
             pm2.connect((err) => {
                 if (err) return logger.error(err)
