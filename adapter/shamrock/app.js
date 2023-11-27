@@ -64,9 +64,10 @@ class Shamrock {
         const event = {
             /** 产生连接 */
             lifecycle: async () => {
-                if (Bot.shamrock.get(id)?.state) return
+                const bot = await Bot.shamrock.get(id)
+                if (bot?.state) return
                 Bot.shamrock.set(id, { ...Bot.shamrock.get(id), state: true })
-                await common.log(id, `建立连接成功，正在加载资源：${request.headers["user-agent"]}`)
+                await common.log(id, `建立连接成功，正在加载资源：${bot["user-agent"]}`)
                 return new addBot(id)
             },
             /** 心跳 */
