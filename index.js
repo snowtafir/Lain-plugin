@@ -1,16 +1,20 @@
 import fs from "fs"
 import pm2 from "pm2"
+import _ from "lodash"
 import "./model/config.js"
 import crypto from "crypto"
 import "./adapter/stdin/stdin.js"
 import yaml from "./model/yaml.js"
 import { createRequire } from "module"
+import Render from "./model/render.js"
+import Version from "./model/version.js"
 import { execSync } from "child_process"
 import { update } from "../other/update.js"
 import guild from "./adapter/QQGuild/guild.js"
+import createAndStartBot from "./adapter/QQBot/index.js"
+import { helpCfg, helpList, style } from './model/help.js'
 import { xiaofei_music } from "./adapter/shamrock/xiaofei/music.js"
 import { xiaofei_weather } from "./adapter/shamrock/xiaofei/weather.js"
-import createAndStartBot from "./adapter/QQBot/index.js"
 
 const require = createRequire(import.meta.url)
 const { exec } = require('child_process')
@@ -44,6 +48,14 @@ export class Lain extends plugin {
                     reg: /^#(Lain|铃音|QQ频道)(强制)?更新(日志)?$/gi,
                     fnc: "update",
                     permission: "master"
+                },
+                {
+                    reg: /^#(Lain|铃音)版本$/,
+                    fnc: "version",
+                },
+                {
+                    reg: /^#(Lain|铃音)帮助$/,
+                    fnc: 'help'
                 },
                 {
                     reg: /^#设置主人$/,
@@ -176,6 +188,41 @@ export class Lain extends plugin {
         return true
     }
 
+    async version(e) {
+        return await Render.render('help/version-info', {
+            currentVersion: Version.version,
+            changelogs: Version.changelogs,
+            name: 'Lain',
+            elem: 'cryo'
+        }, { e, scale: 1.2 })
+    }
+
+    async help(e) {
+        let helpGroup = []
+        _.forEach(helpList, (group) => {
+            _.forEach(group.list, (help) => {
+                let icon = help.icon * 1
+                if (!icon) {
+                    help.css = 'display:none'
+                } else {
+                    let x = (icon - 1) % 10
+                    let y = (icon - x - 1) / 10
+                    help.css = `background-position:-${x * 50}px -${y * 50}px`
+                }
+            })
+
+            helpGroup.push(group)
+        })
+
+        let themeData = await getThemeData(helpCfg, helpCfg)
+        return await Render.render('help/index', {
+            helpCfg,
+            helpGroup,
+            ...themeData,
+            element: 'default'
+        }, { e, scale: 1.6 })
+    }
+
     async master(e) {
         let user_id = e.user_id
         if (e.at) {
@@ -258,6 +305,52 @@ let apps = {
         const cfg = new yaml("./config/config/other.yaml")
         cfg.addVal("masterQQ", user_id)
         return [segment.at(user_id), "新主人好~(*/ω＼*)"]
+    }
+}
+
+async function getThemeData(diyStyle, sysStyle) {
+    let helpConfig = _.extend({}, sysStyle, diyStyle)
+    let colCount = Math.min(5, Math.max(parseInt(helpConfig?.colCount) || 3, 2))
+    let colWidth = Math.min(500, Math.max(100, parseInt(helpConfig?.colWidth) || 265))
+    let width = Math.min(2500, Math.max(800, colCount * colWidth + 30))
+    let resPath = '{{_res_path}}/help/imgs/'
+    let theme = {
+        main: `${resPath}/main.png`,
+        bg: `${resPath}/bg.jpg`,
+        style: style
+    }
+    let themeStyle = theme.style || {}
+    let ret = [`
+    body{background-image:url(${theme.bg});width:${width}px;}
+    .container{background-image:url(${theme.main});width:${width}px;}
+    .help-table .td,.help-table .th{width:${100 / colCount}%}
+    `]
+    let css = function (sel, css, key, def, fn) {
+        let val = getDef(themeStyle[key], diyStyle[key], sysStyle[key], def)
+        if (fn) {
+            val = fn(val)
+        }
+        ret.push(`${sel}{${css}:${val}}`)
+    }
+    css('.help-title,.help-group', 'color', 'fontColor', '#ceb78b')
+    css('.help-title,.help-group', 'text-shadow', 'fontShadow', 'none')
+    css('.help-desc', 'color', 'descColor', '#eee')
+    css('.cont-box', 'background', 'contBgColor', 'rgba(43, 52, 61, 0.8)')
+    css('.cont-box', 'backdrop-filter', 'contBgBlur', 3, (n) => diyStyle.bgBlur === false ? 'none' : `blur(${n}px)`)
+    css('.help-group', 'background', 'headerBgColor', 'rgba(34, 41, 51, .4)')
+    css('.help-table .tr:nth-child(odd)', 'background', 'rowBgColor1', 'rgba(34, 41, 51, .2)')
+    css('.help-table .tr:nth-child(even)', 'background', 'rowBgColor2', 'rgba(34, 41, 51, .4)')
+    return {
+        style: `<style>${ret.join('\n')}</style>`,
+        colCount
+    }
+}
+
+function getDef() {
+    for (let idx in arguments) {
+        if (!_.isUndefined(arguments[idx])) {
+            return arguments[idx]
+        }
     }
 }
 
