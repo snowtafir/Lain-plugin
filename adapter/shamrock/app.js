@@ -174,30 +174,14 @@ class Shamrock {
                     case "notify":
                         switch (data.sub_type) {
                             case "poke": {
-                                await common.log(id, `[${data.operator_id}]戳了戳[${data.target_id}]`)
+                                let action = data.poke_detail?.action || '戳了戳'
+                                let suffix = data.poke_detail?.suffix || ''
+                                await common.log(id, `[${data.operator_id}]${action}[${data.target_id}]${suffix}`)
                                 break
                             }
                             default:
                         }
                         return await this.message(data)
-
-                    // deprecated: 兼容老版本无request类型事件的shamrock,一段时间后删
-                    case "group_apply": {
-                        data.post_type = "request"
-                        data.request_type = "group"
-                        data.user_id = data.operator_id
-                        data.tips = data.tips || data.comment || data.tip
-                        await common.log(id, `[${data.user_id}]申请入群[${data.group_id}]: ${data.tips}`)
-                        return await this.message(data)
-                    }
-                    case "friend_apply":
-                    case "friend_add": {
-                        data.post_type = "request"
-                        data.request_type = "friend"
-                        data.comment = data.comment || data.tip
-                        await common.log(id, `[${data.user_id}]申请加机器人[${data.self_id}]好友: ${data.tips}`)
-                        return await this.message(data)
-                    }
                     default:
                         return
                 }
