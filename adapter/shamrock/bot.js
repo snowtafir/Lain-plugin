@@ -31,6 +31,7 @@ export default class bot {
             stat: { start_time: Date.now() / 1000, recv_msg_cnt: 0 },
             apk: { display: bot["qq-ver"].split(" ")[0], version: bot["qq-ver"].split(" ")[1] },
             version: { id: "QQ", name: "Shamrock", version: bot["user-agent"].replace("Shamrock/", "") },
+            pickMember: (group_id, user_id) => this.pickMember(group_id, user_id),
             pickUser: (user_id) => this.pickUser(Number(user_id)),
             pickFriend: (user_id) => this.pickFriend(Number(user_id)),
             pickGroup: (group_id) => this.pickGroup(Number(group_id)),
@@ -193,6 +194,7 @@ export default class bot {
             setTitle: async (qq, title, duration) => await api.set_group_special_title(this.id, group_id, qq, title),
             /** 修改群名片 **/
             setCard: async (qq, card) => await api.set_group_card(this.id, group_id, qq, card),
+            pickMember: (id) => this.pickMember(group_id, id),
             /** 获取群成员列表 */
             getMemberMap: async () => {
                 let group_Member = Bot[this.id].gml.get(group_id)
@@ -203,16 +205,6 @@ export default class bot {
                     group_Member.set(user.user_id, user)
                 })
                 return group_Member
-            },
-            pickMember: (id) => {
-                /** 取缓存！！！别问为什么，因为傻鸟同步 */
-                let member = Bot[this.id].gml.get(group_id)?.[id]
-                try {
-                    member.info = { ...member }
-                } catch {
-                    member.info = {}
-                }
-                return member
             },
             /**
              * 获取聊天历史记录
@@ -236,20 +228,12 @@ export default class bot {
             },
             setEssenceMessage: async (msg_id) => {
                 let res = await api.set_essence_msg(this.id, msg_id)
-                if (res?.message === '成功') {
-                    return "加精成功"
-                } else {
-                    return res?.message
-                }
+                return res?.message === '成功' ? "加精成功" : res?.message
             },
             /** 移除群精华消息 **/
             removeEssenceMessage: async (msg_id) => {
                 let res = await api.delete_essence_msg(this.id, msg_id)
-                if (res?.message === '成功') {
-                    return "移除精华成功"
-                } else {
-                    return res?.message
-                }
+                return res?.message === '成功' ? "加精成功" : res?.message
             },
             sendFile: async (filePath) => {
                 if (!fs.existsSync(filePath)) return true
@@ -313,24 +297,27 @@ export default class bot {
         }
     }
 
+    pickMember(group_id, user_id) {
+        /** 取缓存！！！别问为什么，因为傻鸟同步 */
+        let member = Bot[this.id].gml.get(group_id)?.[user_id]
+        try {
+            member.info = { ...member }
+        } catch {
+            member.info = {}
+        }
+        return member
+    }
+
     /** 设置精华 */
     async setEssenceMessage(msg_id) {
         let res = await api.set_essence_msg(this.id, msg_id)
-        if (res?.message === '成功') {
-            return "加精成功"
-        } else {
-            return res?.message
-        }
+        return res?.message === '成功' ? "加精成功" : res?.message
     }
 
     /** 移除群精华消息 **/
     async removeEssenceMessage(msg_id) {
         let res = await api.delete_essence_msg(this.id, msg_id)
-        if (res?.message === '成功') {
-            return "移除精华成功"
-        } else {
-            return res?.message
-        }
+        return res?.message === '成功' ? "加精成功" : res?.message
     }
 
     async getGroupMemberInfo(group_id, user_id) {
@@ -341,11 +328,7 @@ export default class bot {
             member.card = member.nickname
             return member
         } catch {
-            let member = {
-                card: "shamrock",
-                nickname: "shamrock"
-            }
-            return member
+            return { card: "shamrock", nickname: "shamrock" }
         }
     }
 
