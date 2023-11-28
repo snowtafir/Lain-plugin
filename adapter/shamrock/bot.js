@@ -299,12 +299,8 @@ export default class bot {
 
     pickMember(group_id, user_id) {
         /** 取缓存！！！别问为什么，因为傻鸟同步 */
-        let member = Bot[this.id].gml.get(group_id)?.[user_id]
-        try {
-            member.info = { ...member }
-        } catch {
-            member.info = {}
-        }
+        let member = Bot[this.id].gml.get(group_id)?.[user_id] || {}
+        member.info = { ...member }
         return member
     }
 

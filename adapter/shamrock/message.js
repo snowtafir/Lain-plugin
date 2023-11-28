@@ -144,16 +144,13 @@ export default new class zaiMsg {
                 is_owner = get_bot_info?.[self_id]?.role === "owner" || false
             } catch (err) { }
             e.group = {
+                name: e.group_name,
                 is_admin,
                 is_owner,
                 pickMember: (id) => {
                     /** 取缓存！！！别问为什么，因为傻鸟同步 */
-                    let member = Bot[self_id].gml.get(group_id)?.[id]
-                    try {
-                        member.info = { ...member }
-                    } catch {
-                        member.info = {}
-                    }
+                    let member = Bot[self_id].gml.get(group_id)?.[id] || {}
+                    member.info = { ...member }
                     return {
                         member,
                         ...member,
