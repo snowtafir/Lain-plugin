@@ -4,7 +4,6 @@ import SendMsg from "./sendMsg.js"
 import e from "./message.js"
 import common from "../../model/common.js"
 import PluginsLoader from "../../../../lib/plugins/loader.js"
-import { init } from "../../index.js"
 
 class WeChat {
     /** 传入基本配置 */
@@ -279,8 +278,8 @@ class WeChat {
         }
 
         await common.log(this.id, "PC微信加载资源成功...")
-        /** 重启 */
-        await init("Lain:restart:WeChat")
+
+        await common.init("Lain:restart")
     }
 
 }

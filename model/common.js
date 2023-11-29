@@ -40,6 +40,36 @@ function log(id, log, type = "info") {
     return list[type]()
 }
 
+/** 适配器重启发送消息 */
+async function init(key = "Lain:restart") {
+    let restart = await redis.get(key)
+    if (restart) {
+        restart = JSON.parse(restart)
+        const uin = restart?.uin || Bot.uin
+        let time = restart.time || new Date().getTime()
+        const msg_id = restart?.msg_id || false
+        time = (new Date().getTime() - time) / 1000
+        console.log(typeof uin)
+        let msg = `重启成功：耗时${time.toFixed(2)}秒`
+        try {
+            if (restart.isGroup) {
+                Bot[uin].pickGroup(restart.id, msg_id).sendMsg(msg)
+            } else {
+                Bot[uin].pickUser(restart.id).sendMsg(msg)
+            }
+        } catch (error) {
+            /** 发送失败后等待5s重试一次，适配器可能没连接bot */
+            await new Promise((resolve) => setTimeout(resolve, 5000))
+            msg = `重启成功：耗时${(time + 5).toFixed(2)}秒`
+            if (restart.isGroup) {
+                Bot[uin].pickGroup(restart.id, msg_id).sendMsg(msg)
+            } else {
+                Bot[uin].pickUser(restart.id, msg_id).sendMsg(msg)
+            }
+        }
+        redis.del(key)
+    }
+}
 
 /** 将云崽过来的消息全部统一格式存放到数组里面 */
 function array(data) {
@@ -234,5 +264,6 @@ export default {
     uploadFile,
     uploadQQ,
     getUrls,
-    rendering
+    rendering,
+    init
 }

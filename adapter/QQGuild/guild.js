@@ -1,7 +1,6 @@
 import SendMsg from "./sendMsg.js"
 import common from "../../model/common.js"
 import qg_log from "./log.js"
-import { init } from "../../index.js"
 import message from "./message.js"
 import loader from "../../plugins/loader.js"
 import pluginsLoader from "../../../../lib/plugins/loader.js"
@@ -189,8 +188,8 @@ export default class guild {
                 await common.log(this.id, `Bot无法在频道 ${qg.id} 中读取子频道列表，请给予权限...错误信息：${err.message}`, "error")
             }
         }
-        /** 重启 */
-        await init("Lain:restart:QQGuild")
+
+        await common.init("Lain:restart")
     }
 
     /** 根据对应事件进行对应处理 */

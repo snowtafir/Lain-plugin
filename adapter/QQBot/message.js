@@ -223,7 +223,7 @@ export default new class message {
         } catch (error) {
             common.log(e.self_id, `发送消息失败：${error?.data || error?.message || error}`, "error")
             common.log(e.self_id, error, "debug")
-            return error?.data || error?.message || error
+            return await e.sendMsg(`发送消息失败：${error?.data || error?.message || error}`)
         }
     }
 

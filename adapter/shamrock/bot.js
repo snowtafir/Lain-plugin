@@ -2,7 +2,6 @@ import fs from "fs"
 import path from "path"
 import common from "../../model/common.js"
 import api from "./api.js"
-import { init } from "../../index.js"
 import { message, toRaw } from "./message.js"
 
 /** 加载资源状态 */
@@ -44,9 +43,8 @@ export default class bot {
             quit: () => this.quit()
         }
 
-        /** 重启 */
-        await init("Lain:restart:shamrock")
-
+        await common.init("Lain:restart")
+        
         /** 加载好友、群列表 */
         this.LoadList()
     }

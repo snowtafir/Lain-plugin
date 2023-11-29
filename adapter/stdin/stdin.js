@@ -5,59 +5,47 @@ import pluginsLoader from "../../../../lib/plugins/loader.js"
 
 const uin = "stdin"
 
-/** 自定义标准输入头像 */
-let avatar = "default_avatar.jpg"
-if (fs.existsSync(process.cwd() + "/plugins/Lain-plugin/resources/avatar.jpg")) {
-    avatar = "avatar.jpg"
-}
+export default async function stdin() {
+    /** 自定义标准输入头像 */
+    let avatar = "default_avatar.jpg"
+    if (fs.existsSync("./plugins/Lain-plugin/resources/avatar.jpg")) avatar = "avatar.jpg"
 
-/** 构建基本参数 */
-Bot[uin] = {
-    fl: new Map(),
-    gl: new Map(),
-    gml: new Map(),
-    id: uin,
-    uin: uin,
-    name: Bot.lain.cfg.stdin_nickname,
-    nickname: Bot.lain.cfg.stdin_nickname,
-    avatar: `../../../../../plugins/Lain-plugin/resources/${avatar}`,
-    stat: { start_time: Date.now() / 1000 },
-    version: { id: "stdin", name: "标准输入" },
-    /** 转发 */
-    makeForwardMsg: async (forwardMsg) => {
-        return await makeForwardMsg(forwardMsg)
-    },
-    pickUser: (userId) => {
-        return {
-            sendMsg: async (msg, quote = false) => {
-                return await sendMsg(msg)
-            },
-            /** 转发 */
-            makeForwardMsg: async (forwardMsg) => {
-                return await makeForwardMsg(forwardMsg)
+    /** 构建基本参数 */
+    Bot[uin] = {
+        fl: new Map(),
+        gl: new Map(),
+        gml: new Map(),
+        id: uin,
+        uin: uin,
+        name: Bot.lain.cfg.stdin_nickname,
+        nickname: Bot.lain.cfg.stdin_nickname,
+        avatar: `../../../../../plugins/Lain-plugin/resources/${avatar}`,
+        stat: { start_time: Date.now() / 1000 },
+        version: { id: "stdin", name: "标准输入" },
+        /** 转发 */
+        makeForwardMsg: async (forwardMsg) => await makeForwardMsg(forwardMsg),
+        pickUser: (userId) => {
+            return {
+                sendMsg: async (msg) => await sendMsg(msg),
+                makeForwardMsg: async (forwardMsg) => await makeForwardMsg(forwardMsg)
             }
         }
     }
-}
 
-Bot.adapter.unshift(uin)
+    Bot.adapter.unshift(uin)
 
-/** 监听控制台输入 */
-const rl = createInterface({
-    input: process.stdin,
-    output: process.stdout
-})
-
-rl.on('SIGINT', () => { rl.close(); process.exit() })
-function getInput() {
-    rl.question('', async (input) => {
-        await pluginsLoader.deal(msg(input.trim()))
-        getInput()
+    /** 监听控制台输入 */
+    const rl = createInterface({
+        input: process.stdin,
+        output: process.stdout
     })
-}
-getInput()
 
-export default function msg(msg) {
+    rl.on('SIGINT', () => { rl.close(); process.exit() })
+    rl.question('', async (input) => { await pluginsLoader.deal(msg(input.trim())) })
+    await common.init("Lain:restart")
+}
+
+function msg(msg) {
     const user_id = 55555
     const time = Date.now() / 1000
 
@@ -93,9 +81,7 @@ export default function msg(msg) {
             last_sent_time: time,
         },
         /** 获取头像 */
-        getAvatarUrl: () => {
-            return `https://q1.qlogo.cn/g?b=qq&s=0&nk=528952540`
-        }
+        getAvatarUrl: () => `https://q1.qlogo.cn/g?b=qq&s=0&nk=528952540`
     }
 
     /** 赋值 */
@@ -155,5 +141,3 @@ async function sendMsg(msg) {
     }
     return await common.log(uin, `发送消息：${log.join('\n')}`)
 }
-
-await common.log(uin, `加载完成...您可以在控制台输入指令哦~`)

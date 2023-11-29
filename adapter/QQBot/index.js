@@ -9,11 +9,7 @@ import pluginsLoader from "../../../../lib/plugins/loader.js"
 export default async function createAndStartBot(cfg) {
     try {
         const bot = new QQBot.Bot({
-            appid: cfg.appid,
-            token: cfg.token,
-            secret: cfg.secret,
-            sandbox: cfg.sandbox || false,
-            removeAt: cfg.removeAt || true,
+            ...cfg,
             logLevel: Yaml.parse(fs.readFileSync("./config/config/bot.yaml", "utf8")).log_level,
             maxRetry: 10,
             intents: [
@@ -52,6 +48,8 @@ export default async function createAndStartBot(cfg) {
         await bot.start()
         // 注册Bot
         await LoadBot(bot)
+
+        await common.init("Lain:restart")
 
         const { id } = await bot.getSelfInfo()
 
@@ -180,10 +178,3 @@ function logInfo(e) {
     } catch { }
     return e
 }
-
-// 原始字符串
-const text = "recv from Group(8EB5925E74CE8588DAF144BE83A2D1C6):  2"
-
-// 使用正则表达式提取括号内的内容
-const result = text.match(/\(([^)]+)\)/)[1]
-console.log(result) // 输出结果：8EB5925E74CE8588DAF144BE83A2D1C6
