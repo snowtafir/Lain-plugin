@@ -110,7 +110,7 @@ function array(data) {
  */
 async function makeForwardMsg(data, node = false, e = {}) {
     const message = {}
-    const allMsg = []
+    let allMsg = []
     /** 防止报错 */
     if (!Array.isArray(data)) data = [data]
 
@@ -151,7 +151,6 @@ async function makeForwardMsg(data, node = false, e = {}) {
         }
         /** AT 表情包 */
         else if (typeof msg === "object") {
-            if (node) msg.node = true
             allMsg.push(msg)
         }
         /** 普通文本 */
@@ -163,6 +162,9 @@ async function makeForwardMsg(data, node = false, e = {}) {
             await log("未兼容的字段：", msg)
         }
     }
+
+    if (node) allMsg.forEach(i => { i.node = true })
+
     /** 对一些重复元素进行去重 */
     message.msg = Array.from(new Set(allMsg.map(JSON.stringify))).map(JSON.parse)
     /** 添加字段，用于兼容chatgpt-plugin的转发 */

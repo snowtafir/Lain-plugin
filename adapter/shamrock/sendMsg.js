@@ -34,34 +34,34 @@ export default class SendMsg {
         if (typeof data == "string") data = [{ type: "text", text: data }]
         if (!Array.isArray(data)) data = [data]
         const CQ = []
-        const msg = []
+        let msg = []
         let node = false
 
         /** chatgpt-plugin */
         if (data?.[0]?.type === "xml") data = data?.[0].msg
 
         for (let i of data) {
-            node = node || i.node
+            if (i?.node) node = true
             switch (i.type) {
                 case "at":
                     CQ.push(`{at:${Number(i.qq) == 0 ? i.id : i.qq}}`)
                     msg.push({
-                        type: i?.node ? "node" : "at",
-                        data: i?.node ? { name: this.name, content: [{ type: "at", data: { qq: Number(i.qq) == 0 ? i.id : i.qq } }] } : { qq: Number(i.qq) == 0 ? i.id : i.qq }
+                        type: "at",
+                        data: { qq: Number(i.qq) == 0 ? i.id : i.qq }
                     })
                     break
                 case "face":
                     CQ.push(`{face:${i.text}}`)
                     msg.push({
-                        type: i?.node ? "node" : "face",
-                        data: i?.node ? { name: this.name, content: [{ type: "face", data: { id: i.text } }] } : { id: i.text }
+                        type: "face",
+                        data: { id: i.text }
                     })
                     break
                 case "text":
                     CQ.push(i.text)
                     msg.push({
-                        type: i?.node ? "node" : "text",
-                        data: i?.node ? { name: this.name, content: [{ type: "text", data: { text: i.text } }] } : { text: i.text }
+                        type: "text",
+                        data: { text: i.text }
                     })
                     break
                 case "file":
@@ -81,8 +81,8 @@ export default class SendMsg {
                     }
                     CQ.push(`{record:${i.file}}`)
                     msg.push({
-                        type: i?.node ? "node" : "record",
-                        data: i?.node ? { name: this.name, content: [{ type: "record", data: { file: i.file } }] } : { file: i.file }
+                        type: "record",
+                        data: { file: i.file }
                     })
                     break
                 case "video":
@@ -99,13 +99,13 @@ export default class SendMsg {
                     }
                     CQ.push(`{video:${i.file}}`)
                     msg.push({
-                        type: i?.node ? "node" : "video",
-                        data: i?.node ? { name: this.name, content: [{ type: "video", data: { file: i.file } }] } : { file: i.file }
+                        type: "video",
+                        data: { file: i.file }
                     })
                     break
                 case "image":
                     CQ.push(`{image:base64://...}`)
-                    msg.push(i?.node ? { type: "node", data: { name: this.name, content: [await this.get_image(i)] } } : await this.get_image(i))
+                    msg.push(await this.get_image(i))
                     break
                 case "poke":
                     CQ.push(`[CQ:poke,id=${i.id}]`)
@@ -175,17 +175,13 @@ export default class SendMsg {
                     })
                     break
                 case "forward":
-                    node ? "" : node = true
+                    CQ.push(i.text)
                     msg.push({
-                        type: "node",
-                        data: {
-                            name: this.name,
-                            content: [{ type: "text", data: { text: i.text } }]
-                        }
+                        type: "text",
+                        data: { text: i.text }
                     })
                     break
                 case "node":
-                    node ? "" : node = true
                     msg.push({
                         type: "node",
                         data: { ...i }
@@ -200,6 +196,23 @@ export default class SendMsg {
                     break
             }
         }
+
+        /** 合并转发 */
+        if (node) {
+            const NodeMsg = []
+            NodeMsg.push(...msg
+                .filter(i => !(i.type == "at" || i.type == "record"))
+                .map(i => ({
+                    type: "node",
+                    data: {
+                        name: this.name,
+                        content: [i]
+                    }
+                }))
+            )
+            msg = NodeMsg
+        }
+
         return { msg, CQ, node }
     }
 
