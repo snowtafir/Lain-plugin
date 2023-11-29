@@ -15,24 +15,13 @@ class Shamrock {
             return bot.close()
         }
 
-        const MapBot = Bot.shamrock.get(id)
-        if (MapBot && MapBot.state) return
-
         /** 保存当前bot */
         Bot.shamrock.set(id, {
             id: id,
             socket: bot,
-            state: false,
             "qq-ver": request.headers["x-qq-version"],
             "user-agent": request.headers["user-agent"]
         })
-
-        /** 创建一个定时器，每隔5秒发送一个心跳消息 */
-        const interval = setInterval(() => {
-            bot.send(JSON.stringify({ type: "heartbeat", message: "ping" }), (err) => {
-                if (err) ws.emit("close")
-            })
-        }, 5000)
 
         bot.on("message", async (data) => {
             data = JSON.parse(data)
@@ -48,10 +37,7 @@ class Shamrock {
         })
 
         bot.on("close", async () => {
-            Bot.shamrock.set(id, { ...Bot.shamrock.get(id), state: false })
             await common.log(id, "连接已关闭", "error")
-            clearInterval(interval)
-            // Bot.shamrock.delete(uin)
         })
     }
 
@@ -65,8 +51,6 @@ class Shamrock {
             /** 产生连接 */
             lifecycle: async () => {
                 const bot = await Bot.shamrock.get(id)
-                if (bot?.state) return
-                Bot.shamrock.set(id, { ...Bot.shamrock.get(id), state: true })
                 await common.log(id, `建立连接成功，正在加载资源：${bot["user-agent"]}`)
                 return new addBot(id)
             },
