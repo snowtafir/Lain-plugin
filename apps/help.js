@@ -74,7 +74,7 @@ export class help extends plugin {
         .help-table .td,.help-table .th{width:${100 / colCount}%}
         `]
         let css = function (sel, css, key, def, fn) {
-            let val = this.getDef(themeStyle[key], diyStyle[key], sysStyle[key], def)
+            let val = getDef(themeStyle[key], diyStyle[key], sysStyle[key], def)
             if (fn) {
                 val = fn(val)
             }
@@ -93,15 +93,13 @@ export class help extends plugin {
             colCount
         }
     }
+}
 
-    getDef() {
-        for (let idx in arguments) {
-            if (!_.isUndefined(arguments[idx])) {
-                return arguments[idx]
-            }
+function getDef() {
+    for (let idx in arguments) {
+        if (!_.isUndefined(arguments[idx])) {
+            return arguments[idx]
         }
     }
 }
-
-
 
