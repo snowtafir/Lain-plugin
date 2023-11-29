@@ -44,7 +44,6 @@ export class Restart extends plugin {
 
         try {
             await redis.set(this.key, data, { EX: 24000 })
-            process.exit()
             pm2.connect((err) => {
                 if (err) return logger.error(err)
 
