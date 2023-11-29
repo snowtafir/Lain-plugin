@@ -277,9 +277,15 @@ export default class SendMsg {
                 Bot.lain.on.delete(echo)
                 try {
                     if (Object.keys(data?.data).length > 0 && data?.data) {
-                        data.seq = data?.data?.message_id
-                        data.rand = 1
-                        return data?.data || data
+                        const { message_id } = data.data
+
+                        /** 储存自身发送的消息 */
+                        await redis.set(message_id, message_id, { EX: 120 })
+                        return {
+                            ...data.data,
+                            seq: message_id,
+                            rand: 1
+                        }
                     }
                     return data
                 } catch {
