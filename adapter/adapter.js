@@ -17,7 +17,7 @@ adapter.push(async function QQGuild() {
     if (!fs.existsSync(Bot.lain._path + "/bot.yaml")) return
     const bot = Yaml.parse(fs.readFileSync(Bot.lain._path + "/bot.yaml", "utf8"))
     for (const i in bot) {
-        if (i === "default") break
+        if (i === "default") continue
         try {
             const Guild = (await import("./QQGuild/guild.js")).default
             return await new Guild(bot[i]).monitor()

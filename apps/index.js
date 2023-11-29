@@ -66,7 +66,7 @@ export class Lain extends plugin {
                 /** 重复的appID，删除 */
                 if (cfg.hasIn(cmd[2])) {
                     cfg.del(cmd[2])
-                    return `Bot：${Bot[cmd[2]].nickname}${cmd[2]} 删除成功...重启后生效...`
+                    return `Bot：${Bot?.[cmd[2]]?.nickname}${cmd[2]} 删除成功...重启后生效...`
                 } else {
                     bot = { appID: cmd[2], token: cmd[3], sandbox: cmd[0] === "1", allMsg: cmd[1] === "1" }
                 }
@@ -74,8 +74,9 @@ export class Lain extends plugin {
                 /** 保存新配置 */
                 cfg.addIn(cmd[2], bot)
                 try {
-                    await (new guild(bot)).monitor()
-                    return `Bot：${Bot[cmd[2]].nickname}(${cmd[2]}) 已连接...`
+                    const Guild = (await import("../adapter/QQGuild/guild.js")).default
+                    await (new Guild(bot)).monitor()
+                    return `Bot：${Bot?.[cmd[2]]?.nickname}(${cmd[2]}) 已连接...`
                 } catch (err) {
                     return err
                 }
@@ -120,6 +121,7 @@ export class Lain extends plugin {
             const msg = []
             const config = cfg.data()
             for (const i in config) {
+                if (i === "default") continue
                 const cfg = [
                     config[i].sandbox ? 1 : 0,
                     config[i].allMsg ? 1 : 0,
