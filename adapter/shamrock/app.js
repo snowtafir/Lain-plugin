@@ -186,9 +186,12 @@ class Shamrock {
                         return
                 }
             },
-            /** Bot自身消息 先不做处理 */
+            /** Bot自身消息 */
             message_sent: async () => {
                 data.post_type = "message"
+                /** 屏蔽由喵崽处理过后发送后的消息 */
+                const { self_id, message_id } = data
+                if (await redis.get(`Shamrock:${self_id}:${message_id}`)) return
                 return await Bot.emit("message", await message.msg(data))
             },
             request: async () => {

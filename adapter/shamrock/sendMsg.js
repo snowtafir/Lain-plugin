@@ -277,12 +277,13 @@ export default class SendMsg {
                 Bot.lain.on.delete(echo)
                 try {
                     if (Object.keys(data?.data).length > 0 && data?.data) {
-                        const { message_id } = data.data
+                        const { message_id, time } = data.data
 
                         /** 储存自身发送的消息 */
-                        await redis.set(message_id, message_id, { EX: 120 })
+                        await redis.set(`Shamrock:${this.id}:${message_id}`, JSON.stringify(data), { EX: 120 })
                         return {
-                            ...data.data,
+                            time,
+                            message_id,
                             seq: message_id,
                             rand: 1
                         }

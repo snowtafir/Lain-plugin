@@ -8,7 +8,6 @@ export default new class zaiMsg {
     /** 转换格式给云崽 */
     async msg(data) {
         const { self_id, user_id, group_id, message_type, message_id, sender } = data
-        if (await redis.get(message_id)) return
 
         let raw_message = data.raw_message
 
