@@ -40,8 +40,8 @@ export default async function stdin() {
         output: process.stdout
     })
 
-    rl.on('SIGINT', () => { rl.close(); process.exit() })
-    rl.question('', async (input) => { await pluginsLoader.deal(msg(input.trim())) })
+    rl.on("SIGINT", () => { rl.close(); process.exit() })
+    rl.on("line", async (input) => await pluginsLoader.deal(msg(input.trim())))
     await common.init("Lain:restart")
 }
 
