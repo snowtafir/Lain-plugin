@@ -158,7 +158,7 @@ async function weather(e, search) {
             }
             code === 0 ? code = city_list[area_id] : false
             if (!code) {
-                let cookie = e.bot[e.self_id].cookies['ti.qq.com']
+                let cookie = (e.bot || Bot[e.self_id]).cookies['ti.qq.com']
                 let options = {
                     method: 'GET',
                     headers: {
