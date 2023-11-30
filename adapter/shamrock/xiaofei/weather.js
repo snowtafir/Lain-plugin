@@ -272,29 +272,3 @@ function get_bkn(skey) {
     bkn &= 2147483647
     return bkn
 }
-
-async function get_pskey(domains) {
-    if (!Array.isArray(domains)) domains = [domains]
-
-    let body = {
-        1: 4138,
-        2: 0,
-        3: 0,
-        4: {
-            1: domains
-        },
-        6: 'android 8.9.33'
-    }
-    body = core.pb.encode(body)
-
-    let payload = core.pb.decode(await Bot.sendUni('OidbSvcTcp.0x102a', body))
-    if (!payload[4]) return null
-
-    let result = core.pb.decode(payload[4].encoded)
-    let list = {}
-    if (!Array.isArray(result[1])) result[1] = [result[1]]
-    for (let val of result[1]) {
-        if (val[2]) list[val[1]] = val[2].toString()
-    }
-    return list
-}

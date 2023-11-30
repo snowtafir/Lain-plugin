@@ -4,7 +4,7 @@ import yaml from "../model/yaml.js"
 /** 设置主人 */
 let sign = {}
 
-export class Lain extends plugin {
+export class LainMaster extends plugin {
     constructor() {
         super({
             name: "铃音-设置主人",

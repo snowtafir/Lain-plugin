@@ -18,7 +18,11 @@ for (let i in files) {
         logger.error(ret[i].reason)
         continue
     }
-    apps[name] = ret[i].value[Object.keys(ret[i].value)[0]]
+
+    // apps[name] = ret[i].value[Object.keys(ret[i].value)[0]]
+    for (let clazz of Object.keys(ret[i].value)) {
+      apps[clazz] = ret[i].value[clazz]
+    }
 }
 
 export { apps }
