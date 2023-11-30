@@ -179,7 +179,7 @@ export class Lain extends plugin {
     /** shamrock重载资源 */
     async loadRes(e) {
         await e.reply("开始重载，请稍等...", true)
-        let res = (await import("./adapter/shamrock/bot.js")).default
+        let res = (await import("../adapter/shamrock/bot.js")).default
         res = new res(e.self_id)
         const msg = await res.LoadList()
         return await e.reply(msg, true)
