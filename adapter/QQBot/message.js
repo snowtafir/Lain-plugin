@@ -259,7 +259,11 @@ export default new class message {
         }
         // 检查是否是字符串类型，且不是url
         else if (typeof i.file === "string") {
-            const localPath = i.file.replace(/^file:\/\//, "")
+            /** file:// */
+            if (fs.existsSync(i.file.replace(/^file:\/\//, ""))) localPath = i.file.replace(/^file:\/\//, "")
+            /** file:/// */
+            if (fs.existsSync(i.file.replace(/^file:\/\/\//, ""))) localPath = i.file.replace(/^file:\/\/\//, "")
+
             if (fs.existsSync(localPath)) {
                 filePath = path.join(folderPath, `${Date.now()}${path.extname(localPath)}`)
                 fs.copyFileSync(localPath, filePath)
