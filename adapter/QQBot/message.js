@@ -288,7 +288,7 @@ export default new class message {
     /** 处理视频 */
     async get_video(i) {
         let filePath
-        const folderPath = process.cwd() + `/plugins/Lain-plugin/resources/image`
+        const folderPath = process.cwd() + `/plugins/Lain-plugin/resources/QQBotApi`
 
         if (typeof i.file === "string" && /^http(s)?:\/\//.test(i.file)) return i
         else if (fs.existsSync(i.file)) {
@@ -310,7 +310,7 @@ export default new class message {
 
     /** 处理语音... */
     async get_audio(i) {
-        const folderPath = process.cwd() + `/plugins/Lain-plugin/resources/image`
+        const folderPath = process.cwd() + `/plugins/Lain-plugin/resources/QQBotApi`
         const file = `${folderPath}/${Date.now()}${path.extname(i.file) || ".mp3"}`
         const pcm = path.join(folderPath, `${Date.now()}.pcm`)
         const silk = path.join(folderPath, `${Date.now()}.silk`)
