@@ -220,39 +220,39 @@ export default class SendMsg {
     async get_image(i) {
         let file
         if (i?.url) i.url.includes("gchat.qpic.cn") && !i.url.startsWith("https://") ? i.file = "https://" + i.url : i.file = i.url
-        /** 特殊格式？... */
-        if (i.file?.type === "Buffer") {
-            file = `base64://${Buffer.from(i.file.data).toString("base64")}`
+        if (i.file?.type === "Buffer" || i.file instanceof Uint8Array) {
+            file = `base64://${Buffer.from(i?.file?.data || i.file).toString("base64")}`
         }
-        /** 将二进制的base64转字符串 防止报错 */
-        else if (i.file instanceof Uint8Array) {
-            file = `base64://${Buffer.from(i.file).toString("base64")}`
-        }
-        /** 天知道从哪里蹦出来的... */
         else if (i.file instanceof fs.ReadStream) {
             file = `./${i.file.path}`
         }
         /** 去掉本地图片的前缀 */
         else if (typeof i.file === "string") {
-            file = i.file.replace(/^file:\/\//, "") || i.url
+            if (fs.existsSync(i.file.replace(/^file:\/\//, ""))) {
+                file = fs.readFileSync(i.file.replace(/^file:\/\//, "")).toString("base64")
+            }
+            else if (fs.existsSync(i.file.replace(/^file:\/\/\//, ""))) {
+                file = fs.readFileSync(i.file.replace(/^file:\/\/\//, "")).toString("base64")
+            }
+            else if (/^base64:\/\//.test(file)) {
+                file = file.replace(/^base64:\/\//, "")
+            }
+            /** 本地文件 */
+            else if (fs.existsSync(file)) {
+                file = fs.readFileSync(file).toString("base64")
+            }
+            /** url图片 */
+            else if (/^http(s)?:\/\//.test(file)) {
+                return { type: "image", data: { file } }
+            }
+            else {
+                await common.log(this.id, i, "error")
+                return { type: "text", data: { text: JSON.stringify() } }
+            }
         }
-
-        /** base64 */
-        if (/^base64:\/\//.test(file)) {
-            file = file.replace(/^base64:\/\//, "")
-        }
-        /** 本地文件 */
-        else if (fs.existsSync(file)) {
-            file = fs.readFileSync(file).toString("base64")
-        }
-        /** url图片 */
-        else if (/^http(s)?:\/\//.test(file)) {
-            return { type: "image", data: { file } }
-        }
-        /** 留个容错防止炸了 */
         else {
             await common.log(this.id, i, "error")
-            return { type: "text", data: { text: "未知格式...请寻找作者适配..." } }
+            return { type: "text", data: { text: JSON.stringify() } }
         }
 
         return { type: "image", data: { file: `base64://${file}` } }

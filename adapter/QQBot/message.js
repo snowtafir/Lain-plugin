@@ -230,44 +230,41 @@ export default new class message {
     /** 处理图片 */
     async get_image(i) {
         let filePath
-        const folderPath = process.cwd() + `/plugins/Lain-plugin/resources/image`
+        const folderPath = process.cwd() + `/plugins/Lain-plugin/resources/QQBotApi`
         if (i?.url) i.url.includes("gchat.qpic.cn") && !i.url.startsWith("https://") ? i.file = "https://" + i.url : i.file = i.url
         // 检查是否是Buffer类型
-        if (i.file?.type === "Buffer") {
+        if (i.file?.type === "Buffer" || i.file instanceof Uint8Array) {
             filePath = path.join(folderPath, `${Date.now()}.jpg`)
-            fs.writeFileSync(filePath, Buffer.from(i.file.data))
-        }
-        // 检查是否是Uint8Array类型
-        else if (i.file instanceof Uint8Array) {
-            filePath = path.join(folderPath, `${Date.now()}.jpg`)
-            fs.writeFileSync(filePath, Buffer.from(i.file))
+            fs.writeFileSync(filePath, Buffer.from(i.file?.data || i.file))
         }
         // 检查是否是ReadStream类型
         else if (i.file instanceof fs.ReadStream) {
             filePath = path.join(folderPath, `${Date.now()}${path.extname(i.file.path)}`)
             fs.copyFileSync(i.file.path, filePath)
         }
-        // 检查是否是base64格式的字符串
-        else if (typeof i.file === "string" && /^base64:\/\//.test(i.file)) {
-            const base64Data = i.file.replace(/^base64:\/\//, "")
-            filePath = path.join(folderPath, `${Date.now()}.jpg`)
-            fs.writeFileSync(filePath, base64Data, 'base64')
-        }
-        // 如果是url，则直接返回url
-        else if (typeof i.file === "string" && /^http(s)?:\/\//.test(i.file)) {
-            return { ...i, type: "image", file: i.file }
-        }
-        // 检查是否是字符串类型，且不是url
+        // 检查是否是字符串类型
         else if (typeof i.file === "string") {
-            /** file:// */
-            if (fs.existsSync(i.file.replace(/^file:\/\//, ""))) localPath = i.file.replace(/^file:\/\//, "")
-            /** file:/// */
-            if (fs.existsSync(i.file.replace(/^file:\/\/\//, ""))) localPath = i.file.replace(/^file:\/\/\//, "")
-
-            if (fs.existsSync(localPath)) {
-                filePath = path.join(folderPath, `${Date.now()}${path.extname(localPath)}`)
-                fs.copyFileSync(localPath, filePath)
-            } else {
+            if (fs.existsSync(i.file.replace(/^file:\/\//, ""))) {
+                filePath = i.file.replace(/^file:\/\//, "")
+            }
+            else if (fs.existsSync(i.file.replace(/^file:\/\/\//, ""))) {
+                filePath = i.file.replace(/^file:\/\/\//, "")
+            }
+            else if (fs.existsSync(i.file)) {
+                filePath = path.join(folderPath, `${Date.now()}${path.extname(i.file)}`)
+                fs.copyFileSync(i.file, filePath)
+            }
+            // 检查是否是base64格式的字符串
+            else if (/^base64:\/\//.test(i.file)) {
+                const base64Data = i.file.replace(/^base64:\/\//, "")
+                filePath = path.join(folderPath, `${Date.now()}.jpg`)
+                fs.writeFileSync(filePath, base64Data, 'base64')
+            }
+            // 如果是url，则直接返回url
+            else if (/^http(s)?:\/\//.test(i.file)) {
+                return { ...i, type: "image", file: i.file }
+            }
+            else {
                 common.log("QQBotApi", `本地文件不存在：${i}`, "error")
                 return { ...i, type: "text", text: "本地文件不存在..." }
             }
@@ -275,7 +272,7 @@ export default new class message {
         // 留个容错
         else {
             common.log("QQBotApi", `未知格式：${i}`, "error")
-            return { ...i, type: "text", text: "未知格式...请寻找作者适配..." }
+            return { ...i, type: "text", text: JSON.stringify(i) }
         }
 
         // 返回名称
@@ -407,34 +404,54 @@ export default new class message {
 
     async Upload_File(filePath, type) {
         const { FigureBed, port, QQBotImgIP, QQBotPort, QQBotImgToken } = Bot.lain.cfg
-        let url
-        // 先调用三方图床
+        let url = `http://${QQBotImgIP}:${QQBotPort || port}/api/QQBot?token=${QQBotImgToken}&name=${path.basename(filePath)}`
+
+
+        /** 先判断是否配置公网 */
+        if (QQBotImgIP && QQBotImgIP != "127.0.0.1") {
+            common.log("QQBotApi", `[生成文件-公网] url：${url}`)
+            await common.sleep(100)
+            return { type, file: url }
+        }
+        /** 未配置公网则按需调用 */
         try {
-            if (FigureBed && type === "image") {
-                const res = await common.uploadFile(filePath, FigureBed)
-                if (res.ok) {
-                    const { result } = await res.json()
-                    url = FigureBed.replace("/uploadimg", "") + result.path
-                    common.log("QQBot图床", `[上传成功] ${url}`)
+            if (type === "image") {
+                /** 调用默认图床 */
+                if (FigureBed) {
+                    const res = await common.uploadFile(filePath, FigureBed)
+                    if (res.ok) {
+                        const { result } = await res.json()
+                        url = FigureBed.replace("/uploadimg", "") + result.path
+                        common.log("QQBot默认图床", `[上传成功] ${url}`)
+                        await common.sleep(100)
+                        return { type, file: url }
+                    } else {
+                        const data = await res.json()
+                        common.log("", `QQBot默认图床发生错误，将调用下一个方法：${data}`, "error")
+                    }
+
+                }
+
+                /** 调用QQ图床 */
+                const botList = Bot.adapter.filter(item => typeof item === "number")
+                if (botList.length > 0) {
+                    url = await common.uploadQQ(filePath, botList[0])
+                    await common.sleep(100)
                     return { type, file: url }
                 } else {
-                    const data = await res.json()
-                    common.log("", `QQBot图床发生错误，将调用下一个方法：${data}`, "error")
+                    common.log("QQBotApi", `未发现可使用的QQ图床，默认返回公网：${url}`, "error")
+                    await common.sleep(100)
+                    return { type, file: url }
                 }
             }
+
         } catch {
-            common.log("", `QQBot图床发生错误，将调用下一个方法`, "error")
+            common.log("", `默认图床和QQ图床调用失败，默认返回公网：${url}`, "error")
+            await common.sleep(100)
+            return { type, file: url }
         }
 
-        // 公网，反正都要返回东西，先赋值吧
-        url = `http://${QQBotImgIP}:${QQBotPort || port}/api/QQBot?token=${QQBotImgToken}&name=${path.basename(filePath)}`
-
-        // 使用QQ图床
-        if (QQBotImgIP == "127.0.0.1" && type === "image") {
-            const botList = Bot.adapter.filter(item => typeof item === "number")
-            if (botList.length > 0) url = await common.uploadQQ(filePath, botList[0])
-        }
-        common.log("QQBotApi", `[生成文件] url：${url}`, "debug")
+        await common.sleep(100)
         return { type, file: url }
     }
 
