@@ -187,9 +187,8 @@ export default class guild {
             } catch (err) {
                 await common.log(this.id, `Bot无法在频道 ${qg.id} 中读取子频道列表，请给予权限...错误信息：${err.message}`, "error")
             }
+            await common.init("Lain:restart")
         }
-
-        await common.init("Lain:restart")
     }
 
     /** 根据对应事件进行对应处理 */
