@@ -255,7 +255,7 @@ export default class SendMsg {
             return { type: "text", data: { text: JSON.stringify() } }
         }
 
-        return { type: "image", data: { file: `base64://${file}` } }
+        return { type: "image", data: { file: `base64://${file.replace(/^base64:\/\//, "")}` } }
     }
 
     /** 发送消息 */
