@@ -1,9 +1,10 @@
 插件名称来源于我的一位朋友，本插件也可称为`铃音插件`(啊哈哈哈哈)。
 
-QQ交流群~欢迎加入：`884587317`
 - 如果您对这个项目感到满意并认为它对你有所帮助，请给我一个`Star`！
 - 您的认可是我持续更新的动力~非常感谢您的支持！
 - 目前插件已不再支持原版云崽、喵版云崽，仅支持喵崽`Miao-Yunzai`
+- 请根据自己的环境选择对应的仓库源，[点击跳转Github](https://github.com/Zyy955/Lain-plugin)，附加
+[Gitee](https://gitee.com/Zyy955/Lain-plugin)地址。
 
  ![Visitor Count](https://profile-counter.glitch.me/Zyy955-Lain-plugin/count.svg)
 
