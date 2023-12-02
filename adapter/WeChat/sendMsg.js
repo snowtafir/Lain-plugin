@@ -120,27 +120,32 @@ export default class SendMsg {
         /** 去掉本地图片的前缀 */
         else if (typeof i.file === "string") {
             file = i.file.replace(/^file:\/\//, "") || i.url
+            if (fs.existsSync(i.file.replace(/^file:\/\//, ""))) {
+                file = i.file.replace(/^file:\/\//, "")
+            }
+            else if (fs.existsSync(i.file.replace(/^file:\/\/\//, ""))) {
+                file = i.file.replace(/^file:\/\/\//, "")
+            }
         }
 
-        /** base64 */
-        if (/^base64:\/\//.test(file)) {
-            file = file.replace(/^base64:\/\//, "")
-            name = `${Date.now()}.${(await fileTypeFromBuffer(Buffer.from(file, "base64"))).ext}`
-        }
         /** 本地文件 */
-        else if (fs.existsSync(file)) {
+        if (fs.existsSync(file)) {
             name = path.basename(file)
             file = fs.readFileSync(file).toString("base64")
+        }
+        /** base64 */
+        else if (/^base64:\/\//.test(file)) {
+            file = file.replace(/^base64:\/\//, "")
+            name = `${Date.now()}.${(await fileTypeFromBuffer(Buffer.from(file, "base64"))).ext}`
         }
         /** url图片 */
         else if (/^http(s)?:\/\//.test(file)) {
             file = Buffer.from(await (await fetch(file)).arrayBuffer()).toString("base64")
             name = `${Date.now()}.${(await fileTypeFromBuffer(Buffer.from(file, "base64"))).ext}`
         }
-        /** 留个容错防止炸了 */
         else {
             await common.log(this.id, i, "error")
-            return { type: "text", data: { text: "未知格式...请寻找作者适配..." } }
+            return { type: "text", data: { text: JSON.stringify(i) } }
         }
 
         /** 上传文件 获取文件id */

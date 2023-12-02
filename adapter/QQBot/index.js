@@ -9,11 +9,7 @@ import pluginsLoader from "../../../../lib/plugins/loader.js"
 export default async function createAndStartBot(cfg) {
     try {
         const bot = new QQBot.Bot({
-            appid: cfg.appid,
-            token: cfg.token,
-            secret: cfg.secret,
-            sandbox: cfg.sandbox || false,
-            removeAt: cfg.removeAt || true,
+            ...cfg,
             logLevel: Yaml.parse(fs.readFileSync("./config/config/bot.yaml", "utf8")).log_level,
             maxRetry: 10,
             intents: [
@@ -32,18 +28,22 @@ export default async function createAndStartBot(cfg) {
 
         // 群聊被动回复
         bot.on("message.group", async (e) => {
-            await loader.deal.call(pluginsLoader, await message.msg(e, true))
+            // await loader.deal.call(pluginsLoader, await message.msg(e, true))
+            Bot.em("message.group", await message.msg(e, true))
         })
 
         // 私聊被动回复
         bot.on("message.private", async (e) => {
-            await loader.deal.call(pluginsLoader, await message.msg(e, false))
+            // await loader.deal.call(pluginsLoader, await message.msg(e, false))
+            Bot.em("message.private", await message.msg(e, true))
         })
 
         // 开始连接
         await bot.start()
         // 注册Bot
         await LoadBot(bot)
+
+        await common.init("Lain:restart")
 
         const { id } = await bot.getSelfInfo()
 
@@ -58,7 +58,7 @@ export default async function createAndStartBot(cfg) {
         }
 
     } catch (err) {
-        common.log(bot.appid, err, "error")
+        common.log("", err, "error")
     }
 }
 
@@ -97,7 +97,7 @@ async function LoadBot(bot) {
                         seq: 10000000,
                         rand: 10000000,
                         time: parseInt(Date.now() / 1000),
-                        message_id: this.getUUID(50)
+                        message_id: common.message_id()
                     }
                 },
                 /** 转发 */
@@ -121,7 +121,7 @@ async function LoadBot(bot) {
                         seq: 10000000,
                         rand: 10000000,
                         time: parseInt(Date.now() / 1000),
-                        message_id: this.getUUID(50)
+                        message_id: common.message_id()
                     }
                 },
                 /** 转发 */
@@ -184,10 +184,3 @@ function logInfo(e) {
     } catch { }
     return e
 }
-
-// 原始字符串
-const text = "recv from Group(8EB5925E74CE8588DAF144BE83A2D1C6):  2"
-
-// 使用正则表达式提取括号内的内容
-const result = text.match(/\(([^)]+)\)/)[1]
-logger.info(result) // 输出结果：8EB5925E74CE8588DAF144BE83A2D1C6

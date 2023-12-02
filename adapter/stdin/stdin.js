@@ -11,68 +11,87 @@ const user_id = 55555
 // 创建数据文件夹
 common.mkdirs(path)
 
-/** 自定义标准输入头像
-可随机设置随机头像(将头像文件放至resources/Avatar目录即可) */
-let avatar = process.cwd() + "/plugins/Lain-plugin/resources/default_avatar.jpg"
-if (fs.existsSync(process.cwd() + "/plugins/Lain-plugin/resources/avatar.jpg")) {
-    avatar = process.cwd() + "/plugins/Lain-plugin/resources/avatar.jpg"
-} else {
-    let txurl = `${process.cwd()}/resources/Avatar/`
-    if (fs.existsSync(txurl)) {
-        let tx_img = []
-        for (let txlb of fs.readdirSync(txurl))
-            if (txlb.includes("."))
-                tx_img.push(txurl + txlb);
-        if (tx_img.length > 0)
-            avatar = tx_img[Math.floor(Math.random() * tx_img.length)];
-    }
-}
 
-/** 构建基本参数 */
-Bot[uin] = {
-    fl: new Map(),
-    gl: new Map(),
-    gml: new Map(),
-    id: uin,
-    name: Bot.lain.cfg.stdin_nickname,
-    uin,
-    nickname: Bot.lain.cfg.stdin_nickname,
-    avatar,
-    stat: { start_time: Date.now() / 1000, recv_msg_cnt: 0 },
-    version: { id: "stdin", name: Bot.lain.cfg.stdin_nickname, version: Bot.lain.adapter.stdin },
-    /** 转发 */
-    makeForwardMsg: sendForwardMsg,
-    pickUser: () => {
-        return {
-            user_id,
-            nickname: Bot.lain.cfg.stdin_nickname,
-            sendMsg: msg => sendMsg(msg),
-            recallMsg: msg_id => common.log(uin, `撤回消息：${msg_id}`),
-            makeForwardMsg: sendForwardMsg,
-            sendForwardMsg: msg => sendForwardMsg(msg),
-            sendFile: (file, name) => sendFile(file, name),
+export default async function stdin() {
+    /** 自定义标准输入头像
+    可随机设置随机头像(将头像文件放至resources/Avatar目录即可) */
+    let avatar = process.cwd() + "/plugins/Lain-plugin/resources/default_avatar.jpg"
+    if (fs.existsSync(process.cwd() + "/plugins/Lain-plugin/resources/avatar.jpg")) {
+        avatar = process.cwd() + "/plugins/Lain-plugin/resources/avatar.jpg"
+    } else {
+        let txurl = `${process.cwd()}/resources/Avatar/`
+        if (fs.existsSync(txurl)) {
+            let tx_img = []
+            for (let txlb of fs.readdirSync(txurl))
+                if (txlb.includes("."))
+                    tx_img.push(txurl + txlb);
+            if (tx_img.length > 0)
+                avatar = tx_img[Math.floor(Math.random() * tx_img.length)];
         }
     }
-}
 
-if (!Bot.adapter.includes(uin)) Bot.adapter.unshift(uin)
+    /** 构建基本参数 */
+    Bot[uin] = {
+        fl: new Map(),
+        gl: new Map(),
+        gml: new Map(),
+        id: uin,
+        name: Bot.lain.cfg.stdin_nickname,
+        uin,
+        nickname: Bot.lain.cfg.stdin_nickname,
+        avatar,
+        stat: { start_time: Date.now() / 1000, recv_msg_cnt: 0 },
+        version: { id: uin, name: Bot.lain.cfg.stdin_nickname, version: Bot.lain.adapter.stdin },
+        /** 转发 */
+        makeForwardMsg: sendForwardMsg,
+        pickUser: () => {
+            return {
+                user_id,
+                nickname: Bot.lain.cfg.stdin_nickname,
+                sendMsg: msg => sendMsg(msg),
+                recallMsg: msg_id => common.log(uin, `撤回消息：${msg_id}`),
+                makeForwardMsg: sendForwardMsg,
+                sendForwardMsg: msg => sendForwardMsg(msg),
+                sendFile: (file, name) => sendFile(file, name),
+            }
+        },
+        pickFriend: () => {
+            return {
+                user_id,
+                nickname: Bot.lain.cfg.stdin_nickname,
+                sendMsg: msg => sendMsg(msg),
+                recallMsg: msg_id => common.log(uin, `撤回消息：${msg_id}`),
+                makeForwardMsg: sendForwardMsg,
+                sendForwardMsg: msg => sendForwardMsg(msg),
+                sendFile: (file, name) => sendFile(file, name),
+            }
+        },
+        pickGroup: () => {
+            return {
+                user_id,
+                nickname: Bot.lain.cfg.stdin_nickname,
+                sendMsg: msg => sendMsg(msg),
+                recallMsg: msg_id => common.log(uin, `撤回消息：${msg_id}`),
+                makeForwardMsg: sendForwardMsg,
+                sendForwardMsg: msg => sendForwardMsg(msg),
+                sendFile: (file, name) => sendFile(file, name),
+            }
+        },
+    }
 
-/** 监听控制台输入 */
-const rl = createInterface({
-    input: process.stdin,
-    output: process.stdout
-})
+    if (!Bot.adapter.includes(uin)) Bot.adapter.unshift(uin)
 
-rl.on('SIGINT', () => { rl.close(); process.exit() })
-function getInput() {
-    rl.question('', async (input) => {
-        await common.log(uin, `收到消息：${input.trim()}`)
-        Bot[uin].stat.recv_msg_cnt++
-        await pluginsLoader.deal(msg(input.trim()))
-        getInput()
+    /** 监听控制台输入 */
+    const rl = createInterface({
+        input: process.stdin,
+        output: process.stdout
     })
+
+    rl.on("SIGINT", () => { rl.close(); process.exit() })
+    // rl.on("line", async (input) => await pluginsLoader.deal(msg(input.trim())))
+    rl.on("line", async (input) => Bot.em("message.private", msg(input.trim())))
+    await common.init("Lain:restart")
 }
-getInput()
 
 async function makeBuffer(file) {
     if (file.match(/^base64:\/\//))
@@ -102,14 +121,15 @@ function msg(msg) {
 
     let e = {
         adapter: "stdin",
-        message_id: "test123456",
+        bot: Bot[uin],
+        message_id: common.message_id(),
         message_type: "private",
         post_type: "message",
-        sub_type: "friend",
+        // sub_type: "friend",
         self_id: uin,
         seq: 888,
         time,
-        uin: uin,
+        uin,
         user_id,
         message: [{ type: "text", text: msg }],
         raw_message: msg,
@@ -168,7 +188,7 @@ async function sendMsg(msg) {
     if (!Array.isArray(msg)) msg = [msg]
     for (let i of msg) {
         if (typeof i != "object")
-            i = { type: "text", data: { text: i }}
+            i = { type: "text", data: { text: i } }
         else if (!i.data)
             i = { type: i.type, data: { ...i, type: undefined } }
 
@@ -181,7 +201,7 @@ async function sendMsg(msg) {
                 i.data.text = String(i.data.text).trim()
                 if (!i.data.text) break
                 if (i.data.text.match("\n"))
-                    i.data.text = `\n${i.text}`
+                    i.data.text = `\n${i.data.text}`
                 await common.log(uin, `发送文本：${i.data.text}`)
                 break
             case "image":
@@ -210,7 +230,7 @@ async function sendMsg(msg) {
                 await common.log(uin, `发送消息：${i}`)
         }
     }
-    return { message_id: Date.now() }
+    return { message_id: common.message_id() }
 }
 
 async function sendFile(file, name = path.basename(file)) {
@@ -227,9 +247,7 @@ async function sendFile(file, name = path.basename(file)) {
 
 function sendForwardMsg(msg) {
     const messages = []
-    for (const i of msg)
-        messages.push(sendMsg(i.message))
+    for (const { message } of msg)
+        messages.push(sendMsg(message))
     return messages
 }
-
-await common.log(uin, `加载完成...您可以在控制台输入指令哦~`)

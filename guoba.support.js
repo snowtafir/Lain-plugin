@@ -80,7 +80,7 @@ export function supportGuoba() {
             schemas: [
                 {
                     component: "Divider",
-                    label: "PC微信设置"
+                    label: "HTTP服务器设置"
                 },
                 {
                     field: "port",
@@ -94,6 +94,10 @@ export function supportGuoba() {
                         min: 1,
                         max: 65535,
                     },
+                },
+                {
+                    component: "Divider",
+                    label: "PC微信设置"
                 },
                 {
                     field: "autoFriend",

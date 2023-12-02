@@ -127,7 +127,7 @@ let api = {
     },
 
     /**
-     * 获取群系统消息 (未实现)
+     * 获取群系统消息
      * @param {string} id - 机器人QQ
      */
     async get_group_system_msg(id) {
@@ -136,7 +136,7 @@ let api = {
     },
 
     /**
-    * 获取精华消息列表 (未实现)
+    * 获取精华消息列表
     * @param {string} id - 机器人QQ
     * @param {number} group_id - 群号
     */
@@ -454,7 +454,7 @@ let api = {
     },
 
     /**
-     * 点赞(实测赞了个寂寞...)
+     * 点赞
      * @param {string} id - 机器人QQ
      * @param {number} user_id - 对方 QQ 号
      * @param {number} times - 点赞次数
@@ -554,6 +554,21 @@ let api = {
         const params = { flag, sub_type, approve, reason }
         return await this.SendApi(id, "set_group_add_request", params)
     },
+
+    /**
+     * 获取城市ADCode
+     * @param id
+     * @param city 城市
+     * @param sub_type add 或 invite, 请求类型（需要和上报消息中的 sub_type 字段相符）
+     * @param approve 是否同意请求／邀请
+     * @param reason 拒绝理由（仅在拒绝时有效）
+     * @return {Promise<*|string>}
+     */
+    async get_weather_city_code(id, city) {
+        const params = { city }
+        return await this.SendApi(id, "get_weather_city_code", params)
+    },
+
 
     /**
      * 上传文件到缓存目录
@@ -657,6 +672,16 @@ let api = {
         return await this.SendApi(id, "send_private_forward_msg", params)
     },
 
+    /**
+     * 获取被禁言的群成员列表
+     * @param {string} id - 机器人QQ
+     * @param {number} group_id - 发送到的目标群号
+     */
+    async get_prohibited_member_list(id, group_id) {
+        const params = { group_id }
+        return await this.SendApi(id, "get_prohibited_member_list", params)
+    },
+
     async SendApi(id, action, params) {
         const bot = Bot.shamrock.get(String(id))
         if (!bot) return common.log(id, "不存在此Bot")
@@ -664,7 +689,7 @@ let api = {
         // console.log("发送请求，接口：", action, "参数：", params)
         bot.socket.send(JSON.stringify({ echo, action, params }))
 
-        for (let i = 0; i < 40; i++) {
+        for (let i = 0; i < 60; i++) {
             const data = await Bot.lain.on.get(echo)
             if (data) {
                 Bot.lain.on.delete(echo)

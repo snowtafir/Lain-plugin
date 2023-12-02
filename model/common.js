@@ -5,6 +5,13 @@ import fetch, { FormData, Blob } from "node-fetch"
 import puppeteer from "../../../lib/puppeteer/puppeteer.js"
 
 /**
+ * 生成message_id
+ */
+function message_id() {
+    return Buffer.from(Date.now().toString()).toString('base64')
+}
+
+/**
  * 创建文件夹
  * @param dirname
  */
@@ -31,20 +38,50 @@ function sleep(ms) {
  * 打印基本日志
  * @param id 开发者id(appID)
  * @param log 日志内容
- * @param err 可选参数，日志转为错误日志
+ * @param err 可选参数，日志类型
  */
 function log(id, log, type = "info") {
     id = chalk.hex("#868ECC")(Bot?.[id]?.nickname ? `[${Bot?.[id]?.nickname}(${id})] ` : (id ? `[${id}] ` : ""))
     const list = {
-        info: function () { logger.info(`${id}${log}`) },
-        error: function () { logger.error(`${id}${log}`) },
-        mark: function () { logger.mark(`${id}${log}`) },
-        debug: function () { logger.debug(`${id}${log}`) },
-        warn: function () { logger.warn(`${id}${log}`) },
+        info: function () { logger.info(id ? id + log : log) },
+        error: function () { logger.error(id ? id + log : log) },
+        mark: function () { logger.mark(id ? id + log : log) },
+        debug: function () { logger.debug(id ? id + log : log) },
+        warn: function () { logger.warn(id ? id + log : log) },
     }
     return list[type]()
 }
 
+/** 适配器重启发送消息 */
+async function init(key = "Lain:restart") {
+    let restart = await redis.get(key)
+    if (restart) {
+        restart = JSON.parse(restart)
+        const uin = restart?.uin || Bot.uin
+        let time = restart.time || new Date().getTime()
+        const msg_id = restart?.msg_id || false
+        time = (new Date().getTime() - time) / 1000
+        console.log(typeof uin)
+        let msg = `重启成功：耗时${time.toFixed(2)}秒`
+        try {
+            if (restart.isGroup) {
+                Bot[uin].pickGroup(restart.id, msg_id).sendMsg(msg)
+            } else {
+                Bot[uin].pickUser(restart.id).sendMsg(msg)
+            }
+        } catch (error) {
+            /** 发送失败后等待5s重试一次，适配器可能没连接bot */
+            await new Promise((resolve) => setTimeout(resolve, 5000))
+            msg = `重启成功：耗时${(time + 5).toFixed(2)}秒`
+            if (restart.isGroup) {
+                Bot[uin].pickGroup(restart.id, msg_id).sendMsg(msg)
+            } else {
+                Bot[uin].pickUser(restart.id, msg_id).sendMsg(msg)
+            }
+        }
+        redis.del(key)
+    }
+}
 
 /** 将云崽过来的消息全部统一格式存放到数组里面 */
 function array(data) {
@@ -85,7 +122,7 @@ function array(data) {
  */
 async function makeForwardMsg(data, node = false, e = {}) {
     const message = {}
-    const allMsg = []
+    let allMsg = []
     /** 防止报错 */
     if (!Array.isArray(data)) data = [data]
 
@@ -126,7 +163,6 @@ async function makeForwardMsg(data, node = false, e = {}) {
         }
         /** AT 表情包 */
         else if (typeof msg === "object") {
-            if (node) msg.node = true
             allMsg.push(msg)
         }
         /** 普通文本 */
@@ -138,6 +174,9 @@ async function makeForwardMsg(data, node = false, e = {}) {
             await log("未兼容的字段：", msg)
         }
     }
+
+    if (node) allMsg.forEach(i => { i.node = true })
+
     /** 对一些重复元素进行去重 */
     message.msg = Array.from(new Set(allMsg.map(JSON.stringify))).map(JSON.parse)
     /** 添加字段，用于兼容chatgpt-plugin的转发 */
@@ -235,10 +274,12 @@ export default {
     log,
     array,
     mkdirs,
+    message_id,
     makeForwardMsg,
     base64,
     uploadFile,
     uploadQQ,
     getUrls,
-    rendering
+    rendering,
+    init
 }

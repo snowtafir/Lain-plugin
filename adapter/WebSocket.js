@@ -47,7 +47,7 @@ export default class WebSocket {
             common.log("QQBotApi", `[收到请求] 访问文件：${name}`, "debug")
             /** 检查令牌有效性 */
             if (token !== Bot.lain.cfg.QQBotImgToken) return res.status(401).send("令牌无效")
-            const _path = process.cwd() + `/plugins/Lain-plugin/resources/image/${name}`
+            const _path = process.cwd() + `/plugins/Lain-plugin/resources/QQBotApi/${name}`
             if (!fs.existsSync(_path)) return res.status(404).send("啊咧，文件不存在捏")
             /** 返回文件 */
             res.sendFile(_path, {}, (err) => {
@@ -80,10 +80,10 @@ export default class WebSocket {
         })
 
         this.Server.listen(this.port, async () => {
-            await common.log("", `HTTP服务器：${logger.blue(`http://localhost:${this.port}`)}`)
-            await common.log("", `QQBotApi：${logger.blue(`http://localhost:${this.port}/api/QQBot`)}`)
-            await common.log("", `本地 Shamrock 连接地址：${logger.blue(`ws://localhost:${this.port}${this.path}`)}`)
-            await common.log("", `本地 ComWeChat 连接地址：${logger.blue(`ws://localhost:${this.port}${this.path_wx}`)}`)
+            await common.log("Lain-plugin", `HTTP服务器：${logger.blue(`http://localhost:${this.port}`)}`)
+            await common.log("Lain-plugin", `QQBotApi：${logger.blue(`http://localhost:${this.port}/api/QQBot`)}`)
+            await common.log("Lain-plugin", `本地 Shamrock 连接地址：${logger.blue(`ws://localhost:${this.port}${this.path}`)}`)
+            await common.log("Lain-plugin", `本地 ComWeChat 连接地址：${logger.blue(`ws://localhost:${this.port}${this.path_wx}`)}`)
         })
 
         /** 捕获错误 */
@@ -94,8 +94,8 @@ export default class WebSocket {
                     const response = await fetch(`http://localhost:${this.port}/api/close-server`)
                     if (response.ok) {
                         await common.sleep(5000)
-                        await common.log("", `本地 Shamrock 连接地址：${logger.blue(`ws://localhost:${this.port}${this.path}`)}`)
-                        await common.log("", `本地 ComWeChat 连接地址：${logger.blue(`ws://localhost:${this.port}${this.path_wx}`)}`)
+                        await common.log("Lain-plugin", `本地 Shamrock 连接地址：${logger.blue(`ws://localhost:${this.port}${this.path}`)}`)
+                        await common.log("Lain-plugin", `本地 ComWeChat 连接地址：${logger.blue(`ws://localhost:${this.port}${this.path_wx}`)}`)
                         return
                     } else {
                         throw new Error(`HTTP请求失败，状态码: ${response.status}`)

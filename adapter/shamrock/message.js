@@ -19,8 +19,11 @@ export default new class zaiMsg {
 
         if (data.post_type === "message") {
             /** 处理message，引用消息 */
-            const { message, source } = await this.message(self_id, data.message, group_id, "e")
+            const { message, source, file } = await this.message(self_id, data.message, group_id, "e")
             e.message = message
+            /** 特殊处理文件 */
+            if (file) e.file = file
+            /** 引用消息 */
             if (source) {
                 e.source = source
                 if (typeof e.source === 'string') {
@@ -72,7 +75,7 @@ export default new class zaiMsg {
             }
 
         }
-        let group_name
+        let group_name = group_id
         /** 先打印日志 */
         if (message_type === "private") {
             isGroup = false
@@ -141,18 +144,16 @@ export default new class zaiMsg {
                 is_owner = get_bot_info?.[self_id]?.role === "owner" || false
             } catch (err) { }
             e.group = {
+                name: e.group_name,
                 is_admin,
                 is_owner,
                 pickMember: (id) => {
                     /** 取缓存！！！别问为什么，因为傻鸟同步 */
-                    let member = Bot[self_id].gml.get(group_id)?.[id]
-                    try {
-                        member.info = { ...member }
-                    } catch {
-                        member.info = {}
-                    }
+                    let member = Bot[self_id].gml.get(group_id)?.[id] || {}
+                    member.info = { ...member }
                     return {
                         member,
+                        ...member,
                         getAvatarUrl: (size = 0, userId = id) => `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${userId}`
                     }
                 },
@@ -352,6 +353,7 @@ export default new class zaiMsg {
 export async function message(id, msg, group_id, reply = true) {
     const message = []
     let source
+    let file
     for (const i of msg) {
         if (i.type === "reply" && reply) {
             /** 引用消息的id */
@@ -398,6 +400,10 @@ export async function message(id, msg, group_id, reply = true) {
         /** 不理解为啥为啥不是node... */
         else if (i.type === "forward") {
             message.push({ type: "node", ...i.data })
+        }
+        /** 文件 */
+        else if (i.type === "file") {
+            file = i.data
         } else {
             if (i.type === "at") {
                 message.push({ type: "at", qq: Number(i.data.qq) })
@@ -406,7 +412,7 @@ export async function message(id, msg, group_id, reply = true) {
             }
         }
     }
-    return { message, source }
+    return { message, source, file }
 }
 
 /**

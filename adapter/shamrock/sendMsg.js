@@ -26,41 +26,42 @@ export default class SendMsg {
         if (node) CQ = ["[转发消息]"]
 
         /** 发送消息 */
-        return await this.SendMsg(id, msg, CQ, node)
+        return await this.sendMsg(id, msg, CQ, node)
     }
 
     /** 转为shamrock可以使用的格式 */
     async msg(data) {
-        if (!Array.isArray(data)) data = [{ type: "text", text: data }]
+        if (typeof data == "string") data = [{ type: "text", text: data }]
+        if (!Array.isArray(data)) data = [data]
         const CQ = []
-        const msg = []
+        let msg = []
         let node = false
 
         /** chatgpt-plugin */
         if (data?.[0]?.type === "xml") data = data?.[0].msg
 
         for (let i of data) {
-            node = node || i.node
+            if (i?.node) node = true
             switch (i.type) {
                 case "at":
                     CQ.push(`{at:${Number(i.qq) == 0 ? i.id : i.qq}}`)
                     msg.push({
-                        type: i?.node ? "node" : "at",
-                        data: i?.node ? { name: this.name, content: [{ type: "at", data: { qq: Number(i.qq) == 0 ? i.id : i.qq } }] } : { qq: Number(i.qq) == 0 ? i.id : i.qq }
+                        type: "at",
+                        data: { qq: Number(i.qq) == 0 ? i.id : i.qq }
                     })
                     break
                 case "face":
                     CQ.push(`{face:${i.text}}`)
                     msg.push({
-                        type: i?.node ? "node" : "face",
-                        data: i?.node ? { name: this.name, content: [{ type: "face", data: { id: i.text } }] } : { id: i.text }
+                        type: "face",
+                        data: { id: i.text }
                     })
                     break
                 case "text":
                     CQ.push(i.text)
                     msg.push({
-                        type: i?.node ? "node" : "text",
-                        data: i?.node ? { name: this.name, content: [{ type: "text", data: { text: i.text } }] } : { text: i.text }
+                        type: "text",
+                        data: { text: i.text }
                     })
                     break
                 case "file":
@@ -80,8 +81,8 @@ export default class SendMsg {
                     }
                     CQ.push(`{record:${i.file}}`)
                     msg.push({
-                        type: i?.node ? "node" : "record",
-                        data: i?.node ? { name: this.name, content: [{ type: "record", data: { file: i.file } }] } : { file: i.file }
+                        type: "record",
+                        data: { file: i.file }
                     })
                     break
                 case "video":
@@ -98,13 +99,13 @@ export default class SendMsg {
                     }
                     CQ.push(`{video:${i.file}}`)
                     msg.push({
-                        type: i?.node ? "node" : "video",
-                        data: i?.node ? { name: this.name, content: [{ type: "video", data: { file: i.file } }] } : { file: i.file }
+                        type: "video",
+                        data: { file: i.file }
                     })
                     break
                 case "image":
                     CQ.push(`{image:base64://...}`)
-                    msg.push(i?.node ? { type: "node", data: { name: this.name, content: [await this.get_image(i)] } } : await this.get_image(i))
+                    msg.push(await this.get_image(i))
                     break
                 case "poke":
                     CQ.push(`[CQ:poke,id=${i.id}]`)
@@ -117,18 +118,70 @@ export default class SendMsg {
                     CQ.push(`{poke:${i.id}}`)
                     msg.push(i)
                     break
-                case "forward":
-                    node ? "" : node = true
+                case "weather":
+                    CQ.push(`[CQ=weather,${i.city ? ('city=' + i.city) : ('code=' + i.code)}]`)
                     msg.push({
-                        type: "node",
+                        type: "weather",
                         data: {
-                            name: this.name,
-                            content: [{ type: "text", data: { text: i.text } }]
+                            code: i.code,
+                            city: i.city
                         }
                     })
                     break
+                case "json":
+                    let json
+                    if (typeof i.data !== "string") {
+                        json = JSON.stringify(i.data)
+                    } else {
+                        json = i.data
+                    }
+                    CQ.push(`[CQ=json,data=${json}]`)
+                    msg.push({
+                        type: "json",
+                        data: {
+                            data: json
+                        }
+                    })
+                    break
+                case "music":
+                    CQ.push(`[CQ=music,type=${i.data.type},id=${i.data.id}]`)
+                    msg.push({
+                        type: "music",
+                        data: i.data
+                    })
+                    break
+                case "location":
+                    const { lat, lng: lon } = data
+                    CQ.push(`[CQ=json,lat=${lat},lon=${lon}]`)
+                    msg.push({
+                        type: "location",
+                        data: {
+                            lat,
+                            lon
+                        }
+                    })
+                    break
+                case "share":
+                    const { url, title, image, content } = data
+                    CQ.push(`[CQ=json,url=${url},title=${title},image=${image},content=${content}]`)
+                    msg.push({
+                        type: "share",
+                        data: {
+                            url,
+                            title,
+                            content,
+                            image
+                        }
+                    })
+                    break
+                case "forward":
+                    CQ.push(i.text)
+                    msg.push({
+                        type: "text",
+                        data: { text: i.text }
+                    })
+                    break
                 case "node":
-                    node ? "" : node = true
                     msg.push({
                         type: "node",
                         data: { ...i }
@@ -143,53 +196,70 @@ export default class SendMsg {
                     break
             }
         }
+
+        /** 合并转发 */
+        if (node) {
+            const NodeMsg = []
+            NodeMsg.push(...msg
+                .filter(i => !(i.type == "at" || i.type == "record"))
+                .map(i => ({
+                    type: "node",
+                    data: {
+                        name: this.name,
+                        content: [i]
+                    }
+                }))
+            )
+            msg = NodeMsg
+        }
+
         return { msg, CQ, node }
     }
 
     /** 统一图片格式 */
     async get_image(i) {
-        let file
+        let file = i.file
         if (i?.url) i.url.includes("gchat.qpic.cn") && !i.url.startsWith("https://") ? i.file = "https://" + i.url : i.file = i.url
-        /** 特殊格式？... */
-        if (i.file?.type === "Buffer") {
-            file = `base64://${Buffer.from(i.file.data).toString("base64")}`
+        if (i.file?.type === "Buffer" || i.file instanceof Uint8Array) {
+            file = `base64://${Buffer.from(i?.file?.data || i.file).toString("base64")}`
         }
-        /** 将二进制的base64转字符串 防止报错 */
-        else if (i.file instanceof Uint8Array) {
-            file = `base64://${Buffer.from(i.file).toString("base64")}`
-        }
-        /** 天知道从哪里蹦出来的... */
         else if (i.file instanceof fs.ReadStream) {
             file = `./${i.file.path}`
         }
         /** 去掉本地图片的前缀 */
         else if (typeof i.file === "string") {
-            file = i.file.replace(/^file:\/\//, "") || i.url
+            if (fs.existsSync(i.file.replace(/^file:\/\//, ""))) {
+                file = fs.readFileSync(i.file.replace(/^file:\/\//, "")).toString("base64")
+            }
+            else if (fs.existsSync(i.file.replace(/^file:\/\/\//, ""))) {
+                file = fs.readFileSync(i.file.replace(/^file:\/\/\//, "")).toString("base64")
+            }
+            else if (/^base64:\/\//.test(file)) {
+                file = file.replace(/^base64:\/\//, "")
+            }
+            /** 本地文件 */
+            else if (fs.existsSync(file)) {
+                file = fs.readFileSync(file).toString("base64")
+            }
+            /** url图片 */
+            else if (/^http(s)?:\/\//.test(file)) {
+                return { type: "image", data: { file } }
+            }
+            else {
+                await common.log(this.id, i, "error")
+                return { type: "text", data: { text: JSON.stringify() } }
+            }
         }
-
-        /** base64 */
-        if (/^base64:\/\//.test(file)) {
-            file = file.replace(/^base64:\/\//, "")
-        }
-        /** 本地文件 */
-        else if (fs.existsSync(file)) {
-            file = fs.readFileSync(file).toString("base64")
-        }
-        /** url图片 */
-        else if (/^http(s)?:\/\//.test(file)) {
-            return { type: "image", data: { file, url: file } }
-        }
-        /** 留个容错防止炸了 */
         else {
             await common.log(this.id, i, "error")
-            return { type: "text", data: { text: "未知格式...请寻找作者适配..." } }
+            return { type: "text", data: { text: JSON.stringify() } }
         }
 
-        return { type: "image", data: { file: `base64://${file}` } }
+        return { type: "image", data: { file: `base64://${file.replace(/^base64:\/\//, "")}` } }
     }
 
     /** 发送消息 */
-    async SendMsg(id, msg, CQ, node) {
+    async sendMsg(id, msg, CQ, node) {
         /** 打印日志 */
         common.log(this.id, `发送${this.isGroup ? "群" : "好友"}消息：[${id}]${CQ.join("")}`)
 
@@ -220,9 +290,16 @@ export default class SendMsg {
                 Bot.lain.on.delete(echo)
                 try {
                     if (Object.keys(data?.data).length > 0 && data?.data) {
-                        data.seq = data?.data?.message_id
-                        data.rand = 1
-                        return data?.data || data
+                        const { message_id, time } = data.data
+
+                        /** 储存自身发送的消息 */
+                        await redis.set(`Shamrock:${this.id}:${message_id}`, JSON.stringify(data), { EX: 120 })
+                        return {
+                            time,
+                            message_id,
+                            seq: message_id,
+                            rand: 1
+                        }
                     }
                     return data
                 } catch {

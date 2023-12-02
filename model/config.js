@@ -1,12 +1,8 @@
 import fs from "fs"
 import Yaml from "yaml"
-import chalk from "chalk"
 import crypto from "crypto"
 import chokidar from "chokidar"
 import common from "../model/common.js"
-import guild from "../adapter/QQGuild/guild.js"
-import WebSocket from "../adapter/WebSocket.js"
-import createAndStartBot from "../adapter/QQBot/index.js"
 
 const _path = process.cwd() + "/plugins/Lain-plugin/config"
 
@@ -57,7 +53,7 @@ if (!fs.existsSync(_path + "/bot.yaml")) {
 if (!fs.existsSync(_path + "/QQBot.yaml")) {
     fs.writeFileSync(_path + "/QQBot.yaml", `ndefault: {}`, "utf8")
 }
-if (!fs.existsSync(_path + `/../resources/image`)) fs.mkdirSync(_path + `/../resources/image`)
+if (!fs.existsSync(_path + `/../resources/QQBotApi`)) fs.mkdirSync(_path + `/../resources/QQBotApi`)
 
 const cfg = Yaml.parse(fs.readFileSync(_path + "/config.yaml", "utf8"))
 const YZ = JSON.parse(fs.readFileSync("./package.json", "utf-8"))
@@ -82,23 +78,9 @@ Bot.lain = {
     guilds: {},
 }
 
-/** 检查配置文件是否存在 */
-if (fs.existsSync(_path + "/bot.yaml")) {
-    const bot = Yaml.parse(fs.readFileSync(_path + "/bot.yaml", "utf8"))
-    for (const i in bot) {
-        if (i === "default") break
-        try {
-            const qg = new guild(bot[i])
-            await qg.monitor()
-        } catch (err) {
-            logger.error(err)
-        }
-    }
-}
-
 /** 清空资源 */
-fs.readdir(`${_path}/../resources/image`, (err, files) => {
-    files.forEach(file => { fs.unlink(`${_path}/../resources/image/${file}`, (err) => { }) })
+fs.readdir(`${_path}/../resources/QQBotApi`, (err, files) => {
+    files.forEach(file => { fs.unlink(`${_path}/../resources/QQBotApi/${file}`, (err) => { }) })
 })
 
 /** 热重载~ */
@@ -123,17 +105,3 @@ try {
 } catch (err) {
     logger.error(err)
 }
-
-/** shamrock 微信 */
-await (new WebSocket()).server()
-
-/** QQBot */
-try {
-    Object.entries(Yaml.parse(fs.readFileSync(Bot.lain._path + "/QQBot.yaml", "utf8"))).forEach(async ([appid, cfg]) => {
-        if (Object.keys(cfg).length === 0) return
-        await createAndStartBot(cfg)
-    })
-} catch (err) { common.log("QQBot", `QQBot适配器加载失败,${err}`, "error") }
-
-logger.info(chalk.hex("#868ECC")(`Lain-plugin插件${Bot.lain.version}全部初始化完成~`))
-logger.info(chalk.hex("#868ECC")("https://gitee.com/sky-summer/Lain-plugin"))

@@ -54,12 +54,13 @@ export default class message {
         const nickname = msg.author.username
         /** 获取场景 */
         const message_type = type === "私信" ? "private" : "group"
-        const sub_type = type === "私信" ? "friend" : "normal"
+        const sub_type = type === "私信" ? "" : "normal"
         /** 存入data中 */
         this.data.group_name = group_name
         /** 先存一部分 */
         e = {
             adapter: "QQGuild",
+            bot: Bot[this.id],
             author: msg.author,
             channel_id: msg.channel_id,
             channel_name: channel_name,
@@ -102,7 +103,7 @@ export default class message {
                 user_id: user_id,
                 nickname: nickname,
                 last_sent_time: time,
-				join_time: Date.parse(msg.member.joined_at) / 1000,
+                join_time: Date.parse(msg.member.joined_at) / 1000,
             },
             group_id: group_id,
             is_admin: is_admin,
@@ -224,7 +225,7 @@ export default class message {
             let msg = ""
             msg += `撤回消息:\n频道ID：${guild_id}`
             msg += `\n子频道ID：${channel_id}`
-            msg += `\n详细消息：`
+            msg += `\n详细信息：`
             msg += `\n时间：${timestamp}`
             msg += `\n用户ID：${author.id}`
             msg += `\n用户昵称：${author.username}`
