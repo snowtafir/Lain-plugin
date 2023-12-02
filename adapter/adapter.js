@@ -20,11 +20,12 @@ adapter.push(async function QQGuild() {
         if (i === "default") continue
         try {
             const Guild = (await import("./QQGuild/guild.js")).default
-            return await new Guild(bot[i]).monitor()
+            await new Guild(bot[i]).monitor()
         } catch (err) {
-            return logger.error(err)
+            logger.error(err)
         }
     }
+    common.log("Lain-plugin", "QQ频道适配器加载完成...")
 })
 
 /** QQBot适配器 */
@@ -54,5 +55,5 @@ for (let i of adapter) {
     }
 }
 
-common.log("", `Lain-plugin插件${Bot.lain.version}全部初始化完成~`)
-common.log("", "https://gitee.com/Zyy955/Lain-plugin")
+common.log("Lain-plugin", `Lain-plugin插件${Bot.lain.version}全部初始化完成~`)
+common.log("Lain-plugin", "https://gitee.com/Zyy955/Lain-plugin")

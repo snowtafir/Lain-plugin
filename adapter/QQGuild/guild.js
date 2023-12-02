@@ -279,5 +279,3 @@ export default class guild {
         await Bot[this.id].client.directMessageApi.postDirectMessage(_data.data.guild_id, { content: hi })
     }
 }
-
-logger.info(`[Lain-plugin]QQ频道适配器加载完成...`)
