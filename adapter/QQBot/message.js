@@ -234,7 +234,7 @@ export default new class message {
         } catch (error) {
             common.log(e.self_id, `发送消息失败：${error?.data || error?.message || error}`, "error")
             common.log(e.self_id, error, "debug")
-            await e.sendMsg(`发送消息失败：${error?.data || error?.message || error}`)
+            res = await e.sendMsg(`发送消息失败：${error?.data || error?.message || error}`)
         }
 
         /** 分片发送图片 */
@@ -245,7 +245,7 @@ export default new class message {
                 } catch (error) {
                     common.log(e.self_id, `发送消息失败：${error?.data || error?.message || error}`, "error")
                     common.log(e.self_id, error, "debug")
-                    await e.sendMsg(`发送消息失败：${error?.data || error?.message || error}`)
+                    res = await e.sendMsg(`发送消息失败：${error?.data || error?.message || error}`)
                 }
             })
         }
