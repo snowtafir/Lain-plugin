@@ -11,7 +11,7 @@ export default new class message {
     async msg(e, isGroup) {
         e.sendMsg = e.reply
         e.bot.stat = Bot?.[e.self_id]?.stat
-        e.message = await this.message(e.message, true)
+        e.message = (await this.message(e.message, true)).message
 
         /** 重新构建快速回复消息 */
         e.reply = async (msg, quote) => {
@@ -158,15 +158,17 @@ export default new class message {
     }
 
     /** 处理message */
-    async message(e, t = false) {
+    async message(e, YZ = false) {
         if (!Array.isArray(e)) e = [e]
         e = common.array(e)
         let msg = false
+        let img = false
+        const image = []
         const message = []
         for (let i in e) {
             switch (typeof e[i]) {
                 case "string":
-                    if (!msg && t && Bot.lain.cfg.QQBotPrefix) {
+                    if (!msg && YZ && Bot.lain.cfg.QQBotPrefix) {
                         msg = true
                         message.push({ type: "text", text: e[i].trim().replace(/^\//, "#") })
                     } else {
@@ -177,10 +179,18 @@ export default new class message {
                     try {
                         switch (e[i].type) {
                             case "image":
-                                message.push(await this.get_image(e[i]))
+                                if (YZ) {
+                                    message.push(await this.get_image(e[i]))
+                                }
+                                else if (!img) {
+                                    img = true
+                                    message.push(await this.get_image(e[i]))
+                                } else {
+                                    image.push(await this.get_image(e[i]))
+                                }
                                 break
                             case "text":
-                                if (!msg && t && Bot.lain.cfg.QQBotPrefix) {
+                                if (!msg && YZ && Bot.lain.cfg.QQBotPrefix) {
                                     msg = true
                                     e[i].text = e[i].text.trim().replace(/^\//, "#")
                                     message.push(e[i])
@@ -212,19 +222,35 @@ export default new class message {
             }
 
         }
-        return message
+        return { message, image }
     }
 
     /** 快速回复 */
     async reply(e, msg) {
-        msg = await this.message(msg)
+        let res
+        const { message, image } = await this.message(msg)
         try {
-            return await e.sendMsg(msg)
+            res = await e.sendMsg(message)
         } catch (error) {
             common.log(e.self_id, `发送消息失败：${error?.data || error?.message || error}`, "error")
             common.log(e.self_id, error, "debug")
-            return await e.sendMsg(`发送消息失败：${error?.data || error?.message || error}`)
+            await e.sendMsg(`发送消息失败：${error?.data || error?.message || error}`)
         }
+
+        /** 分片发送图片 */
+        if (image.length > 0) {
+            image.forEach(async i => {
+                try {
+                    res = await e.sendMsg(i)
+                } catch (error) {
+                    common.log(e.self_id, `发送消息失败：${error?.data || error?.message || error}`, "error")
+                    common.log(e.self_id, error, "debug")
+                    await e.sendMsg(`发送消息失败：${error?.data || error?.message || error}`)
+                }
+            })
+        }
+
+        return res
     }
 
     /** 处理图片 */
@@ -266,16 +292,17 @@ export default new class message {
             }
             // 如果是url，则直接返回url
             else if (/^http(s)?:\/\//.test(i.file)) {
+                common.log("QQBotApi", `传入的图片类型为URL，直接返回：${url}`, "debug")
                 return { ...i, type: "image", file: i.file }
             }
             else {
-                common.log("QQBotApi", `本地文件不存在：${i}`, "error")
+                common.log("QQBotApi", `本地文件不存在：` + i, "error")
                 return { ...i, type: "text", text: "本地文件不存在..." }
             }
         }
         // 留个容错
         else {
-            common.log("QQBotApi", `未知格式：${i}`, "error")
+            common.log("QQBotApi", `未知格式：` + i, "error")
             return { ...i, type: "text", text: JSON.stringify(i) }
         }
 
@@ -284,7 +311,7 @@ export default new class message {
             const obj = await this.Upload_File(filePath, "image")
             return { ...i, ...obj }
         } else {
-            common.log("QQBotApi", `文件保存失败:${JSON.stringify(i)}`, "error")
+            common.log("QQBotApi", `文件保存失败：` + i, "error")
             return { ...i, type: "text", text: "文件保存失败..." }
         }
     }
@@ -299,7 +326,7 @@ export default new class message {
             filePath = path.join(folderPath, `${Date.now()}${path.extname(i.file)}`)
             fs.copyFileSync(i.file, filePath)
         } else {
-            common.log("QQBotApi", `本地文件不存在：${i}`, "error")
+            common.log("QQBotApi", `本地文件不存在：` + i, "error")
             return { type: "text", text: "本地文件不存在..." }
         }
 
@@ -338,7 +365,7 @@ export default new class message {
             }
             i.file = file
         }
-        
+
         /** file:// */
         if (fs.existsSync(i.file.replace(/^file:\/\//, ""))) i.file = i.file.replace(/^file:\/\//, "")
         /** file:/// */
@@ -368,7 +395,7 @@ export default new class message {
                 })
 
         } else {
-            common.log("QQBotApi", `本地文件不存在：${i}`, "error")
+            common.log("QQBotApi", `本地文件不存在：` + i, "error")
             return { type: "text", text: "本地文件不存在..." }
         }
 
@@ -376,7 +403,7 @@ export default new class message {
         if (fs.existsSync(silk)) {
             return await this.Upload_File(silk, "audio")
         } else {
-            common.log("QQBotApi", `文件保存失败:${i}`, "error")
+            common.log("QQBotApi", `文件保存失败：` + i, "error")
             return { type: "text", text: "文件保存失败..." }
         }
     }
