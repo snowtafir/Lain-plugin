@@ -245,10 +245,14 @@ export default new class message {
         // 检查是否是字符串类型
         else if (typeof i.file === "string") {
             if (fs.existsSync(i.file.replace(/^file:\/\//, ""))) {
-                filePath = i.file.replace(/^file:\/\//, "")
+                i.file = i.file.replace(/^file:\/\//, "")
+                filePath = path.join(folderPath, `${Date.now()}${path.extname(i.file)}`)
+                fs.copyFileSync(i.file, filePath)
             }
             else if (fs.existsSync(i.file.replace(/^file:\/\/\//, ""))) {
-                filePath = i.file.replace(/^file:\/\/\//, "")
+                i.file = i.file.replace(/^file:\/\/\//, "")
+                filePath = path.join(folderPath, `${Date.now()}${path.extname(i.file)}`)
+                fs.copyFileSync(i.file, filePath)
             }
             else if (fs.existsSync(i.file)) {
                 filePath = path.join(folderPath, `${Date.now()}${path.extname(i.file)}`)
@@ -280,7 +284,7 @@ export default new class message {
             const obj = await this.Upload_File(filePath, "image")
             return { ...i, ...obj }
         } else {
-            common.log("QQBotApi", `文件保存失败:${i}`, "error")
+            common.log("QQBotApi", `文件保存失败:${JSON.stringify(i)}`, "error")
             return { ...i, type: "text", text: "文件保存失败..." }
         }
     }
@@ -340,6 +344,7 @@ export default new class message {
                 await this.runFfmpeg(i.file, pcm)
             } catch (error) {
                 console.error(`执行错误: ${error}`)
+                return { type: "text", text: `语音转码失败：${error}` }
             }
             /** pcm 转 silk */
             await encodeSilk(fs.readFileSync(pcm), 48000)
@@ -378,8 +383,13 @@ export default new class message {
                 cm = `ffmpeg`
             } else {
                 const cfg = Yaml.parse(fs.readFileSync("./config/config/bot.yaml", "utf8"))
-                cm = `"${cfg.ffmpeg_path}"`
+                cm = cfg.ffmpeg_path ? `"${cfg.ffmpeg_path}"` : null
             }
+
+            if (!cm) {
+                throw new Error("未检测到 ffmpeg ，无法进行转码，请正确配置环境变量或手动前往 bot.yaml 进行配置")
+            }
+
             exec(`${cm} -i "${input}" -f s16le -ar 48000 -ac 1 "${output}"`, async (error, stdout, stderr) => {
                 if (error) {
                     common.log("QQBot", `执行错误: ${error}`, "error")
