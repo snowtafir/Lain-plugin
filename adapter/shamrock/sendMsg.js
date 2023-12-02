@@ -218,15 +218,13 @@ export default class SendMsg {
 
     /** 统一图片格式 */
     async get_image(i) {
-        let file
+        let file = i.file
         if (i?.url) i.url.includes("gchat.qpic.cn") && !i.url.startsWith("https://") ? i.file = "https://" + i.url : i.file = i.url
         if (i.file?.type === "Buffer" || i.file instanceof Uint8Array) {
             file = `base64://${Buffer.from(i?.file?.data || i.file).toString("base64")}`
         }
         else if (i.file instanceof fs.ReadStream) {
             file = `./${i.file.path}`
-        } else {
-            file = i.file
         }
         /** 去掉本地图片的前缀 */
         else if (typeof i.file === "string") {
