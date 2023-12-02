@@ -250,7 +250,12 @@ export default new class message {
             })
         }
 
-        return res
+        return {
+            seq: res?.group_code,
+            rand: 1,
+            time: Date.now(),
+            message_id: res?.group_code
+        }
     }
 
     /** 处理图片 */
