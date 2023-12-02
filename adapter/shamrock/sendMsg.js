@@ -225,6 +225,8 @@ export default class SendMsg {
         }
         else if (i.file instanceof fs.ReadStream) {
             file = `./${i.file.path}`
+        } else {
+            file = i.file
         }
         /** 去掉本地图片的前缀 */
         else if (typeof i.file === "string") {
