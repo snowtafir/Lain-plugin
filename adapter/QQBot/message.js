@@ -338,6 +338,12 @@ export default new class message {
             }
             i.file = file
         }
+        
+        /** file:// */
+        if (fs.existsSync(i.file.replace(/^file:\/\//, ""))) i.file = i.file.replace(/^file:\/\//, "")
+        /** file:/// */
+        if (fs.existsSync(i.file.replace(/^file:\/\/\//, ""))) i.file = i.file.replace(/^file:\/\/\//, "")
+
         if (fs.existsSync(i.file)) {
             try {
                 /** mp3 转 pcm */
