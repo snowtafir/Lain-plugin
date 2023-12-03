@@ -47,7 +47,7 @@ export default class WebSocket {
             common.log("QQBotApi", `[收到请求] 访问文件：${name}`, "debug")
             /** 检查令牌有效性 */
             if (token !== Bot.lain.cfg.QQBotImgToken) return res.status(401).send("令牌无效")
-            const _path = process.cwd() + `/plugins/Lain-plugin/resources/image/${name}`
+            const _path = process.cwd() + `/plugins/Lain-plugin/resources/QQBotApi/${name}`
             if (!fs.existsSync(_path)) return res.status(404).send("啊咧，文件不存在捏")
             /** 返回文件 */
             res.sendFile(_path, {}, (err) => {

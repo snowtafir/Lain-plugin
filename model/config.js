@@ -54,7 +54,7 @@ if (!fs.existsSync(_path + "/bot.yaml")) {
 if (!fs.existsSync(_path + "/QQBot.yaml")) {
     fs.writeFileSync(_path + "/QQBot.yaml", `ndefault: {}`, "utf8")
 }
-if (!fs.existsSync(_path + `/../resources/image`)) fs.mkdirSync(_path + `/../resources/image`)
+if (!fs.existsSync(_path + `/../resources/QQBotApi`)) fs.mkdirSync(_path + `/../resources/QQBotApi`)
 
 const cfg = Yaml.parse(fs.readFileSync(_path + "/config.yaml", "utf8"))
 const YZ = JSON.parse(fs.readFileSync("./package.json", "utf-8"))
@@ -80,8 +80,8 @@ Bot.lain = {
 }
 
 /** 清空资源 */
-fs.readdir(`${_path}/../resources/image`, (err, files) => {
-    files.forEach(file => { fs.unlink(`${_path}/../resources/image/${file}`, (err) => { }) })
+fs.readdir(`${_path}/../resources/QQBotApi`, (err, files) => {
+    files.forEach(file => { fs.unlink(`${_path}/../resources/QQBotApi/${file}`, (err) => { }) })
 })
 
 /** 热重载~ */

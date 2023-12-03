@@ -64,7 +64,7 @@ export default async function createAndStartBot(cfg) {
         }
 
     } catch (err) {
-        common.log(bot.appid, err, "error")
+        common.log("", err, "error")
     }
 }
 

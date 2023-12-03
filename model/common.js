@@ -32,11 +32,11 @@ function sleep(ms) {
 function log(id, log, type = "info") {
     id = chalk.hex("#868ECC")(Bot?.[id]?.nickname ? `[${Bot?.[id]?.nickname}(${id})] ` : (id ? `[${id}] ` : ""))
     const list = {
-        info: function () { logger.info(`${id}`, log) },
-        error: function () { logger.error(`${id}`, log) },
-        mark: function () { logger.mark(`${id}`, log) },
-        debug: function () { logger.debug(`${id}`, log) },
-        warn: function () { logger.warn(`${id}`, log) },
+        info: function () { logger.info(id ? id + log : log) },
+        error: function () { logger.error(id ? id + log : log) },
+        mark: function () { logger.mark(id ? id + log : log) },
+        debug: function () { logger.debug(id ? id + log : log) },
+        warn: function () { logger.warn(id ? id + log : log) },
     }
     return list[type]()
 }
