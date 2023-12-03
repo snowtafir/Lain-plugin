@@ -59,6 +59,16 @@ export const helpList = [
         "icon": 2,
         "title": "#重载资源",
         "desc": "用于重新加载好友列表，群列表等。"
+      },
+      {
+        "icon": 5,
+        "title": "#shamrock版本",
+        "desc": "查询OpenShamrock官方库版本信息"
+      },
+      {
+        "icon": 4,
+        "title": "#shamrock(测试)安装包",
+        "desc": "从github下载apk安装包发送到群聊/私聊"
       }
     ]
   },
