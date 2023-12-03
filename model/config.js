@@ -18,7 +18,8 @@ const configItems = [
     { key: 'QQBotImgToken', value: crypto.createHash("sha256").update(crypto.randomBytes(32)).digest("hex"), comment: '# 图片Api的token 随机生成 无特殊需求不建议更改' },
     { key: 'FigureBed', value: "http://206.233.128.146/uploadimg", comment: '# 方法1：图床API 从网上收集的，非本人所属，侵权删~' },
     { key: 'QQBotPort', value: 0, comment: '# QQBot图片Api公网IP实际端口。实际占用的是HTTP端口，此配置适用于内网和公网端口不一致用户。' },
-    { key: 'QQBotPrefix', value: true, comment: '# QQBot指令前缀转换 /转#' }
+    { key: 'QQBotPrefix', value: true, comment: '# QQBot指令前缀转换 /转#' },
+    { key: 'githubKey', value: '', comment: '# Github personal access token, 用于查看和下载shamrock版本信息' }
 ]
 
 /** 检查配置文件是否存在 */

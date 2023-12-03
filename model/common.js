@@ -3,6 +3,7 @@ import chalk from "chalk"
 import crypto from "crypto"
 import fetch, { FormData, Blob } from "node-fetch"
 import puppeteer from "../../../lib/puppeteer/puppeteer.js"
+import path from "path";
 
 /** 注册uin */
 if (!Bot?.adapter) {
@@ -257,6 +258,50 @@ async function rendering(content, error) {
     return msg.file
 }
 
+function mkdirs (dirname) {
+    if (fs.existsSync(dirname)) {
+        return true
+    } else {
+        if (mkdirs(path.dirname(dirname))) {
+            fs.mkdirSync(dirname)
+            return true
+        }
+    }
+}
+/**
+ *
+ * @param url 要下载的文件链接
+ * @param destPath 目标路径，如received/abc.pdf. 目前如果文件名重复会覆盖。
+ * @param headers
+ * @param absolute 是否是绝对路径，默认为false，此时拼接在data/lain下
+ * @returns {Promise<string>} 最终下载文件的存储位置
+ */
+async function downloadFile (url, destPath, headers = {}, absolute = false) {
+    let response = await fetch(url, { headers })
+    if (!response.ok) {
+        throw new Error(`download file http error: status: ${response.status}`)
+    }
+    let dest = destPath
+    if (!absolute) {
+        const _path = process.cwd()
+        dest = path.join(_path, 'data', 'lain', dest)
+        const lastLevelDirPath = path.dirname(dest)
+        mkdirs(lastLevelDirPath)
+    }
+    const fileStream = fs.createWriteStream(dest)
+    await new Promise((resolve, reject) => {
+        response.body.pipe(fileStream)
+        response.body.on('error', err => {
+            reject(err)
+        })
+        fileStream.on('finish', function () {
+            resolve()
+        })
+    })
+    logger.info(`File downloaded successfully! URL: ${url}, Destination: ${dest}`)
+    return dest
+}
+
 export default {
     sleep,
     log,
@@ -267,5 +312,7 @@ export default {
     uploadQQ,
     getUrls,
     rendering,
-    init
+    init,
+    downloadFile,
+    mkdirs
 }
