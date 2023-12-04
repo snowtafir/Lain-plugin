@@ -3,7 +3,7 @@ import chalk from "chalk"
 import crypto from "crypto"
 import fetch, { FormData, Blob } from "node-fetch"
 import puppeteer from "../../../lib/puppeteer/puppeteer.js"
-import path from "path";
+import path from "path"
 
 /** 注册uin */
 if (!Bot?.adapter) {
@@ -232,7 +232,7 @@ async function getUrls(url) {
     url = url.replace(/[\u4e00-\u9fa5]/g, "|")
     const get_urls = (await import("get-urls")).default
     try {
-        urls = [...get_urls(url, { normalizeProtocol: false })]
+        urls = [...get_urls(url, { normalizeProtocol: false, stripWWW: false, removeQueryParameters: false })]
     } catch {
         log("Lain-plugin", "没有安装 get-urls 模块，建议执行pnpm install -P 进行安装使用更精准的替换url")
         const urlRegex = /(https?:\/\/)?(([0-9a-z.-]+\.[a-z]+)|(([0-9]{1,3}\.){3}[0-9]{1,3}))(:[0-9]+)?(\/[0-9a-z%/.\-_#]*)?(\?[0-9a-z=&%_\-.]*)?(\#[0-9a-z=&%_\-]*)?/ig
@@ -258,7 +258,7 @@ async function rendering(content, error) {
     return msg.file
 }
 
-function mkdirs (dirname) {
+function mkdirs(dirname) {
     if (fs.existsSync(dirname)) {
         return true
     } else {
@@ -276,7 +276,7 @@ function mkdirs (dirname) {
  * @param absolute 是否是绝对路径，默认为false，此时拼接在data/lain下
  * @returns {Promise<string>} 最终下载文件的存储位置
  */
-async function downloadFile (url, destPath, headers = {}, absolute = false) {
+async function downloadFile(url, destPath, headers = {}, absolute = false) {
     let response = await fetch(url, { headers })
     if (!response.ok) {
         throw new Error(`download file http error: status: ${response.status}`)
@@ -302,6 +302,67 @@ async function downloadFile (url, destPath, headers = {}, absolute = false) {
     return dest
 }
 
+/**
+ * 处理segment中的图片、语音、文件
+ * @param i 需要处理的文件
+ * 返回{type,file}
+ * 
+ * type:{buffer,file,http,base64,error}
+ * 
+ * error为无法判断类型，直接返回i.file
+ */
+
+function getFile(i) {
+    let file
+    let type = "file"
+
+    // 检查是否是Buffer类型
+    if (i?.type === "Buffer" || i instanceof Uint8Array) {
+        type = "buffer"
+        file = i?.data || i
+    }
+    // 检查是否是ReadStream类型
+    else if (i instanceof fs.ReadStream) {
+        file = `file://./${i.path}`
+    }
+    // 检查是否是字符串类型
+    else if (typeof i === "string") {
+        if (fs.existsSync(i.replace(/^file:\/\//, ""))) {
+            file = i
+        }
+        else if (fs.existsSync(i.replace(/^file:\/\/\//, ""))) {
+            file = i.replace(/^file:\/\/\//, "file://")
+        }
+        else if (fs.existsSync(i)) {
+            file = i
+        }
+        // 检查是否是base64格式的字符串
+        else if (/^base64:\/\//.test(i)) {
+            type = "base64"
+            file = i
+        }
+        // 如果是url，则直接返回url
+        else if (/^http(s)?:\/\//.test(i)) {
+            type = "http"
+            file = i
+        }
+        else {
+            common.log("Lain-plugin", "未知格式，无法处理：" + i, "error")
+            type = "error"
+            file = i
+        }
+    }
+    // 留个容错
+    else {
+        common.log("Lain-plugin", "未知格式，无法处理：" + i, "error")
+        type = "error"
+        file = i
+    }
+
+    return { type, file }
+}
+
+
 export default {
     sleep,
     log,
@@ -314,5 +375,6 @@ export default {
     rendering,
     init,
     downloadFile,
-    mkdirs
+    mkdirs,
+    getFile
 }
