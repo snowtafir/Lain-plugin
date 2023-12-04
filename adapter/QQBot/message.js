@@ -12,6 +12,16 @@ export default new class message {
         e.sendMsg = e.reply
         e.bot.stat = Bot?.[e.self_id]?.stat
 
+        if (Bot.lain.cfg.QQBotPrefix) {
+            e.message.some(msg => {
+                if (msg.type === "text") {
+                    msg.text = msg.text.trim().replace(/^\//, "#")
+                    return true
+                }
+                return false
+            })
+        }
+
         /** 重新构建快速回复消息 */
         e.reply = async (msg, quote) => {
             return await this.reply(e, msg, quote)
@@ -160,18 +170,23 @@ export default new class message {
     async message(e) {
         if (!Array.isArray(e)) e = [e]
         e = common.array(e)
-        let msg = false
         let img = false
         const image = []
         const message = []
         for (let i in e) {
             switch (typeof e[i]) {
                 case "string":
-                    if (!msg && Bot.lain.cfg.QQBotPrefix) {
-                        msg = true
-                        message.push({ type: "text", text: e[i].trim().replace(/^\//, "#") })
-                    } else {
-                        message.push(...await this.HandleURL(e[i]))
+                    for (let i of await this.HandleURL(e[i])) {
+                        if (i.type === "image") {
+                            if (!img) {
+                                img = true
+                                message.push(i)
+                            } else {
+                                image.push(i)
+                            }
+                        } else {
+                            message.push(i)
+                        }
                     }
                     break
                 case "object":
@@ -186,22 +201,17 @@ export default new class message {
                                 }
                                 break
                             case "text":
-                                if (!msg && Bot.lain.cfg.QQBotPrefix) {
-                                    msg = true
-                                    e[i].text = e[i].text.trim().replace(/^\//, "#")
-                                    message.push(e[i])
-                                } else {
-                                    for (let i of await this.HandleURL(e[i])) {
-                                        if (i.type === "image") {
-                                            if (!img) {
-                                                img = true
-                                                message.push(i)
-                                            } else {
-                                                image.push(i)
-                                            }
-                                        } else {
+
+                                for (let i of await this.HandleURL(e[i])) {
+                                    if (i.type === "image") {
+                                        if (!img) {
+                                            img = true
                                             message.push(i)
+                                        } else {
+                                            image.push(i)
                                         }
+                                    } else {
+                                        message.push(i)
                                     }
                                 }
                                 break
@@ -405,11 +415,6 @@ export default new class message {
         const { FigureBed, port, QQBotImgIP, QQBotPort, QQBotImgToken } = Bot.lain.cfg
         let url = `http://${QQBotImgIP}:${QQBotPort || port}/api/QQBot?token=${QQBotImgToken}&name=${path.basename(filePath)}`
 
-        if (type !== "image") {
-            common.log("QQBotApi", `非图片，默认使用公网：${url}`)
-            return { type, file: url }
-        }
-
         /** 先判断是否配置公网 */
         if (QQBotImgIP && QQBotImgIP != "127.0.0.1") {
             common.log("QQBotApi", `[生成文件-公网] url：${url}`)
@@ -429,24 +434,27 @@ export default new class message {
                     return { type, file: url }
                 } else {
                     const data = await res.json()
-                    common.log("", `QQBot默认图床发生错误，将调用下一个方法：${data}`, "error")
+                    common.log("Lain-plugin", `QQBot默认图床发生错误，将调用下一个方法：${data}`, "error")
                 }
-
-            }
-
-            /** 调用QQ图床 */
-            const botList = Bot.adapter.filter(item => typeof item === "number")
-            if (botList.length > 0) {
-                url = await common.uploadQQ(filePath, botList[0])
-                await common.sleep(100)
-                return { type, file: url }
+            } else if (type === "image") {
+                /** 调用QQ图床 */
+                const botList = Bot.adapter.filter(item => typeof item === "number")
+                if (botList.length > 0) {
+                    url = await common.uploadQQ(filePath, botList[0])
+                    await common.sleep(100)
+                    return { type, file: url }
+                } else {
+                    common.log("QQBotApi", `未发现可使用的QQ图床，默认返回公网：${url}`, "error")
+                    await common.sleep(100)
+                    return { type, file: url }
+                }
             } else {
-                common.log("QQBotApi", `未发现可使用的QQ图床，默认返回公网：${url}`, "error")
+                common.log("Lain-plugin", `默认图床和QQ图床调用失败，默认返回公网：${url}`, "error")
                 await common.sleep(100)
                 return { type, file: url }
             }
         } catch {
-            common.log("", `默认图床和QQ图床调用失败，默认返回公网：${url}`, "error")
+            common.log("Lain-plugin", `默认图床和QQ图床调用失败，默认返回公网：${url}`, "error")
             await common.sleep(100)
             return { type, file: url }
         }

@@ -2,26 +2,26 @@ import { ShamrockRepoClient } from '../model/shamrock/shamrock.js'
 import Render from '../model/render.js'
 import common from '../model/common.js'
 import fs from 'fs'
-import path from "path";
+import path from "path"
 export class shamrock extends plugin {
-  constructor () {
+  constructor() {
     super({
       name: '铃音Shamrock版本信息',
       priority: -50,
       rule: [
         {
-          reg: /^#(shamrock|Shamrock)(版本|更新日志)$/,
+          reg: /^#(shamrock|三叶草)(版本|更新日志)$/gi,
           fnc: 'version'
         },
         {
-          reg: /^#(shamrock|Shamrock)(发布|测试)?(安装包|apk|APK)$/,
+          reg: /^#(shamrock|三叶草)(发布|测试)?(安装包|apk|APK)$/gi,
           fnc: 'apk'
         }
       ]
     })
   }
 
-  async version (e) {
+  async version(e) {
     if (e.adapter !== 'shamrock') {
       return false
     }
@@ -52,7 +52,7 @@ export class shamrock extends plugin {
     }
   }
 
-  async apk (e) {
+  async apk(e) {
     // 不用shamrock也能用吧？
     // if (e.adapter !== 'shamrock') {
     //   return false
