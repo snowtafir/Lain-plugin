@@ -224,7 +224,7 @@ export default class SendMsg {
             file = `base64://${Buffer.from(i?.file?.data || i.file).toString("base64")}`
         }
         else if (i.file instanceof fs.ReadStream) {
-            file = `./${i.file.path}`
+            file = fs.readFileSync(`./${i.file.path}`).toString("base64")
         }
         /** 去掉本地图片的前缀 */
         else if (typeof i.file === "string") {
@@ -282,6 +282,7 @@ export default class SendMsg {
         const params = { [this.isGroup ? "group_id" : "user_id"]: id, message: msg }
         /** 发送消息 */
         bot.socket.send(JSON.stringify({ echo, action, params }))
+        // console.log("发送消息:", { echo, action, params })
 
         /** 等待返回结果 */
         for (let i = 0; i < 10; i++) {
