@@ -176,16 +176,16 @@ export default new class message {
         for (let i in e) {
             switch (typeof e[i]) {
                 case "string":
-                    for (let i of await this.HandleURL(e[i])) {
-                        if (i.type === "image") {
+                    for (let msg of await this.HandleURL(e[i])) {
+                        if (msg.type === "image") {
                             if (!img) {
                                 img = true
-                                message.push(i)
+                                message.push(msg)
                             } else {
-                                image.push(i)
+                                image.push(msg)
                             }
                         } else {
-                            message.push(i)
+                            message.push(msg)
                         }
                     }
                     break
@@ -201,17 +201,16 @@ export default new class message {
                                 }
                                 break
                             case "text":
-
-                                for (let i of await this.HandleURL(e[i])) {
-                                    if (i.type === "image") {
+                                for (let msg of await this.HandleURL(e[i])) {
+                                    if (msg.type === "image") {
                                         if (!img) {
                                             img = true
-                                            message.push(i)
+                                            message.push(msg)
                                         } else {
-                                            image.push(i)
+                                            image.push(msg)
                                         }
                                     } else {
-                                        message.push(i)
+                                        message.push(msg)
                                     }
                                 }
                                 break
@@ -224,16 +223,16 @@ export default new class message {
                             case "at":
                                 break
                             case "forward":
-                                for (let i of await this.HandleURL(e[i])) {
-                                    if (i.type === "image") {
+                                for (let msg of await this.HandleURL(e[i])) {
+                                    if (msg.type === "image") {
                                         if (!img) {
                                             img = true
-                                            message.push(i)
+                                            message.push(msg)
                                         } else {
-                                            image.push(i)
+                                            image.push(msg)
                                         }
                                     } else {
-                                        message.push(i)
+                                        message.push(msg)
                                     }
                                 }
                                 break
@@ -295,7 +294,7 @@ export default new class message {
         }
         /** url直接返回即可 */
         else if (type === "http") {
-            return { type, file }
+            return { type: uploadType, file }
         }
         /** 文件上传 */
         else if (type === "file" && fs.existsSync(file)) {
@@ -489,7 +488,7 @@ export default new class message {
                         if (err) reject(err)
                         const base64 = "base64://" + buffer.toString("base64")
                         const Uint8Array = await common.rendering(base64, i)
-                        message.push(await this.get_image({ type: "image", file: Uint8Array }))
+                        message.push(await this.Upload({ type: "image", file: Uint8Array }, "image"))
                         msg = msg.replace(i, "[链接(请扫码查看)]")
                         msg = msg.replace(i.replace(/^http:\/\//g, ""), "[链接(请扫码查看)]")
                         msg = msg.replace(i.replace(/^https:\/\//g, ""), "[链接(请扫码查看)]")
@@ -531,7 +530,6 @@ export default new class message {
                 fs.writeFileSync(filePath, file.replace(/^base64:\/\//, ""), "base64")
                 return { type: "file", file: filePath }
             case "http":
-
                 return { type: "http", file: file }
             default:
                 return { type: "error", file: file }
