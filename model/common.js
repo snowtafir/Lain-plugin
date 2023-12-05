@@ -322,7 +322,7 @@ function getFile(i) {
         file = i?.data || i
     }
     // 检查是否是ReadStream类型
-    else if (i instanceof fs.ReadStream) {
+    else if (i instanceof fs.ReadStream || i?.path) {
         file = `file://./${i.path}`
     }
     // 检查是否是字符串类型
