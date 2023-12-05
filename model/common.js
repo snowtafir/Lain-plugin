@@ -323,7 +323,11 @@ function getFile(i) {
     }
     // 检查是否是ReadStream类型
     else if (i instanceof fs.ReadStream || i?.path) {
-        file = `file://./${i.path}`
+        if (fs.existsSync(i.path)) {
+            file = `file://${i.path}`
+        } else {
+            file = `file://./${i.path}`
+        }
     }
     // 检查是否是字符串类型
     else if (typeof i === "string") {
