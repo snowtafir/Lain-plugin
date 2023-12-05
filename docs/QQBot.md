@@ -2,6 +2,8 @@
 
  ![Visitor Count](https://profile-counter.glitch.me/Zyy955-Lain-plugin/count.svg)
 
+# 请勿轻信任何人的出售官方Bot，吃相别太难看。
+
 ## 1.获取QQ机器人
 
 ...我也不知道咋获取，因为我没有...
