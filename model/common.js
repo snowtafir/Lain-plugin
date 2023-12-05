@@ -222,9 +222,9 @@ async function uploadQQ(file, uin) {
     return `https://gchat.qpic.cn/gchatpic_new/0/0-0-${md5.toUpperCase()}/0?term=2&is_origin=0`
 }
 
-/** 
+/**
  * 传入字符串 提取url 返回数组
- * @param url 
+ * @param url
  */
 async function getUrls(url) {
     let urls = []
@@ -306,9 +306,9 @@ async function downloadFile(url, destPath, headers = {}, absolute = false) {
  * 处理segment中的图片、语音、文件
  * @param i 需要处理的文件
  * 返回{type,file}
- * 
+ *
  * type:{buffer,file,http,base64,error}
- * 
+ *
  * error为无法判断类型，直接返回i.file
  */
 
@@ -347,14 +347,14 @@ function getFile(i) {
             file = i
         }
         else {
-            common.log("Lain-plugin", "未知格式，无法处理：" + i, "error")
+            log("Lain-plugin", "未知格式，无法处理：" + i, "error")
             type = "error"
             file = i
         }
     }
     // 留个容错
     else {
-        common.log("Lain-plugin", "未知格式，无法处理：" + i, "error")
+        log("Lain-plugin", "未知格式，无法处理：" + i, "error")
         type = "error"
         file = i
     }
