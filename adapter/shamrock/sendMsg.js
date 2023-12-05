@@ -63,7 +63,7 @@ export default class SendMsg {
                         const base64 = await this.getFile(i, "record")
                         /** 上传文件 */
                         const { file } = await api.download_file(this.id, base64.data.file)
-                        msg.push({ type: "record", data: { file } })
+                        msg.push({ type: "record", data: { file: `file://${file}` } })
                     } catch (err) {
                         common.log(this.id, err, "error")
                         msg.push(await this.getFile(i, "record"))
@@ -75,7 +75,7 @@ export default class SendMsg {
                         const base64 = await this.getFile(i, "video")
                         /** 上传文件 */
                         const { file } = await api.download_file(this.id, base64.data.file)
-                        msg.push({ type: "video", data: { file } })
+                        msg.push({ type: "video", data: { file: `file://${file}` } })
                     } catch (err) {
                         common.log(this.id, err, "error")
                         msg.push(await this.getFile(i, "video"))
