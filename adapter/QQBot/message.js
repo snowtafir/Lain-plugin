@@ -8,9 +8,12 @@ import { encode as encodeSilk } from "silk-wasm"
 
 export default new class message {
     /** 转换格式给云崽 */
-    async msg(e, isGroup) {
-        e.sendMsg = e.reply
-        e.bot.stat = Bot?.[e.self_id]?.stat
+    async msg(data, isGroup) {
+        let { self_id: tiny_id, ...e } = data
+        e.tiny_id = tiny_id
+        e.self_id = e.bot.config.appid
+        e.sendMsg = data.reply
+        e.data = data
 
         if (Bot.lain.cfg.QQBotPrefix) {
             e.message.some(msg => {
@@ -22,7 +25,7 @@ export default new class message {
             })
         }
 
-        /** 重新构建快速回复消息 */
+        /** 构建快速回复消息 */
         e.reply = async (msg, quote) => {
             return await this.reply(e, msg, quote)
         }
@@ -31,36 +34,31 @@ export default new class message {
         e.recall = async () => { return }
 
         /** 获取对应用户头像 */
-        e.getAvatarUrl = (size = 0, id = user_id) => {
-            return `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${id}`
-        }
+        e.getAvatarUrl = (size = 0, id = user_id) => `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${id}`
 
         /** 构建场景对应的方法 */
         if (isGroup) {
             const member = {
                 info: {
-                    group_id: e.group_id,
-                    user_id: e.user_id,
+                    group_id: `${e.self_id}:${e.group_id}`,
+                    user_id: `${e.self_id}:${e.user_id}`,
                     nickname: "",
                     last_sent_time: "",
                 },
-                group_id: e.group_id,
+                group_id: `${e.self_id}:${e.group_id}`,
                 is_admin: false,
                 is_owner: false,
                 /** 获取头像 */
-                getAvatarUrl: (size = 0) => {
-                    return `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${e.user_id}`
-                },
-                mute: async (time) => {
-                    return
-                },
+                getAvatarUrl: (size = 0) => `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${e.user_id}`,
+                mute: async (time) => "",
             }
 
             e.member = member
-            e.group_name = e.group_id
+            e.group_name = `${e.self_id}: ${e.group_id}`
 
             e.group = {
                 pickMember: (id) => {
+                    try { id = id.split(":")[1] } catch { }
                     return {
                         member,
                         getAvatarUrl: (size = 0, userId = id) => `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${userId}`
@@ -72,56 +70,32 @@ export default new class message {
                 recallMsg: async (msg_id) => {
                     return
                 },
-                sendMsg: async (msg, quote) => {
-                    return reply(msg, quote)
-                },
+                sendMsg: async (msg, quote) => await this.reply(e, msg),
                 makeForwardMsg: async (forwardMsg) => {
                     return await common.makeForwardMsg(forwardMsg, false)
                 },
                 /** 戳一戳 */
-                pokeMember: async (operator_id) => {
-                    return
-                },
+                pokeMember: async (operator_id) => "",
                 /** 禁言 */
-                muteMember: async (group_id, user_id, time) => {
-                    return
-                },
+                muteMember: async (group_id, user_id, time) => "",
                 /** 全体禁言 */
-                muteAll: async (type) => {
-                    return
-                },
-                getMemberMap: async () => {
-                    return
-                },
+                muteAll: async (type) => "",
+                getMemberMap: async () => "",
                 /** 退群 */
-                quit: async () => {
-                    return
-                },
+                quit: async () => "",
                 /** 设置管理 */
-                setAdmin: async (qq, type) => {
-                    return
-                },
+                setAdmin: async (qq, type) => "",
                 /** 踢 */
-                kickMember: async (qq, reject_add_request = false) => {
-                    return
-                },
+                kickMember: async (qq, reject_add_request = false) => "",
                 /** 头衔 **/
-                setTitle: async (qq, title, duration) => {
-                    return
-                },
+                setTitle: async (qq, title, duration) => "",
                 /** 修改群名片 **/
-                setCard: async (qq, card) => {
-                    return
-                },
+                setCard: async (qq, card) => "",
             }
         } else {
             e.friend = {
-                sendMsg: async (msg, quote) => {
-                    return reply(msg, quote)
-                },
-                recallMsg: async (msg_id) => {
-                    return
-                },
+                sendMsg: async (msg, quote) => await this.reply(e, msg),
+                recallMsg: async (msg_id) => "",
                 makeForwardMsg: async (forwardMsg) => {
                     return await common.makeForwardMsg(forwardMsg, false)
                 },
@@ -129,6 +103,7 @@ export default new class message {
                     return ["test"]
                 },
                 getAvatarUrl: async (size = 0, userID = user_id) => {
+                    try { id = id.split(":")[1] } catch { }
                     return `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${userID}`
                 }
             }
@@ -141,28 +116,10 @@ export default new class message {
 
         /** 添加适配器标识 */
         e.adapter = "QQBot"
-
-        e.bot.getGroupMemberInfo = async function (group_id, user_id) {
-            return {
-                group_id,
-                user_id,
-                nickname: "QQBot",
-                card: "QQBot",
-                sex: "female",
-                age: 6,
-                join_time: "",
-                last_sent_time: "",
-                level: 1,
-                role: "member",
-                title: "",
-                title_expire_time: "",
-                shutup_time: 0,
-                update_time: "",
-                area: "南极洲",
-                rank: "潜水",
-            }
-        }
-
+        e.user_id = `${e.self_id}:${e.user_id}`
+        e.group_id = `${e.self_id}:${e.group_id}`
+        e.author.id = `${e.self_id}:${e.user_id}`
+        e.sender.user_id = `${e.self_id}:${e.user_id}`
         return e
     }
 
@@ -257,7 +214,7 @@ export default new class message {
         let res
         const { message, image } = await this.message(msg)
         try {
-            res = await e.sendMsg(message)
+            res = await e.sendMsg.call(e.data, message)
         } catch (error) {
             common.log(e.self_id, `发送消息失败：${error?.data || error?.message || error}`, "error")
             common.log(e.self_id, error, "debug")

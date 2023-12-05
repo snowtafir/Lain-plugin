@@ -41,7 +41,8 @@ export default async function stdin() {
     })
 
     rl.on("SIGINT", () => { rl.close(); process.exit() })
-    rl.on("line", async (input) => await pluginsLoader.deal(msg(input.trim())))
+
+    rl.on("line", async (input) => await Bot.emit("message", msg(input.trim())))
     await common.init("Lain:restart")
 }
 

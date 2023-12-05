@@ -57,14 +57,14 @@ class WeChat {
             group: async () => {
                 await common.log(this.id, `群消息：[${group_id}，${user_id}] ${data.alt_message}`)
                 /** 转换消息 交由云崽处理 */
-                PluginsLoader.deal(await (new e(this.id)).msg(data))
+                await Bot.emit("message", await (new e(this.id)).msg(data))
             },
 
             /** 好友消息 */
             private: async () => {
                 await common.log(this.id, `好友消息：[${user_id}] ${data.alt_message}`)
                 /** 转换消息 交由云崽处理 */
-                PluginsLoader.deal(await (new e(this.id)).msg(data))
+                await Bot.emit("message", await (new e(this.id)).msg(data))
             },
 
             /** 好友申请 */

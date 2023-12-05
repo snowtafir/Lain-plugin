@@ -28,7 +28,7 @@ export default async function createAndStartBot(cfg) {
 
         // 群聊被动回复
         bot.on("message.group", async (e) => {
-            await loader.deal.call(pluginsLoader, await message.msg(e, true))
+            return await Bot.emit("message", await message.msg(e, true))
         })
 
         // 私聊被动回复
@@ -46,21 +46,20 @@ export default async function createAndStartBot(cfg) {
         })
         // 开始连接
         await bot.start()
+
         // 注册Bot
-        await LoadBot(bot)
+        await LoadBot(cfg.appid, bot)
 
         await common.init("Lain:restart")
 
-        const { id } = await bot.getSelfInfo()
-
         bot.logger = {
-            trace: log => common.log(id, log, "trace"),
-            debug: log => common.log(id, log, "debug"),
-            info: log => common.log(id, logInfo(log), "info"),
-            mark: log => common.log(id, log, "mark"),
-            warn: log => common.log(id, log, "warn"),
-            error: log => common.log(id, log, "error"),
-            fatal: log => common.log(id, log, "fatal")
+            trace: log => common.log(cfg.appid, log, "trace"),
+            debug: log => common.log(cfg.appid, log, "debug"),
+            info: log => common.log(cfg.appid, logInfo(log), "info"),
+            mark: log => common.log(cfg.appid, log, "mark"),
+            warn: log => common.log(cfg.appid, log, "warn"),
+            error: log => common.log(cfg.appid, log, "error"),
+            fatal: log => common.log(cfg.appid, log, "fatal")
         }
 
     } catch (err) {
@@ -68,31 +67,26 @@ export default async function createAndStartBot(cfg) {
     }
 }
 
-async function LoadBot(bot) {
-    const { avatar, id, username, union_openid } = await bot.getSelfInfo()
-    // 主动发送频道消息
-    // bot.sendGuildMessage(channel_id, 'hello')
-    // 主动发送频道消息，注：需要先调用bot.createDirectSession(guild_id,user_id)创建私信会话，此处传入的guild_id为创建的session会话中返回的guild_id
-    // bot.sendDirectMessage(guild_id, 'hello')
+async function LoadBot(appID, bot) {
+    const { id, avatar, username } = await bot.getSelfInfo()
 
-    Bot[id] = {
+    Bot[appID] = {
+        ...bot,
         bkn: 0,
         /** 好友列表 */
         fl: new Map(),
         /** 群列表 */
         gl: new Map(),
         gml: new Map(),
-        uin: id,
-        tiny_id: union_openid,
+        uin: appID,
+        tiny_id: id,
         avatar,
         nickname: username,
         stat: { start_time: Date.now() / 1000, recv_msg_cnt: 0 },
         apk: { display: "qq-group-bot", version: Bot.lain["dependencies"]["qq-group-bot"].replace("^", "") },
         version: { id: "QQ", name: "QQBot", version: Bot.lain["dependencies"]["qq-group-bot"].replace("^", "") },
         /** 转发 */
-        makeForwardMsg: async (forwardMsg) => {
-            return await common.makeForwardMsg(forwardMsg)
-        },
+        makeForwardMsg: async (data) => await common.makeForwardMsg(data),
         pickGroup: (groupID) => {
             return {
                 is_admin: false,
@@ -101,9 +95,7 @@ async function LoadBot(bot) {
                     bot.sendGroupMessage(groupID, msg)
                 },
                 /** 转发 */
-                makeForwardMsg: async (forwardMsg) => {
-                    return await common.makeForwardMsg(forwardMsg)
-                },
+                makeForwardMsg: async (data) => await common.makeForwardMsg(data),
                 pickMember: (id) => {
                     return {}
                 },
@@ -114,14 +106,9 @@ async function LoadBot(bot) {
         },
         pickUser: (user_id) => {
             return {
-                sendMsg: async (msg) => {
-                    // 主动发送私聊消息
-                    bot.sendPrivateMessage(user_id, msg)
-                },
+                sendMsg: async (msg) => bot.sendPrivateMessage(user_id, msg),
                 /** 转发 */
-                makeForwardMsg: async (forwardMsg) => {
-                    return await common.makeForwardMsg(forwardMsg)
-                },
+                makeForwardMsg: async (data) => await common.makeForwardMsg(data),
                 getChatHistory: async (msg_id, num, reply) => {
                     return ["test"]
                 }
