@@ -118,8 +118,8 @@ export default new class message {
         e.adapter = "QQBot"
         e.user_id = `${e.self_id}:${e.user_id}`
         e.group_id = `${e.self_id}:${e.group_id}`
-        e.author.id = `${e.self_id}:${e.user_id}`
-        e.sender.user_id = `${e.self_id}:${e.user_id}`
+        e.author.id = `${e.self_id}:${e.author.id}`
+        e.sender.user_id = `${e.self_id}:${e.sender.user_id}`
         return e
     }
 
