@@ -8,7 +8,7 @@ export default class guild {
     /** 传入基本配置 */
     constructor(Cfg) {
         /** 开发者id */
-        this.id = `qg_${Cfg.appID}`
+        this.id = Cfg.appID
         /** 机器人令牌(token) */
         this.token = Cfg.token
         /** 沙盒模式 */
