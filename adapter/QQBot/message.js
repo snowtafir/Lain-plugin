@@ -463,7 +463,7 @@ export default new class message {
 
     /** 统一文件格式 */
     async getFile(i, type) {
-        const res = common.getFile(i.file)
+        const res = common.getFile(i)
         const { file } = res
 
         let extname = ".jpg"
