@@ -40,12 +40,12 @@ export default new class message {
         if (isGroup) {
             const member = {
                 info: {
-                    group_id: `${e.self_id}:${e.group_id}`,
-                    user_id: `${e.self_id}:${e.user_id}`,
+                    group_id: `${e.self_id}-${e.group_id}`,
+                    user_id: `${e.self_id}-${e.user_id}`,
                     nickname: "",
                     last_sent_time: "",
                 },
-                group_id: `${e.self_id}:${e.group_id}`,
+                group_id: `${e.self_id}-${e.group_id}`,
                 is_admin: false,
                 is_owner: false,
                 /** 获取头像 */
@@ -54,11 +54,11 @@ export default new class message {
             }
 
             e.member = member
-            e.group_name = `${e.self_id}: ${e.group_id}`
+            e.group_name = `${e.self_id}-${e.group_id}`
 
             e.group = {
                 pickMember: (id) => {
-                    try { id = id.split(":")[1] } catch { }
+                    try { id = id.split("-")[1] } catch { }
                     return {
                         member,
                         getAvatarUrl: (size = 0, userId = id) => `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${userId}`
@@ -103,7 +103,7 @@ export default new class message {
                     return ["test"]
                 },
                 getAvatarUrl: async (size = 0, userID = user_id) => {
-                    try { id = id.split(":")[1] } catch { }
+                    try { id = id.split("-")[1] } catch { }
                     return `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${userID}`
                 }
             }
@@ -116,10 +116,10 @@ export default new class message {
 
         /** 添加适配器标识 */
         e.adapter = "QQBot"
-        e.user_id = `${e.self_id}:${e.user_id}`
-        e.group_id = `${e.self_id}:${e.group_id}`
-        e.author.id = `${e.self_id}:${e.author.id}`
-        e.sender.user_id = `${e.self_id}:${e.sender.user_id}`
+        e.user_id = `${e.self_id}-${e.user_id}`
+        e.group_id = `${e.self_id}-${e.group_id}`
+        e.author.id = `${e.self_id}-${e.author.id}`
+        e.sender.user_id = `${e.self_id}-${e.sender.user_id}`
         return e
     }
 
