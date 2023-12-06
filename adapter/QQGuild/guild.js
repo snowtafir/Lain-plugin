@@ -2,15 +2,13 @@ import SendMsg from "./sendMsg.js"
 import common from "../../model/common.js"
 import qg_log from "./log.js"
 import message from "./message.js"
-import loader from "../../plugins/loader.js"
-import pluginsLoader from "../../../../lib/plugins/loader.js"
 import { createOpenAPI, createWebsocket } from "qq-guild-bot"
 
 export default class guild {
     /** 传入基本配置 */
     constructor(Cfg) {
         /** 开发者id */
-        this.id = Cfg.appID
+        this.id = `qg_${Cfg.appID}`
         /** 机器人令牌(token) */
         this.token = Cfg.token
         /** 沙盒模式 */
@@ -130,7 +128,7 @@ export default class guild {
     }
 
     /** 获取一些基本信息 */
-    async guilds(id) {
+    async guilds() {
         /** 加载机器人所在频道、将对应的子频道信息存入变量中用于后续调用 */
         const meGuilds = (await this.client.meApi.meGuilds()).data
 
@@ -232,7 +230,6 @@ export default class guild {
 
         if (guild && channel) {
             data.checkBlack = true
-            // return await loader.deal.call(pluginsLoader, await e.msg(type))
             const message_type = type === "私信" ? "private" : "group"
             return Bot.em(`message.${message_type}`, await e.msg(type))
         } else {

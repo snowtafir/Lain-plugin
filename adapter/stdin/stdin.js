@@ -36,8 +36,8 @@ export default async function stdin() {
         gl: new Map(),
         gml: new Map(),
         id: uin,
-        name: Bot.lain.cfg.stdin_nickname,
         uin,
+        name: Bot.lain.cfg.stdin_nickname,
         nickname: Bot.lain.cfg.stdin_nickname,
         avatar,
         stat: { start_time: Date.now() / 1000, recv_msg_cnt: 0 },
@@ -88,7 +88,7 @@ export default async function stdin() {
     })
 
     rl.on("SIGINT", () => { rl.close(); process.exit() })
-    // rl.on("line", async (input) => await pluginsLoader.deal(msg(input.trim())))
+
     rl.on("line", async (input) => Bot.em("message.private", msg(input.trim())))
     await common.init("Lain:restart")
 }
@@ -152,9 +152,7 @@ function msg(msg) {
             last_sent_time: time,
         },
         /** 获取头像 */
-        getAvatarUrl: () => {
-            return Bot[uin].avatar
-        }
+        getAvatarUrl: () => Bot[uin].avatar
     }
 
     /** 赋值 */
@@ -179,7 +177,6 @@ function msg(msg) {
     e.reply = async (reply) => {
         return await sendMsg(reply)
     }
-
     return e
 }
 

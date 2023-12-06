@@ -3,7 +3,6 @@ import api from "./api.js"
 import SendMsg from "./sendMsg.js"
 import e from "./message.js"
 import common from "../../model/common.js"
-import PluginsLoader from "../../../../lib/plugins/loader.js"
 
 class WeChat {
     /** 传入基本配置 */
@@ -58,7 +57,7 @@ class WeChat {
                 await common.log(this.id, `群消息：[${group_id}，${user_id}] ${data.alt_message}`)
                 Bot[this.id].stat.recv_msg_cnt++
                 /** 转换消息 交由云崽处理 */
-                PluginsLoader.deal(await (new e(this.id)).msg(data))
+                await Bot.emit("message", await (new e(this.id)).msg(data))
             },
 
             /** 好友消息 */
@@ -66,7 +65,7 @@ class WeChat {
                 await common.log(this.id, `好友消息：[${user_id}] ${data.alt_message}`)
                 Bot[this.id].stat.recv_msg_cnt++
                 /** 转换消息 交由云崽处理 */
-                PluginsLoader.deal(await (new e(this.id)).msg(data))
+                await Bot.emit("message", await (new e(this.id)).msg(data))
             },
 
             /** 好友申请 */
@@ -113,14 +112,14 @@ class WeChat {
             "wx.get_private_poke": async () => {
                 await common.log(this.id, `好友消息：${data.from_user_id} 拍了拍 ${data.user_id}`)
                 /** 转换消息 交由云崽处理 */
-                PluginsLoader.deal(await (new e(this.id)).msg(data))
+                await Bot.emit("notice", await (new e(this.id)).msg(data))
             },
 
             /** 群聊拍一拍 */
             "wx.get_group_poke": async () => {
                 await common.log(this.id, `群消息：${data.from_user_id} 拍了拍 ${data.user_id}`)
                 /** 转换消息 交由云崽处理 */
-                PluginsLoader.deal(await (new e(this.id)).msg(data))
+                await Bot.emit("notice", await (new e(this.id)).msg(data))
             },
 
             /** 好友收到名片 */

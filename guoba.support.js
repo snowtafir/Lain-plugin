@@ -331,6 +331,16 @@ export function supportGuoba() {
                     },
                 },
                 {
+                    field: "githubKey",
+                    label: "Github Access Token",
+                    component: "InputPassword",
+                    bottomHelpMessage: "用于查询shamrock仓库版本信息。登录网页github点击右上角头像，然后settings-developer-personal access tokens-Fine-grained tokens创建一个默认的即可",
+                    required: false,
+                    componentProps: {
+                        placeholder: "请输入Github Access Token",
+                    },
+                },
+                {
                     component: "Divider",
                     label: "标准输入设置"
                 },

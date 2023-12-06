@@ -45,74 +45,49 @@ export default class SendMsg {
             switch (i.type) {
                 case "at":
                     CQ.push(`{at:${Number(i.qq) == 0 ? i.id : i.qq}}`)
-                    msg.push({
-                        type: "at",
-                        data: { qq: Number(i.qq) == 0 ? i.id : i.qq }
-                    })
+                    msg.push({ type: "at", data: { qq: Number(i.qq) == 0 ? i.id : i.qq } })
                     break
                 case "face":
                     CQ.push(`{face:${i.text}}`)
-                    msg.push({
-                        type: "face",
-                        data: { id: i.text }
-                    })
+                    msg.push({ type: "face", data: { id: i.text } })
                     break
                 case "text":
                     CQ.push(i.text)
-                    msg.push({
-                        type: "text",
-                        data: { text: i.text }
-                    })
+                    msg.push({ type: "text", data: { text: i.text } })
                     break
                 case "file":
                     break
                 case "record":
-                    if (i.file && fs.existsSync(i.file)) {
-                        /** 上传文件 */
-                        try {
-                            const base64 = "base64://" + fs.readFileSync(i.file).toString("base64")
-                            i.file = (await api.download_file(this.id, base64))?.file
-                            i.file = `file://${i.file}`
-                        } catch (err) {
-                            common.log(this.id, err, "error")
-                        }
-                    } else {
-                        if (i?.url) i.file = i.url
-                    }
                     CQ.push(`{record:${i.file}}`)
-                    msg.push({
-                        type: "record",
-                        data: { file: i.file }
-                    })
+                    try {
+                        const base64 = await this.getFile(i, "record")
+                        /** 上传文件 */
+                        const { file } = await api.download_file(this.id, base64.data.file)
+                        msg.push({ type: "record", data: { file: `file://${file}` } })
+                    } catch (err) {
+                        common.log(this.id, err, "error")
+                        msg.push(await this.getFile(i, "record"))
+                    }
                     break
                 case "video":
-                    /** 本地文件 */
-                    if (i.file && fs.existsSync(i.file)) {
-                        /** 上传文件 */
-                        try {
-                            const base64 = "base64://" + fs.readFileSync(i.file).toString("base64")
-                            i.file = (await api.download_file(this.id, base64))?.file
-                            i.file = `file://${i.file}`
-                        } catch (err) {
-                            common.log(this.id, err, "error")
-                        }
-                    }
                     CQ.push(`{video:${i.file}}`)
-                    msg.push({
-                        type: "video",
-                        data: { file: i.file }
-                    })
+                    try {
+                        const base64 = await this.getFile(i, "video")
+                        /** 上传文件 */
+                        const { file } = await api.download_file(this.id, base64.data.file)
+                        msg.push({ type: "video", data: { file: `file://${file}` } })
+                    } catch (err) {
+                        common.log(this.id, err, "error")
+                        msg.push(await this.getFile(i, "video"))
+                    }
                     break
                 case "image":
                     CQ.push(`{image:base64://...}`)
-                    msg.push(await this.get_image(i))
+                    msg.push(await this.getFile(i, "image"))
                     break
                 case "poke":
                     CQ.push(`[CQ:poke,id=${i.id}]`)
-                    msg.push({
-                        type: "poke",
-                        data: { type: i.id, id: 0, strength: i?.strength || 0 }
-                    })
+                    msg.push({ type: "poke", data: { type: i.id, id: 0, strength: i?.strength || 0 } })
                     break
                 case "touch":
                     CQ.push(`{poke:${i.id}}`)
@@ -120,79 +95,38 @@ export default class SendMsg {
                     break
                 case "weather":
                     CQ.push(`[CQ=weather,${i.city ? ('city=' + i.city) : ('code=' + i.code)}]`)
-                    msg.push({
-                        type: "weather",
-                        data: {
-                            code: i.code,
-                            city: i.city
-                        }
-                    })
+                    msg.push({ type: "weather", data: { code: i.code, city: i.city } })
                     break
                 case "json":
-                    let json
-                    if (typeof i.data !== "string") {
-                        json = JSON.stringify(i.data)
-                    } else {
-                        json = i.data
-                    }
+                    let json = i.data
+                    if (typeof i.data !== "string") json = JSON.stringify(i.data)
                     CQ.push(`[CQ=json,data=${json}]`)
-                    msg.push({
-                        type: "json",
-                        data: {
-                            data: json
-                        }
-                    })
+                    msg.push({ type: "json", data: { data: json } })
                     break
                 case "music":
                     CQ.push(`[CQ=music,type=${i.data.type},id=${i.data.id}]`)
-                    msg.push({
-                        type: "music",
-                        data: i.data
-                    })
+                    msg.push({ type: "music", data: i.data })
                     break
                 case "location":
                     const { lat, lng: lon } = data
                     CQ.push(`[CQ=json,lat=${lat},lon=${lon}]`)
-                    msg.push({
-                        type: "location",
-                        data: {
-                            lat,
-                            lon
-                        }
-                    })
+                    msg.push({ type: "location", data: { lat, lon } })
                     break
                 case "share":
                     const { url, title, image, content } = data
                     CQ.push(`[CQ=json,url=${url},title=${title},image=${image},content=${content}]`)
-                    msg.push({
-                        type: "share",
-                        data: {
-                            url,
-                            title,
-                            content,
-                            image
-                        }
-                    })
+                    msg.push({ type: "share", data: { url, title, content, image } })
                     break
                 case "forward":
                     CQ.push(i.text)
-                    msg.push({
-                        type: "text",
-                        data: { text: i.text }
-                    })
+                    msg.push({ type: "text", data: { text: i.text } })
                     break
                 case "node":
-                    msg.push({
-                        type: "node",
-                        data: { ...i }
-                    })
+                    msg.push({ type: "node", data: { ...i } })
                     break
                 default:
                     CQ.push(JSON.stringify(i))
-                    msg.push({
-                        type: "text",
-                        data: { text: JSON.stringify(i) }
-                    })
+                    msg.push({ type: "text", data: { text: JSON.stringify(i) } })
                     break
             }
         }
@@ -216,46 +150,22 @@ export default class SendMsg {
         return { msg, CQ, node }
     }
 
-    /** 统一图片格式 */
-    async get_image(i) {
-        let file = i.file
-        if (i?.url) i.url.includes("gchat.qpic.cn") && !i.url.startsWith("https://") ? i.file = "https://" + i.url : i.file = i.url
-        if (i.file?.type === "Buffer" || i.file instanceof Uint8Array) {
-            file = `base64://${Buffer.from(i?.file?.data || i.file).toString("base64")}`
+    /** 统一文件格式 */
+    async getFile(i, type) {
+        const res = common.getFile(i)
+        const { file } = res
+        switch (res.type) {
+            case "file":
+                return { type, data: { file: "base64://" + fs.readFileSync(file.replace(/^file:\/\//, "")).toString("base64") } }
+            case "buffer":
+                return { type, data: { file: `base64://${Buffer.from(file).toString("base64")}` } }
+            case "base64":
+                return { type, data: { file } }
+            case "http":
+                return { type, data: { file } }
+            default:
+                return { type: "text", data: { text: `无法处理此格式：${JSON.stringify(i)}` } }
         }
-        else if (i.file instanceof fs.ReadStream) {
-            file = `./${i.file.path}`
-        }
-        /** 去掉本地图片的前缀 */
-        else if (typeof i.file === "string") {
-            if (fs.existsSync(i.file.replace(/^file:\/\//, ""))) {
-                file = fs.readFileSync(i.file.replace(/^file:\/\//, "")).toString("base64")
-            }
-            else if (fs.existsSync(i.file.replace(/^file:\/\/\//, ""))) {
-                file = fs.readFileSync(i.file.replace(/^file:\/\/\//, "")).toString("base64")
-            }
-            else if (/^base64:\/\//.test(file)) {
-                file = file.replace(/^base64:\/\//, "")
-            }
-            /** 本地文件 */
-            else if (fs.existsSync(file)) {
-                file = fs.readFileSync(file).toString("base64")
-            }
-            /** url图片 */
-            else if (/^http(s)?:\/\//.test(file)) {
-                return { type: "image", data: { file } }
-            }
-            else {
-                await common.log(this.id, i, "error")
-                return { type: "text", data: { text: JSON.stringify() } }
-            }
-        }
-        else {
-            await common.log(this.id, i, "error")
-            return { type: "text", data: { text: JSON.stringify() } }
-        }
-
-        return { type: "image", data: { file: `base64://${file.replace(/^base64:\/\//, "")}` } }
     }
 
     /** 发送消息 */
@@ -282,6 +192,7 @@ export default class SendMsg {
         const params = { [this.isGroup ? "group_id" : "user_id"]: id, message: msg }
         /** 发送消息 */
         bot.socket.send(JSON.stringify({ echo, action, params }))
+        // console.log("发送消息:", { echo, action, params })
 
         /** 等待返回结果 */
         for (let i = 0; i < 10; i++) {

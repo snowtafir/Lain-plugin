@@ -60,7 +60,7 @@ class Shamrock {
             },
             /** 消息事件 */
             message: async () => {
-                return await Bot.em(`${data.message_type}.${data.post_type}`, await message.msg(data))
+                return await Bot.em(`${data.post_type}.${data.message_type}`, await message.msg(data))
             },
             /** 戳一戳 */
             notice: async () => {

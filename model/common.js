@@ -3,28 +3,7 @@ import chalk from "chalk"
 import crypto from "crypto"
 import fetch, { FormData, Blob } from "node-fetch"
 import puppeteer from "../../../lib/puppeteer/puppeteer.js"
-
-/**
- * 生成message_id
- */
-function message_id() {
-    return Buffer.from(Date.now().toString()).toString('base64')
-}
-
-/**
- * 创建文件夹
- * @param dirname
- */
-function mkdirs(dirname) {
-    if (fs.existsSync(dirname)) {
-        return true
-    } else {
-        if (mkdirs(path.dirname(dirname))) {
-            fs.mkdirSync(dirname)
-            return true
-        }
-    }
-}
+import path from "path"
 
 /**
  * 休眠函数
@@ -233,9 +212,9 @@ async function uploadQQ(file, uin) {
     return `https://gchat.qpic.cn/gchatpic_new/0/0-0-${md5.toUpperCase()}/0?term=2&is_origin=0`
 }
 
-/** 
+/**
  * 传入字符串 提取url 返回数组
- * @param url 
+ * @param url
  */
 async function getUrls(url) {
     let urls = []
@@ -243,7 +222,7 @@ async function getUrls(url) {
     url = url.replace(/[\u4e00-\u9fa5]/g, "|")
     const get_urls = (await import("get-urls")).default
     try {
-        urls = [...get_urls(url, { normalizeProtocol: false })]
+        urls = [...get_urls(url, { normalizeProtocol: false, stripWWW: false, removeQueryParameters: false })]
     } catch {
         log("Lain-plugin", "没有安装 get-urls 模块，建议执行pnpm install -P 进行安装使用更精准的替换url")
         const urlRegex = /(https?:\/\/)?(([0-9a-z.-]+\.[a-z]+)|(([0-9]{1,3}\.){3}[0-9]{1,3}))(:[0-9]+)?(\/[0-9a-z%/.\-_#]*)?(\?[0-9a-z=&%_\-.]*)?(\#[0-9a-z=&%_\-]*)?/ig
@@ -269,17 +248,149 @@ async function rendering(content, error) {
     return msg.file
 }
 
+/**
+ * 生成message_id
+ */
+function message_id() {
+    return Buffer.from(Date.now().toString()).toString('base64')
+}
+
+/**
+ * 创建文件夹
+ * @param dirname
+ */
+function mkdirs(dirname) {
+    if (fs.existsSync(dirname)) {
+        return true
+    } else {
+        if (mkdirs(path.dirname(dirname))) {
+            fs.mkdirSync(dirname)
+            return true
+        }
+    }
+}
+
+/**
+ *
+ * @param url 要下载的文件链接
+ * @param destPath 目标路径，如received/abc.pdf. 目前如果文件名重复会覆盖。
+ * @param headers
+ * @param absolute 是否是绝对路径，默认为false，此时拼接在data/lain下
+ * @returns {Promise<string>} 最终下载文件的存储位置
+ */
+async function downloadFile(url, destPath, headers = {}, absolute = false) {
+    let response = await fetch(url, { headers })
+    if (!response.ok) {
+        throw new Error(`download file http error: status: ${response.status}`)
+    }
+    let dest = destPath
+    if (!absolute) {
+        const _path = process.cwd()
+        dest = path.join(_path, 'data', 'lain', dest)
+        const lastLevelDirPath = path.dirname(dest)
+        mkdirs(lastLevelDirPath)
+    }
+    const fileStream = fs.createWriteStream(dest)
+    await new Promise((resolve, reject) => {
+        response.body.pipe(fileStream)
+        response.body.on('error', err => {
+            reject(err)
+        })
+        fileStream.on('finish', function () {
+            resolve()
+        })
+    })
+    logger.info(`File downloaded successfully! URL: ${url}, Destination: ${dest}`)
+    return dest
+}
+
+/**
+ * 处理segment中的图片、语音、文件
+ * @param i 需要处理的文件
+ * 返回{type,file}
+ *
+ * type:{buffer,file,http,base64,error}
+ *
+ * error为无法判断类型，直接返回i.file
+ */
+
+function getFile(i) {
+    if (i?.url) {
+        if (i.url.includes("gchat.qpic.cn") && !i.url.startsWith("https://")) {
+            i = "https://" + i.url
+        } else {
+            i = i.url
+        }
+    } else {
+        i = i.file
+    }
+
+    let file
+    let type = "file"
+
+    // 检查是否是Buffer类型
+    if (i?.type === "Buffer" || i instanceof Uint8Array) {
+        type = "buffer"
+        file = i?.data || i
+    }
+    // 检查是否是ReadStream类型
+    else if (i instanceof fs.ReadStream || i?.path) {
+        if (fs.existsSync(i.path)) {
+            file = `file://${i.path}`
+        } else {
+            file = `file://./${i.path}`
+        }
+    }
+    // 检查是否是字符串类型
+    else if (typeof i === "string") {
+        if (fs.existsSync(i.replace(/^file:\/\//, ""))) {
+            file = i
+        }
+        else if (fs.existsSync(i.replace(/^file:\/\/\//, ""))) {
+            file = i.replace(/^file:\/\/\//, "file://")
+        }
+        else if (fs.existsSync(i)) {
+            file = i
+        }
+        // 检查是否是base64格式的字符串
+        else if (/^base64:\/\//.test(i)) {
+            type = "base64"
+            file = i
+        }
+        // 如果是url，则直接返回url
+        else if (/^http(s)?:\/\//.test(i)) {
+            type = "http"
+            file = i
+        }
+        else {
+            log("Lain-plugin", "未知格式，无法处理：" + i, "error")
+            type = "error"
+            file = i
+        }
+    }
+    // 留个容错
+    else {
+        log("Lain-plugin", "未知格式，无法处理：" + i, "error")
+        type = "error"
+        file = i
+    }
+
+    return { type, file }
+}
+
 export default {
     sleep,
     log,
     array,
-    mkdirs,
-    message_id,
     makeForwardMsg,
     base64,
     uploadFile,
     uploadQQ,
     getUrls,
     rendering,
-    init
+    init,
+    message_id,
+    downloadFile,
+    mkdirs,
+    getFile
 }

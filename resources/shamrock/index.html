@@ -1,0 +1,128 @@
+{{extend elemLayout}}
+
+{{block 'css'}}
+<link rel="stylesheet" type="text/css" href="{{_res_path}}/shamrock/index.css"/>
+{{/block}}
+
+{{block 'main'}}
+<div class="anemo-bg log-cont">
+    <div class="cont-title">
+        <img src="{{_res_path}}/shamrock/img/shamrock.webp" alt="ShamrockLogo" class="cont-logo"/>
+        <div style="margin-left: 10px">
+            <div class="cont-text">{{version}}</div>
+            <div class="github">
+                <img src="{{_res_path}}/shamrock/img/github-logo-white.png" class="github-logo"/>
+                <span class="cont-text-sub">https://github.com/whitechi73/OpenShamrock</span>
+            </div>
+            <div class="github-status">
+                <img src="{{_res_path}}/shamrock/img/star.png" class="github-logo"/>
+                <span class="cont-text-sub">{{repo.stargazers_count}}</span>
+
+                <img src="{{_res_path}}/shamrock/img/code-branch.svg" class="github-fork"/>
+                <span class="cont-text-sub">{{repo.forks_count}}</span>
+
+                <img src="{{_res_path}}/shamrock/img/eye.svg" class="github-subscribe"/>
+                <span class="cont-text-sub">{{repo.subscribers_count}}</span>
+            </div>
+
+        </div>
+    </div>
+    <div class="status-block">
+        <div class="status-blck-title">
+            版本摘要
+        </div>
+        <div class="status-blck-content">
+            <div class="digest">
+                <div>
+                    {{if versionBehind.beta > 0 }}
+                    · 当前使用的版本({{version}})落后最新测试版<span class="strong">{{versionBehind.beta}}</span>个提交
+                    {{else}}
+                    · 当前使用的版本({{version}})已经是最新测试版啦
+                    {{/if}}
+                </div>
+                <div>
+                    {{if versionBehind.release > 0 }}
+                    · 当前使用的版本({{version}})落后最新发布版<span class="strong">{{versionBehind.release}}</span>个版本
+                    {{else}}
+                    · 当前使用的版本({{version}})已经是最新版啦或者比最新版还新
+                    {{/if}}
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <div class="status-block">
+        <div class="status-blck-title">
+            发布版本(近3个版本)
+        </div>
+        {{each releases release}}
+        <div class="status-blck-content">
+            <div class="release">
+                <div class="release-version">
+                    {{release.name}}
+                    <span class="release-version-time">
+                        {{release.published_at}}
+                    </span>
+                </div>
+                <div class="release-log">
+                    {{@release.body}}
+                </div>
+            </div>
+        </div>
+        {{/each}}
+    </div>
+
+    <div class="status-block">
+        <div class="status-blck-title">
+            测试版本(近10次提交)
+        </div>
+        <div class="status-blck-content">
+            {{each commits commit}}
+            <div class="commit">
+                <div class="commit-sha">
+
+                    <div class="commit-sha-value">
+                        {{commit.sha.slice(0, 8)}}
+                    </div>
+                    <span class="commit-time">
+                        {{commit.commit.author.date}}
+                    </span>
+                </div>
+                <div class="commit-content">
+                    <img src="{{commit.author.avatar_url}}" class="committer-avatar">
+                    <span class="strong">{{commit.author.login}}</span>
+                    · {{commit.commit.message}}
+                </div>
+            </div>
+            {{/each}}
+        </div>
+    </div>
+
+    <div class="status-block">
+        <div class="status-blck-title">
+            更多命令
+        </div>
+        <div class="status-blck-content">
+            <div class="help">
+                <div class="help-item">
+                    <div class="help-item-main">
+                        #shamrock安装包
+                    </div>
+                    <span class="commit-time">
+                        下载最新版release安装包
+                    </span>
+                </div>
+                <div class="help-item">
+                    <div class="help-item-main">
+                        #shamrock测试安装包
+                    </div>
+                    <span class="commit-time">
+                        下载最新测试版安装包，需要配置github APIKey
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{{/block}}
