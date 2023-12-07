@@ -38,6 +38,16 @@ export default new class message {
 
         /** 构建场景对应的方法 */
         if (isGroup) {
+            try {
+                const group_id = `${e.self_id}-${e.group_id}`
+                if (!Bot[e.self_id].gl.get(group_id)) {
+                    Bot[e.self_id].gl.set(group_id, { group_id })
+                }
+                if (redis.get(`lain:QQBot:gl:${group_id}`)) {
+                    /** 存redis */
+                    redis.set(`lain:QQBot:gl:${group_id}`, JSON.stringify({ group_id }))
+                }
+            } catch { }
             const member = {
                 info: {
                     group_id: `${e.self_id}-${e.group_id}`,

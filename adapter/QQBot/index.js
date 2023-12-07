@@ -151,6 +151,13 @@ async function LoadBot(appID, bot) {
         getGroupList: () => { return Bot[appID].gl }
     }
     if (!Bot.adapter.includes(String(appID))) Bot.adapter.push(String(appID))
+    try {
+        const glList = await redis.keys(`lain:QQBot:gl:*`)
+        glList.forEach(async i => {
+            const group_id = await redis.get(i)
+            Bot[appID].gl.set(group_id, JSON.stringify(group_id))
+        })
+    } catch { }
 }
 
 function logInfo(e) {
