@@ -147,7 +147,8 @@ async function LoadBot(appID, bot) {
                     return ["test"]
                 }
             }
-        }
+        },
+        getGroupList: () => { return Bot[appID].gl }
     }
     if (!Bot.adapter.includes(String(id))) Bot.adapter.push(String(id))
 }

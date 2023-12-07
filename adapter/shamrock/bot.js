@@ -40,11 +40,12 @@ export default class bot {
             removeEssenceMessage: async (msg_id) => await this.removeEssenceMessage(msg_id),
             makeForwardMsg: async (message) => await common.makeForwardMsg(message, true),
             getMsg: (msg_id) => "",
-            quit: () => this.quit()
+            quit: () => this.quit(),
+            getGroupList: () => { return Bot[this.id].gl }
         }
 
         await common.init("Lain:restart")
-        
+
         /** 加载好友、群列表 */
         this.LoadList()
     }

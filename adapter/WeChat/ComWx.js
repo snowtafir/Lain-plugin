@@ -221,7 +221,8 @@ class WeChat {
                     area: "南极洲",
                     rank: "潜水",
                 }
-            }
+            },
+            getGroupList: () => { return Bot[this.id].gl }
         }
 
         if (!Bot.adapter.includes(this.id)) Bot.adapter.push(this.id)
