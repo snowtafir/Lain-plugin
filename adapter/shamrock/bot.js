@@ -42,9 +42,9 @@ export default class bot {
             makeForwardMsg: async (message) => await common.makeForwardMsg(message, true),
             getMsg: (msg_id) => "",
             quit: () => this.quit(),
-            getFriendMap: () => Bot[appID].fl,
-            getGroupList: () => Bot[appID].gl,
-            getGuildList: () => Bot[appID].tl
+            getFriendMap: () => Bot[this.id].fl,
+            getGroupList: () => Bot[this.id].gl,
+            getGuildList: () => Bot[this.id].tl
         }
 
         await common.init("Lain:restart")

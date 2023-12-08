@@ -224,9 +224,9 @@ class WeChat {
                     rank: "潜水",
                 }
             },
-            getFriendMap: () => Bot[appID].fl,
-            getGroupList: () => Bot[appID].gl,
-            getGuildList: () => Bot[appID].tl
+            getFriendMap: () => Bot[this.id].fl,
+            getGroupList: () => Bot[this.id].gl,
+            getGuildList: () => Bot[this.id].tl
         }
 
         if (!Bot.adapter.includes(this.id)) Bot.adapter.push(this.id)
