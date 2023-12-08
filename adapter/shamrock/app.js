@@ -175,6 +175,7 @@ class Shamrock {
                 data.post_type = "message"
                 /** 屏蔽由喵崽处理过后发送后的消息 */
                 const { self_id, message_id } = data
+                await common.sleep(1000)
                 if (await redis.get(`Shamrock:${self_id}:${message_id}`)) return
                 return await Bot.emit("message", await message.msg(data))
             },
@@ -193,7 +194,8 @@ class Shamrock {
                     }
                     case "friend": {
                         await common.log(id, `[${data.user_id}]申请加机器人[${data.self_id}]好友: ${data.comment}`)
-                        return await this.message(data)
+                        return await Bot.emit("request", await message.msg(data))
+                        // return await this.message(data)
                     }
                 }
             }

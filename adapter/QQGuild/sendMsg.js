@@ -127,7 +127,8 @@ export default class SendMsg {
                         if (err) reject(err)
                         const base64 = "base64://" + buffer.toString("base64")
                         const Uint8Array = await common.rendering(base64, i)
-                        const Api_msg = { content: "", type: "file_image", image: Uint8Array, log: "{image：base64://...}" }
+                        const img = await this.Base64(segment.image(Uint8Array))
+                        const Api_msg = { content: "", ...img }
                         /** 转换的二维码连接是否撤回 */
                         const qr = Number(Bot.lain.cfg.recallQR) || 0
                         /** 构建请求参数、打印日志 */
@@ -290,16 +291,17 @@ export default class SendMsg {
         } catch (error) {
             logger.error(`${Bot[this.id].nickname} 发送消息错误，正在转成图片重新发送...\n错误信息：`, error)
             /** 转换为图片发送 */
-            let image = new FormData()
-            if (this.msg_id) image.set("msg_id", this.msg_id)
-
             const content = typeof msg === "string" ? msg : "啊咧，图片发不出来"
-            image.set("file_image", new Blob([await common.rendering(content, error)]))
+            const Uint8Array = await common.rendering(content, error)
+            const img = await this.Base64(segment.image(Uint8Array))
+            const Api_msg = { content, ...img }
+            /** 构建请求参数、打印日志 */
+            const SendMsg = await this.Construct_data(Api_msg)
 
             /** 判断频道还是私聊 */
             this.eventType !== "DIRECT_MESSAGE_CREATE"
-                ? res = await Bot[this.id].client.messageApi.postMessage(this.channel_id, msg)
-                : res = await Bot[this.id].client.directMessageApi.postDirectMessage(this.guild_id, msg)
+                ? res = await Bot[this.id].client.messageApi.postMessage(this.channel_id, SendMsg)
+                : res = await Bot[this.id].client.directMessageApi.postDirectMessage(this.guild_id, SendMsg)
         }
 
         /** 连接转二维码撤回 */

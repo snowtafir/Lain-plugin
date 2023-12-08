@@ -155,10 +155,12 @@ class WeChat {
 
         /** 构建基本参数 */
         Bot[this.id] = {
+            adapter: "ComWeChat",
             fl: new Map(),
             /** 群列表 */
             gl: new Map(),
             gml: new Map(),
+            tl: new Map(),
             id: this.id,
             name: botCfg.user_name,
             uin: this.id,
@@ -222,7 +224,10 @@ class WeChat {
                     area: "南极洲",
                     rank: "潜水",
                 }
-            }
+            },
+            getFriendMap: () => Bot[this.id].fl,
+            getGroupList: () => Bot[this.id].gl,
+            getGuildList: () => Bot[this.id].tl
         }
 
         if (!Bot.adapter.includes(this.id)) Bot.adapter.push(this.id)

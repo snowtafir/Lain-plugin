@@ -2,6 +2,8 @@ import fs from "fs"
 import pm2 from "pm2"
 import { exec } from "child_process"
 
+let state = false
+
 export class Restart extends plugin {
     constructor(e = '') {
         super({
@@ -24,6 +26,8 @@ export class Restart extends plugin {
     }
 
     async restart() {
+        if (state) return true
+        state = true
         if (!this.e?.adapter) return false
         this.key = "Lain:restart"
 
@@ -33,7 +37,7 @@ export class Restart extends plugin {
         logger.mark(`${this.e.logFnc} 开始执行重启，请稍等...`)
 
         const data = JSON.stringify({
-            uin: this.e?.self_id || this.e.bot.uin,
+            uin: this.e?.bot?.uin || this.e?.self_id || Bot.uin,
             isGroup: !!this.e.isGroup,
             id: this.e.isGroup ? this.e.group_id : this.e.user_id,
             time: new Date().getTime(),
@@ -64,6 +68,7 @@ export class Restart extends plugin {
                                 logger.mark('重启成功，运行已由前台转为后台')
                                 logger.mark(`查看日志请用命令：${npm} run log`)
                                 logger.mark(`停止后台运行命令：${npm} stop`)
+                                state = false
                                 process.exit()
                             }
                         })
@@ -71,6 +76,7 @@ export class Restart extends plugin {
                 })
             })
         } catch (error) {
+            state = false
             redis.del(this.key)
             const errorMessage = error.stack ?? error
             this.e.reply(`操作失败！\n${errorMessage}`)

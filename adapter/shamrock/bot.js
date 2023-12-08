@@ -16,12 +16,13 @@ export default class bot {
 
     /** 加载资源 */
     async loadRes() {
-        const bot = Bot.shamrock.get(String(this.id))
+        const bot = Bot.shamrock.get(this.id)
         /** 构建基本参数 */
         Bot[this.id] = {
             bkn: 0,
             fl: new Map(),
             gl: new Map(),
+            tl: new Map(),
             gml: new Map(),
             adapter: "Shamrock",
             uin: Number(this.id),
@@ -40,7 +41,10 @@ export default class bot {
             removeEssenceMessage: async (msg_id) => await this.removeEssenceMessage(msg_id),
             makeForwardMsg: async (message) => await common.makeForwardMsg(message, true),
             getMsg: (msg_id) => "",
-            quit: () => this.quit()
+            quit: () => this.quit(),
+            getFriendMap: () => Bot[this.id].fl,
+            getGroupList: () => Bot[this.id].gl,
+            getGuildList: () => Bot[this.id].tl
         }
 
         await common.init("Lain:restart")

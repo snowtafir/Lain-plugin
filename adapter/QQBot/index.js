@@ -64,11 +64,14 @@ async function LoadBot(appID, bot) {
 
     Bot[appID] = {
         ...bot,
+        adapter: "QQBot",
         bkn: 0,
         /** 好友列表 */
         fl: new Map(),
         /** 群列表 */
         gl: new Map(),
+        /** 频道 */
+        tl: new Map(),
         gml: new Map(),
         uin: appID,
         tiny_id: id,
@@ -154,9 +157,19 @@ async function LoadBot(appID, bot) {
                     return ["test"]
                 }
             }
-        }
+        },
+        getFriendMap: () => Bot[appID].fl,
+        getGroupList: () => Bot[appID].gl,
+        getGuildList: () => Bot[appID].tl
     }
     if (!Bot.adapter?.includes(appID)) Bot.adapter.push(appID)
+    try {
+        const glList = await redis.keys(`lain:QQBot:gl:*`)
+        glList.forEach(async i => {
+            const group_id = await redis.get(i)
+            Bot[appID].gl.set(group_id, JSON.stringify(group_id))
+        })
+    } catch { }
 }
 
 function logInfo(e) {

@@ -71,9 +71,12 @@ export default class guild {
         /** 构建基本参数 */
         Bot[this.id] = {
             ...Bot[this.id],
+            adapter: "QQGuild",
             fl: new Map(),
             /** 群列表 */
             gl: new Map(),
+            /** 频道 */
+            tl: new Map(),
             /** 子频道列表 */
             gml: new Map(),
             /** 兼容旧配置 */
@@ -121,7 +124,10 @@ export default class guild {
                     area: "南极洲",
                     rank: "潜水",
                 }
-            }
+            },
+            getFriendMap: () => Bot[this.id].fl,
+            getGroupList: () => Bot[this.id].gl,
+            getGuildList: () => Bot[this.id].tl
         }
 
         if (!Bot.adapter.includes(this.id)) Bot.adapter.push(this.id)
