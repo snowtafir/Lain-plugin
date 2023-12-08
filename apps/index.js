@@ -164,6 +164,9 @@ export class Lain extends plugin {
         e.channel_id ? msg.push(`当前子频道ID：${e.channel_id}`) : ""
         e.group_id ? msg.push(`当前群聊ID：${e.group_id}`) : ""
         if (e.isMaster && e?.adapter === "QQGuild") msg.push("\n温馨提示：\n使用本体黑白名单请使用「群聊ID」\n使用插件黑白名单请按照配置文件说明进行添加~")
+
+        /** at用户 */
+        if (e.isMaster && e.at) msg.push(`\n目标用户ID：${e.at}`)
         return await e.reply(`\n${msg.join('\n')}`, true, { at: true })
     }
 
