@@ -246,7 +246,10 @@ export default class bot {
                 let name = path.extname(filePath)
                 return await api.upload_group_file(this.id, group_id, file, name.replace(/^\./, ""))
             },
-            getMemberMap: async () => await api.get_prohibited_member_list(this.id, group_id)
+            getMemberMap: async () => await api.get_prohibited_member_list(this.id, group_id),
+            sign: async () => {
+                await api.send_group_sign(this.id, group_id)
+            }
         }
     }
 

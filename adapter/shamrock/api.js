@@ -277,7 +277,7 @@ let api = {
     },
 
     /**
-     * 群打卡（未实现）
+     * 群打卡
      * @param {string} id - 机器人QQ
      * @param {number} group_id - 群号
      */
@@ -287,7 +287,7 @@ let api = {
     },
 
     /**
-     * 发送群公告（未实现）
+     * 发送群公告
      * @param {string} id - 机器人QQ
      * @param {number} group_id - 群号
      * @param {string} content - 公告内容
@@ -299,7 +299,7 @@ let api = {
     },
 
     /**
-     * 获取群公告（未实现）
+     * 获取群公告
      * @param {string} id - 机器人QQ
      * @param {number} group_id - 群号
      */

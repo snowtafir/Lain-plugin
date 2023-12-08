@@ -270,6 +270,9 @@ export default new class zaiMsg {
                     const { file } = await api.download_file(self_id, base64)
                     let name = path.basename(filePath)
                     return await api.upload_group_file(self_id, group_id, file, name.replace(/^\./, ""))
+                },
+                sign: async () => {
+                    await api.send_group_sign(self_id, group_id)
                 }
             }
         } else {
