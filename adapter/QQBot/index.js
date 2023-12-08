@@ -72,6 +72,7 @@ async function LoadBot(appID, bot) {
 
     Bot[appID] = {
         ...bot,
+        adapter: "QQBot",
         bkn: 0,
         /** 好友列表 */
         fl: new Map(),

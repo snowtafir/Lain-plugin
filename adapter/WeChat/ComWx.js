@@ -154,6 +154,7 @@ class WeChat {
 
         /** 构建基本参数 */
         Bot[this.id] = {
+            adapter: "ComWeChat",
             fl: new Map(),
             /** 群列表 */
             gl: new Map(),

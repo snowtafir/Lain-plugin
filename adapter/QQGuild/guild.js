@@ -71,6 +71,7 @@ export default class guild {
         /** 构建基本参数 */
         Bot[this.id] = {
             ...Bot[this.id],
+            adapter: "QQGuild",
             fl: new Map(),
             /** 群列表 */
             gl: new Map(),
