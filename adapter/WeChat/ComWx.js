@@ -160,6 +160,7 @@ class WeChat {
             gl: new Map(),
             gml: new Map(),
             tl: new Map(),
+            guilds: new Map(),
             id: this.id,
             name: botCfg.user_name,
             uin: this.id,

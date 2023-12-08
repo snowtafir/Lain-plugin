@@ -73,13 +73,10 @@ export default class guild {
             ...Bot[this.id],
             adapter: "QQGuild",
             fl: new Map(),
-            /** 群列表 */
             gl: new Map(),
-            /** 频道 */
             tl: new Map(),
-            /** 子频道列表 */
             gml: new Map(),
-            /** 兼容旧配置 */
+            guilds: new Map(),
             id: bot.id,
             name: bot.username,
             uin: this.id,
@@ -129,7 +126,7 @@ export default class guild {
             getGroupList: () => Bot[this.id].gl,
             getGuildList: () => Bot[this.id].tl
         }
-        
+
         /** 公域私域 */
         Bot[this.id].version.id = Bot[this.id].allMsg ? "私域" : "公域"
 
@@ -159,11 +156,14 @@ export default class guild {
                 channels: {}
             }
 
+            /** 按照icqq标准格式保存频道列表 */
+            Bot[this.id].guilds.set(qg.id, qg)
+
             /** 延迟下 */
             await common.sleep(200)
 
             try {
-                /** 添加频道列表到Bot.gl中，用于主动发送消息 */
+                /** 添加频道列表到Bot.gl中 */
                 const channelList = (await this.client.channelApi.channels(qg.id)).data
                 for (const i of channelList) {
                     /** 存一份给锅巴用 */

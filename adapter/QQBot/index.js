@@ -81,6 +81,7 @@ async function LoadBot(appID, bot) {
         /** 频道 */
         tl: new Map(),
         gml: new Map(),
+        guilds: new Map(),
         uin: appID,
         tiny_id: id,
         avatar,

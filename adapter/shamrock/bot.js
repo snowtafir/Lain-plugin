@@ -24,6 +24,7 @@ export default class bot {
             gl: new Map(),
             tl: new Map(),
             gml: new Map(),
+            guilds: new Map(),
             adapter: "Shamrock",
             uin: this.id,
             tiny_id: String(this.id),

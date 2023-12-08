@@ -15,6 +15,7 @@ export default async function stdin() {
         gl: new Map(),
         gml: new Map(),
         tl: new Map(),
+        guilds: new Map(),
         id: uin,
         uin: uin,
         name: Bot.lain.cfg.stdin_nickname,
