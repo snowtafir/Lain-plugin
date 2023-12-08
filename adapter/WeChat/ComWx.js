@@ -166,8 +166,8 @@ class WeChat {
             nickname: Bot.lain.cfg.name || botCfg.user_name,
             avatar: botCfg?.["wx.avatar"],
             stat: { start_time: Date.now() / 1000, recv_msg_cnt: 0 },
-            apk: { display: "CWeChatRobot", version: Bot.lain.adapter.CWeChatRobot },
-            version: { id: "PC", name: "微信", version: Bot.lain.adapter.WeChat },
+            apk: Bot.lain.adapter.ComWeChat.apk,
+            version: Bot.lain.adapter.ComWeChat.version,
             /** 转发 */
             makeForwardMsg: async (forwardMsg) => {
                 return await common.makeForwardMsg(forwardMsg)

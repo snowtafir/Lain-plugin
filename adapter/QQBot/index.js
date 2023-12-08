@@ -86,8 +86,8 @@ async function LoadBot(appID, bot) {
         avatar,
         nickname: username,
         stat: { start_time: Date.now() / 1000, recv_msg_cnt: 0 },
-        apk: { display: "qq-group-bot", version: Bot.lain["dependencies"]["qq-group-bot"].replace("^", "") },
-        version: { id: "QQ", name: "QQBot", version: Bot.lain["dependencies"]["qq-group-bot"].replace("^", "") },
+        apk: Bot.lain.adapter.QQBot.apk,
+        version: Bot.lain.adapter.QQBot.version,
         /** 转发 */
         makeForwardMsg: async (data) => await common.makeForwardMsg(data),
         pickGroup: (groupID) => {

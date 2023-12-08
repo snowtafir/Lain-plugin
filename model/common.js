@@ -246,9 +246,8 @@ async function getUrls(url) {
 /** 渲染图片 */
 async function rendering(content, error) {
     const data = {
-        Yz: Bot.lain,
+        lain: Bot.lain.adapter.lain,
         error: error,
-        guild: Bot.lain.version,
         msg: content,
         saveId: 'Lain-plugin',
         _plugin: 'Lain-plugin',

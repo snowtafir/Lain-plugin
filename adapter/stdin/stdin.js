@@ -1,8 +1,6 @@
 import fs from "fs"
 import { createInterface } from "readline"
 import common from "../../model/common.js"
-import pluginsLoader from "../../../../lib/plugins/loader.js"
-
 const uin = "stdin"
 
 export default async function stdin() {
@@ -12,16 +10,18 @@ export default async function stdin() {
 
     /** 构建基本参数 */
     Bot[uin] = {
+        adapter: "stdin",
         fl: new Map(),
         gl: new Map(),
         gml: new Map(),
+        tl: new Map(),
         id: uin,
         uin: uin,
         name: Bot.lain.cfg.stdin_nickname,
         nickname: Bot.lain.cfg.stdin_nickname,
         avatar: `../../../../../plugins/Lain-plugin/resources/${avatar}`,
         stat: { start_time: Date.now() / 1000 },
-        version: { id: "stdin", name: "标准输入" },
+        version: Bot.lain.adapter.stdin.version,
         /** 转发 */
         makeForwardMsg: async (forwardMsg) => await makeForwardMsg(forwardMsg),
         pickUser: (userId) => {

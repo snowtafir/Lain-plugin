@@ -87,8 +87,8 @@ export default class guild {
             nickname: bot.username,
             avatar: bot.avatar,
             stat: { start_time: Date.now() / 1000, recv_msg_cnt: 0 },
-            apk: { display: "qq-guild-bot", version: Bot.lain.guild.ver },
-            version: { id: Bot[this.id].allMsg ? "私域" : "公域", name: "QQ频道", version: Bot.lain.guild.guild_ver },
+            apk: Bot.lain.adapter.QQGuild.apk,
+            version: Bot.lain.adapter.QQGuild.version,
             /** 转发 */
             makeForwardMsg: async (forwardMsg) => {
                 return await common.makeForwardMsg(forwardMsg)
@@ -129,6 +129,9 @@ export default class guild {
             getGroupList: () => Bot[this.id].gl,
             getGuildList: () => Bot[this.id].tl
         }
+        
+        /** 公域私域 */
+        Bot[this.id].version.id = Bot[this.id].allMsg ? "私域" : "公域"
 
         if (!Bot.adapter.includes(this.id)) Bot.adapter.push(this.id)
     }

@@ -25,12 +25,12 @@ export default class bot {
             tl: new Map(),
             gml: new Map(),
             adapter: "Shamrock",
-            uin: Number(this.id),
+            uin: this.id,
             tiny_id: String(this.id),
-            avatar: `https://q1.qlogo.cn/g?b=qq&s=0&nk=${Number(this.id)}`,
+            avatar: `https://q1.qlogo.cn/g?b=qq&s=0&nk=${this.id}`,
             stat: { start_time: Date.now() / 1000, recv_msg_cnt: 0 },
             apk: { display: bot["qq-ver"].split(" ")[0], version: bot["qq-ver"].split(" ")[1] },
-            version: { id: "QQ", name: "Shamrock", version: bot["user-agent"].replace("Shamrock/", "") },
+            version: { id: "QQ", name: "三叶草", version: bot["user-agent"].replace("Shamrock/", "") },
             pickMember: (group_id, user_id) => this.pickMember(group_id, user_id),
             pickUser: (user_id) => this.pickUser(Number(user_id)),
             pickFriend: (user_id) => this.pickFriend(Number(user_id)),
@@ -56,7 +56,7 @@ export default class bot {
     async LoadList() {
         if (resList) return "目前以有任务事件在加载中，请勿重复加载"
         resList = true
-        if (!Bot.adapter.includes(Number(this.id))) Bot.adapter.push(Number(this.id))
+        if (!Bot.adapter.includes(this.id)) Bot.adapter.push(this.id)
 
         /** 获取bot自身信息 */
         const info = await api.get_login_info(this.id)
@@ -320,7 +320,7 @@ export default class bot {
 
     async getGroupMemberInfo(group_id, user_id) {
         /** 被自己坑了 */
-        if (user_id == "88888" || user_id == "stdin") user_id = Number(this.id)
+        if (user_id == "88888" || user_id == "stdin") user_id = this.id
         try {
             let member = await api.get_group_member_info(this.id, group_id, user_id)
             member.card = member.nickname

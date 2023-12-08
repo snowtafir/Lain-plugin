@@ -6,10 +6,11 @@
   "gitee": "https://gitee.com/Zyy955/Lain-plugin",
   "type": "module",
   "adapter": {
-    "qg": "0.5.2",
+    "QQGuild": "0.5.2",
+    "ComWeChat": "0.2.3",
+    "CWeChatRobot": "0.0.8",
     "stdin": "0.1.2",
-    "WeChat": "0.2.3",
-    "CWeChatRobot": "0.0.8"
+    "QQBot": "0.0.1"
   },
   "dependencies": {
     "qq-guild-bot": "^2.9.5",
