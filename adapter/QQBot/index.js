@@ -77,6 +77,8 @@ async function LoadBot(appID, bot) {
         fl: new Map(),
         /** 群列表 */
         gl: new Map(),
+        /** 频道 */
+        tl: new Map(),
         gml: new Map(),
         uin: appID,
         tiny_id: id,
@@ -148,7 +150,9 @@ async function LoadBot(appID, bot) {
                 }
             }
         },
-        getGroupList: () => { return Bot[appID].gl }
+        getFriendMap: () => Bot[appID].fl,
+        getGroupList: () => Bot[appID].gl,
+        getGuildList: () => Bot[appID].tl
     }
     if (!Bot.adapter.includes(String(appID))) Bot.adapter.push(String(appID))
     try {

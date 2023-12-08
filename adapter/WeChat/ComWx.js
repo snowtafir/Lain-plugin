@@ -158,6 +158,7 @@ class WeChat {
             /** 群列表 */
             gl: new Map(),
             gml: new Map(),
+            tl: new Map(),
             id: this.id,
             name: botCfg.user_name,
             uin: this.id,
@@ -222,7 +223,9 @@ class WeChat {
                     rank: "潜水",
                 }
             },
-            getGroupList: () => { return Bot[this.id].gl }
+            getFriendMap: () => Bot[appID].fl,
+            getGroupList: () => Bot[appID].gl,
+            getGuildList: () => Bot[appID].tl
         }
 
         if (!Bot.adapter.includes(this.id)) Bot.adapter.push(this.id)

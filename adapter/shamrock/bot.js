@@ -22,6 +22,7 @@ export default class bot {
             bkn: 0,
             fl: new Map(),
             gl: new Map(),
+            tl: new Map(),
             gml: new Map(),
             adapter: "Shamrock",
             uin: Number(this.id),
@@ -41,7 +42,9 @@ export default class bot {
             makeForwardMsg: async (message) => await common.makeForwardMsg(message, true),
             getMsg: (msg_id) => "",
             quit: () => this.quit(),
-            getGroupList: () => { return Bot[this.id].gl }
+            getFriendMap: () => Bot[appID].fl,
+            getGroupList: () => Bot[appID].gl,
+            getGuildList: () => Bot[appID].tl
         }
 
         await common.init("Lain:restart")

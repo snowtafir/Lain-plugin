@@ -304,11 +304,11 @@ async function downloadFile(url, destPath, headers = {}, absolute = false) {
 
 /**
  * 处理segment中的图片、语音、文件
- * @param i 需要处理的文件
- * 返回{type,file}
- *
- * type:{buffer,file,http,base64,error}
- *
+ * @param i 需要处理的对象
+ * 传入类似于 {type:"image", file:"file://...", url:"http://"}
+ * 
+ * 返回 {type:<file|buffer|base64|http|error>, file=:<file://|buffer|base64://|http://|i.file>}
+ * 
  * error为无法判断类型，直接返回i.file
  */
 
