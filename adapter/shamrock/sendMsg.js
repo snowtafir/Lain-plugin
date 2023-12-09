@@ -192,10 +192,9 @@ export default class SendMsg {
         const params = { [this.isGroup ? "group_id" : "user_id"]: id, message: msg }
         /** 发送消息 */
         bot.socket.send(JSON.stringify({ echo, action, params }))
-        // console.log("发送消息:", { echo, action, params })
 
         /** 等待返回结果 */
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < 1200; i++) {
             let data = await Bot.lain.on.get(echo)
             if (data) {
                 Bot.lain.on.delete(echo)
@@ -217,11 +216,9 @@ export default class SendMsg {
                     return data
                 }
             } else {
-                await common.sleep(500)
+                await common.sleep(50)
             }
         }
-
-        /** 获取失败 */
         return "获取失败"
     }
 }

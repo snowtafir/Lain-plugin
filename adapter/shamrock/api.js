@@ -686,25 +686,25 @@ let api = {
         const bot = Bot.shamrock.get(String(id))
         if (!bot) return common.log(id, "不存在此Bot")
         const echo = randomUUID()
-        // console.log("发送请求，接口：", action, "参数：", params)
+        // console.log("发送请求，echo:", echo, " 接口：", action, "参数：", params)
         bot.socket.send(JSON.stringify({ echo, action, params }))
 
-        for (let i = 0; i < 60; i++) {
+        for (let i = 0; i < 1200; i++) {
             const data = await Bot.lain.on.get(echo)
             if (data) {
-                Bot.lain.on.delete(echo)
-                try {
-                    if (Object.keys(data?.data).length > 0 && data?.data) return data.data
-                    return data
-                } catch {
+                if (data.status === "ok") {
+                    Bot.lain.on.delete(echo)
+                    common.log("SendApi返回结果", data.data, "debug")
+                    return data.data
+                } else {
+                    common.log("Lain-plugin", data, "error")
                     return data
                 }
             } else {
-                await common.sleep(1000)
+                await common.sleep(50)
             }
         }
 
-        /** 获取失败 */
         return "获取失败"
     }
 }

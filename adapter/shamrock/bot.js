@@ -70,7 +70,7 @@ export default class bot {
             if (!(group_list && Array.isArray(group_list))) {
                 await common.log(this.id, `Shamrock群列表获取失败，正在重试：${retries + 1}`, "error")
             }
-            await common.sleep(1000)
+            await common.sleep(50)
         }
 
         /** 群列表获取失败 */
@@ -96,7 +96,7 @@ export default class bot {
             if (!(friend_list && Array.isArray(friend_list))) {
                 await common.log(this.id, `Shamrock好友列表获取失败，正在重试：${retries + 1}`, "error")
             }
-            await common.sleep(1000)
+            await common.sleep(50)
         }
 
         /** 好友列表获取失败 */
