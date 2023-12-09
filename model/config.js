@@ -8,7 +8,6 @@ const _path = process.cwd() + "/plugins/Lain-plugin/config"
 
 const configItems = [
     { key: 'port', value: '2955', comment: '# 端口' },
-    { key: 'path', value: '"/ComWeChat"', comment: '# 路径' },
     { key: 'autoFriend', value: '0', comment: '# 是否自动同意加好友 1-同意 0-不处理' },
     { key: 'name', value: '""', comment: '# 自定义椰奶状态名称' },
     { key: 'stdin_nickname', value: '"标准输入"', comment: '# 标准输入的昵称' },
@@ -19,7 +18,8 @@ const configItems = [
     { key: 'FigureBed', value: "http://206.233.128.146/uploadimg", comment: '# 方法1：图床API 从网上收集的，非本人所属，侵权删~' },
     { key: 'QQBotPort', value: 0, comment: '# QQBot图片Api公网IP实际端口。实际占用的是HTTP端口，此配置适用于内网和公网端口不一致用户。' },
     { key: 'QQBotPrefix', value: true, comment: '# QQBot指令前缀转换 /转#' },
-    { key: 'githubKey', value: '', comment: '# Github personal access token, 用于查看和下载shamrock版本信息' }
+    { key: 'githubKey', value: '', comment: '# Github personal access token, 用于查看和下载shamrock版本信息' },
+    { key: 'QQBotGroupId', value: '', comment: '# QQBot默认进群后，推送提示显示的群号。' },
 ]
 
 /** 检查配置文件是否存在 */

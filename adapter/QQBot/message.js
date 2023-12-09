@@ -43,9 +43,24 @@ export default new class message {
                 if (!Bot[e.self_id].gl.get(group_id)) {
                     Bot[e.self_id].gl.set(group_id, { group_id })
                 }
-                if (redis.get(`lain:QQBot:gl:${group_id}`)) {
+                if (await redis.get(`lain:QQBot:gl:${group_id}`)) {
                     /** 存redis */
                     redis.set(`lain:QQBot:gl:${group_id}`, JSON.stringify({ group_id }))
+                }
+                /** 首次进群后，推送防司马崽声明~ */
+                if (!await redis.get(`lain:QQBot:tips:${group_id}`)) {
+                    const msg = []
+                    const name = `「${Bot[data.bot.config.appid].nickname}」`
+                    msg.push(`温馨提示：`)
+                    msg.push(`感谢使用${name}，本Bot完全开源免费~\n`)
+                    msg.push(`请各位尊重Yunzai本体及其插件开发者们的努力~`)
+                    msg.push("如果本Bot是付费入群,请立刻退款举报！！！\n")
+                    msg.push(`来自：Lain-plugin防倒卖崽提示，本提示仅在首次入群后触发~`)
+                    if (Bot.lain.cfg.QQBotGroupId) {
+                        msg.push(`\n如有疑问，请添加${name}官方群: ${Bot.lain.cfg.QQBotGroupId}~`)
+                    }
+                    data.reply(msg.join("\n"))
+                    redis.set(`lain:QQBot:tips:${group_id}`, JSON.stringify({ group_id }))
                 }
             } catch { }
             const member = {
