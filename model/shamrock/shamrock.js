@@ -4,7 +4,7 @@ export const SHAMROCK_OWNER = 'whitechi73'
 export const SHAMROCK_REPO = 'OpenShamrock'
 
 export class ShamrockRepoClient {
-  constructor (key) {
+  constructor(key) {
     this.client = new GithubClient(key)
     this.cache = {
       commits: {}
@@ -15,7 +15,7 @@ export class ShamrockRepoClient {
    * 获取最近提交
    * @returns {Promise<Object[]>}
    */
-  async getCommits (num = 30, deal = false) {
+  async getCommits(num = 30, deal = false) {
     let commits = []
     if (this.cache.commits?.[num]) {
       commits = this.cache.commits?.[num]
@@ -36,7 +36,7 @@ export class ShamrockRepoClient {
    * @param sha
    * @returns {Promise<Object|*>}
    */
-  async getCommitBySha (sha) {
+  async getCommitBySha(sha) {
     if (this.cache[`commits-${sha}`]) {
       return this.cache[`commits-${sha}`]
     }
@@ -51,7 +51,7 @@ export class ShamrockRepoClient {
    * @param type beta还是release，分别对应commit喝release
    * @returns {Promise<Object[]>} 比自己当前版本新的所有commits或release
    */
-  async getVersionBehind (version, type = 'beta') {
+  async getVersionBehind(version, type = 'beta') {
     if (this.cache[`newCommits-${type}`]) {
       return this.cache[`newCommits-${type}`]
     }
@@ -83,7 +83,7 @@ export class ShamrockRepoClient {
    * 获取当前仓库状态
    * @returns {Promise<Object>}
    */
-  async getRepoStatus () {
+  async getRepoStatus() {
     if (this.cache.repo) {
       return this.cache.repo
     }
@@ -96,7 +96,7 @@ export class ShamrockRepoClient {
    * 获取release
    * @returns {Promise<Object[]>}
    */
-  async getRelease (num = 5, deal = false) {
+  async getRelease(num = 5, deal = false) {
     let releases = await this.client.getReleases({ per_page: num })
     if (deal) {
       const regex = /@(\w+)/g
@@ -119,7 +119,7 @@ export class ShamrockRepoClient {
    * @param num
    * @returns {Promise<{total_count: number, artifacts: Object[]}>}
    */
-  async getActions (num = 3) {
+  async getActions(num = 3) {
     return await this.client.getActionsArtifacts({ per_page: num })
   }
 }

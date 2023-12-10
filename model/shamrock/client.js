@@ -1,16 +1,16 @@
 import cfg from '../../../../lib/config/config.js'
 import { HttpsProxyAgent } from 'https-proxy-agent'
-import {SHAMROCK_OWNER, SHAMROCK_REPO} from "./shamrock.js";
+import { SHAMROCK_OWNER, SHAMROCK_REPO } from "./shamrock.js";
 export class GithubClient {
-  constructor (key) {
+  constructor(key) {
     this.key = key
     let proxy = cfg.bot.proxyAddress
     this.client = {
       request: (url, options = {}) => {
         const defaultOptions = proxy
           ? {
-              agent: new HttpsProxyAgent(proxy)
-            }
+            agent: new HttpsProxyAgent(proxy)
+          }
           : {}
         const mergedOptions = {
           ...defaultOptions,
@@ -35,7 +35,7 @@ export class GithubClient {
    * @param repo
    * @returns {Promise<Object>}
    */
-  async getRepository (owner = SHAMROCK_OWNER, repo = SHAMROCK_REPO) {
+  async getRepository(owner = SHAMROCK_OWNER, repo = SHAMROCK_REPO) {
     let res = await this.client.request(`https://api.github.com/repos/${owner}/${repo}`, {
       headers: this.commonHeaders
     })
@@ -50,7 +50,7 @@ export class GithubClient {
    * @param options 可选参数：since, until, per_page, page, sha等
    * @returns {Promise<Object[]>}
    */
-  async getCommits (options = {}, owner = SHAMROCK_OWNER, repo = SHAMROCK_REPO) {
+  async getCommits(options = {}, owner = SHAMROCK_OWNER, repo = SHAMROCK_REPO) {
     let res = await this.client.request(`https://api.github.com/repos/${owner}/${repo}/commits${this.query(options)}`, {
       headers: this.commonHeaders
     })
@@ -65,7 +65,7 @@ export class GithubClient {
    * @param sha commit sha
    * @returns {Promise<Object>}
    */
-  async getCommitBySha (sha, owner = SHAMROCK_OWNER, repo = SHAMROCK_REPO) {
+  async getCommitBySha(sha, owner = SHAMROCK_OWNER, repo = SHAMROCK_REPO) {
     if (!sha) {
       throw new Error('sha cannot be empty')
     }
@@ -83,7 +83,7 @@ export class GithubClient {
    * @param options 可选参数：per_page, page
    * @returns {Promise<Object[]>}
    */
-  async getReleases (options = {}, owner = SHAMROCK_OWNER, repo = SHAMROCK_REPO) {
+  async getReleases(options = {}, owner = SHAMROCK_OWNER, repo = SHAMROCK_REPO) {
     let res = await this.client.request(`https://api.github.com/repos/${owner}/${repo}/releases${this.query(options)}`, {
       headers: this.commonHeaders
     })
@@ -98,7 +98,7 @@ export class GithubClient {
    * @param options 可选参数：per_page, page, name
    * @returns {Promise<Object[]>}
    */
-  async getActionsArtifacts (options = {}, owner = SHAMROCK_OWNER, repo = SHAMROCK_REPO) {
+  async getActionsArtifacts(options = {}, owner = SHAMROCK_OWNER, repo = SHAMROCK_REPO) {
     let res = await this.client.request(`https://api.github.com/repos/${owner}/${repo}/actions/artifacts${this.query(options)}`, {
       headers: this.commonHeaders
     })
@@ -111,7 +111,7 @@ export class GithubClient {
    * @param containsQuestionMark 结果前面是否包含?
    * @returns {string}
    */
-  query (params, containsQuestionMark = true) {
+  query(params, containsQuestionMark = true) {
     if (!params || typeof params !== 'object') {
       return ''
     }
@@ -133,7 +133,7 @@ export class GithubClient {
    * @param {Response} res
    * @returns {Promise<Object | Object[]>}
    */
-  async toJson (res) {
+  async toJson(res) {
     if (res.status === 200) {
       return await res.json()
     } else if (res.status === 429 || (await res.text())?.includes('limited')) {
