@@ -272,6 +272,19 @@ export default new class zaiMsg {
         },
         sign: async () => {
           await api.send_group_sign(self_id, group_id)
+        },
+        shareMusic: async (platform, id) => {
+          if (!['qq', '163'].includes(platform)) {
+            return 'platform not supported yet'
+          }
+          let msg = new SendMsg(this.id, true)
+          return await msg.message({
+            type: 'music',
+            data: {
+              type: platform,
+              id
+            }
+          }, group_id)
         }
       }
     } else {

@@ -3,6 +3,7 @@ import path from 'path'
 import common from '../../model/common.js'
 import api from './api.js'
 import { message, toRaw } from './message.js'
+import SendMsg from './sendMsg.js'
 
 /** 加载资源状态 */
 let resList = false
@@ -247,6 +248,19 @@ export default class bot {
       // getMemberMap: async () => await api.get_prohibited_member_list(this.id, group_id),
       sign: async () => {
         await api.send_group_sign(this.id, group_id)
+      },
+      shareMusic: async (platform, id) => {
+        if (!['qq', '163'].includes(platform)) {
+          return 'platform not supported yet'
+        }
+        let msg = new SendMsg(this.id, true)
+        return await msg.message({
+          type: 'music',
+          data: {
+            type: platform,
+            id
+          }
+        }, group_id)
       }
     }
   }
