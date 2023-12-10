@@ -320,7 +320,7 @@ export default class StartQQBot {
       message.push(image[0])
       image.splice(0, 1)
     } else {
-      message.push({ type: 'text', text })
+      message.push({ type: 'text', text: text.trim() })
     }
 
     return { message, image }
@@ -443,9 +443,9 @@ export default class StartQQBot {
 
   /** ffmpeg转码 转为pcm */
   async runFfmpeg (input, output) {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       let cm
-      let ret = this.execSync('ffmpeg -version')
+      let ret = await this.execSync('ffmpeg -version')
       if (ret.stdout) {
         cm = 'ffmpeg'
       } else {
