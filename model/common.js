@@ -113,6 +113,7 @@ function fatal (id, log) {
 async function init (key = 'Lain:restart') {
   let restart = await redis.get(key)
   if (restart) {
+    redis.del(key)
     restart = JSON.parse(restart)
     const uin = restart?.uin || Bot.uin
     let time = restart.time || new Date().getTime()
@@ -126,17 +127,7 @@ async function init (key = 'Lain:restart') {
       } else {
         Bot[uin].pickUser(restart.id).sendMsg(msg)
       }
-    } catch (error) {
-      /** 发送失败后等待5s重试一次，适配器可能没连接bot */
-      await new Promise((resolve) => setTimeout(resolve, 5000))
-      msg = `重启成功：耗时${(time + 5).toFixed(2)}秒`
-      if (restart.isGroup) {
-        Bot[uin].pickGroup(restart.id, msgId).sendMsg(msg)
-      } else {
-        Bot[uin].pickUser(restart.id, msgId).sendMsg(msg)
-      }
-    }
-    redis.del(key)
+    } catch (error) { }
   }
 }
 
@@ -153,8 +144,8 @@ function array (data) {
       ? [{ type: 'text', text: i }]
       : Array.isArray(i)
         ? [].concat(...i.map(format => (typeof format === 'string'
-            ? [{ type: 'text', text: format }]
-            : typeof format === 'object' && format !== null ? [format] : [])))
+          ? [{ type: 'text', text: format }]
+          : typeof format === 'object' && format !== null ? [format] : [])))
         : typeof i === 'object' && i !== null ? [i] : []
     )))
   } else if (data instanceof fs.ReadStream) {
