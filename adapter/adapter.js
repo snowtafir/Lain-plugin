@@ -34,8 +34,8 @@ adapter.push(async function QQBot () {
     const cfg = fs.readFileSync(Bot.lain._path + '/QQBot.yaml', 'utf8')
     Object.entries(Yaml.parse(cfg)).forEach(async ([appid, cfg]) => {
       if (Object.keys(cfg).length === 0) return
-      const createAndStartBot = (await import('./QQBot/index.js')).default
-      return await createAndStartBot(cfg)
+      const StartQQBot = (await import('./QQBot/index.js')).default
+      return new StartQQBot(cfg)
     })
   } catch (err) { return common.error('QQBot', `QQBot适配器加载失败,${err}`) }
 })

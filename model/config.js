@@ -19,7 +19,8 @@ const configItems = [
   { key: 'QQBotPort', value: 0, comment: '# QQBot图片Api公网IP实际端口。实际占用的是HTTP端口，此配置适用于内网和公网端口不一致用户。' },
   { key: 'QQBotPrefix', value: true, comment: '# QQBot指令前缀转换 /转#' },
   { key: 'githubKey', value: '', comment: '# Github personal access token, 用于查看和下载shamrock版本信息' },
-  { key: 'QQBotGroupId', value: '', comment: '# QQBot默认进群后，推送提示显示的群号。' }
+  { key: 'QQBotGroupId', value: '', comment: '# QQBot默认进群后，推送提示显示的群号。' },
+  { key: 'QQBotTips', value: false, comment: '# QQBot防倒卖崽提示' }
 ]
 
 /** 检查配置文件是否存在 */
@@ -58,6 +59,7 @@ if (!fs.existsSync(_path + '/../resources/QQBotApi')) fs.mkdirSync(_path + '/../
 
 const cfg = Yaml.parse(fs.readFileSync(_path + '/config.yaml', 'utf8'))
 const packYZ = JSON.parse(fs.readFileSync('./package.json', 'utf-8'))
+const BotCfg = Yaml.parse(fs.readFileSync('./config/config/bot.yaml', 'utf8'))
 const packLain = JSON.parse(fs.readFileSync('./plugins/Lain-plugin/package.json', 'utf-8'))
 
 const { name, version, adapter, dependencies } = packLain
@@ -68,6 +70,7 @@ Bot.lain = {
   cfg,
   /** 配置文件夹路径 */
   _path,
+  BotCfg,
   /** 全部频道列表 */
   guilds: {},
   /** 适配器版本及依赖 */

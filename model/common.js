@@ -91,6 +91,24 @@ function warn (id, log) {
   logger.warn(id || '', log)
 }
 
+/**
+* @param id Bot的id、QQ
+* @param log 日志内容
+*/
+function trace (id, log) {
+  id = nickname(id)
+  logger.trace(id || '', log)
+}
+
+/**
+* @param id Bot的id、QQ
+* @param log 日志内容
+*/
+function fatal (id, log) {
+  id = nickname(id)
+  logger.fatal(id || '', log)
+}
+
 /** 适配器重启发送消息 */
 async function init (key = 'Lain:restart') {
   let restart = await redis.get(key)
@@ -422,6 +440,8 @@ export default {
   debug,
   mark,
   warn,
+  fatal,
+  trace,
   array,
   makeForwardMsg,
   base64,
