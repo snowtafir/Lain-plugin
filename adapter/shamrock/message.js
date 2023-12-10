@@ -27,7 +27,7 @@ export default new class zaiMsg {
       if (source) {
         e.source = source
         if (typeof e.source === 'string') {
-          common.log(user_id, e.source, 'error')
+          common.error(user_id, e.source)
         } else {
           e.source.message = source.raw_message
         }
@@ -49,7 +49,7 @@ export default new class zaiMsg {
             if (e.flag) {
               return await api.set_friend_add_request(self_id, e.flag, approve)
             } else {
-              await common.log(self_id, '处理好友申请失败：缺少flag参数', 'error')
+              await common.error(self_id, '处理好友申请失败：缺少flag参数')
               return false
             }
           }
@@ -61,10 +61,10 @@ export default new class zaiMsg {
               return await api.set_group_add_request(self_id, e.flag, e.sub_type, approve)
             } else {
               if (e.sub_type === 'add') {
-                await common.log(self_id, '处理入群申请失败：缺少flag参数')
+                await common.error(self_id, '处理入群申请失败：缺少flag参数')
               } else {
                 // invite
-                await common.log(self_id, '处理邀请机器人入群失败：缺少flag参数')
+                await common.error(self_id, '处理邀请机器人入群失败：缺少flag参数')
               }
               return false
             }
@@ -78,7 +78,7 @@ export default new class zaiMsg {
     /** 先打印日志 */
     if (message_type === 'private') {
       isGroup = false
-      await common.log(self_id, `好友消息：[${sender?.nickname || sender?.card}(${user_id})] ${raw_message}`)
+      await common.info(self_id, `好友消息：[${sender?.nickname || sender?.card}(${user_id})] ${raw_message}`)
     } else {
       try {
         group_name = Bot[self_id].gl.get(group_id)?.group_name
@@ -86,7 +86,7 @@ export default new class zaiMsg {
         group_name = group_id
       }
 
-      await common.log(self_id, `群消息：[${group_name}，${sender?.nickname || sender?.card}(${user_id})] ${raw_message}`)
+      await common.info(self_id, `群消息：[${group_name}，${sender?.nickname || sender?.card}(${user_id})] ${raw_message}`)
     }
 
     /** 快速撤回 */
@@ -165,7 +165,7 @@ export default new class zaiMsg {
             messages.push(source)
 
             messages = messages
-            // 如果source获取失败，会报错
+              // 如果source获取失败，会报错
               .filter(m => Array.isArray(m?.message))
               .map(async m => {
                 m.group_name = group_name
@@ -368,17 +368,17 @@ export async function message (id, msg, group_id, reply = true) {
           source = await api.get_msg(id, msg_id)
 
           if (typeof source === 'string') {
-            common.log(id, `获取引用消息内容失败，正在重试：第 ${retryCount} 次`)
+            common.info(id, `获取引用消息内容失败，正在重试：第 ${retryCount} 次`)
             retryCount++
           } else {
             break
           }
         }
         if (typeof source === 'string') {
-          common.log(id, '获取引用消息内容失败，重试次数上限，已终止')
+          common.error(id, '获取引用消息内容失败，重试次数上限，已终止')
           continue
         }
-        common.log('', source, 'debug')
+        common.debug('', source)
         let source_reply = source.message.map(u => (u.type === 'at' ? { type: u.type, qq: Number(u.data.qq) } : { type: u.type, ...u.data }))
 
         let raw_message = toRaw(source_reply, id, group_id)

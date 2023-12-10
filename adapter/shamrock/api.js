@@ -337,8 +337,11 @@ let api = {
      * @param {number} user_id - QQ号
      */
   async group_touch (id, group_id, user_id) {
-    const params = { group_id, user_id }
-    return await this.SendApi(id, 'group_touch', params)
+    const params = {
+      group_id,
+      message: [{ type: 'touch', data: { id: user_id } }]
+    }
+    return await this.SendApi(id, 'send_group_msg', params)
   },
 
   /**
@@ -582,7 +585,7 @@ let api = {
 
   async httpApi (id, action, headers, data, query = '') {
     if (!Bot.lain.cfg.baseUrl || !Bot.lain.cfg.baseUrl.startsWith('http')) {
-      return common.log(id, '未配置Shamrock主动http端口')
+      return common.warn(id, '未配置Shamrock主动http端口')
     }
     if (!headers) {
       headers = {}
@@ -594,8 +597,7 @@ let api = {
       headers.Authorization = `Bearer ${token}`
     }
     const bot = Bot.shamrock.get(String(id))
-    if (!bot) return common.log(id, '不存在此Bot')
-    const echo = randomUUID()
+    if (!bot) return common.error(id, '不存在此Bot')
     let res = await fetch(baseUrl + '/' + action + query, {
       headers,
       body: data,
@@ -606,7 +608,7 @@ let api = {
       return result.data
     } else {
       let result = await res.json()
-      common.log(id, result, 'error')
+      common.error(id, result)
       return {}
     }
   },
@@ -627,7 +629,7 @@ let api = {
       type = 'base64'
       file = file.replace('base64://', '')
     } else {
-      return common.log(id, `下载文件到缓存目录Api：未适配的格式，${file}`)
+      return common.error(id, `下载文件到缓存目录Api：未适配的格式，${file}`)
     }
     let params = { [type]: file }
     headers ? params.headers = headers : ''
@@ -679,7 +681,7 @@ let api = {
 
   async SendApi (id, action, params) {
     const bot = Bot.shamrock.get(String(id))
-    if (!bot) return common.log(id, '不存在此Bot')
+    if (!bot) return common.error(id, '不存在此Bot')
     const echo = randomUUID()
     // console.log("发送请求，echo:", echo, " 接口：", action, "参数：", params)
     bot.socket.send(JSON.stringify({ echo, action, params }))
@@ -689,10 +691,10 @@ let api = {
       if (data) {
         if (data.status === 'ok') {
           Bot.lain.on.delete(echo)
-          common.log('SendApi返回结果', data.data, 'debug')
+          common.debug('SendApi返回结果', data.data)
           return data.data
         } else {
-          common.log('Lain-plugin', data, 'error')
+          common.error('Lain-plugin', data)
           return data
         }
       } else {

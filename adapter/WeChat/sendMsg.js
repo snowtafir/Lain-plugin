@@ -142,7 +142,7 @@ export default class SendMsg {
       file = Buffer.from(await (await fetch(file)).arrayBuffer()).toString('base64')
       name = `${Date.now()}.${(await fileTypeFromBuffer(Buffer.from(file, 'base64'))).ext}`
     } else {
-      await common.log(this.id, i, 'error')
+      common.error(this.id, i)
       return { type: 'text', data: { text: JSON.stringify(i) } }
     }
 

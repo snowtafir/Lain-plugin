@@ -117,7 +117,7 @@ export default class SendMsg {
 
             let promises = urls.map(i => {
                 return new Promise((resolve, reject) => {
-                    common.log("QQ频道", `url替换：${i}`, "mark")
+                    common.info("QQ频道", `url替换：${i}`, "mark")
                     qrcode.toBuffer(i, {
                         errorCorrectionLevel: "H",
                         type: "png",
@@ -271,7 +271,7 @@ export default class SendMsg {
             else msg.content = content
             logs += content
         }
-        await common.log(this.id, `发送消息：[${this.group_name}] ${logs}`)
+        await common.info(this.id, `发送消息：[${this.group_name}] ${logs}`)
         return msg
     }
 

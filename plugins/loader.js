@@ -1,9 +1,9 @@
-import lodash from "lodash"
-import util from "node:util"
+import lodash from 'lodash'
+import util from 'node:util'
 import Runtime from '../../../lib/plugins/runtime.js'
 
 export default new class loader {
-  async deal(e) {
+  async deal (e) {
     try {
       /** 记录消息次数 */
       await redis.incr(`lain:${e.self_id}:sendMsg:total`)
@@ -13,9 +13,9 @@ export default new class loader {
     if (!e?.bot) Object.defineProperty(e, 'bot', { value: Bot[e.self_id] })
 
     /** 检查频道消息 */
-    if (e.adapter === "shamrock" && this.checkGuildMsg(e)) return
+    if (e.adapter === 'shamrock' && this.checkGuildMsg(e)) return
     /** 检查黑白名单 */
-    if (e.adapter !== "QQGuild" && !this.checkBlack(e)) return
+    if (e.adapter !== 'QQGuild' && !this.checkBlack(e)) return
 
     /** 冷却 */
     if (!this.checkLimit(e)) return
@@ -133,4 +133,4 @@ export default new class loader {
       }
     }
   }
-}
+}()

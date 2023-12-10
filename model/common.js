@@ -16,19 +16,19 @@ if (!Bot?.adapter) {
 }
 
 /**
- * 休眠函数
- * @param ms 毫秒
- */
+* 休眠函数
+* @param ms 毫秒
+*/
 function sleep (ms) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 /**
- * 打印基本日志
- * @param id 开发者id(appID)
- * @param log 日志内容
- * @param err 可选参数，日志转为错误日志
- */
+* 打印基本日志
+* @param id 开发者id(appID)
+* @param log 日志内容
+* @param err 可选参数，日志转为错误日志
+*/
 function log (id, log, type = 'info') {
   id = chalk.hex('#868ECC')(Bot?.[id]?.nickname ? `[${Bot?.[id]?.nickname}(${id})] ` : (id ? `[${id}] ` : ''))
   const list = {
@@ -39,6 +39,56 @@ function log (id, log, type = 'info') {
     warn: function () { logger.warn(id ? id + log : log) }
   }
   return list[type]()
+}
+
+/** 得到铃音插件的前缀 */
+function nickname (id) {
+  id = chalk.hex('#868ECC')(Bot?.[id]?.nickname ? `[${Bot?.[id]?.nickname}(${id})] ` : (id ? `[${id}] ` : ''))
+  return id
+}
+/**
+* @param id Bot的id、QQ
+* @param log 日志内容
+*/
+function info (id, log) {
+  id = nickname(id)
+  logger.info(id || '', log)
+}
+
+/**
+* @param id Bot的id、QQ
+* @param log 日志内容
+*/
+function error (id, log) {
+  id = nickname(id)
+  logger.error(id || '', log)
+}
+
+/**
+* @param id Bot的id、QQ
+* @param log 日志内容
+*/
+function mark (id, log) {
+  id = nickname(id)
+  logger.mark(id || '', log)
+}
+
+/**
+* @param id Bot的id、QQ
+* @param log 日志内容
+*/
+function debug (id, log) {
+  id = nickname(id)
+  logger.debug(id || '', log)
+}
+
+/**
+* @param id Bot的id、QQ
+* @param log 日志内容
+*/
+function warn (id, log) {
+  id = nickname(id)
+  logger.warn(id || '', log)
 }
 
 /** 适配器重启发送消息 */
@@ -106,11 +156,11 @@ function array (data) {
 }
 
 /**
- * 制作转发消息
- * @param data 转发内容
- * @param node 开启后将转为shamrock格式的转发
- * @param e 特殊处理日志
- */
+* 制作转发消息
+* @param data 转发内容
+* @param node 开启后将转为shamrock格式的转发
+* @param e 特殊处理日志
+*/
 async function makeForwardMsg (data, node = false, e = {}) {
   const message = {}
   let allMsg = []
@@ -190,11 +240,11 @@ async function base64 (path) {
 }
 
 /**
- * 三方图床
- * @param file 文件路径地址
- * @param url 上传接口
- * @return url地址
- */
+* 三方图床
+* @param file 文件路径地址
+* @param url 上传接口
+* @return url地址
+*/
 async function uploadFile (file, url) {
   const formData = new FormData()
   formData.append('imgfile', new Blob([fs.readFileSync(file)], { type: 'image/jpeg' }), 'image.jpg')
@@ -205,11 +255,11 @@ async function uploadFile (file, url) {
 }
 
 /**
- * QQ图床
- * @param file 文件路径地址
- * @param uin botQQ
- * @return url地址
- */
+* QQ图床
+* @param file 文件路径地址
+* @param uin botQQ
+* @return url地址
+*/
 async function uploadQQ (file, uin) {
   const base64 = fs.readFileSync(file).toString('base64')
   const { message_id } = await Bot[uin].pickUser(uin).sendMsg([segment.image(`base64://${base64}`)])
@@ -220,9 +270,9 @@ async function uploadQQ (file, uin) {
 }
 
 /**
- * 传入字符串 提取url 返回数组
- * @param url
- */
+* 传入字符串 提取url 返回数组
+* @param url
+*/
 async function getUrls (url) {
   let urls = []
   /** 中文不符合url规范 */
@@ -265,13 +315,13 @@ function mkdirs (dirname) {
   }
 }
 /**
- *
- * @param url 要下载的文件链接
- * @param destPath 目标路径，如received/abc.pdf. 目前如果文件名重复会覆盖。
- * @param headers
- * @param absolute 是否是绝对路径，默认为false，此时拼接在data/lain下
- * @returns {Promise<string>} 最终下载文件的存储位置
- */
+*
+* @param url 要下载的文件链接
+* @param destPath 目标路径，如received/abc.pdf. 目前如果文件名重复会覆盖。
+* @param headers
+* @param absolute 是否是绝对路径，默认为false，此时拼接在data/lain下
+* @returns {Promise<string>} 最终下载文件的存储位置
+*/
 async function downloadFile (url, destPath, headers = {}, absolute = false) {
   let response = await fetch(url, { headers })
   if (!response.ok) {
@@ -299,14 +349,14 @@ async function downloadFile (url, destPath, headers = {}, absolute = false) {
 }
 
 /**
- * 处理segment中的图片、语音、文件
- * @param i 需要处理的对象
- * 传入类似于 {type:"image", file:"file://...", url:"http://"}
- *
- * 返回 {type:<file|buffer|base64|http|error>, file=:<file://|buffer|base64://|http://|i.file>}
- *
- * error为无法判断类型，直接返回i.file
- */
+* 处理segment中的图片、语音、文件
+* @param i 需要处理的对象
+* 传入类似于 {type:"image", file:"file://...", url:"http://"}
+*
+* 返回 {type:<file|buffer|base64|http|error>, file=:<file://|buffer|base64://|http://|i.file>}
+*
+* error为无法判断类型，直接返回i.file
+*/
 
 function getFile (i) {
   if (i?.url) {
@@ -350,13 +400,13 @@ function getFile (i) {
       type = 'http'
       file = i
     } else {
-      log('Lain-plugin', '未知格式，无法处理：' + i, 'error')
+      log('Lain-plugin', '未知格式，无法处理：' + i)
       type = 'error'
       file = i
     }
   } else {
     // 留个容错
-    log('Lain-plugin', '未知格式，无法处理：' + i, 'error')
+    log('Lain-plugin', '未知格式，无法处理：' + i)
     type = 'error'
     file = i
   }
@@ -367,6 +417,11 @@ function getFile (i) {
 export default {
   sleep,
   log,
+  info,
+  error,
+  debug,
+  mark,
+  warn,
   array,
   makeForwardMsg,
   base64,

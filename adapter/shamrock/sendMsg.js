@@ -5,7 +5,7 @@ import api from './api.js'
 
 export default class SendMsg {
   /** 传入基本配置 */
-  constructor (id, isGroup = true) {
+  constructor(id, isGroup = true) {
     /** 机器人uin */
     this.id = id
     /** 是否群聊 */
@@ -65,7 +65,7 @@ export default class SendMsg {
             const { file } = await api.download_file(this.id, base64.data.file)
             msg.push({ type: 'record', data: { file: `file://${file}` } })
           } catch (err) {
-            common.log(this.id, err, 'error')
+            common.error(this.id, err)
             msg.push(await this.getFile(i, 'record'))
           }
           break
@@ -77,7 +77,7 @@ export default class SendMsg {
             const { file } = await api.download_file(this.id, base64.data.file)
             msg.push({ type: 'video', data: { file: `file://${file}` } })
           } catch (err) {
-            common.log(this.id, err, 'error')
+            common.error(this.id, err)
             msg.push(await this.getFile(i, 'video'))
           }
           break
@@ -91,7 +91,7 @@ export default class SendMsg {
           break
         case 'touch':
           CQ.push(`{poke:${i.id}}`)
-          msg.push(i)
+          msg.push({ type: 'touch', data: { id: i.id } })
           break
         case 'weather':
           CQ.push(`[CQ=weather,${i.city ? ('city=' + i.city) : ('code=' + i.code)}]`)
@@ -171,7 +171,7 @@ export default class SendMsg {
   /** 发送消息 */
   async sendMsg (id, msg, CQ, node) {
     /** 打印日志 */
-    common.log(this.id, `发送${this.isGroup ? '群' : '好友'}消息：[${id}]${CQ.join('')}`)
+    common.info(this.id, `发送${this.isGroup ? '群' : '好友'}消息：[${id}]${CQ.join('')}`)
 
     /** 处理合并转发 */
     if (node) {
@@ -184,7 +184,7 @@ export default class SendMsg {
 
     /** 非合并转发 */
     const bot = Bot.shamrock.get(String(this.id))
-    if (!bot) return common.log(this.id, '不存在此Bot')
+    if (!bot) return common.info(this.id, '不存在此Bot')
 
     const echo = randomUUID()
     /** 判断群聊、私聊 */

@@ -241,8 +241,8 @@ export default new class message {
     try {
       res = await e.sendMsg.call(e.data, message)
     } catch (error) {
-      common.log(e.self_id, `发送消息失败：${error?.data || error?.message || error}`, 'error')
-      common.log(e.self_id, error, 'debug')
+      common.error(e.self_id, `发送消息失败：${error?.data || error?.message || error}`)
+      common.debug(e.self_id, error)
       res = await e.sendMsg.call(e.data, `发送消息失败：${error?.data || error?.message || error}`)
     }
 
@@ -252,8 +252,8 @@ export default new class message {
         try {
           res = await e.sendMsg.call(e.data, i)
         } catch (error) {
-          common.log(e.self_id, `发送消息失败：${error?.data || error?.message || error}`, 'error')
-          common.log(e.self_id, error, 'debug')
+          common.error(e.self_id, `发送消息失败：${error?.data || error?.message || error}`)
+          common.debug(e.self_id, error)
           res = await e.sendMsg.call(e.data, `发送消息失败：${error?.data || error?.message || error}`)
         }
       })
@@ -281,7 +281,7 @@ export default new class message {
       return await this.Upload_File(file, uploadType)
     } else {
       /** 这种情况都能碰到？ */
-      common.log('QQBotApi', '文件保存失败：' + i, 'error')
+      common.error('QQBotApi', '文件保存失败：' + i)
       return { type: 'text', text: JSON.stringify(i) }
     }
   }
@@ -300,9 +300,9 @@ export default new class message {
         if (res.ok) {
           const buffer = await res.arrayBuffer()
           fs.writeFileSync(fileMp3, Buffer.from(buffer))
-          common.log('QQBot', '语音文件下载成功', 'mark')
+          common.info('QQBot', '语音文件下载成功')
         } else {
-          common.log('QQBot', `语音文件下载失败：${res.status}，${res.statusText}`, 'error')
+          common.error('QQBot', `语音文件下载失败：${res.status}，${res.statusText}`)
           return { type: 'text', text: `语音文件下载失败：${res.status}，${res.statusText}` }
         }
       } catch (error) {
@@ -329,14 +329,14 @@ export default new class message {
           fs.unlink(file, () => { })
           /** 删除pcm文件 */
           fs.unlink(pcm, () => { })
-          common.log('QQBot', `silk转码完成：${silk}`, 'mark')
+          common.info('QQBot', `silk转码完成：${silk}`)
         })
         .catch((err) => {
-          common.log('QQBot', `转码失败${err}`, 'error')
+          common.error('QQBot', `转码失败${err}`)
           return { type: 'text', text: `转码失败${err}` }
         })
     } else {
-      common.log('QQBotApi', '本地文件不存在：' + file, 'error')
+      common.error('QQBotApi', '本地文件不存在：' + file)
       return { type: 'text', text: '本地文件不存在...' }
     }
 
@@ -344,7 +344,7 @@ export default new class message {
     if (fs.existsSync(silk)) {
       return await this.Upload_File(silk, 'audio')
     } else {
-      common.log('QQBotApi', '文件保存失败：' + silk, 'error')
+      common.error('QQBotApi', '文件保存失败：' + silk)
       return { type: 'text', text: '文件保存失败...' }
     }
   }
@@ -367,11 +367,11 @@ export default new class message {
 
       exec(`${cm} -i "${input}" -f s16le -ar 48000 -ac 1 "${output}"`, async (error, stdout, stderr) => {
         if (error) {
-          common.log('QQBot', `执行错误: ${error}`, 'error')
+          common.error('QQBot', `执行错误: ${error}`)
           reject(error)
           return
         }
-        common.log('QQBot', 'ffmpeg转码完成')
+        common.info('QQBot', 'ffmpeg转码完成')
         resolve()
       }
       )
@@ -394,7 +394,7 @@ export default new class message {
 
     /** 先判断是否配置公网 */
     if (QQBotImgIP && QQBotImgIP != '127.0.0.1') {
-      common.log('QQBotApi', `[生成文件-公网] url：${url}`)
+      common.info('QQBotApi', `[生成文件-公网] url：${url}`)
       await common.sleep(100)
       return { type, file: url }
     }
@@ -406,12 +406,12 @@ export default new class message {
         if (res.ok) {
           const { result } = await res.json()
           url = FigureBed.replace('/uploadimg', '') + result.path
-          common.log('QQBot默认图床', `[上传成功] ${url}`)
+          common.info('QQBot默认图床', `[上传成功] ${url}`)
           await common.sleep(100)
           return { type, file: url }
         } else {
           const data = await res.json()
-          common.log('Lain-plugin', `QQBot默认图床发生错误，将调用下一个方法：${data}`, 'error')
+          common.error('Lain-plugin', `QQBot默认图床发生错误，将调用下一个方法：${data}`)
         }
       } else if (type === 'image') {
         /** 调用QQ图床 */
@@ -421,17 +421,17 @@ export default new class message {
           await common.sleep(100)
           return { type, file: url }
         } else {
-          common.log('QQBotApi', `未发现可使用的QQ图床，默认返回公网：${url}`, 'error')
+          common.error('QQBotApi', `未发现可使用的QQ图床，默认返回公网：${url}`)
           await common.sleep(100)
           return { type, file: url }
         }
       } else {
-        common.log('Lain-plugin', `默认图床和QQ图床调用失败，默认返回公网：${url}`, 'error')
+        common.error('Lain-plugin', `默认图床和QQ图床调用失败，默认返回公网：${url}`)
         await common.sleep(100)
         return { type, file: url }
       }
     } catch {
-      common.log('Lain-plugin', `默认图床和QQ图床调用失败，默认返回公网：${url}`, 'error')
+      common.error('Lain-plugin', `默认图床和QQ图床调用失败，默认返回公网：${url}`)
       await common.sleep(100)
       return { type, file: url }
     }
@@ -456,7 +456,7 @@ export default new class message {
 
       let promises = urls.map(i => {
         return new Promise((resolve, reject) => {
-          common.log('QQBot', `url替换：${i}`, 'mark')
+          common.mark('QQBot', `url替换：${i}`)
           qrcode.toBuffer(i, {
             errorCorrectionLevel: 'H',
             type: 'png',

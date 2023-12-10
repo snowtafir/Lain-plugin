@@ -8,7 +8,7 @@ import { message, toRaw } from './message.js'
 let resList = false
 
 export default class bot {
-  constructor (id) {
+  constructor(id) {
     /** 机器人QQ号 */
     this.id = Number(id)
     this.loadRes()
@@ -68,14 +68,14 @@ export default class bot {
     for (let retries = 0; retries < 5; retries++) {
       group_list = await api.get_group_list(this.id)
       if (!(group_list && Array.isArray(group_list))) {
-        await common.log(this.id, `Shamrock群列表获取失败，正在重试：${retries + 1}`, 'error')
+        await common.error(this.id, `Shamrock群列表获取失败，正在重试：${retries + 1}`)
       }
       await common.sleep(50)
     }
 
     /** 群列表获取失败 */
     if (!group_list || !typeof group_list === 'object') {
-      await common.log(this.id, 'Shamrock群列表获取失败次数过多，已停止重试', 'error')
+      await common.error(this.id, 'Shamrock群列表获取失败次数过多，已停止重试')
     }
 
     if (group_list && typeof group_list === 'object') {
@@ -94,14 +94,14 @@ export default class bot {
     for (let retries = 0; retries < 5; retries++) {
       friend_list = await api.get_friend_list(this.id)
       if (!(friend_list && Array.isArray(friend_list))) {
-        await common.log(this.id, `Shamrock好友列表获取失败，正在重试：${retries + 1}`, 'error')
+        await common.error(this.id, `Shamrock好友列表获取失败，正在重试：${retries + 1}`)
       }
       await common.sleep(50)
     }
 
     /** 好友列表获取失败 */
     if (!friend_list || !typeof friend_list === 'object') {
-      await common.log(this.id, 'Shamrock好友列表获取失败次数过多，已停止重试', 'error')
+      await common.error(this.id, 'Shamrock好友列表获取失败次数过多，已停止重试')
     }
 
     if (friend_list && typeof friend_list === 'object') {
@@ -145,7 +145,7 @@ export default class bot {
         }
       }
     } catch (err) {
-      await common.log(this.id, 'Shamrock获取bkn失败。', 'warn')
+      await common.warn(this.id, 'Shamrock获取bkn失败。')
     }
 
     Bot[this.id].cookies = {}
@@ -161,12 +161,12 @@ export default class bot {
         }
         Bot[this.id].cookies[domain] = ck
       }).catch(error => {
-        common.log(this.id, `${domain} 获取cookie失败：${error}`, 'debug')
+        common.debug(this.id, `${domain} 获取cookie失败：${error}`)
       })
     }
 
     const log = `Shamrock加载资源成功：加载了${Bot[this.id].fl.size}个好友，${Bot[this.id].gl.size}个群。`
-    await common.log(this.id, log)
+    await common.info(this.id, log)
     resList = false
     return log
   }
@@ -176,7 +176,7 @@ export default class bot {
     const is_admin = Bot[this.id].gml.get(group_id)?.[this.id]?.role === 'admin'
     const is_owner = Bot[this.id].gml.get(group_id)?.[this.id]?.role === 'owner'
     return {
-      is_admin,
+      is_admin: is_owner || is_admin,
       is_owner,
       sendMsg: async (msg) => await this.sendMsg(group_id, msg, true),
       recallMsg: async (msg_id) => await this.recallMsg(msg_id),

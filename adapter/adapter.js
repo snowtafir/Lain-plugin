@@ -9,7 +9,7 @@ const adapter = []
 adapter.push(async function stdin () {
   const stdin = (await import('./stdin/stdin.js')).default
   await stdin()
-  return await common.log('标准输入', '加载完成...您可以在控制台输入指令哦~')
+  return await common.info('标准输入', '加载完成...您可以在控制台输入指令哦~')
 })
 
 /** 加载QQ频道适配器 */
@@ -25,7 +25,7 @@ adapter.push(async function QQGuild () {
       logger.error(err)
     }
   }
-  common.log('Lain-plugin', 'QQ频道适配器加载完成...')
+  common.info('Lain-plugin', 'QQ频道适配器加载完成...')
 })
 
 /** QQBot适配器 */
@@ -37,7 +37,7 @@ adapter.push(async function QQBot () {
       const createAndStartBot = (await import('./QQBot/index.js')).default
       return await createAndStartBot(cfg)
     })
-  } catch (err) { return common.log('QQBot', `QQBot适配器加载失败,${err}`, 'error') }
+  } catch (err) { return common.error('QQBot', `QQBot适配器加载失败,${err}`) }
 })
 
 /** 启动HTTP服务器，加载shamrock、Com微信适配器 */
@@ -51,9 +51,9 @@ for (let i of adapter) {
   try {
     await i()
   } catch (error) {
-    common.log('Lain-plugin', error, 'error')
+    common.error('Lain-plugin', error)
   }
 }
 
-common.log('Lain-plugin', `Lain-plugin插件${Bot.lain.version}全部初始化完成~`)
-common.log('Lain-plugin', 'https://gitee.com/Zyy955/Lain-plugin')
+common.info('Lain-plugin', `Lain-plugin插件${Bot.lain.version}全部初始化完成~`)
+common.info('Lain-plugin', 'https://gitee.com/Zyy955/Lain-plugin')
