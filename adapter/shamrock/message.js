@@ -146,14 +146,23 @@ export default new class zaiMsg {
         name: e.group_name,
         is_admin,
         is_owner,
-        pickMember: (id) => {
-          /** 取缓存！！！别问为什么，因为傻鸟同步 */
-          let member = Bot[self_id].gml.get(group_id)?.[id] || {}
-          member.info = { ...member }
-          return {
-            member,
-            ...member,
-            getAvatarUrl: (size = 0, userId = id) => `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${userId}`
+        pickMember: (id, refresh = false, cb = () => {}) => {
+          if (!refresh) {
+            /** 取缓存！！！别问为什么，因为傻鸟同步 */
+            let member = Bot[self_id].gml.get(group_id)?.[id] || {}
+            member.info = { ...member }
+            return {
+              member,
+              ...member,
+              getAvatarUrl: (size = 0, userId = id) => `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${userId}`
+            }
+          } else {
+            api.get_group_member_info(self_id, group_id, id, true).then(res => {
+              if (typeof cb === 'function') {
+                cb(res)
+              }
+            })
+            return {}
           }
         },
         getChatHistory: async (msg_id, num, reply) => {
@@ -161,9 +170,10 @@ export default new class zaiMsg {
             let { messages } = await api.get_group_msg_history(self_id, group_id, num, msg_id)
 
             /** 获取一下消息本身 */
-            let source = await api.get_msg(self_id, msg_id)
-            messages.push(source)
-
+            if (msg_id !== 0) {
+              let source = await api.get_msg(self_id, msg_id)
+              messages.push(source)
+            }
             messages = messages
               // 如果source获取失败，会报错
               .filter(m => Array.isArray(m?.message))
@@ -216,14 +226,14 @@ export default new class zaiMsg {
           return await api.set_group_whole_ban(self_id, group_id, type)
         },
         getMemberMap: async () => {
-          let group_Member = Bot[self_id].gml.get(group_id)
-          if (group_Member && Object.keys(group_Member) > 0) return group_Member
-          group_Member = new Map()
-          let member_list = await api.get_group_member_list(self_id, group_id)
-          member_list.forEach(user => {
-            group_Member.set(user.user_id, user)
+          let groupMember = Bot[self_id].gml.get(group_id)
+          if (groupMember && Object.keys(groupMember) > 0) return groupMember
+          groupMember = new Map()
+          let memberList = await api.get_group_member_list(self_id, group_id)
+          memberList.forEach(user => {
+            groupMember.set(user.user_id, user)
           })
-          return group_Member
+          return groupMember
         },
         /** 退群 */
         quit: async () => {

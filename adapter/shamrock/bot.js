@@ -39,7 +39,7 @@ export default class bot {
       pickGroup: (group_id) => this.pickGroup(Number(group_id)),
       setEssenceMessage: async (msg_id) => await this.setEssenceMessage(msg_id),
       sendPrivateMsg: async (user_id, msg) => await this.sendMsg(Number(user_id), msg, false),
-      getGroupMemberInfo: async (group_id, user_id) => await this.getGroupMemberInfo(Number(group_id), Number(user_id)),
+      getGroupMemberInfo: async (group_id, user_id, no_cache) => await this.getGroupMemberInfo(Number(group_id), Number(user_id), no_cache),
       removeEssenceMessage: async (msg_id) => await this.removeEssenceMessage(msg_id),
       makeForwardMsg: async (message) => await common.makeForwardMsg(message, true),
       getMsg: (msg_id) => '',
@@ -209,12 +209,12 @@ export default class bot {
         return group_Member
       },
       /**
-             * 获取聊天历史记录
-             * @param msg_id 起始消息的message_id（默认为0，表示从最后一条发言往前）
-             * @param num 数量
-             * @param reply 是否展开回复引用的消息(source)（实测数量大的时候耗时且可能出错）
-             * @return {Promise<Awaited<unknown>[]>}
-             */
+       * 获取聊天历史记录
+       * @param msg_id 起始消息的message_id（默认为0，表示从最后一条发言往前）
+       * @param num 数量
+       * @param reply 是否展开回复引用的消息(source)（实测数量大的时候耗时且可能出错）
+       * @return {Promise<Awaited<unknown>[]>}
+       */
       getChatHistory: async (msg_id, num, reply) => {
         let { messages } = await api.get_group_msg_history(this.id, group_id, num, msg_id)
         let group = Bot[this.id].gl.get(group_id)
@@ -315,11 +315,20 @@ export default class bot {
     }
   }
 
-  pickMember (group_id, user_id) {
-    /** 取缓存！！！别问为什么，因为傻鸟同步 */
-    let member = Bot[this.id].gml.get(group_id)?.[user_id] || {}
-    member.info = { ...member }
-    return member
+  pickMember (group_id, user_id, refresh = false, cb = () => {}) {
+    if (!refresh) {
+      /** 取缓存！！！别问为什么，因为傻鸟同步 */
+      let member = Bot[this.id].gml.get(group_id)?.[user_id] || {}
+      member.info = { ...member }
+      return member
+    } else {
+      api.get_group_member_info(this.id, group_id, user_id, true).then(res => {
+        if (typeof cb === 'function') {
+          cb(res)
+        }
+      })
+      return {}
+    }
   }
 
   /** 设置精华 */
@@ -334,11 +343,11 @@ export default class bot {
     return res?.message === '成功' ? '加精成功' : res?.message
   }
 
-  async getGroupMemberInfo (group_id, user_id) {
+  async getGroupMemberInfo (group_id, user_id, refresh) {
     /** 被自己坑了 */
     if (user_id == '88888' || user_id == 'stdin') user_id = this.id
     try {
-      let member = await api.get_group_member_info(this.id, group_id, user_id)
+      let member = await api.get_group_member_info(this.id, group_id, user_id, no_cache)
       member.card = member.nickname
       return member
     } catch {

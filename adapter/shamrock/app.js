@@ -24,10 +24,10 @@ class Shamrock {
     })
 
     bot.on('message', async (data) => {
+      common.debug(id, '[ws] received -> ' + data)
       data = JSON.parse(data)
       /** 带echo事件另外保存 */
       if (data?.echo) return Bot.lain.on.set(data.echo, data)
-
       try {
         await this.event(id, data)
       } catch (error) {

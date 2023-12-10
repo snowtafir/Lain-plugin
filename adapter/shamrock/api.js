@@ -100,9 +100,10 @@ let api = {
     * @param {string} id - 机器人QQ
     * @param {number} group_id - 群号
     * @param {number} user_id - 群成员QQ号
+    * @param {boolean} refresh - 是否强制刷新，会获取age, area和level字段
     */
-  async get_group_member_info (id, group_id, user_id) {
-    const params = { group_id, user_id }
+  async get_group_member_info (id, group_id, user_id, refresh = false) {
+    const params = { group_id, user_id, refresh }
     return await this.SendApi(id, 'get_group_member_info', params)
   },
 
@@ -684,6 +685,7 @@ let api = {
     if (!bot) return common.error(id, '不存在此Bot')
     const echo = randomUUID()
     // console.log("发送请求，echo:", echo, " 接口：", action, "参数：", params)
+    common.debug(id, '[ws] send -> ' + JSON.stringify({ echo, action, params }))
     bot.socket.send(JSON.stringify({ echo, action, params }))
 
     for (let i = 0; i < 1200; i++) {
@@ -691,7 +693,7 @@ let api = {
       if (data) {
         if (data.status === 'ok') {
           Bot.lain.on.delete(echo)
-          common.debug('SendApi返回结果', data.data)
+          // common.debug('SendApi返回结果', data.data)
           return data.data
         } else {
           common.error('Lain-plugin', data)
