@@ -347,7 +347,7 @@ export default class bot {
     /** 被自己坑了 */
     if (user_id == '88888' || user_id == 'stdin') user_id = this.id
     try {
-      let member = await api.get_group_member_info(this.id, group_id, user_id, no_cache)
+      let member = await api.get_group_member_info(this.id, group_id, user_id, refresh)
       member.card = member.nickname
       return member
     } catch {
