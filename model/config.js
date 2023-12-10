@@ -152,6 +152,19 @@ Bot.lain = {
         display: 'qq-group-bot',
         version: dependencies['qq-group-bot'].replace('^', '')
       }
+    },
+    WeXin: {
+      /** 插件 */
+      version: {
+        id: 'WeXin',
+        name: 'WeXin',
+        version: adapter.WeXin
+      },
+      /** 依赖包 */
+      apk: {
+        display: 'qq-group-bot',
+        version: dependencies.wechat4u.replace('^', '')
+      }
     }
   }
 }

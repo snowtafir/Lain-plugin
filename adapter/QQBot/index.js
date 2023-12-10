@@ -29,14 +29,9 @@ export default class StartQQBot {
   async StartBot () {
     this.bot = new QQBot.Bot(this.config)
     // 群聊被动回复
-    this.bot.on('message.group', async (e) => {
-      return await Bot.emit('message', await this.msg(e, true))
-    })
-
+    this.bot.on('message.group', async (e) => Bot.emit('message', await this.msg(e, true)))
     // 私聊被动回复
-    this.bot.on('message.private', async (e) => {
-      return await Bot.emit('message', await this.msg(e, true))
-    })
+    this.bot.on('message.private', async (e) => await Bot.emit('message', await this.msg(e, true)))
 
     /** 开始链接 */
     await this.bot.start()
