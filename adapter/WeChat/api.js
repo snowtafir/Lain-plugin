@@ -120,7 +120,7 @@ const api = {
         concat += JSON.stringify(i)
       }
     }
-    await common.info(Bot.lain.wc.uin, `发送${send_type === 'private' ? '好友消息' : '群消息'}：[${id}] ${concat}`)
+    common.info(Bot.lain.wc.uin, `发送${send_type === 'private' ? '好友消息' : '群消息'}：[${id}] ${concat}`)
     return await this.SendApi(params, 'send_message')
   },
   /** 发送请求事件 */

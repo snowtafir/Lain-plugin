@@ -11,7 +11,7 @@ class Shamrock {
     const id = request.headers['x-self-id']
 
     if (!id) {
-      await common.error('shamrock', '没有提供机器人标识')
+      common.error('shamrock', '没有提供机器人标识')
       return bot.close()
     }
 
@@ -37,7 +37,7 @@ class Shamrock {
     })
 
     bot.on('close', async () => {
-      await common.error(id, '连接已关闭')
+      common.error(id, '连接已关闭')
     })
   }
 
@@ -51,7 +51,7 @@ class Shamrock {
       /** 产生连接 */
       lifecycle: async () => {
         const bot = await Bot.shamrock.get(id)
-        await common.info(id, `建立连接成功，正在加载资源：${bot['user-agent']}`)
+        common.info(id, `建立连接成功，正在加载资源：${bot['user-agent']}`)
         return new addBot(id)
       },
       /** 心跳 */
@@ -71,9 +71,9 @@ class Shamrock {
             data.notice_type = 'group'
             data.sub_type = 'recall'
             if (data.operator_id === data.user_id) {
-              await common.info(id, `群消息撤回：[${data.group_id}，${data.user_id}] ${data.message_id}`)
+              common.info(id, `群消息撤回：[${data.group_id}，${data.user_id}] ${data.message_id}`)
             } else {
-              await common.info(id, `群消息撤回：[${data.group_id}]${data.operator_id} 撤回 ${data.user_id}的消息 ${data.message_id} `)
+              common.info(id, `群消息撤回：[${data.group_id}]${data.operator_id} 撤回 ${data.user_id}的消息 ${data.message_id} `)
             }
             return await Bot.emit('notice.group', await message.msg(data))
           case 'group_increase': {
@@ -82,14 +82,14 @@ class Shamrock {
             data.sub_type = 'increase'
             data.user_id = data.target_id
             if (data.self_id === data.user_id) {
-              await common.info(id, `机器人加入群聊：[${data.group_id}}]`)
+              common.info(id, `机器人加入群聊：[${data.group_id}}]`)
             } else {
               switch (sub_type) {
                 case 'invite': {
-                  await common.info(id, `[${data.operator_id}]邀请[${data.user_id}]加入了群聊[${data.group_id}] `)
+                  common.info(id, `[${data.operator_id}]邀请[${data.user_id}]加入了群聊[${data.group_id}] `)
                 }
                 default: {
-                  await common.info(id, `新人${data.user_id}加入群聊[${data.group_id}] `)
+                  common.info(id, `新人${data.user_id}加入群聊[${data.group_id}] `)
                 }
               }
             }
@@ -100,11 +100,11 @@ class Shamrock {
             data.sub_type = 'decrease'
             data.user_id = data.target_id
             if (data.self_id === data.user_id) {
-              await common.info(id, data.operator_id
+              common.info(id, data.operator_id
                 ? `机器人被[${data.operator_id}]踢出群聊：[${data.group_id}}]`
                 : `机器人退出群聊：[${data.group_id}}]`)
             } else {
-              await common.info(id, data.operator_id
+              common.info(id, data.operator_id
                 ? `成员[${data.user_id}]被[${data.operator_id}]踢出群聊：[${data.group_id}}]`
                 : `成员[${data.user_id}]退出群聊[${data.group_id}}]`)
             }
@@ -120,10 +120,10 @@ class Shamrock {
               gml[data.self_id] = { ...gml[data.self_id] }
               if (data.set) {
                 gml[data.self_id].role = 'admin'
-                await common.info(id, `机器人[${data.self_id}]在群[${data.group_id}]被设置为管理员`)
+                common.info(id, `机器人[${data.self_id}]在群[${data.group_id}]被设置为管理员`)
               } else {
                 gml[data.self_id].role = 'member'
-                await common.info(id, `机器人[${data.self_id}]在群[${data.group_id}]被取消管理员`)
+                common.info(id, `机器人[${data.self_id}]在群[${data.group_id}]被取消管理员`)
               }
               Bot[id].gml.set(data.group_id, { ...gml })
             } else {
@@ -131,10 +131,10 @@ class Shamrock {
               gml[data.target_id] = { ...gml[data.target_id] }
               if (data.set) {
                 gml[data.target_id].role = 'admin'
-                await common.info(id, `成员[${data.target_id}]在群[${data.group_id}]被设置为管理员`)
+                common.info(id, `成员[${data.target_id}]在群[${data.group_id}]被设置为管理员`)
               } else {
                 gml[data.target_id].role = 'member'
-                await common.info(id, `成员[${data.target_id}]在群[${data.group_id}]被取消管理员`)
+                common.info(id, `成员[${data.target_id}]在群[${data.group_id}]被取消管理员`)
               }
               Bot[id].gml.set(data.group_id, { ...gml })
             }
@@ -149,11 +149,11 @@ class Shamrock {
               data.sub_type = 'ban'
             }
             if (data.self_id === data.target_id) {
-              await common.info(id, data.duration === 0
+              common.info(id, data.duration === 0
                 ? `机器人[${data.self_id}]在群[${data.group_id}]被解除禁言`
                 : `机器人[${data.self_id}]在群[${data.group_id}]被禁言${data.duration}秒`)
             } else {
-              await common.info(id, data.duration === 0
+              common.info(id, data.duration === 0
                 ? `成员[${data.target_id}]在群[${data.group_id}]被解除禁言`
                 : `成员[${data.target_id}]在群[${data.group_id}]被禁言${data.duration}秒`)
             }
@@ -164,7 +164,7 @@ class Shamrock {
               case 'poke': {
                 let action = data.poke_detail?.action || '戳了戳'
                 let suffix = data.poke_detail?.suffix || ''
-                await common.info(id, `[${data.operator_id}]${action}[${data.target_id}]${suffix}`)
+                common.info(id, `[${data.operator_id}]${action}[${data.target_id}]${suffix}`)
                 break
               }
               default:
@@ -188,15 +188,16 @@ class Shamrock {
           case 'group': {
             data.tips = data.comment
             if (data.sub_type === 'add') {
-              await common.info(id, `[${data.user_id}]申请入群[${data.group_id}]: ${data.tips}`)
+              common.info(id, `[${data.user_id}]申请入群[${data.group_id}]: ${data.tips}`)
             } else {
               // invite
-              await common.info(id, `[${data.user_id}]邀请机器人入群[${data.group_id}]: ${data.tips}`)
+              common.info(id, `[${data.user_id}]邀请机器人入群[${data.group_id}]: ${data.tips}`)
             }
             return await this.message(data)
           }
           case 'friend': {
-            await common.info(id, `[${data.user_id}]申请加机器人[${data.self_id}]好友: ${data.comment}`)
+            data.sub_type = 'add'
+            common.info(id, `[${data.user_id}]申请加机器人[${data.self_id}]好友: ${data.comment}`)
             return await Bot.emit('request', await message.msg(data))
             // return await this.message(data)
           }
@@ -227,10 +228,10 @@ shamrock.on('connection', async (bot, request) => {
 shamrock.on('error', async error => {
   if (error.code === 'EADDRINUSE') {
     const msg = `Shamrock：启动WS服务器失败，端口${this.port}已被占用，请自行解除端口`
-    return await common.error(this.id, msg)
+    return common.error(this.id, msg)
   }
   const msg = `Shamrock - 发生错误：${error.message}`
-  await common.error(this.id, msg)
+  common.error(this.id, msg)
   return await common.debug(this.id, msg)
 })
 

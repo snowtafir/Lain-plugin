@@ -9,7 +9,7 @@ const adapter = []
 adapter.push(async function stdin () {
   const stdin = (await import('./stdin/stdin.js')).default
   await stdin()
-  return await common.info('标准输入', '加载完成...您可以在控制台输入指令哦~')
+  return common.info('标准输入', '加载完成...您可以在控制台输入指令哦~')
 })
 
 /** 加载QQ频道适配器 */

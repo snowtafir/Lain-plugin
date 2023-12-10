@@ -49,7 +49,7 @@ export default new class zaiMsg {
             if (e.flag) {
               return await api.set_friend_add_request(self_id, e.flag, approve)
             } else {
-              await common.error(self_id, '处理好友申请失败：缺少flag参数')
+              common.error(self_id, '处理好友申请失败：缺少flag参数')
               return false
             }
           }
@@ -61,10 +61,10 @@ export default new class zaiMsg {
               return await api.set_group_add_request(self_id, e.flag, e.sub_type, approve)
             } else {
               if (e.sub_type === 'add') {
-                await common.error(self_id, '处理入群申请失败：缺少flag参数')
+                common.error(self_id, '处理入群申请失败：缺少flag参数')
               } else {
                 // invite
-                await common.error(self_id, '处理邀请机器人入群失败：缺少flag参数')
+                common.error(self_id, '处理邀请机器人入群失败：缺少flag参数')
               }
               return false
             }
@@ -78,7 +78,7 @@ export default new class zaiMsg {
     /** 先打印日志 */
     if (message_type === 'private') {
       isGroup = false
-      await common.info(self_id, `好友消息：[${sender?.nickname || sender?.card}(${user_id})] ${raw_message}`)
+      common.info(self_id, `好友消息：[${sender?.nickname || sender?.card}(${user_id})] ${raw_message}`)
     } else {
       try {
         group_name = Bot[self_id].gl.get(group_id)?.group_name
@@ -86,7 +86,7 @@ export default new class zaiMsg {
         group_name = group_id
       }
 
-      await common.info(self_id, `群消息：[${group_name}，${sender?.nickname || sender?.card}(${user_id})] ${raw_message}`)
+      common.info(self_id, `群消息：[${group_name}，${sender?.nickname || sender?.card}(${user_id})] ${raw_message}`)
     }
 
     /** 快速撤回 */

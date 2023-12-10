@@ -78,10 +78,10 @@ export default class WebSocket {
     })
 
     this.Server.listen(this.port, async () => {
-      await common.info('Lain-plugin', `HTTP服务器：${logger.blue(`http://localhost:${this.port}`)}`)
-      await common.info('Lain-plugin', `QQBotApi：${logger.blue(`http://localhost:${this.port}/api/QQBot`)}`)
-      await common.info('Lain-plugin', `本地 Shamrock 连接地址：${logger.blue(`ws://localhost:${this.port}${this.path}`)}`)
-      await common.info('Lain-plugin', `本地 ComWeChat 连接地址：${logger.blue(`ws://localhost:${this.port}${this.path_wx}`)}`)
+      common.info('Lain-plugin', `HTTP服务器：${logger.blue(`http://localhost:${this.port}`)}`)
+      common.info('Lain-plugin', `QQBotApi：${logger.blue(`http://localhost:${this.port}/api/QQBot`)}`)
+      common.info('Lain-plugin', `本地 Shamrock 连接地址：${logger.blue(`ws://localhost:${this.port}${this.path}`)}`)
+      common.info('Lain-plugin', `本地 ComWeChat 连接地址：${logger.blue(`ws://localhost:${this.port}${this.path_wx}`)}`)
     })
 
     /** 捕获错误 */
@@ -92,8 +92,8 @@ export default class WebSocket {
           const response = await fetch(`http://localhost:${this.port}/api/close-server`)
           if (response.ok) {
             await common.sleep(5000)
-            await common.info('Lain-plugin', `本地 Shamrock 连接地址：${logger.blue(`ws://localhost:${this.port}${this.path}`)}`)
-            await common.info('Lain-plugin', `本地 ComWeChat 连接地址：${logger.blue(`ws://localhost:${this.port}${this.path_wx}`)}`)
+            common.info('Lain-plugin', `本地 Shamrock 连接地址：${logger.blue(`ws://localhost:${this.port}${this.path}`)}`)
+            common.info('Lain-plugin', `本地 ComWeChat 连接地址：${logger.blue(`ws://localhost:${this.port}${this.path_wx}`)}`)
           } else {
             throw new Error(`HTTP请求失败，状态码: ${response.status}`)
           }

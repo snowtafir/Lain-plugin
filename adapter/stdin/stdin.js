@@ -95,7 +95,7 @@ function msg (msg) {
       return await sendMsg(reply)
     },
     recallMsg: async (msg_id) => {
-      return await common.info(uin, `撤回消息：${msg_id}`)
+      return common.info(uin, `撤回消息：${msg_id}`)
     },
     makeForwardMsg: async (forwardMsg) => {
       return await makeForwardMsg(forwardMsg)
@@ -104,7 +104,7 @@ function msg (msg) {
 
   /** 快速撤回 */
   e.recall = async () => {
-    return await common.info(uin, `撤回消息：${msg_id}`)
+    return common.info(uin, `撤回消息：${msg_id}`)
   }
   /** 快速回复 */
   e.reply = async (reply) => {
@@ -140,5 +140,5 @@ async function sendMsg (msg) {
       log.push(JSON.stringify(msg).slice(0, 2000))
     }
   }
-  return await common.info(uin, `发送消息：${log.join('\n')}`)
+  return common.info(uin, `发送消息：${log.join('\n')}`)
 }

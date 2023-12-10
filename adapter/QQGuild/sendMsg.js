@@ -271,7 +271,7 @@ export default class SendMsg {
             else msg.content = content
             logs += content
         }
-        await common.info(this.id, `发送消息：[${this.group_name}] ${logs}`)
+        common.info(this.id, `发送消息：[${this.group_name}] ${logs}`)
         return msg
     }
 

@@ -68,14 +68,14 @@ export default class bot {
     for (let retries = 0; retries < 5; retries++) {
       group_list = await api.get_group_list(this.id)
       if (!(group_list && Array.isArray(group_list))) {
-        await common.error(this.id, `Shamrock群列表获取失败，正在重试：${retries + 1}`)
+        common.error(this.id, `Shamrock群列表获取失败，正在重试：${retries + 1}`)
       }
       await common.sleep(50)
     }
 
     /** 群列表获取失败 */
     if (!group_list || !typeof group_list === 'object') {
-      await common.error(this.id, 'Shamrock群列表获取失败次数过多，已停止重试')
+      common.error(this.id, 'Shamrock群列表获取失败次数过多，已停止重试')
     }
 
     if (group_list && typeof group_list === 'object') {
@@ -94,14 +94,14 @@ export default class bot {
     for (let retries = 0; retries < 5; retries++) {
       friend_list = await api.get_friend_list(this.id)
       if (!(friend_list && Array.isArray(friend_list))) {
-        await common.error(this.id, `Shamrock好友列表获取失败，正在重试：${retries + 1}`)
+        common.error(this.id, `Shamrock好友列表获取失败，正在重试：${retries + 1}`)
       }
       await common.sleep(50)
     }
 
     /** 好友列表获取失败 */
     if (!friend_list || !typeof friend_list === 'object') {
-      await common.error(this.id, 'Shamrock好友列表获取失败次数过多，已停止重试')
+      common.error(this.id, 'Shamrock好友列表获取失败次数过多，已停止重试')
     }
 
     if (friend_list && typeof friend_list === 'object') {
@@ -145,7 +145,7 @@ export default class bot {
         }
       }
     } catch (err) {
-      await common.warn(this.id, 'Shamrock获取bkn失败。')
+      common.warn(this.id, 'Shamrock获取bkn失败。')
     }
 
     Bot[this.id].cookies = {}
@@ -166,7 +166,7 @@ export default class bot {
     }
 
     const log = `Shamrock加载资源成功：加载了${Bot[this.id].fl.size}个好友，${Bot[this.id].gl.size}个群。`
-    await common.info(this.id, log)
+    common.info(this.id, log)
     resList = false
     return log
   }
