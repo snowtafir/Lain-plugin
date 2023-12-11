@@ -691,9 +691,8 @@ let api = {
     for (let i = 0; i < 1200; i++) {
       const data = await Bot.lain.on.get(echo)
       if (data) {
+        Bot.lain.on.delete(echo)
         if (data.status === 'ok') {
-          Bot.lain.on.delete(echo)
-          // common.debug('SendApi返回结果', data.data)
           return data.data
         } else {
           common.error('Lain-plugin', data)
