@@ -438,9 +438,9 @@ export default class StartQQBot {
 
   /** ffmpeg转码 转为pcm */
   async runFfmpeg (input, output) {
-    return new Promise(async (resolve, reject) => {
+    return new Promise((resolve, reject) => {
       let cm
-      let ret = await this.execSync('ffmpeg -version')
+      let ret = this.execSync('ffmpeg -version')
       if (ret.stdout) {
         cm = 'ffmpeg'
       } else {
@@ -493,7 +493,7 @@ export default class StartQQBot {
         if (res.ok) {
           const { result } = await res.json()
           url = FigureBed.replace('/uploadimg', '') + result.path
-          common.info('QQBot默认图床', `[上传成功] ${url}`)
+          common.info('Lain-plugin', `[上传文件成功] ${url}`)
           await common.sleep(100)
           return { type, file: url }
         } else {
@@ -508,7 +508,7 @@ export default class StartQQBot {
           await common.sleep(100)
           return { type, file: url }
         } else {
-          common.error('QQBotApi', `未发现可使用的QQ图床，默认返回公网：${url}`)
+          common.error('Lain-plugin', `未发现可使用的QQ图床，默认返回公网：${url}`)
           await common.sleep(100)
           return { type, file: url }
         }
@@ -543,7 +543,7 @@ export default class StartQQBot {
 
       let promises = urls.map(i => {
         return new Promise((resolve, reject) => {
-          common.mark('QQBot', `url替换：${i}`)
+          common.mark('Lain-plugin', `url替换：${i}`)
           qrcode.toBuffer(i, {
             errorCorrectionLevel: 'H',
             type: 'png',
