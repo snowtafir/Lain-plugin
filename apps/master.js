@@ -18,6 +18,10 @@ export class LainMaster extends plugin {
                     reg: /^#(删除|取消)主人$/,
                     fnc: "del_master",
                     permission: "master"
+                },
+                {
+                    reg: /^#(禁用|启用|恢复)主人$/,
+                    fnc: 'off_master'
                 }
             ]
         })
@@ -38,6 +42,7 @@ export class LainMaster extends plugin {
             /** 检测用户是否已经是主人 */
             if (e.isMaster) return e.reply([segment.at(e.user_id), "已经是主人了哦(〃'▽'〃)"])
         }
+        
         /** 生成验证码 */
         sign[user_id] = crypto.randomUUID()
         logger.mark(`设置主人验证码：${logger.green(sign[e.user_id])}`)
@@ -56,6 +61,26 @@ export class LainMaster extends plugin {
         return await e.reply([segment.at(e.at), "拜拜~"])
     }
 
+    async off_master(e) {
+        let user_id = Number(e.user_id) || e.user_id
+        if (/禁用/.test(e.msg)) {
+            /** 检测用户是否是主人 */
+            if (!e.isMaster) return e.reply([segment.at(e.user_id), "只有主人才能命令我哦~\n(*/ω＼*)"])
+            const cfg = new yaml("./config/config/other.yaml")
+            cfg.addVal("masterQQ", '--' + String(user_id))
+            cfg.delVal("masterQQ", user_id)
+            return await e.reply([segment.at(user_id), "已临时禁用你的主人权限！\n如需恢复发送 #启用主人"])
+        } else {
+            /** 检测用户是否是主人 */
+            if (e.isMaster) return e.reply([segment.at(e.user_id), "已经是主人了哦(〃'▽'〃)"])
+            const cfg = new yaml("./config/config/other.yaml")
+            if (!cfg.value("masterQQ", '--' + String(user_id))) return e.reply([segment.at(user_id), "只有主人才能命令我哦~\n(*/ω＼*)"])
+            cfg.addVal("masterQQ", user_id)
+            cfg.delVal("masterQQ", '--' + String(user_id))
+            return await e.reply([segment.at(user_id), "已恢复你的主人权限~(*/ω＼*)"])
+        }
+    }
+
     SetAdmin() {
         /** 结束上下文 */
         this.finish('SetAdmin')
@@ -70,6 +95,7 @@ export class LainMaster extends plugin {
     /** 设置主人 */
     addmaster(e, user_id = null) {
         user_id = user_id || e.user_id
+        if (Number(user_id)) user_id = Number(user_id)
         const cfg = new yaml("./config/config/other.yaml")
         cfg.addVal("masterQQ", user_id)
         return [segment.at(user_id), "新主人好~(*/ω＼*)"]
