@@ -387,13 +387,13 @@ export default class StartQQBot {
         if (res.ok) {
           const buffer = await res.arrayBuffer()
           fs.writeFileSync(fileMp3, Buffer.from(buffer))
-          common.info('QQBot', '语音文件下载成功')
+          common.mark('Lain-plugin', `语音文件下载成功：${file}`)
         } else {
-          common.error('QQBot', `语音文件下载失败：${res.status}，${res.statusText}`)
+          common.error('Lain-plugin', `语音文件下载失败：${res.status}，${res.statusText}`)
           return { type: 'text', text: `语音文件下载失败：${res.status}，${res.statusText}` }
         }
       } catch (error) {
-        common.error('QQBot', error.message, 'errror')
+        common.error('Lain-plugin', error.message, 'errror')
         return { type: 'text', text: `语音文件下载失败：${error?.message || error}` }
       }
       file = fileMp3
@@ -404,26 +404,26 @@ export default class StartQQBot {
         /** mp3 转 pcm */
         await this.runFfmpeg(file, pcm)
       } catch (error) {
-        console.error(`执行错误: ${error}`)
+        console.error('执行错误:', error)
         return { type: 'text', text: `语音转码失败：${error}` }
       }
       /** pcm 转 silk */
       await encodeSilk(fs.readFileSync(pcm), 48000)
         .then((silkData) => {
           /** 转silk完成，保存 */
-          fs.writeFileSync(silk, silkData)
+          fs.writeFileSync(silk, silkData.data)
           /** 删除初始mp3文件 */
           fs.unlink(file, () => { })
           /** 删除pcm文件 */
           fs.unlink(pcm, () => { })
-          common.info('QQBot', `silk转码完成：${silk}`)
+          common.mark('Lain-plugin', `silk转码完成：${silk}`)
         })
         .catch((err) => {
-          common.error('QQBot', `转码失败${err}`)
+          common.error('Lain-plugin', `转码失败${err}`)
           return { type: 'text', text: `转码失败${err}` }
         })
     } else {
-      common.error('QQBotApi', '本地文件不存在：' + file)
+      common.error('Lain-plugin', '本地文件不存在：' + file)
       return { type: 'text', text: '本地文件不存在...' }
     }
 
@@ -454,11 +454,11 @@ export default class StartQQBot {
 
       exec(`${cm} -i "${input}" -f s16le -ar 48000 -ac 1 "${output}"`, async (error, stdout, stderr) => {
         if (error) {
-          common.error('QQBot', `执行错误: ${error}`)
+          common.error('Lain-plugin', `执行错误: ${error}`)
           reject(error)
           return
         }
-        common.info('QQBot', 'ffmpeg转码完成')
+        common.mark('Lain-plugin', `ffmpeg转码完成：${input} => ${output}`)
         resolve()
       }
       )
