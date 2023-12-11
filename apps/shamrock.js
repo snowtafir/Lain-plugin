@@ -87,7 +87,7 @@ export class shamrock extends plugin {
         return
       }
       let client = new ShamrockRepoClient(Bot.lain.cfg.githubKey)
-      let actions = await client.getActions()
+      let actions = await client.getActions(10)
       let latestAll = actions.artifacts.find(a => a.name.includes('all'))
       let url = latestAll.archive_download_url
       let name = latestAll.name
