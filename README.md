@@ -1,9 +1,8 @@
-![Lain-plugin](https://socialify.git.ci/Zyy955/Lain-plugin/image?description=1&font=Jost&forks=1&issues=1&language=1&name=1&owner=1&pulls=1&stargazers=1&theme=Light)
+![Lain-plugin](https://socialify.git.ci/Zyy955/Lain-plugin/image?description=1&font=KoHo&forks=1&issues=1&language=1&logo=https://cdn.jsdelivr.net/gh/Zyy955/imgs/img/202312120000234.jpg&name=1&owner=1&pattern=Circuit%20Board&pulls=1&stargazers=1&theme=Light)
 
 ## 简介
-- (╥╯^╰╥) 在线征集美工大佬，仓库主页缺一个标题图！！！
 - [Github](https://github.com/Zyy955/Lain-plugin)
-- [Gitee](https://gitee.com/Zyy955/Lain-plugin)
+- [Gitee镜像](https://gitee.com/Zyy955/Lain-plugin)
 - 插件更新日志：[点击查看](./CHANGELOG.md)
 - 本项目使用 [GPL-3.0](./LICENSE) 开源协议，欢迎任何形式的贡献！
 
