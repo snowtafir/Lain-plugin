@@ -408,6 +408,9 @@ function getFile (i) {
       // 如果是url，则直接返回url
       type = 'http'
       file = i
+    } else if (i.includes('protobuf://')) {
+      type = 'buffer'
+      file = Buffer.from(i, 'base64')
     } else {
       log('Lain-plugin', '未知格式，无法处理：' + i)
       type = 'error'

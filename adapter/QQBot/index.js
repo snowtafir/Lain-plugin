@@ -274,7 +274,7 @@ export default class StartQQBot {
   async message (e) {
     if (!Array.isArray(e)) e = [e]
     e = common.array(e)
-    let text = ''
+    let text = []
     const image = []
     const message = []
 
@@ -296,7 +296,7 @@ export default class StartQQBot {
               if (msg.type === 'image') {
                 image.push(msg)
               } else {
-                text += `\n${msg.text}`
+                text.push(msg.text)
               }
             })
             break
@@ -311,11 +311,11 @@ export default class StartQQBot {
     }
 
     if (image.length) {
-      message.push({ type: 'text', text: text.trim() })
+      if (text.length) message.push({ type: 'text', text: text.join('\n') })
       message.push(image[0])
       image.splice(0, 1)
     } else {
-      message.push({ type: 'text', text: text.trim() })
+      if (text.length) message.push({ type: 'text', text: text.join('\n') })
     }
 
     return { message, image }

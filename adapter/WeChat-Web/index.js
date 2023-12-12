@@ -182,7 +182,9 @@ export default class StartWeChat4u {
         this.bot.getMsgImg(msg.MsgId)
           .then(res => {
             const _path = process.cwd() + `/temp/WeXin/${msg.MsgId}.gif`
-            if (!fs.existsSync(_path)) fs.writeFileSync(_path, res.data)
+            res = res.data.split(';base64,').pop()
+            res = Buffer.from(res, 'base64')
+            if (!fs.existsSync(_path)) fs.writeFileSync(_path, res)
             message.push({ type: 'image', file: _path })
             toString += `{image:${_path}}`
             common.info(this.id, `群消息：[表情:${_path}]`)
