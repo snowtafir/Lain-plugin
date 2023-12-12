@@ -438,9 +438,9 @@ export default class StartQQBot {
 
   /** ffmpeg转码 转为pcm */
   async runFfmpeg (input, output) {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       let cm
-      let ret = this.execSync('ffmpeg -version')
+      let ret = await this.execSync('ffmpeg -version')
       if (ret.stdout) {
         cm = 'ffmpeg'
       } else {
