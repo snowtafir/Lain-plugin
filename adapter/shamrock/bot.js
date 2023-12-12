@@ -46,7 +46,8 @@ export default class bot {
       quit: (group_id) => this.quit(group_id),
       getFriendMap: () => Bot[this.id].fl,
       getGroupList: () => Bot[this.id].gl,
-      getGuildList: () => Bot[this.id].tl
+      getGuildList: () => Bot[this.id].tl,
+      getMuteList: async (group_id) => await this.getMuteList(group_id)
     }
 
     await common.init('Lain:restart')
@@ -352,5 +353,10 @@ export default class bot {
   /** 撤回消息 */
   async recallMsg (msg_id) {
     return await api.delete_msg(this.id, msg_id)
+  }
+
+  /** 获取禁言列表 */
+  async getMuteList (group_id) {
+    return await api.get_prohibited_member_list(this.id, group_id)
   }
 }
