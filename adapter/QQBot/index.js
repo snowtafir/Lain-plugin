@@ -256,7 +256,7 @@ export default class StartQQBot {
   /** 小兔崽子 */
   async QQBotTips (data, groupId) {
     /** 首次进群后，推送防司马崽声明~ */
-    if (!await redis.get(`lain:QQBot:tip:${groupId}`)) {
+    if (!await redis.get(`lain:QQBot:tips:${groupId}`)) {
       const msg = []
       const name = `「${Bot[this.id].nickname}」`
       msg.push('温馨提示：')
