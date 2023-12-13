@@ -426,6 +426,17 @@ function getFile (i) {
   return { type, file }
 }
 
+/** 保存每个适配器收到的消息次数 */
+async function recvMsg (adapter) {
+  await redis.incr(`lain:recvMsg:${adapter}`)
+}
+
+/** 读取每个适配器收到的消息次数 */
+async function readMsg (adapter) {
+  const msg = await redis.get(`lain:recvMsg:${adapter}`)
+  return msg || 0
+}
+
 export default {
   sleep,
   log,
@@ -446,5 +457,7 @@ export default {
   init,
   downloadFile,
   mkdirs,
-  getFile
+  getFile,
+  recvMsg,
+  readMsg
 }

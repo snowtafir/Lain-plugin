@@ -124,7 +124,8 @@ export default class guild {
       },
       getFriendMap: () => Bot[this.id].fl,
       getGroupList: () => Bot[this.id].gl,
-      getGuildList: () => Bot[this.id].tl
+      getGuildList: () => Bot[this.id].tl,
+      readMsg: async () => await common.readMsg('QQGuild')
     }
 
     /** 公域私域 */
@@ -205,15 +206,15 @@ export default class guild {
       case 'MESSAGE_CREATE':
         await this.permissions(data)
         break
-        /** 私信 */
+      /** 私信 */
       case 'DIRECT_MESSAGE_CREATE':
         await this.permissions(data, '私信')
         break
-        /** 公域事件 仅接收@机器人消息 */
+      /** 公域事件 仅接收@机器人消息 */
       case 'AT_MESSAGE_CREATE':
         await this.permissions(data)
         break
-        /** 其他事件不需要给云崽、直接单独处理即可 */
+      /** 其他事件不需要给云崽、直接单独处理即可 */
       default:
         await (new qg_log(this.id)).event(data)
         break

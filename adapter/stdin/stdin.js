@@ -25,6 +25,7 @@ export default async function stdin () {
     version: Bot.lain.adapter.stdin.version,
     /** 转发 */
     makeForwardMsg: async (forwardMsg) => await makeForwardMsg(forwardMsg),
+    readMsg: async () => await common.readMsg('stdin'),
     pickUser: (userId) => {
       return {
         sendMsg: async (msg) => await sendMsg(msg),
@@ -110,6 +111,8 @@ function msg (msg) {
   e.reply = async (reply) => {
     return await sendMsg(reply)
   }
+  /** 保存消息次数 */
+  try { common.recvMsg(e.adapter) } catch { }
   return e
 }
 

@@ -145,7 +145,7 @@ export default new class zaiMsg {
         name: e.group_name,
         is_admin,
         is_owner,
-        pickMember: (id, refresh = false, cb = () => {}) => {
+        pickMember: (id, refresh = false, cb = () => { }) => {
           if (!refresh) {
             /** 取缓存！！！别问为什么，因为傻鸟同步 */
             let member = Bot[self_id].gml.get(group_id)?.[id] || {}
@@ -357,6 +357,8 @@ export default new class zaiMsg {
     /** 添加适配器标识 */
     e.adapter = 'shamrock'
 
+    /** 保存消息次数 */
+    try { common.recvMsg(e.adapter) } catch { }
     return e
   }
 

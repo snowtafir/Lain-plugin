@@ -71,7 +71,7 @@ pnpm config set sharp_binary_host "https://npmmirror.com/mirrors/sharp" && pnpm 
 - 标准输入：`stdin`
 - QQ频道：`QQGuild`
 - Shamrock：`shamrock`
-- PC微信：`WeChat`
+- PC微信：`ComWeChat`
 - QQBot：`QQBot`
 - 网页版微信：`WeXin`
 

@@ -74,7 +74,8 @@ export default class StartWeChat4u {
         pickUser: (userId) => this.pickFriend(userId),
         pickFriend: (userId) => this.pickFriend(userId),
         makeForwardMsg: async (data) => await common.makeForwardMsg(data),
-        getGroupMemberInfo: (groupId, userId) => Bot.getGroupMemberInfo(groupId, userId)
+        getGroupMemberInfo: (groupId, userId) => Bot.getGroupMemberInfo(groupId, userId),
+        readMsg: async () => await common.readMsg('WeXin')
       }
       /** 保存id到adapter */
       if (!Bot.adapter.includes(String(this.id))) Bot.adapter.push(String(this.id))
@@ -269,6 +270,9 @@ export default class StartWeChat4u {
 
     /** 兼容message不存在的情况 */
     if (message) e.message = message
+    /** 保存消息次数 */
+    try { common.recvMsg(e.adapter) } catch { }
+    /** 保存好友 */
     return e
   }
 

@@ -68,6 +68,7 @@ export default class StartQQBot {
       getFriendMap: () => Bot[this.id].fl,
       getGroupList: () => Bot[this.id].gl,
       getGuildList: () => Bot[this.id].tl,
+      readMsg: async () => await common.readMsg('QQBot'),
       pickGroup: (groupID) => this.pickGroup(groupID),
       pickUser: (userId) => this.pickFriend(userId),
       pickFriend: (userId) => this.pickFriend(userId),
@@ -75,7 +76,9 @@ export default class StartQQBot {
       getGroupMemberInfo: (group_id, user_id) => Bot.getGroupMemberInfo(group_id, user_id)
     }
     /** 加载缓存中的群列表 */
-    this.GroupGl()
+    this.gmlList('gl')
+    /** 加载缓存中的好友列表 */
+    this.gmlList('fl')
     /** 保存id到adapter */
     if (!Bot.adapter.includes(String(this.id))) Bot.adapter.push(String(this.id))
   }
@@ -94,13 +97,17 @@ export default class StartQQBot {
     return common.info(this.id, e)
   }
 
-  /** 加载缓存中的群列表 */
-  async GroupGl () {
+  /** 加载缓存中的群、好友列表 */
+  async gmlList (type = 'gl') {
     try {
-      const glList = await redis.keys('lain:QQBot:gl:*')
-      glList.forEach(async i => {
-        const group_id = await redis.get(i)
-        Bot[this.id].gl.set(group_id, { group_id })
+      const List = await redis.keys(`lain:${type}:${this.id}:*`)
+      List.forEach(async i => {
+        const id = await redis.get(i)
+        if (type === 'gl') {
+          Bot[this.id].gl.set(id, JSON.parse(id))
+        } else {
+          Bot[this.id].fl.set(id, JSON.parse(id))
+        }
       })
     } catch { }
   }
@@ -232,7 +239,7 @@ export default class StartQQBot {
         const groupId = `${this.id}-${e.group_id}`
         if (!Bot[e.self_id].gl.get(groupId)) Bot[e.self_id].gl.set(groupId, { group_id: groupId })
         /** 缓存群列表 */
-        if (await redis.get(`lain:QQBot:gl:${groupId}`)) redis.set(`lain:QQBot:gl:${groupId}`, JSON.stringify({ group_id: groupId }))
+        if (await redis.get(`lain:gl:${e.self_id}:${groupId}`)) redis.set(`lain:gl:${e.self_id}:${groupId}`, JSON.stringify({ group_id: groupId }))
         /** 防倒卖崽 */
         if (Bot.lain.cfg.QQBotTips) await this.QQBotTips(data, groupId)
       } catch { }
@@ -250,6 +257,13 @@ export default class StartQQBot {
     e.group_id = `${this.id}-${e.group_id}`
     e.author.id = `${this.id}-${e.author.id}`
     e.sender.user_id = `${this.id}-${e.sender.user_id}`
+
+    /** 缓存好友列表 */
+    if (!Bot[e.self_id].fl.get(e.user_id)) Bot[e.self_id].fl.set(e.user_id, { user_id: e.user_id })
+    if (await redis.get(`lain:fl:${e.self_id}:${e.user_id}`)) redis.set(`lain:fl:${e.self_id}:${e.user_id}`, JSON.stringify({ user_id: e.user_id }))
+
+    /** 保存消息次数 */
+    try { common.recvMsg(e.adapter) } catch { }
     return e
   }
 

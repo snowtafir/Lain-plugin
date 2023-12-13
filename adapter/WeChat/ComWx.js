@@ -169,6 +169,7 @@ class WeChat {
       stat: { start_time: Date.now() / 1000, recv_msg_cnt: 0 },
       apk: Bot.lain.adapter.ComWeChat.apk,
       version: Bot.lain.adapter.ComWeChat.version,
+      readMsg: async () => await common.readMsg('ComWeChat'),
       /** 转发 */
       makeForwardMsg: async (forwardMsg) => {
         return await common.makeForwardMsg(forwardMsg)

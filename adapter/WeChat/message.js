@@ -51,7 +51,7 @@ export default class message {
     let e = {
       atBot: atme,
       atme,
-      adapter: 'WeChat',
+      adapter: 'ComWeChat',
       uin: this.id,
       group_id,
       group_name: Bot.gl.get(group_id)?.group_name || '未知',
@@ -151,6 +151,8 @@ export default class message {
       e.operator_id = data.from_user_id
     }
 
+    /** 保存消息次数 */
+    try { common.recvMsg(e.adapter) } catch { }
     return e
   }
 

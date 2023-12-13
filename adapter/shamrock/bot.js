@@ -26,13 +26,13 @@ export default class bot {
       tl: new Map(),
       gml: new Map(),
       guilds: new Map(),
-      adapter: 'Shamrock',
+      adapter: 'shamrock',
       uin: this.id,
       tiny_id: String(this.id),
       avatar: `https://q1.qlogo.cn/g?b=qq&s=0&nk=${this.id}`,
       stat: { start_time: Date.now() / 1000, recv_msg_cnt: 0 },
       apk: { display: bot['qq-ver'].split(' ')[0], version: bot['qq-ver'].split(' ')[1] },
-      version: { id: 'Shamrock', name: '三叶草', version: bot['user-agent'].replace('Shamrock/', '') },
+      version: { id: 'shamrock', name: '三叶草', version: bot['user-agent'].replace('Shamrock/', '') },
       pickMember: (group_id, user_id) => this.pickMember(group_id, user_id),
       pickUser: (user_id) => this.pickFriend(Number(user_id)),
       pickFriend: (user_id) => this.pickFriend(Number(user_id)),
@@ -51,7 +51,8 @@ export default class bot {
       _loadGroup: this.loadGroup,
       _loadGroupMemberList: this.loadGroupMemberList,
       _loadFriendList: this.loadFriendList,
-      _loadAll: this.LoadList
+      _loadAll: this.LoadList,
+      readMsg: async () => await common.readMsg('shamrock')
     }
 
     await common.init('Lain:restart')
