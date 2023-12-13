@@ -210,7 +210,7 @@ export default class message {
     /** 缓存一下初始消息，可通过msg_id查询 */
     await redis.set(msg.id, JSON.stringify(message), { EX: 120 })
     /** 保存消息次数 */
-    try { common.recvMsg(e.adapter) } catch { }
+    try { common.recvMsg(e.self_id, e.adapter) } catch { }
     return e
   }
 

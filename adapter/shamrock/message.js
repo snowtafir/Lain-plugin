@@ -358,7 +358,7 @@ export default new class zaiMsg {
     e.adapter = 'shamrock'
 
     /** 保存消息次数 */
-    try { common.recvMsg(e.adapter) } catch { }
+    try { common.recvMsg(e.self_id, e.adapter) } catch { }
     return e
   }
 

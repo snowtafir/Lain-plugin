@@ -7,7 +7,7 @@ import PluginsLoader from '../../../../lib/plugins/loader.js'
 
 class WeChat {
   /** 传入基本配置 */
-  constructor() {
+  constructor () {
     const { port, path } = Bot.lain.cfg
     /** 端口 */
     this.port = port
@@ -169,7 +169,8 @@ class WeChat {
       stat: { start_time: Date.now() / 1000, recv_msg_cnt: 0 },
       apk: Bot.lain.adapter.ComWeChat.apk,
       version: Bot.lain.adapter.ComWeChat.version,
-      readMsg: async () => await common.readMsg('ComWeChat'),
+      readMsg: async () => await common.recvMsg(this.id, 'ComWeChat', true),
+      MsgTotal: async (type) => await common.MsgTotal(this.id, 'ComWeChat', type, true),
       /** 转发 */
       makeForwardMsg: async (forwardMsg) => {
         return await common.makeForwardMsg(forwardMsg)

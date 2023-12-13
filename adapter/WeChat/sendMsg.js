@@ -88,6 +88,7 @@ export default class SendMsg {
     /** 发送消息 */
     if (content.length > 0) {
       await api.send_message(this.detail_type, this.group_id || this.user_id, content)
+      try { await common.MsgTotal(this.id, 'ComWeChat') } catch { }
     }
 
     await common.sleep(200)
@@ -95,6 +96,7 @@ export default class SendMsg {
     /** 发送图片 */
     if (ArrImg.length > 0) {
       res = await api.send_message(this.detail_type, this.group_id || this.user_id, ArrImg)
+      try { await common.MsgTotal(this.id, 'ComWeChat', 'image') } catch { }
     }
     return res
   }

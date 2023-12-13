@@ -52,7 +52,8 @@ export default class bot {
       _loadGroupMemberList: this.loadGroupMemberList,
       _loadFriendList: this.loadFriendList,
       _loadAll: this.LoadList,
-      readMsg: async () => await common.readMsg('shamrock')
+      readMsg: async () => await common.recvMsg(this.id, 'shamrock', true),
+      MsgTotal: async (type) => await common.MsgTotal(this.id, 'shamrock', type, true)
     }
 
     await common.init('Lain:restart')

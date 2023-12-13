@@ -125,7 +125,8 @@ export default class guild {
       getFriendMap: () => Bot[this.id].fl,
       getGroupList: () => Bot[this.id].gl,
       getGuildList: () => Bot[this.id].tl,
-      readMsg: async () => await common.readMsg('QQGuild')
+      readMsg: async () => await common.recvMsg(this.id, 'QQGuild', true),
+      MsgTotal: async (type) => await common.MsgTotal(this.id, 'QQGuild', type, true)
     }
 
     /** 公域私域 */

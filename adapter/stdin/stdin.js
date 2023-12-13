@@ -25,7 +25,8 @@ export default async function stdin () {
     version: Bot.lain.adapter.stdin.version,
     /** 转发 */
     makeForwardMsg: async (forwardMsg) => await makeForwardMsg(forwardMsg),
-    readMsg: async () => await common.readMsg('stdin'),
+    readMsg: async () => await common.recvMsg(uin, 'stdin', true),
+    MsgTotal: async (type) => await common.MsgTotal(uin, 'stdin', type, true),
     pickUser: (userId) => {
       return {
         sendMsg: async (msg) => await sendMsg(msg),
@@ -105,14 +106,14 @@ function msg (msg) {
 
   /** 快速撤回 */
   e.recall = async () => {
-    return common.info(uin, `撤回消息：${msg_id}`)
+    return common.info(uin, '撤回消息：123456')
   }
   /** 快速回复 */
   e.reply = async (reply) => {
     return await sendMsg(reply)
   }
   /** 保存消息次数 */
-  try { common.recvMsg(e.adapter) } catch { }
+  try { common.recvMsg(e.self_id, e.adapter) } catch { }
   return e
 }
 
@@ -143,5 +144,6 @@ async function sendMsg (msg) {
       log.push(JSON.stringify(msg).slice(0, 2000))
     }
   }
+  try { await common.MsgTotal(this.id, 'stdin') } catch { }
   return common.info(uin, `发送消息：${log.join('\n')}`)
 }

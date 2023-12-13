@@ -68,7 +68,8 @@ export default class StartQQBot {
       getFriendMap: () => Bot[this.id].fl,
       getGroupList: () => Bot[this.id].gl,
       getGuildList: () => Bot[this.id].tl,
-      readMsg: async () => await common.readMsg('QQBot'),
+      readMsg: async () => await common.recvMsg(this.id, 'QQBot', true),
+      MsgTotal: async (type) => await common.MsgTotal(this.id, 'QQBot', type, true),
       pickGroup: (groupID) => this.pickGroup(groupID),
       pickUser: (userId) => this.pickFriend(userId),
       pickFriend: (userId) => this.pickFriend(userId),
@@ -263,7 +264,7 @@ export default class StartQQBot {
     if (await redis.get(`lain:fl:${e.self_id}:${e.user_id}`)) redis.set(`lain:fl:${e.self_id}:${e.user_id}`, JSON.stringify({ user_id: e.user_id }))
 
     /** 保存消息次数 */
-    try { common.recvMsg(e.adapter) } catch { }
+    try { common.recvMsg(e.self_id, e.adapter) } catch { }
     return e
   }
 
@@ -328,7 +329,9 @@ export default class StartQQBot {
       if (text.length) message.push({ type: 'text', text: text.join('\n') })
       message.push(image[0])
       image.splice(0, 1)
+      try { await common.MsgTotal(this.id, 'QQBot', 'image') } catch { }
     } else {
+      try { await common.MsgTotal(this.id, 'QQBot') } catch { }
       if (text.length) message.push({ type: 'text', text: text.join('\n') })
     }
 

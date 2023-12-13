@@ -173,6 +173,11 @@ export default class SendMsg {
     /** 打印日志 */
     common.info(this.id, `发送${this.isGroup ? '群' : '好友'}消息：[${id}]${CQ.join('')}`)
 
+    if (CQ.includes('{image:base64://...}')) {
+      try { await common.MsgTotal(this.id, 'shamrock', 'image') } catch { }
+    } else {
+      try { await common.MsgTotal(this.id, 'shamrock') } catch { }
+    }
     /** 处理合并转发 */
     if (node) {
       if (this.isGroup) {

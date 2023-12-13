@@ -426,15 +426,37 @@ function getFile (i) {
   return { type, file }
 }
 
-/** 保存每个适配器收到的消息次数 */
-async function recvMsg (adapter) {
-  await redis.incr(`lain:recvMsg:${adapter}`)
+/**
+ * 保存、读取收到的消息次数
+ * @param {string|number} id BotID
+ * @param {string} adapter 适配器名称
+ * @param {boolean} read 传入true为读取，可选
+ * @return {number} 次数
+ */
+async function recvMsg (id, adapter, read = false) {
+  const key = `lain:recvMsg:${adapter}:${id}`
+  if (read) {
+    const msg = await redis.get(key)
+    return msg || 0
+  }
+  await redis.incr(key)
 }
 
-/** 读取每个适配器收到的消息次数 */
-async function readMsg (adapter) {
-  const msg = await redis.get(`lain:recvMsg:${adapter}`)
-  return msg || 0
+/**
+ * 保存、读取发送的消息次数
+ * @param {string|number} id BotID
+ * @param {string} adapter 适配器名称
+ * @param {boolean} read 传入true为读取，可选
+ * @param {string} type 发送类型 默认消息，可选image
+ * @return {number} 次数
+ */
+async function MsgTotal (id, adapter, type = 'text', read = false) {
+  const key = `lain:sendMsg:${adapter}:${id}:${type === 'text' ? 'text' : 'image'}`
+  if (read) {
+    const msg = await redis.get(key)
+    return msg || 0
+  }
+  await redis.incr(key)
 }
 
 export default {
@@ -459,5 +481,5 @@ export default {
   mkdirs,
   getFile,
   recvMsg,
-  readMsg
+  MsgTotal
 }

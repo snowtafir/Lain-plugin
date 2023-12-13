@@ -75,7 +75,8 @@ export default class StartWeChat4u {
         pickFriend: (userId) => this.pickFriend(userId),
         makeForwardMsg: async (data) => await common.makeForwardMsg(data),
         getGroupMemberInfo: (groupId, userId) => Bot.getGroupMemberInfo(groupId, userId),
-        readMsg: async () => await common.readMsg('WeXin')
+        readMsg: async () => await common.recvMsg(this.id, 'WeXin', true),
+        MsgTotal: async (type) => await common.MsgTotal(this.id, 'WeXin', type, true)
       }
       /** 保存id到adapter */
       if (!Bot.adapter.includes(String(this.id))) Bot.adapter.push(String(this.id))
@@ -271,7 +272,7 @@ export default class StartWeChat4u {
     /** 兼容message不存在的情况 */
     if (message) e.message = message
     /** 保存消息次数 */
-    try { common.recvMsg(e.adapter) } catch { }
+    try { common.recvMsg(e.self_id, e.adapter) } catch { }
     /** 保存好友 */
     return e
   }
@@ -318,6 +319,7 @@ export default class StartWeChat4u {
           break
         case 'image':
           message.push(await this.getFile(i))
+          try { await common.MsgTotal(this.id, 'WeXin', 'image') } catch { }
           break
         case 'video':
           message.push(await this.getFile(i, 'video'))
@@ -328,6 +330,7 @@ export default class StartWeChat4u {
         case 'text':
         case 'forward':
           message.push(i.text)
+          try { await common.MsgTotal(this.id, 'WeXin') } catch { }
           break
         default:
           message.push(JSON.stringify(i))
