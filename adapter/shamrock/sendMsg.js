@@ -5,7 +5,7 @@ import api from './api.js'
 
 export default class SendMsg {
   /** 传入基本配置 */
-  constructor(id, isGroup = true) {
+  constructor (id, isGroup = true) {
     /** 机器人uin */
     this.id = id
     /** 是否群聊 */
@@ -198,21 +198,20 @@ export default class SendMsg {
       let data = await Bot.lain.on.get(echo)
       if (data) {
         Bot.lain.on.delete(echo)
-        try {
-          if (Object.keys(data?.data).length > 0 && data?.data) {
-            const { message_id, time } = data.data
+        if (data.status === 'ok') {
+          const { message_id, time } = data.data
 
-            /** 储存自身发送的消息 */
-            await redis.set(`Shamrock:${this.id}:${message_id}`, JSON.stringify(data), { EX: 120 })
-            return {
-              time,
-              message_id,
-              seq: message_id,
-              rand: 1
-            }
+          /** 储存自身发送的消息 */
+          try { await redis.set(`Shamrock:${this.id}:${message_id}`, JSON.stringify(data), { EX: 120 }) } catch { }
+
+          return {
+            time,
+            message_id,
+            seq: message_id,
+            rand: 1
           }
-          return data
-        } catch {
+        } else {
+          common.error('Lain-plugin', data)
           return data
         }
       } else {

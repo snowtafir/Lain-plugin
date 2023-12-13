@@ -6,6 +6,8 @@ import loader from '../../plugins/loader.js'
 import pluginsLoader from '../../../../lib/plugins/loader.js'
 import api from './api.js'
 
+let pokeCD = 0
+
 class Shamrock {
   async server (bot, request) {
     /** 获取机器人uin */
@@ -198,6 +200,9 @@ class Shamrock {
               }
               default:
             }
+            const time = Date.now()
+            if (time - pokeCD < 1500) return false
+            pokeCD = time
             return await this.message(data)
           case 'friend_add':
             // shamrock暂未实现

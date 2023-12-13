@@ -1,7 +1,8 @@
+![Lain-plugin](https://socialify.git.ci/Zyy955/Lain-plugin/image?description=1&font=KoHo&forks=1&issues=1&language=1&logo=https://cdn.jsdelivr.net/gh/Zyy955/imgs/img/202312120000234.jpg&name=1&owner=1&pattern=Circuit%20Board&pulls=1&stargazers=1&theme=Light)
+
 ## 简介
-- (╥╯^╰╥) 在线征集美工大佬，仓库主页缺一个标题图！！！
 - [Github](https://github.com/Zyy955/Lain-plugin)
-- [Gitee](https://gitee.com/Zyy955/Lain-plugin)
+- [Gitee镜像](https://gitee.com/Zyy955/Lain-plugin)
 - 插件更新日志：[点击查看](./CHANGELOG.md)
 - 本项目使用 [GPL-3.0](./LICENSE) 开源协议，欢迎任何形式的贡献！
 
@@ -49,6 +50,7 @@ pnpm config set sharp_binary_host "https://npmmirror.com/mirrors/sharp" && pnpm 
 - [PC微信](./docs/WeChat.md)
 - [Shamrock](./docs/Shamrock.md)
 - [QQBot](./docs/QQBot.md)
+- [网页版微信](./docs/WeXin.md)
 
 ## 4.设置主人
 
@@ -71,13 +73,14 @@ pnpm config set sharp_binary_host "https://npmmirror.com/mirrors/sharp" && pnpm 
 - Shamrock：`shamrock`
 - PC微信：`WeChat`
 - QQBot：`QQBot`
+- 网页版微信：`WeXin`
 
 ## 适配进度
 - [√] 标准输入
 - [√] 跳过登录QQ
 - [√] QQ频道适配器
 - [√] PC微信适配器
-- [ ] 网页版微信适配器
+- [√] 网页版微信适配器
 - [√] `shamrock适配器`
 - [√] QQBot适配器
 
@@ -98,6 +101,6 @@ pnpm config set sharp_binary_host "https://npmmirror.com/mirrors/sharp" && pnpm 
 - [Miao-Yunzai](https://github.com/yoimiya-kokomi/Miao-Yunzai)
 - [索引库](https://github.com/yhArcadia/Yunzai-Bot-plugins-index)
 - [OpenShamrock](https://github.com/whitechi73/OpenShamrock)
-- [ComWeChat：](https://github.com/JustUndertaker/ComWeChatBotClient)
+- [ComWeChat](https://github.com/JustUndertaker/ComWeChatBotClient)
 - [wechat4u](https://github.com/nodeWechat/wechat4u/blob/master/run-core.js)
 - [qq-group-bot](https://github.com/lc-cn/qq-group-bot)

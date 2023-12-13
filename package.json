@@ -10,18 +10,20 @@
     "ComWeChat": "0.2.3",
     "CWeChatRobot": "0.0.8",
     "stdin": "0.1.2",
-    "QQBot": "0.0.1"
+    "QQBot": "0.0.2",
+    "WeXin": "0.0.3"
   },
   "dependencies": {
     "qq-guild-bot": "^2.9.5",
     "qrcode": "^1.5.3",
     "axios": "^1.6.2",
-    "sharp": "^0.32.6",
-    "ws": "^8.14.2",
+    "sharp": "^0.33.0",
+    "ws": "^8.15.0",
     "file-type": "^18.7.0",
     "express": "^4.18.2",
     "qq-group-bot": "^1.0.0",
-    "silk-wasm": "^2.0.2",
-    "get-urls": "^12.0.1"
+    "silk-wasm": "^3.1.0",
+    "get-urls": "^12.0.1",
+    "wechat4u": "^0.7.14"
   }
 }

@@ -91,10 +91,29 @@ function warn (id, log) {
   logger.warn(id || '', log)
 }
 
+/**
+* @param id Bot的id、QQ
+* @param log 日志内容
+*/
+function trace (id, log) {
+  id = nickname(id)
+  logger.trace(id || '', log)
+}
+
+/**
+* @param id Bot的id、QQ
+* @param log 日志内容
+*/
+function fatal (id, log) {
+  id = nickname(id)
+  logger.fatal(id || '', log)
+}
+
 /** 适配器重启发送消息 */
 async function init (key = 'Lain:restart') {
   let restart = await redis.get(key)
   if (restart) {
+    redis.del(key)
     restart = JSON.parse(restart)
     const uin = restart?.uin || Bot.uin
     let time = restart.time || new Date().getTime()
@@ -108,17 +127,7 @@ async function init (key = 'Lain:restart') {
       } else {
         Bot[uin].pickUser(restart.id).sendMsg(msg)
       }
-    } catch (error) {
-      /** 发送失败后等待5s重试一次，适配器可能没连接bot */
-      await new Promise((resolve) => setTimeout(resolve, 5000))
-      msg = `重启成功：耗时${(time + 5).toFixed(2)}秒`
-      if (restart.isGroup) {
-        Bot[uin].pickGroup(restart.id, msgId).sendMsg(msg)
-      } else {
-        Bot[uin].pickUser(restart.id, msgId).sendMsg(msg)
-      }
-    }
-    redis.del(key)
+    } catch (error) { }
   }
 }
 
@@ -135,8 +144,8 @@ function array (data) {
       ? [{ type: 'text', text: i }]
       : Array.isArray(i)
         ? [].concat(...i.map(format => (typeof format === 'string'
-            ? [{ type: 'text', text: format }]
-            : typeof format === 'object' && format !== null ? [format] : [])))
+          ? [{ type: 'text', text: format }]
+          : typeof format === 'object' && format !== null ? [format] : [])))
         : typeof i === 'object' && i !== null ? [i] : []
     )))
   } else if (data instanceof fs.ReadStream) {
@@ -399,6 +408,9 @@ function getFile (i) {
       // 如果是url，则直接返回url
       type = 'http'
       file = i
+    } else if (i.includes('protobuf://')) {
+      type = 'buffer'
+      file = Buffer.from(i, 'base64')
     } else {
       log('Lain-plugin', '未知格式，无法处理：' + i)
       type = 'error'
@@ -422,6 +434,8 @@ export default {
   debug,
   mark,
   warn,
+  fatal,
+  trace,
   array,
   makeForwardMsg,
   base64,

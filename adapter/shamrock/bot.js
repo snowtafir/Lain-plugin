@@ -34,7 +34,7 @@ export default class bot {
       apk: { display: bot['qq-ver'].split(' ')[0], version: bot['qq-ver'].split(' ')[1] },
       version: { id: 'Shamrock', name: '三叶草', version: bot['user-agent'].replace('Shamrock/', '') },
       pickMember: (group_id, user_id) => this.pickMember(group_id, user_id),
-      pickUser: (user_id) => this.pickUser(Number(user_id)),
+      pickUser: (user_id) => this.pickFriend(Number(user_id)),
       pickFriend: (user_id) => this.pickFriend(Number(user_id)),
       pickGroup: (group_id) => this.pickGroup(Number(group_id)),
       setEssenceMessage: async (msg_id) => await this.setEssenceMessage(msg_id),
@@ -47,6 +47,7 @@ export default class bot {
       getFriendMap: () => Bot[this.id].fl,
       getGroupList: () => Bot[this.id].gl,
       getGuildList: () => Bot[this.id].tl,
+      getMuteList: async (group_id) => await this.getMuteList(group_id),
       _loadGroup: this.loadGroup,
       _loadGroupMemberList: this.loadGroupMemberList,
       _loadFriendList: this.loadFriendList,
@@ -267,9 +268,7 @@ export default class bot {
         return await api.upload_group_file(this.id, group_id, file, name.replace(/^\./, ''))
       },
       // getMemberMap: async () => await api.get_prohibited_member_list(this.id, group_id),
-      sign: async () => {
-        await api.send_group_sign(this.id, group_id)
-      },
+      sign: async () => await api.send_group_sign(this.id, group_id),
       shareMusic: async (platform, id) => {
         if (!['qq', '163'].includes(platform)) {
           return 'platform not supported yet'
@@ -286,43 +285,18 @@ export default class bot {
     }
   }
 
-  pickUser (user_id) {
-    return {
-      sendMsg: async (msg) => await this.sendMsg(user_id, msg, false),
-      recallMsg: async (msg_id) => await this.recallMsg(msg_id),
-      makeForwardMsg: async (message) => await this.makeForwardMsg(message),
-      /**
-             * 获取私聊聊天记录
-             * @param msg_id 起始消息的message_id（默认为0，表示从最后一条发言往前）
-             * @param num 数量
-             * @param reply 是否展开回复引用的消息(source)（实测数量大的时候耗时且可能出错）
-             * @return {Promise<Awaited<unknown>[]>}
-             */
-      getChatHistory: async (msg_id, num, reply) => {
-        let { messages } = await api.get_history_msg(this.id, 'private', user_id, null, num, msg_id)
-        messages = messages.map(async m => {
-          m.raw_message = toRaw(m.message, this.id)
-          let result = await message(this.id, m.message, null, reply)
-          m = Object.assign(m, result)
-          return m
-        })
-        return Promise.all(messages)
-      }
-    }
-  }
-
   pickFriend (user_id) {
     return {
       sendMsg: async (msg) => await this.sendMsg(user_id, msg, false),
       recallMsg: async (msg_id) => await this.recallMsg(msg_id),
       makeForwardMsg: async (message) => await this.makeForwardMsg(message),
       /**
-             * 获取私聊聊天记录
-             * @param msg_id 起始消息的message_id（默认为0，表示从最后一条发言往前）
-             * @param num 数量
-             * @param reply 是否展开回复引用的消息(source)（实测数量大的时候耗时且可能出错）
-             * @return {Promise<Awaited<unknown>[]>}
-             */
+       * 获取私聊聊天记录
+       * @param msg_id 起始消息的message_id（默认为0，表示从最后一条发言往前）
+       * @param num 数量
+       * @param reply 是否展开回复引用的消息(source)（实测数量大的时候耗时且可能出错）
+       * @return {Promise<Awaited<unknown>[]>}
+       */
       getChatHistory: async (msg_id, num, reply) => {
         let { messages } = await api.get_history_msg(this.id, 'private', user_id, null, num, msg_id)
         messages = messages.map(async m => {
@@ -336,7 +310,7 @@ export default class bot {
     }
   }
 
-  pickMember (group_id, user_id, refresh = false, cb = () => {}) {
+  pickMember (group_id, user_id, refresh = false, cb = () => { }) {
     if (!refresh) {
       /** 取缓存！！！别问为什么，因为傻鸟同步 */
       let member = Bot[this.id].gml.get(group_id)?.[user_id] || {}
@@ -382,11 +356,11 @@ export default class bot {
   }
 
   /**
-     * 发送消息
-     * @param {number} id - 发送到的目标群号或QQ
-     * @param {string|Array|object} msg - 消息内容
-     * @param {boolean} isGroup 是否为群消息，默认是
-     */
+   * 发送消息
+   * @param {number} id - 发送到的目标群号或QQ
+   * @param {string|Array|object} msg - 消息内容
+   * @param {boolean} isGroup 是否为群消息，默认是
+   */
   async sendMsg (id, msg, isGroup = true) {
     const SendMsg = (await import('./sendMsg.js')).default
     return await (new SendMsg(this.id, isGroup)).message(msg, id)
@@ -400,5 +374,10 @@ export default class bot {
   /** 撤回消息 */
   async recallMsg (msg_id) {
     return await api.delete_msg(this.id, msg_id)
+  }
+
+  /** 获取禁言列表 */
+  async getMuteList (group_id) {
+    return await api.get_prohibited_member_list(this.id, group_id)
   }
 }

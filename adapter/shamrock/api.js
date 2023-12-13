@@ -500,12 +500,14 @@ let api = {
   /**
      * 清除本地缓存消息
      * @param {string} id - 机器人QQ
-     * @param {string} message_type - 消息 类型 必填
-     * @param {number} user_id - 私聊QQ
-     * @param {number} group_id - 群号
+     * @param {string} message_type - 消息 类型 必填 private 或 group
+     * @param {number} user_id - 私聊QQ 任选其一
+     * @param {number} group_id - 群号 任选其一
      */
-  async clear_msgs (id, message_type, user_id, group_id) {
-    const params = { user_id, message_type, group_id }
+  async clear_msgs (id, message_type, TargetID) {
+    let type = 'private'
+    if (message_type == 'group') type = 'group_id'
+    const params = { message_type, [type]: TargetID }
     return await this.SendApi(id, 'clear_msgs', params)
   },
 
@@ -692,9 +694,8 @@ let api = {
     for (let i = 0; i < 1200; i++) {
       const data = await Bot.lain.on.get(echo)
       if (data) {
+        Bot.lain.on.delete(echo)
         if (data.status === 'ok') {
-          Bot.lain.on.delete(echo)
-          // common.debug('SendApi返回结果', data.data)
           return data.data
         } else {
           common.error('Lain-plugin', data)

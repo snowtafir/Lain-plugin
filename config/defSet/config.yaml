@@ -28,6 +28,8 @@ QQBotPort: 0
 QQBotImgToken: ""
 # QQBot指令前缀转换 /转#
 QQBotPrefix: true
+# QQBot防倒卖崽提示开关
+QQBotTips: false
 # QQBot默认进群后，推送提示显示的群号，如果配置，则会添加上提示 如有疑问，请添加bot官方群: 123456~
 QQBotGroupId: ""
 

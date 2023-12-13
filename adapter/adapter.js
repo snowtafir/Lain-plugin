@@ -34,8 +34,8 @@ adapter.push(async function QQBot () {
     const cfg = fs.readFileSync(Bot.lain._path + '/QQBot.yaml', 'utf8')
     Object.entries(Yaml.parse(cfg)).forEach(async ([appid, cfg]) => {
       if (Object.keys(cfg).length === 0) return
-      const createAndStartBot = (await import('./QQBot/index.js')).default
-      return await createAndStartBot(cfg)
+      const StartQQBot = (await import('./QQBot/index.js')).default
+      return new StartQQBot(cfg)
     })
   } catch (err) { return common.error('QQBot', `QQBot适配器加载失败,${err}`) }
 })
@@ -44,6 +44,24 @@ adapter.push(async function QQBot () {
 adapter.push(async function httpServer () {
   const WebSocket = (await import('./WebSocket.js')).default
   return await (new WebSocket()).server()
+})
+
+/** 加载微信 */
+adapter.push(async function wechat4u () {
+  const StartWeChat4u = (await import('./WeChat-Web/index.js')).default
+  const _path = fs.readdirSync('./plugins/Lain-plugin/config')
+  const Jsons = _path.filter(file => file.endsWith('.json'))
+  if (Jsons.length > 0) {
+    Jsons.forEach(async i => {
+      const id = i.replace(/\.json$/gi, '')
+      try {
+        await new StartWeChat4u(id, i)
+      } catch (error) {
+        common.error('Lain-plugin', `微信 ${id} 登录失败，已跳过。`)
+        common.error('Lain-plugin', error)
+      }
+    })
+  }
 })
 
 /** 加载适配器 */
