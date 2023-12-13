@@ -234,7 +234,7 @@ export default class StartQQBot {
         /** 缓存群列表 */
         if (await redis.get(`lain:QQBot:gl:${groupId}`)) redis.set(`lain:QQBot:gl:${groupId}`, JSON.stringify({ group_id: groupId }))
         /** 防倒卖崽 */
-        if (Bot.lain.cfg.QQBotTips) await this.QQBotTips(groupId)
+        if (Bot.lain.cfg.QQBotTips) await this.QQBotTips(data, groupId)
       } catch { }
 
       e.member = this.member(e.group_id, e.user_id)
@@ -254,9 +254,9 @@ export default class StartQQBot {
   }
 
   /** 小兔崽子 */
-  async QQBotTips (groupId) {
+  async QQBotTips (data, groupId) {
     /** 首次进群后，推送防司马崽声明~ */
-    if (!await redis.get(`lain:QQBot:tips:${groupId}`)) {
+    if (!await redis.get(`lain:QQBot:tip:${groupId}`)) {
       const msg = []
       const name = `「${Bot[this.id].nickname}」`
       msg.push('温馨提示：')
@@ -265,7 +265,7 @@ export default class StartQQBot {
       msg.push('如果本Bot是付费入群,请立刻退款举报！！！\n')
       msg.push('来自：Lain-plugin防倒卖崽提示，本提示仅在首次入群后触发~')
       if (Bot.lain.cfg.QQBotGroupId) msg.push(`\n如有疑问，请添加${name}官方群: ${Bot.lain.cfg.QQBotGroupId}~`)
-      this.reply(msg.join('\n'))
+      data.reply(msg.join('\n'))
       redis.set(`lain:QQBot:tips:${groupId}`, JSON.stringify({ group_id: groupId }))
     }
   }
