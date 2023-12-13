@@ -9,7 +9,7 @@ import SendMsg from './sendMsg.js'
 let resList = false
 
 export default class bot {
-  constructor(id) {
+  constructor (id) {
     /** 机器人QQ号 */
     this.id = Number(id)
     this.loadRes()
@@ -46,13 +46,92 @@ export default class bot {
       quit: (group_id) => this.quit(group_id),
       getFriendMap: () => Bot[this.id].fl,
       getGroupList: () => Bot[this.id].gl,
-      getGuildList: () => Bot[this.id].tl
+      getGuildList: () => Bot[this.id].tl,
+      _loadGroup: this.loadGroup,
+      _loadGroupMemberList: this.loadGroupMemberList,
+      _loadFriendList: this.loadFriendList,
+      _loadAll: this.LoadList
     }
 
     await common.init('Lain:restart')
 
     /** 加载好友、群列表 */
     this.LoadList()
+  }
+
+  async loadGroup (id = this.id) {
+    /** 获取群聊列表啦~ */
+    let groupList
+    for (let retries = 0; retries < 5; retries++) {
+      groupList = await api.get_group_list(id)
+      if (!(groupList && Array.isArray(groupList))) {
+        common.error(this.id, `Shamrock群列表获取失败，正在重试：${retries + 1}`)
+      }
+      await common.sleep(50)
+    }
+
+    /** 群列表获取失败 */
+    if (!groupList || !(typeof groupList === 'object')) {
+      common.error(this.id, 'Shamrock群列表获取失败次数过多，已停止重试')
+    }
+
+    if (groupList && typeof groupList === 'object') {
+      for (const i of groupList) {
+        /** 延迟一下 */
+        // await common.sleep(50)
+        /** 给锅巴用 */
+        Bot.gl.set(i.group_id, i)
+        /** 自身参数 */
+        Bot[id].gl.set(i.group_id, i)
+      }
+    }
+    common.debug(id, '加载群列表完成')
+    return groupList
+  }
+
+  async loadGroupMemberList (groupId, id = this.id) {
+    /** 获取群成员，缓存到gml中 */
+    try {
+      let gml = {}
+      let memberList = await api.get_group_member_list(id, groupId)
+      for (const user of memberList) {
+        /** 延迟一下 */
+        // await common.sleep(50)
+        user.card = user.nickname
+        gml[user.user_id] = user
+      }
+      Bot[id].gml.set(groupId, gml)
+      common.debug(id, `加载[${groupId}]群成员完成`)
+    } catch (error) { }
+  }
+
+  async loadFriendList (id = this.id) {
+    /** 好友列表 */
+    let friendList
+    for (let retries = 0; retries < 5; retries++) {
+      friendList = await api.get_friend_list(id)
+      if (!(friendList && Array.isArray(friendList))) {
+        common.error(this.id, `Shamrock好友列表获取失败，正在重试：${retries + 1}`)
+      }
+      await common.sleep(50)
+    }
+
+    /** 好友列表获取失败 */
+    if (!friendList || !(typeof friendList === 'object')) {
+      common.error(this.id, 'Shamrock好友列表获取失败次数过多，已停止重试')
+    }
+
+    if (friendList && typeof friendList === 'object') {
+      for (const i of friendList) {
+        /** 延迟一下 */
+        // await common.sleep(50)
+        /** 给锅巴用 */
+        Bot.fl.set(i.user_id, i)
+        /** 自身参数 */
+        Bot[id].fl.set(i.user_id, i)
+      }
+    }
+    common.debug(id, '加载好友列表完成')
   }
 
   async LoadList () {
@@ -64,72 +143,14 @@ export default class bot {
     const info = await api.get_login_info(this.id)
     Bot[this.id].nickname = info?.nickname || ''
 
-    /** 获取群聊列表啦~ */
-    let group_list
-    for (let retries = 0; retries < 5; retries++) {
-      group_list = await api.get_group_list(this.id)
-      if (!(group_list && Array.isArray(group_list))) {
-        common.error(this.id, `Shamrock群列表获取失败，正在重试：${retries + 1}`)
-      }
-      await common.sleep(50)
+    let groupList = await this.loadGroup()
+
+    for (const group of groupList) {
+      this.loadGroupMemberList(group.group_id)
+      await common.sleep(100)
     }
 
-    /** 群列表获取失败 */
-    if (!group_list || !typeof group_list === 'object') {
-      common.error(this.id, 'Shamrock群列表获取失败次数过多，已停止重试')
-    }
-
-    if (group_list && typeof group_list === 'object') {
-      group_list.forEach(async i => {
-        /** 延迟一下 */
-        await common.sleep(50)
-        /** 给锅巴用 */
-        Bot.gl.set(i.group_id, i)
-        /** 自身参数 */
-        Bot[this.id].gl.set(i.group_id, i)
-      })
-    }
-
-    /** 好友列表 */
-    let friend_list
-    for (let retries = 0; retries < 5; retries++) {
-      friend_list = await api.get_friend_list(this.id)
-      if (!(friend_list && Array.isArray(friend_list))) {
-        common.error(this.id, `Shamrock好友列表获取失败，正在重试：${retries + 1}`)
-      }
-      await common.sleep(50)
-    }
-
-    /** 好友列表获取失败 */
-    if (!friend_list || !typeof friend_list === 'object') {
-      common.error(this.id, 'Shamrock好友列表获取失败次数过多，已停止重试')
-    }
-
-    if (friend_list && typeof friend_list === 'object') {
-      friend_list.forEach(async i => {
-        /** 延迟一下 */
-        await common.sleep(50)
-        /** 给锅巴用 */
-        Bot.fl.set(i.user_id, i)
-        /** 自身参数 */
-        Bot[this.id].fl.set(i.user_id, i)
-      })
-    }
-
-    group_list.forEach(async i => {
-      /** 获取群成员，缓存到gml中 */
-      try {
-        let gml = {}
-        let member_list = await api.get_group_member_list(this.id, i.group_id)
-        member_list.forEach(async user => {
-          /** 延迟一下 */
-          await common.sleep(50)
-          user.card = user.nickname
-          gml[user.user_id] = user
-        })
-        Bot[this.id].gml.set(i.group_id, gml)
-      } catch (error) { }
-    })
+    await this.loadFriendList()
 
     // let { token } = await api.get_csrf_token(uin, "qun.qq.com")
     try {

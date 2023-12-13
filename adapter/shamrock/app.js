@@ -1,9 +1,10 @@
 import { WebSocketServer } from 'ws'
 import common from '../../model/common.js'
-import addBot from './bot.js'
+import AddBot from './bot.js'
 import message from './message.js'
 import loader from '../../plugins/loader.js'
 import pluginsLoader from '../../../../lib/plugins/loader.js'
+import api from './api.js'
 
 class Shamrock {
   async server (bot, request) {
@@ -52,7 +53,7 @@ class Shamrock {
       lifecycle: async () => {
         const bot = await Bot.shamrock.get(id)
         common.info(id, `建立连接成功，正在加载资源：${bot['user-agent']}`)
-        return new addBot(id)
+        return new AddBot(id)
       },
       /** 心跳 */
       heartbeat: async () => {
@@ -62,10 +63,22 @@ class Shamrock {
       message: async () => {
         return await Bot.emit('message', await message.msg(data))
       },
-      /** 戳一戳 */
+      /** 通知事件 */
       notice: async () => {
         // Bot.emit(data.post_type, await zaiMsg.msg(data))
-        data.post_type = 'notice'
+        data.post_type = 'notice';
+        (async () => {
+          if (['group_increase', 'group_decrease', 'group_admin'].includes(data.notice_type)) {
+            // 加载或刷新该群的信息
+            let group = await api.get_group_info(data.self_id, data.group_id, true)
+            if (group?.group_id) {
+              Bot.gl.set(data.group_id, group)
+              Bot[data.self_id].gl.set(data.group_id, group)
+              // 加载或刷新该群的群成员列表
+              await Bot[data.self_id]._loadGroupMemberList(data.group_id, data.self_id)
+            }
+          }
+        })().catch(common.error)
         switch (data.notice_type) {
           case 'group_recall':
             data.notice_type = 'group'
@@ -78,15 +91,16 @@ class Shamrock {
             return await Bot.emit('notice.group', await message.msg(data))
           case 'group_increase': {
             data.notice_type = 'group'
-            let sub_type = data.sub_type
+            let subType = data.sub_type
             data.sub_type = 'increase'
             data.user_id = data.target_id
             if (data.self_id === data.user_id) {
               common.info(id, `机器人加入群聊：[${data.group_id}}]`)
             } else {
-              switch (sub_type) {
+              switch (subType) {
                 case 'invite': {
                   common.info(id, `[${data.operator_id}]邀请[${data.user_id}]加入了群聊[${data.group_id}] `)
+                  break
                 }
                 default: {
                   common.info(id, `新人${data.user_id}加入群聊[${data.group_id}] `)
@@ -103,6 +117,10 @@ class Shamrock {
               common.info(id, data.operator_id
                 ? `机器人被[${data.operator_id}]踢出群聊：[${data.group_id}}]`
                 : `机器人退出群聊：[${data.group_id}}]`)
+              // 移除该群的信息
+              Bot.gl.delete(data.group_id)
+              Bot[data.self_id].gl.delete(data.group_id)
+              Bot[data.self_id].gml.delete(data.group_id)
             } else {
               common.info(id, data.operator_id
                 ? `成员[${data.user_id}]被[${data.operator_id}]踢出群聊：[${data.group_id}}]`
@@ -157,6 +175,8 @@ class Shamrock {
                 ? `成员[${data.target_id}]在群[${data.group_id}]被解除禁言`
                 : `成员[${data.target_id}]在群[${data.group_id}]被禁言${data.duration}秒`)
             }
+            // 异步加载或刷新该群的群成员列表以更新禁言时长
+            Bot[data.self_id]._loadGroupMemberList(data.group_id, data.self_id)
             return await this.message(data)
           }
           case 'notify':
@@ -167,9 +187,35 @@ class Shamrock {
                 common.info(id, `[${data.operator_id}]${action}[${data.target_id}]${suffix}`)
                 break
               }
+              case 'title': {
+                common.info(id, `群[${data.group_id}]成员[${data.user_id}]获得头衔[${data.title}]`)
+                let gml = Bot[data.self_id].gml.get(data.group_id)
+                let user = gml[data.user_id]
+                user.title = data.title
+                gml[data.user_id] = user
+                Bot[id].gml.set(data.group_id, gml)
+                break
+              }
               default:
             }
             return await this.message(data)
+          case 'friend_add':
+            // shamrock暂未实现
+            return await this.message(data)
+          case 'essence': {
+            // todo
+            common.info(id, `群[${data.group_id}]成员[${data.sender_id}]的消息[${data.message_id}]被[${data.operator_id}]${data.sub_type === 'add' ? '设为' : '移除'}精华`)
+            return await this.message(data)
+          }
+          case 'group_card': {
+            common.info(id, `群[${data.group_id}]成员[${data.user_id}]群名片变成为${data.card_new}`)
+            let gml = Bot[data.self_id].gml.get(data.group_id)
+            let user = gml[data.user_id]
+            user.card = data.card_new
+            gml[data.user_id] = user
+            Bot[id].gml.set(data.group_id, gml)
+            return await this.message(data)
+          }
           default:
         }
       },

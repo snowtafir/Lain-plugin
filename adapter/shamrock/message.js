@@ -402,6 +402,7 @@ export async function message (id, msg, group_id, reply = true) {
           continue
         }
         common.debug('', source)
+        // todo 判断引用是否追溯得到
         let source_reply = source.message.map(u => (u.type === 'at' ? { type: u.type, qq: Number(u.data.qq) } : { type: u.type, ...u.data }))
 
         let raw_message = toRaw(source_reply, id, group_id)

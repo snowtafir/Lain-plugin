@@ -77,12 +77,13 @@ let api = {
   },
 
   /**
-    * 获取群信息
-    * @param {string} id - 机器人QQ
-    * @param {number} group_id - 群号
-    */
-  async get_group_info (id, group_id) {
-    const params = { group_id }
+   * 获取群信息
+   * @param {string} id - 机器人QQ
+   * @param {number} group_id - 群号
+   * @param refresh 是否刷新
+   */
+  async get_group_info (id, group_id, refresh = false) {
+    const params = { group_id, refresh }
     return await this.SendApi(id, 'get_group_info', params)
   },
 
