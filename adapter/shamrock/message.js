@@ -85,8 +85,7 @@ export default new class zaiMsg {
       } catch {
         group_name = group_id
       }
-
-      common.info(self_id, `群消息：[${group_name}，${sender?.nickname || sender?.card}(${user_id})] ${raw_message}`)
+      raw_message && common.info(self_id, `群消息：[${group_name}，${sender?.nickname || sender?.card}(${user_id})] ${raw_message}`)
     }
 
     /** 快速撤回 */

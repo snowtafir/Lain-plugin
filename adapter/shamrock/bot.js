@@ -136,62 +136,71 @@ export default class bot {
   }
 
   async LoadList () {
-    if (resList) return '目前以有任务事件在加载中，请勿重复加载'
-    resList = true
-    if (!Bot.adapter.includes(this.id)) Bot.adapter.push(this.id)
-
-    /** 获取bot自身信息 */
-    const info = await api.get_login_info(this.id)
-    Bot[this.id].nickname = info?.nickname || ''
-
-    let groupList = await this.loadGroup()
-
-    for (const group of groupList) {
-      this.loadGroupMemberList(group.group_id)
-      await common.sleep(100)
-    }
-
-    await this.loadFriendList()
-
-    // let { token } = await api.get_csrf_token(uin, "qun.qq.com")
     try {
-      let { cookies } = await api.get_cookies(this.id)
-      if (cookies) {
-        let match = cookies.match(/skey=([^;]+)/)
-        if (match) {
-          let skey = match[1]
-          let n = 5381
-          for (let e = skey || '', r = 0, o = e.length; r < o; ++r) {
-            n += (n << 5) + e.charAt(r).charCodeAt(0)
+      if (resList) return '目前以有任务事件在加载中，请勿重复加载'
+      resList = true
+      if (!Bot.adapter.includes(this.id)) Bot.adapter.push(this.id)
+
+      /** 获取bot自身信息 */
+      const info = await api.get_login_info(this.id)
+      Bot[this.id].nickname = info?.nickname || ''
+      let _this = this
+      await Promise.all([
+        // 加载群信息
+        (async () => {
+          // 加载群列表
+          let groupList = await _this.loadGroup()
+          // 加载群员
+          await Promise.all(groupList.map(async (group, index) => {
+            await common.sleep(50 * Math.floor(index / 10))
+            await _this.loadGroupMemberList(group.group_id)
+          }))
+        })(),
+        // 加载好友信息
+        _this.loadFriendList()
+      ])
+
+      // let { token } = await api.get_csrf_token(uin, "qun.qq.com")
+      try {
+        let { cookies } = await api.get_cookies(this.id)
+        if (cookies) {
+          let match = cookies.match(/skey=([^;]+)/)
+          if (match) {
+            let skey = match[1]
+            let n = 5381
+            for (let e = skey || '', r = 0, o = e.length; r < o; ++r) {
+              n += (n << 5) + e.charAt(r).charCodeAt(0)
+            }
+            Bot[this.id].bkn = 2147483647 & n
           }
-          Bot[this.id].bkn = 2147483647 & n
         }
+      } catch (err) {
+        common.warn(this.id, 'Shamrock获取bkn失败。')
       }
-    } catch (err) {
-      common.warn(this.id, 'Shamrock获取bkn失败。')
-    }
 
-    Bot[this.id].cookies = {}
-    let domains = ['aq.qq.com', 'buluo.qq.com', 'connect.qq.com', 'docs.qq.com', 'game.qq.com', 'gamecenter.qq.com', 'haoma.qq.com', 'id.qq.com', 'kg.qq.com', 'mail.qq.com', 'mma.qq.com', 'office.qq.com', 'openmobile.qq.com', 'qqweb.qq.com', 'qun.qq.com', 'qzone.qq.com', 'ti.qq.com', 'v.qq.com', 'vip.qq.com', 'y.qq.com', '']
-    for (let domain of domains) {
-      api.get_cookies(this.id, domain).then(ck => {
-        ck = ck?.cookies
-        if (ck) {
-          try {
-            // 适配椰奶逆天的ck转JSON方法
-            ck = ck.trim().replace(/\w+=;/g, '').replace(/\w+=$/g, '')
-          } catch (err) { }
-        }
-        Bot[this.id].cookies[domain] = ck
-      }).catch(error => {
-        common.debug(this.id, `${domain} 获取cookie失败：${error}`)
-      })
-    }
+      Bot[this.id].cookies = {}
+      let domains = ['aq.qq.com', 'buluo.qq.com', 'connect.qq.com', 'docs.qq.com', 'game.qq.com', 'gamecenter.qq.com', 'haoma.qq.com', 'id.qq.com', 'kg.qq.com', 'mail.qq.com', 'mma.qq.com', 'office.qq.com', 'openmobile.qq.com', 'qqweb.qq.com', 'qun.qq.com', 'qzone.qq.com', 'ti.qq.com', 'v.qq.com', 'vip.qq.com', 'y.qq.com', '']
+      for (let domain of domains) {
+        api.get_cookies(this.id, domain).then(ck => {
+          ck = ck?.cookies
+          if (ck) {
+            try {
+              // 适配椰奶逆天的ck转JSON方法
+              ck = ck.trim().replace(/\w+=;/g, '').replace(/\w+=$/g, '')
+            } catch (err) { }
+          }
+          Bot[this.id].cookies[domain] = ck
+        }).catch(error => {
+          common.debug(this.id, `${domain} 获取cookie失败：${error}`)
+        })
+      }
 
-    const log = `Shamrock加载资源成功：加载了${Bot[this.id].fl.size}个好友，${Bot[this.id].gl.size}个群。`
-    common.info(this.id, log)
-    resList = false
-    return log
+      const log = `Shamrock加载资源成功：加载了${Bot[this.id].fl.size}个好友，${Bot[this.id].gl.size}个群。`
+      common.info(this.id, log)
+      return log
+    } finally {
+      resList = false
+    }
   }
 
   /** 群对象 */
