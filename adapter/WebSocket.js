@@ -3,8 +3,8 @@ import express from 'express'
 import fetch from 'node-fetch'
 import { createServer } from 'http'
 import common from '../model/common.js'
-import shamrock from './shamrock/app.js'
-import ComWeChat from './WeChat/ComWx.js'
+import shamrock from './shamrock/index.js'
+import ComWeChat from './WeChat/index.js'
 
 export default class WebSocket {
   constructor () {

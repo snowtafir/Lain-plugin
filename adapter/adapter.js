@@ -19,7 +19,7 @@ adapter.push(async function QQGuild () {
   for (const i in bot) {
     if (i === 'default') continue
     try {
-      const Guild = (await import('./QQGuild/guild.js')).default
+      const Guild = (await import('./QQGuild/index.js')).default
       await new Guild(bot[i]).monitor()
     } catch (err) {
       logger.error(err)

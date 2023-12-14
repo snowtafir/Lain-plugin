@@ -74,7 +74,7 @@ export class Lain extends plugin {
         /** 保存新配置 */
         cfg.addIn(cmd[2], bot)
         try {
-          const Guild = (await import('../adapter/QQGuild/guild.js')).default
+          const Guild = (await import('../adapter/QQGuild/index.js')).default
           await (new Guild(bot)).monitor()
           return `Bot：${Bot?.[cmd[2]]?.nickname}(${cmd[2]}) 已连接...`
         } catch (err) {

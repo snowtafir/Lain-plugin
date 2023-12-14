@@ -501,11 +501,10 @@ let api = {
      * 清除本地缓存消息
      * @param {string} id - 机器人QQ
      * @param {string} message_type - 消息 类型 必填 private 或 group
-     * @param {number} user_id - 私聊QQ 任选其一
-     * @param {number} group_id - 群号 任选其一
+     * @param {number} TargetID - 目标群或者目标好友
      */
   async clear_msgs (id, message_type, TargetID) {
-    let type = 'private'
+    let type = 'user_id'
     if (message_type == 'group') type = 'group_id'
     const params = { message_type, [type]: TargetID }
     return await this.SendApi(id, 'clear_msgs', params)
