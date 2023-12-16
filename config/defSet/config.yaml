@@ -32,6 +32,8 @@ QQBotPrefix: true
 QQBotTips: false
 # QQBot默认进群后，推送提示显示的群号，如果配置，则会添加上提示 如有疑问，请添加bot官方群: 123456~
 QQBotGroupId: ""
+# QQBotApi被访问后删除对应的文件，单位为秒，默认30s
+QQBotDelFiles: 30
 
 #-------- 以下是标准输入配置 --------
 # 标准输入开关

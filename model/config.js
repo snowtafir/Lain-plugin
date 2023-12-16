@@ -20,7 +20,8 @@ const configItems = [
   { key: 'QQBotPrefix', value: true, comment: '# QQBot指令前缀转换 /转#' },
   { key: 'githubKey', value: '', comment: '# Github personal access token, 用于查看和下载shamrock版本信息' },
   { key: 'QQBotGroupId', value: '', comment: '# QQBot默认进群后，推送提示显示的群号。' },
-  { key: 'QQBotTips', value: false, comment: '# QQBot防倒卖崽提示' }
+  { key: 'QQBotTips', value: false, comment: '# QQBot防倒卖崽提示' },
+  { key: 'QQBotDelFiles', value: 30, comment: '# QQBotApi被访问后删除对应的文件，单位为秒，默认30s' }
 ]
 
 /** 检查配置文件是否存在 */

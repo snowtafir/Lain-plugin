@@ -90,11 +90,10 @@ export default class yaml {
     }
   }
 
-  /** 更新Ymal */
+  /** Yaml */
   save () {
     try {
       fs.writeFileSync(this._path, this.document.toString(), 'utf8')
-      logger.info(`更新Yaml成功：${this._path}`)
     } catch (err) {
       logger.error(`更新Yaml失败:${err?.message}`)
     }

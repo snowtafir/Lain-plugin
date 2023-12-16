@@ -249,27 +249,41 @@ async function base64 (path) {
 }
 
 /**
-* 三方图床
-* @param file 文件路径地址
-* @param url 上传接口
+* 三方云盘
+* @param file 文件，支持file://,buffer,base64://
 * @return url地址
 */
-async function uploadFile (file, url) {
+async function uploadFile (file) {
+  if (!(file instanceof Uint8Array || Buffer.isBuffer(file))) {
+    if (file.includes('file://')) {
+      file = fs.readFileSync(file.replace('file://', ''))
+    } else {
+      file = Buffer.from(file.replace('base://'), 'base64')
+    }
+  }
+  let url = Bot.lain.cfg.FigureBed
   const formData = new FormData()
-  formData.append('imgfile', new Blob([fs.readFileSync(file)], { type: 'image/jpeg' }), 'image.jpg')
-  return await fetch(url, {
+  formData.append('imgfile', new Blob([file], { type: 'image/jpeg' }), 'image.jpg')
+  const res = await fetch(url, {
     method: 'POST',
     body: formData
   })
+  if (res.ok) {
+    const { result } = await res.json()
+    url = url.replace('/uploadimg', '') + result.path
+    info('Lain-plugin', `[上传文件成功] ${url}`)
+    return url
+  }
+  throw new Error('上传失败')
 }
 
 /**
 * QQ图床
 * @param file 文件路径地址
-* @param uin botQQ
+* @param uin botQQ 可选，未传入则调用Bot.uin
 * @return url地址
 */
-async function uploadQQ (file, uin) {
+async function uploadQQ (file, uin = Bot.uin) {
   const base64 = fs.readFileSync(file).toString('base64')
   const { message_id } = await Bot[uin].pickUser(uin).sendMsg([segment.image(`base64://${base64}`)])
   await Bot[uin].pickUser(uin).recallMsg(message_id)
@@ -382,9 +396,9 @@ function getFile (i) {
   let type = 'file'
 
   // 检查是否是Buffer类型
-  if (i?.type === 'Buffer' || i instanceof Uint8Array) {
+  if (i?.type === 'Buffer' || i instanceof Uint8Array || Buffer.isBuffer(i || i?.data)) {
     type = 'buffer'
-    file = i?.data || i
+    file = i || i?.data
   } else if (i instanceof fs.ReadStream || i?.path) {
     // 检查是否是ReadStream类型
     if (fs.existsSync(i.path)) {
@@ -395,7 +409,7 @@ function getFile (i) {
   } else if (typeof i === 'string') {
     // 检查是否是字符串类型
     if (fs.existsSync(i.replace(/^file:\/\//, ''))) {
-      file = i
+      file = `file://${i}`
     } else if (fs.existsSync(i.replace(/^file:\/\/\//, ''))) {
       file = i.replace(/^file:\/\/\//, 'file://')
     } else if (fs.existsSync(i)) {
@@ -408,9 +422,6 @@ function getFile (i) {
       // 如果是url，则直接返回url
       type = 'http'
       file = i
-    } else if (i.includes('protobuf://')) {
-      type = 'buffer'
-      file = Buffer.from(i, 'base64')
     } else {
       log('Lain-plugin', '未知格式，无法处理：' + i)
       type = 'error'

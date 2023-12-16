@@ -295,8 +295,10 @@ export default class StartQQBot {
             image.push(await this.Upload(e[i], 'image'))
             break
           case 'video':
+            message.push(await this.Upload(e[i], 'video'))
+            break
           case 'record':
-            message.push(await this.Upload(e[i], e[i].type === 'video' ? 'video' : 'audio'))
+            message.push(await this.get_audio(e[i], 'audio'))
             break
           case 'text':
           case 'forward':
@@ -373,25 +375,13 @@ export default class StartQQBot {
 
   /** 统一传入的格式并上传 */
   async Upload (i, uploadType) {
-    const { type, file } = await this.getFile(i, uploadType)
-    /** 语音特殊处理 需要转码 */
-    if (uploadType === 'audio') {
-      return await this.get_audio(type, file)
-    } else if (type === 'http') {
-      /** url直接返回即可 */
-      return { type: uploadType, file }
-    } else if (type === 'file' && fs.existsSync(file)) {
-      /** 文件上传 */
-      return await this.Upload_File(file, uploadType)
-    } else {
-      /** 这种情况都能碰到？ */
-      common.error('QQBotApi', '文件保存失败：' + i)
-      return { type: 'text', text: JSON.stringify(i) }
-    }
+    const { type, file } = common.getFile(i)
+    return await this.getFile(type, file, uploadType)
   }
 
   /** 处理语音... */
-  async get_audio (type, file) {
+  async get_audio (i) {
+    let { type, file } = common.getFile(i)
     const filePath = process.cwd() + '/plugins/Lain-plugin/resources/QQBotApi'
     const pcm = path.join(filePath, `${Date.now()}.pcm`)
     const silk = path.join(filePath, `${Date.now()}.silk`)
@@ -446,7 +436,7 @@ export default class StartQQBot {
 
     // 返回名称
     if (fs.existsSync(silk)) {
-      return await this.Upload_File(silk, 'audio')
+      return await this.getFile('file', `file://${silk}`, 'audio')
     } else {
       common.error('QQBotApi', '文件保存失败：' + silk)
       return { type: 'text', text: '文件保存失败...' }
@@ -489,56 +479,6 @@ export default class StartQQBot {
         resolve({ error, stdout, stderr })
       })
     })
-  }
-
-  /** 上传文件返回url */
-  async Upload_File (filePath, type) {
-    const { FigureBed, port, QQBotImgIP, QQBotPort, QQBotImgToken } = Bot.lain.cfg
-    let url = `http://${QQBotImgIP}:${QQBotPort || port}/api/QQBot?token=${QQBotImgToken}&name=${path.basename(filePath)}`
-
-    /** 先判断是否配置公网 */
-    if (QQBotImgIP && QQBotImgIP != '127.0.0.1') {
-      common.info('QQBotApi', `[生成文件-公网] url：${url}`)
-      await common.sleep(100)
-      return { type, file: url }
-    }
-    /** 未配置公网则按需调用 */
-    try {
-      /** 调用默认图床 */
-      if (FigureBed) {
-        const res = await common.uploadFile(filePath, FigureBed)
-        if (res.ok) {
-          const { result } = await res.json()
-          url = FigureBed.replace('/uploadimg', '') + result.path
-          common.info('Lain-plugin', `[上传文件成功] ${url}`)
-          await common.sleep(100)
-          return { type, file: url }
-        } else {
-          const data = await res.json()
-          common.error('Lain-plugin', `QQBot默认图床发生错误，将调用下一个方法：${data}`)
-        }
-      } else if (type === 'image') {
-        /** 调用QQ图床 */
-        const botList = Bot.adapter.filter(item => typeof item === 'number')
-        if (botList.length > 0) {
-          url = await common.uploadQQ(filePath, botList[0])
-          await common.sleep(100)
-          return { type, file: url }
-        } else {
-          common.error('Lain-plugin', `未发现可使用的QQ图床，默认返回公网：${url}`)
-          await common.sleep(100)
-          return { type, file: url }
-        }
-      } else {
-        common.error('Lain-plugin', `默认图床和QQ图床调用失败，默认返回公网：${url}`)
-        await common.sleep(100)
-        return { type, file: url }
-      }
-    } catch {
-      common.error('Lain-plugin', `默认图床和QQ图床调用失败，默认返回公网：${url}`)
-      await common.sleep(100)
-      return { type, file: url }
-    }
   }
 
   /** 转换文本中的URL为图片 */
@@ -586,35 +526,41 @@ export default class StartQQBot {
     return [{ type: 'text', text: msg }]
   }
 
-  /** 统一文件格式 */
-  async getFile (i, type) {
-    const res = common.getFile(i)
-    const { file } = res
+  /** 统一文件格式处理为url */
+  async getFile (type, file, uploadType) {
+    const { FigureBed, port, QQBotImgIP, QQBotPort, QQBotImgToken } = Bot.lain.cfg
+    /** url直接返回 */
+    if (type === 'http') return { type: uploadType, file }
+    /** 调用默认云盘 */
+    if ((!QQBotImgIP || QQBotImgIP === '127.0.0.1') && FigureBed) {
+      return { type: uploadType, file: await common.uploadFile(file) }
+    }
 
+    /** 使用本地公网作为云盘 */
     let extname = '.jpg'
-    if (type == 'audio') extname = '.mp3'
-    else if (type == 'video') extname = '.mp4'
+    if (uploadType == 'audio') extname = '.mp3'
+    else if (uploadType == 'video') extname = '.mp4'
 
     /** 统一使用时间戳命名，无后缀，根据类型补后缀 */
     let filePath = `${process.cwd()}/plugins/Lain-plugin/resources/QQBotApi/${Date.now()}`
-
-    switch (res.type) {
+    let url = `http://${QQBotImgIP}:${QQBotPort || port}/api/QQBot?token=${QQBotImgToken}&name=`
+    switch (type) {
       case 'file':
         filePath = filePath + path.extname(file)
         fs.copyFileSync(file.replace(/^file:\/\//, ''), filePath)
-        return { type: 'file', file: filePath }
+        return { type: uploadType, file: url + path.basename(filePath) }
       case 'buffer':
         filePath = filePath + extname
-        fs.writeFileSync(filePath, Buffer.from(file))
-        return { type: 'file', file: filePath }
+        fs.writeFileSync(filePath, file)
+        return { type: uploadType, file: url + path.basename(filePath) }
       case 'base64':
         filePath = filePath + extname
         fs.writeFileSync(filePath, file.replace(/^base64:\/\//, ''), 'base64')
-        return { type: 'file', file: filePath }
+        return { type: uploadType, file: url + path.basename(filePath) }
       case 'http':
-        return { type: 'http', file }
+        return { type: uploadType, file }
       default:
-        return { type: 'error', file }
+        return { type: uploadType, file }
     }
   }
 }
