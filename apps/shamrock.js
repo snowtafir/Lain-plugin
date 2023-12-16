@@ -2,9 +2,10 @@ import { ShamrockRepoClient } from '../model/shamrock/shamrock.js'
 import Render from '../model/render.js'
 import common from '../model/common.js'
 import fs from 'fs'
-import path from "path"
+import path from 'path'
+
 export class shamrock extends plugin {
-  constructor() {
+  constructor () {
     super({
       name: '铃音Shamrock版本信息',
       priority: -50,
@@ -21,7 +22,7 @@ export class shamrock extends plugin {
     })
   }
 
-  async version(e) {
+  async version (e) {
     if (e.adapter !== 'shamrock') {
       return false
     }
@@ -52,7 +53,7 @@ export class shamrock extends plugin {
     }
   }
 
-  async apk(e) {
+  async apk (e) {
     // 不用shamrock也能用吧？
     // if (e.adapter !== 'shamrock') {
     //   return false

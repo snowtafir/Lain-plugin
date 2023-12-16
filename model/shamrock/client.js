@@ -1,6 +1,8 @@
 import cfg from '../../../../lib/config/config.js'
 import { HttpsProxyAgent } from 'https-proxy-agent'
-import {SHAMROCK_OWNER, SHAMROCK_REPO} from "./shamrock.js";
+import { SHAMROCK_OWNER, SHAMROCK_REPO } from './shamrock.js'
+import fetch from 'node-fetch'
+
 export class GithubClient {
   constructor (key) {
     this.key = key
