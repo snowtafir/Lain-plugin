@@ -164,7 +164,7 @@ export default class StartWeChat4u {
         text = msg.Content?.match(/\n(.+)/)?.[1] || msg.Content
         message.push({ type: 'text', text })
         toString += text
-        common.info(this.id, `群消息：${text}`)
+        common.info(this.id, `收到消息：${text}`)
         break
       /** 图片 */
       case this.bot.CONF.MSGTYPE_IMAGE:
@@ -174,7 +174,7 @@ export default class StartWeChat4u {
             if (!fs.existsSync(_path)) fs.writeFileSync(_path, res.data)
             message.push({ type: 'image', file: _path })
             toString += `{image:${_path}}`
-            common.info(this.id, `群消息：[图片:${_path}]`)
+            common.info(this.id, `收到消息：[图片:${_path}]`)
           })
           .catch(err => { this.bot.emit('error', err?.tips || err) })
         break
@@ -189,7 +189,7 @@ export default class StartWeChat4u {
             if (!fs.existsSync(_path)) fs.writeFileSync(_path, res)
             message.push({ type: 'image', file: _path })
             toString += `{image:${_path}}`
-            common.info(this.id, `群消息：[表情:${_path}]`)
+            common.info(this.id, `收到消息：[表情:${_path}]`)
           })
           .catch(err => { this.bot.emit('error', err?.tips) })
         break
@@ -285,7 +285,7 @@ export default class StartWeChat4u {
       await common.sleep(300)
       try {
         const res = await this.bot.sendMsg(i, peer_id)
-        common.info(this.id, `发送消息：${JSON.stringify(i)}`)
+        // common.info(this.id, `发送消息：${JSON.stringify(i)}`)
         return {
           seq: res.MsgID,
           rand: 1,
@@ -332,9 +332,11 @@ export default class StartWeChat4u {
         case 'text':
         case 'forward':
           message.push(i.text)
+          common.info(this.id, '发送消息：i.text')
           try { await common.MsgTotal(this.id, 'WeXin') } catch { }
           break
         default:
+          common.info(this.id, `发送消息：${JSON.stringify(i)}`)
           message.push(JSON.stringify(i))
           break
       }
@@ -349,26 +351,34 @@ export default class StartWeChat4u {
     let filename
 
     if (type == 'image') {
+      type = '[图片:'
       filename = Date.now() + '.jpg'
     } else if (type == 'record') {
       filename = Date.now() + '.mp3'
+      type = '[语音:'
     } else if (type == 'video') {
       filename = Date.now() + '.mp4'
+      type = '[视频:'
     }
 
     switch (res.type) {
       case 'file':
+        filename = Date.now() + path.extname(file)
+        common.info(this.id, `发送消息：${type}${file}]`)
         file = fs.readFileSync(file.replace(/^file:\/\//, ''))
-        return { file, filename: path.extname(file) }
-      case 'buffer':
-        return { type: 'file', file: Buffer.from(file), filename }
-      case 'base64':
-        file = Buffer.from(file.replace(/^base64:\/\//, ''))
         return { file, filename }
+      case 'buffer':
+        common.info(this.id, `发送消息：${type}base64://...]`)
+        return { file: Buffer.from(file), filename }
+      case 'base64':
+        common.info(this.id, `发送消息：${type}base64://...]`)
+        return { file: Buffer.from(file), filename }
       case 'http':
+        common.info(this.id, `发送消息：${type}${file}]`)
         file = Buffer.from(await (await fetch(file)).arrayBuffer())
-        return { file, filename: path.extname(file) || filename }
+        return { file, filename: Date.now() + path.extname(file) || filename }
       default:
+        common.info(this.id, `发送消息：${type}${file}]`)
         return { file, filename }
     }
   }
