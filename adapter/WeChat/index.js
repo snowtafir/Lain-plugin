@@ -287,7 +287,7 @@ class WeChat {
 
     common.info(this.id, 'PC微信加载资源成功...')
 
-    await common.init('Lain:restart')
+    await common.init('Lain:restart:WeChat')
   }
 }
 

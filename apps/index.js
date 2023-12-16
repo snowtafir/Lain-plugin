@@ -6,7 +6,7 @@ import { xiaofei_music } from '../adapter/shamrock/xiaofei/music.js'
 import { xiaofei_weather } from '../adapter/shamrock/xiaofei/weather.js'
 
 export class Lain extends plugin {
-  constructor() {
+  constructor () {
     super({
       name: '铃音基本设置',
       priority: -50,
@@ -18,7 +18,7 @@ export class Lain extends plugin {
         },
         {
           reg: /^#QQ(群|群机器人|机器人)设置.+$/gi,
-          fnc: 'QQBBot',
+          fnc: 'QQBot',
           permission: 'master'
         },
         {
@@ -85,7 +85,7 @@ export class Lain extends plugin {
     }
   }
 
-  async QQBBot (e) {
+  async QQBot (e) {
     const msg = async (e) => {
       const cmd = e.msg.replace(/^#QQ(群|群机器人|机器人)设置/gi, '').replace(/：/g, ':').trim().split(':')
       if (cmd.length !== 6) return '格式错误...'
@@ -103,8 +103,8 @@ export class Lain extends plugin {
       /** 保存新配置 */
       cfg.addIn(cmd[3], bot)
       try {
-        const createAndStartBot = (await import('../adapter/QQBot/index.js')).default
-        await createAndStartBot(bot)
+        const StartQQBot = (await import('../adapter/QQBot/index.js')).default
+        await new StartQQBot(bot)
         return `QQBot：${cmd[3]} 已连接...`
       } catch (err) {
         return err

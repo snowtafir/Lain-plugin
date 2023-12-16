@@ -35,8 +35,6 @@ export default class StartQQBot {
 
     /** 开始链接 */
     await this.bot.start()
-    /** 重启 */
-    await common.init('Lain:restart')
 
     this.bot.logger = {
       info: log => this.msgLog(log),
@@ -82,6 +80,9 @@ export default class StartQQBot {
     this.gmlList('fl')
     /** 保存id到adapter */
     if (!Bot.adapter.includes(String(this.id))) Bot.adapter.push(String(this.id))
+
+    /** 重启 */
+    await common.init('Lain:restart:QQBot')
   }
 
   /** 修改一下日志 */
@@ -145,7 +146,7 @@ export default class StartQQBot {
   /** 好友对象 */
   pickFriend (userId) {
     return {
-      sendMsg: async (msg, msgId) => await this.sendFriendMsg(userId, msg, msgId),
+      sendMsg: async (msg) => await this.sendFriendMsg(userId, msg),
       makeForwardMsg: async (data) => await common.makeForwardMsg(data),
       getChatHistory: async () => [],
       getAvatarUrl: async (size = 0, userID) => `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${userID.split('-')[1] || this.id}`
@@ -178,33 +179,24 @@ export default class StartQQBot {
   }
 
   /** 发送好友消息 */
-  async sendFriendMsg (userId, msg, msgId) {
+  async sendFriendMsg (userId, msg) {
+    userId = userId.split('-')[1]
     /** 转换格式 */
-    const { message, image } = await this.message(msg)
-    if (msgId) message.push({ type: 'reply', id: msgId })
-    this.bot.sendPrivateMessage(userId, message)
+    const { message, image, reply } = await this.message(msg)
+    this.bot.sendPrivateMessage(userId, message, this.bot)
     /** 分片发送图片 */
-    if (image.length > 0) {
-      image.forEach(async i => {
-        i = [i, { type: 'reply', id: msgId }]
-        this.bot.sendPrivateMessage(userId, i)
-      })
-    }
+    if (image.length) image.forEach(async i => this.bot.sendPrivateMessage(userId, reply ? [i, reply] : i))
   }
 
   /** 发送群消息 */
-  async sendGroupMsg (groupID, msg, msgId) {
+  async sendGroupMsg (groupID, msg) {
+    /** 获取正确的id */
+    groupID = groupID.split('-')[1]
     /** 转换格式 */
-    const { message, image } = await this.message(msg)
-    if (msgId) message.push({ type: 'reply', id: msgId })
-    this.bot.sendGroupMessage(groupID, message)
+    const { message, image, reply } = await this.message(msg)
+    this.bot.sendGroupMessage(groupID, message, this.bot)
     /** 分片发送图片 */
-    if (image.length > 0) {
-      image.forEach(async i => {
-        i = [i, { type: 'reply', id: msgId }]
-        this.bot.sendGroupMessage(groupID, i)
-      })
-    }
+    if (image.length) image.forEach(async i => this.bot.sendGroupMessage(groupID, reply ? [i, reply] : i))
   }
 
   /** 转换格式给云崽处理 */
@@ -289,6 +281,7 @@ export default class StartQQBot {
   async message (e) {
     if (!Array.isArray(e)) e = [e]
     e = common.array(e)
+    let reply
     let text = []
     const image = []
     const message = []
@@ -315,6 +308,10 @@ export default class StartQQBot {
               }
             })
             break
+          case 'reply':
+            reply = e[i]
+            message.push(e[i])
+            break
           default:
             message.push(e[i])
             break
@@ -335,7 +332,7 @@ export default class StartQQBot {
       if (text.length) message.push({ type: 'text', text: text.join('\n') })
     }
 
-    return { message, image }
+    return { message, image, reply }
   }
 
   /** 快速回复 */
@@ -363,12 +360,15 @@ export default class StartQQBot {
       })
     }
 
-    return {
+    res = {
+      ...res,
       seq: res?.group_code,
       rand: 1,
       time: Date.now(),
-      message_id: res?.group_code
+      message_id: res?.msg_id
     }
+    console.log(res)
+    return res
   }
 
   /** 统一传入的格式并上传 */

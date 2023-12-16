@@ -119,8 +119,8 @@ async function init (key = 'Lain:restart') {
     let time = restart.time || new Date().getTime()
     const msgId = restart?.msg_id || false
     time = (new Date().getTime() - time) / 1000
-    console.log(typeof uin)
     let msg = `重启成功：耗时${time.toFixed(2)}秒`
+    if (restart?.adapter === 'QQBot') msg = [{ type: 'reply', id: msgId }, msg]
     try {
       if (restart.isGroup) {
         Bot[uin].pickGroup(restart.id, msgId).sendMsg(msg)

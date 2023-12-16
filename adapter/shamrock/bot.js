@@ -56,7 +56,7 @@ export default class bot {
       MsgTotal: async (type) => await common.MsgTotal(this.id, 'shamrock', type, true)
     }
 
-    await common.init('Lain:restart')
+    await common.init('Lain:restart:shamrock')
 
     /** 加载好友、群列表 */
     this.LoadList()
