@@ -281,6 +281,8 @@ export default class StartWeChat4u {
   async reply (peer_id, msg) {
     const message = await this.message(msg)
     message.forEach(async i => {
+      /** 延迟下防止过快发送失败 */
+      await common.sleep(300)
       try {
         const res = await this.bot.sendMsg(i, peer_id)
         common.info(this.id, `发送消息：${JSON.stringify(i)}`)
