@@ -332,7 +332,7 @@ export default class StartWeChat4u {
         case 'text':
         case 'forward':
           message.push(i.text)
-          common.info(this.id, '发送消息：i.text')
+          common.info(this.id, `发送消息：${i.text}`)
           try { await common.MsgTotal(this.id, 'WeXin') } catch { }
           break
         default:
