@@ -4,7 +4,7 @@ import common from '../../model/common.js'
 
 export default class message {
   /** 传入基本配置 */
-  constructor(id) {
+  constructor (id) {
     /** 开发者id */
     this.id = id
     /** bot名称 */
@@ -12,7 +12,7 @@ export default class message {
   }
 
   /** 消息转换为Yunzai格式 */
-  async msg(data) {
+  async msg (data) {
     const { group_id, detail_type, self, time, message_id } = data
     /** 存一份原始消息到redis中，用于引用消息 */
     if (message_id) {
@@ -51,7 +51,7 @@ export default class message {
     let e = {
       atBot: atme,
       atme,
-      adapter: 'WeChat',
+      adapter: 'ComWeChat',
       uin: this.id,
       group_id,
       group_name: Bot.gl.get(group_id)?.group_name || '未知',
@@ -151,11 +151,13 @@ export default class message {
       e.operator_id = data.from_user_id
     }
 
+    /** 保存消息次数 */
+    try { common.recvMsg(e.self_id, e.adapter) } catch { }
     return e
   }
 
   /** 构建message */
-  async message(msg) {
+  async message (msg) {
     let atme = false
     let message = []
     let source = {}
@@ -207,7 +209,7 @@ export default class message {
   }
 
   /** 处理消息、转换格式 */
-  async reply(msg, quote, group_name) {
+  async reply (msg, quote, group_name) {
     const { guild_id, channel_id } = this.data.msg
     /** 处理云崽过来的消息 */
     return await (new SendMsg(this.id, { guild_id, channel_id }, this.data.eventType, this.msg_id, group_name)).message(msg, quote)

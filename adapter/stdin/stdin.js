@@ -96,7 +96,7 @@ export default async function stdin() {
     Bot.em('message.private', msg(input.trim()))
   }
   )
-  await common.init('Lain:restart')
+  await common.init('Lain:restart:stdin')
 }
 
 async function makeBuffer(file) {
@@ -112,12 +112,12 @@ async function makeBuffer(file) {
 async function fileType(data) {
   const file = {}
   try {
-    file.url = data.replace(/^base64:\/\/.*/, 'base64://...')
+    file.url = data
     file.buffer = await makeBuffer(data)
     file.type = await fileTypeFromBuffer(file.buffer)
     file.path = `${path}${Date.now()}.${file.type.ext}`
   } catch (err) {
-    await common.error(uin, `文件类型检测错误：${logger.red(err)}`)
+    common.error(uin, `文件类型检测错误：${logger.red(err)}`)
   }
   return file
 }
@@ -176,13 +176,15 @@ function msg(msg) {
   }
 
   /** 快速撤回 */
-  e.recall = async () => {
-    return await common.info(uin, `撤回消息：${msg_id}`)
+  e.recall = async (msg_id) => {
+    return common.info(uin, `撤回消息：${msg_id}`)
   }
   /** 快速回复 */
   e.reply = async (reply) => {
     return await sendMsg(reply)
   }
+  /** 保存消息次数 */
+  try { common.recvMsg(e.self_id, e.adapter) } catch { }
   return e
 }
 
@@ -205,18 +207,18 @@ async function sendMsg(msg) {
         if (!i.data.text) break
         if (i.data.text.match('\n'))
           i.data.text = `\n${i.data.text}`
-        await common.info(uin, `发送文本：${i.data.text}`)
+        common.info(uin, `发送文本：${i.data.text}`)
         break
       case 'image':
-        await common.info(uin, `发送图片：${file.url}\n文件已保存到：${logger.cyan(file.path)}`)
+        common.info(uin, `发送图片：${file.url}\n文件已保存到：${logger.cyan(file.path)}`)
         fs.writeFileSync(file.path, file.buffer)
         break
       case 'record':
-        await common.info(uin, `发送音频：${file.url}\n文件已保存到：${logger.cyan(file.path)}`)
+        common.info(uin, `发送音频：${file.url}\n文件已保存到：${logger.cyan(file.path)}`)
         fs.writeFileSync(file.path, file.buffer)
         break
       case 'video':
-        await common.info(uin, `发送视频：${file.url}\n文件已保存到：${logger.cyan(file.path)}`)
+        common.info(uin, `发送视频：${file.url}\n文件已保存到：${logger.cyan(file.path)}`)
         fs.writeFileSync(file.path, file.buffer)
         break
       case 'reply':
@@ -230,21 +232,22 @@ async function sendMsg(msg) {
         if (!Array.isArray(i?.data) || Object.keys(i.data) === 0) return { message_id: Date.now() }
         i = JSON.stringify(i)
         if (i.match('\n')) i = `\n${i}`
-        await common.info(uin, `发送消息：${i}`)
+        common.info(uin, `发送消息：${i}`)
     }
   }
+  try { await common.MsgTotal(this.id, 'stdin') } catch { }
   return { message_id: common.message_id() }
 }
 
 async function sendFile(file, name = path.basename(file)) {
   const buffer = await makeBuffer(file)
   if (!Buffer.isBuffer(buffer)) {
-    await common.error(uin, `发送文件错误：找不到文件 ${logger.red(file)}`)
+    common.error(uin, `发送文件错误：找不到文件 ${logger.red(file)}`)
     return false
   }
 
   const files = `${path}${Date.now()}-${name}`
-  await common.info(uin, `发送文件：${file}\n文件已保存到：${logger.cyan(files)}`)
+  common.info(uin, `发送文件：${file}\n文件已保存到：${logger.cyan(files)}`)
   return fs.writeFileSync(files, buffer)
 }
 

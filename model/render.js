@@ -1,12 +1,6 @@
-/*
- * @Author: sky-summer xuwu1232021@163.com
- * @Date: 2023-12-11 00:29:07
- * @LastEditTime: 2023-12-11 00:29:07
- * @FilePath: /Lain-plugin/model/render.js
- */
-import Version from "./version.js"
+import Version from './version.js'
 
-function scale(pct = 1) {
+function scale (pct = 1) {
   let scale = 100
   scale = Math.min(2, Math.max(0.5, scale / 100))
   pct = pct * scale
@@ -14,7 +8,7 @@ function scale(pct = 1) {
 }
 
 const Render = {
-  async render(path, params, cfg) {
+  async render (path, params, cfg) {
     let { e } = cfg
     if (!e.runtime) {
       console.log('未找到e.runtime，请升级至最新版Yunzai')
@@ -23,7 +17,7 @@ const Render = {
     let BotName = 'Miao-Yunzai'
     return e.runtime.render('Lain-plugin', path, params, {
       retType: cfg.retMsgId ? 'msgId' : 'default',
-      beforeRender({ data }) {
+      beforeRender ({ data }) {
         let pluginName = ''
         if (data.pluginName !== false) {
           pluginName = ` & ${data.pluginName || 'Lain-plugin'}`

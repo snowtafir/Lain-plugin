@@ -32,8 +32,6 @@ export default class SendMsg {
     return await this.qg_msg(msg)
   }
 
-
-
   /** 转为频道格式的消息 */
   async qg_msg(msg) {
     let image = {}
@@ -158,7 +156,6 @@ export default class SendMsg {
       if (fs.existsSync(file.replace(/^file:[/]{0,2}/, ""))) {
         base64 = fs.readFileSync(file.replace(/^file:[/]{0,2}/, ""))
         return { type, image: base64, log }
-
       } else if (fs.existsSync(file.replace(/^file:[/]{0,3}/, ""))) {
         base64 = fs.readFileSync(file.replace(/^file:[/]{0,3}/, ""))
         return { type, image: base64, log }
@@ -240,6 +237,7 @@ export default class SendMsg {
           /** 产生错误直接存入即可 */
           msg.set("file_image", new Blob([image]))
         }
+        try { await common.MsgTotal(this.id, 'QQGuild', 'image') } catch { }
         break
       case "url":
         logs += Api_msg.log
@@ -252,6 +250,7 @@ export default class SendMsg {
         }
         msg.image = image
         if (this.msg_id) msg.msg_id = this.msg_id
+        try { await common.MsgTotal(this.id, 'QQGuild', 'image') } catch { }
         break
       default:
         /** 引用消息 */
@@ -269,6 +268,7 @@ export default class SendMsg {
       if (msg instanceof FormData) msg.set("content", content)
       else msg.content = content
       logs += content
+      try { await common.MsgTotal(this.id, 'QQGuild') } catch { }
     }
     common.info(this.id, `发送消息：[${this.group_name}] ${logs}`)
     return msg

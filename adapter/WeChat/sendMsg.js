@@ -7,7 +7,7 @@ import { fileTypeFromBuffer } from 'file-type'
 
 export default class SendMsg {
   /** 传入基本配置 */
-  constructor(id, data) {
+  constructor (id, data) {
     /** 开发者id */
     this.id = id
     const { group_id, detail_type, user_id } = data
@@ -17,7 +17,7 @@ export default class SendMsg {
   }
 
   /** 发送消息 */
-  async message(msg) {
+  async message (msg) {
     /** 将云崽过来的消息统一为数组 */
     msg = await common.array(msg)
     /** 发送 */
@@ -25,7 +25,7 @@ export default class SendMsg {
   }
 
   /** 转换格式并发送消息 */
-  async wc_msg(msg) {
+  async wc_msg (msg) {
     const content = []
     /** 单独存储多图片，严格按照图片顺序进行发送 */
     const ArrImg = []
@@ -88,6 +88,7 @@ export default class SendMsg {
     /** 发送消息 */
     if (content.length > 0) {
       await api.send_message(this.detail_type, this.group_id || this.user_id, content)
+      try { await common.MsgTotal(this.id, 'ComWeChat') } catch { }
     }
 
     await common.sleep(200)
@@ -95,12 +96,13 @@ export default class SendMsg {
     /** 发送图片 */
     if (ArrImg.length > 0) {
       res = await api.send_message(this.detail_type, this.group_id || this.user_id, ArrImg)
+      try { await common.MsgTotal(this.id, 'ComWeChat', 'image') } catch { }
     }
     return res
   }
 
   /** 上传图片获取图片id */
-  async get_file_id(i) {
+  async get_file_id (i) {
     let name
     let type = 'data'
     let file = i.file

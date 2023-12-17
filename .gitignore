@@ -3,3 +3,5 @@ config/*
 !config/defSet/config.yaml
 resources/image
 resources/QQBotApi
+*.ts
+*.bak

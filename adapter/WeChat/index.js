@@ -171,6 +171,8 @@ class WeChat {
       stat: { start_time: parseInt(Date.now() / 1000), recv_msg_cnt: 0 },
       apk: Bot.lain.adapter.ComWeChat.apk,
       version: Bot.lain.adapter.ComWeChat.version,
+      readMsg: async () => await common.recvMsg(this.id, 'ComWeChat', true),
+      MsgTotal: async (type) => await common.MsgTotal(this.id, 'ComWeChat', type, true),
       /** 转发 */
       makeForwardMsg: async (forwardMsg) => {
         return await common.makeForwardMsg(forwardMsg)
@@ -287,7 +289,7 @@ class WeChat {
 
     common.info(this.id, 'PC微信加载资源成功...')
 
-    await common.init('Lain:restart')
+    await common.init('Lain:restart:WeChat')
   }
 }
 

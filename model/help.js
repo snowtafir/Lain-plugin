@@ -1,110 +1,110 @@
 export const helpCfg = {
-  "themeSet": false,
-  "title": "铃音帮助",
-  "subTitle": "Miao-Yunzai & Lain-plugin",
-  "colWidth": 265,
-  "theme": "all",
-  "themeExclude": [
-    "default"
+  themeSet: false,
+  title: '铃音帮助',
+  subTitle: 'Miao-Yunzai & Lain-plugin',
+  colWidth: 265,
+  theme: 'all',
+  themeExclude: [
+    'default'
   ],
-  "colCount": 2,
-  "bgBlur": true
+  colCount: 2,
+  bgBlur: true
 }
 export const helpList = [
   {
-    "group": "QQBot ---> #QQ群设置 沙盒:私域:移除at:appID:token:secret",
-    "list": [
+    group: 'QQBot ---> #QQ群设置 沙盒:私域:移除at:appID:token:secret',
+    list: [
       {
-        "icon": 1,
-        "title": "#QQ群设置",
-        "desc": "是=1 否=0 再次添加为删除"
+        icon: 1,
+        title: '#QQ群设置',
+        desc: '是=1 否=0 再次添加为删除'
       },
       {
-        "icon": 3,
-        "title": "#QQ频道账号",
-        "desc": "查看机器人"
+        icon: 3,
+        title: '#QQ频道账号',
+        desc: '查看机器人'
       }
     ],
-    "auth": false
+    auth: false
   },
   {
-    "group": "QQGuild --> #QQ频道设置 沙盒:私域:appid:token",
-    "list": [
+    group: 'QQGuild --> #QQ频道设置 沙盒:私域:appid:token',
+    list: [
       {
-        "icon": 23,
-        "title": "#QQ频道设置",
-        "desc": "是=1 否=0 再次添加为删除"
+        icon: 23,
+        title: '#QQ频道设置',
+        desc: '是=1 否=0 再次添加为删除'
       },
       {
-        "icon": 13,
-        "title": "#QQ频道账号",
-        "desc": "查看已经获取面板信息的角色列表"
+        icon: 13,
+        title: '#QQ频道账号',
+        desc: '查看已经获取面板信息的角色列表'
       },
       {
-        "icon": 6,
-        "title": "#QQ频道解除私信",
-        "desc": "解除私信3条后等待回复问题...每天仅可发送两次私信主动消息"
+        icon: 6,
+        title: '#QQ频道解除私信',
+        desc: '解除私信3条后等待回复问题...每天仅可发送两次私信主动消息'
       },
       {
-        "icon": 7,
-        "title": "#ID",
-        "desc": "获取个人id、频道id"
+        icon: 7,
+        title: '#ID',
+        desc: '获取个人id、频道id'
       }
     ]
   },
   {
-    "group": "Shamrock",
-    "list": [
+    group: 'Shamrock',
+    list: [
       {
-        "icon": 2,
-        "title": "#重载资源",
-        "desc": "用于重新加载好友列表，群列表等。"
+        icon: 2,
+        title: '#重载资源',
+        desc: '用于重新加载好友列表，群列表等。'
       },
       {
-        "icon": 5,
-        "title": "#shamrock版本",
-        "desc": "查询OpenShamrock官方库版本信息"
+        icon: 5,
+        title: '#shamrock版本',
+        desc: '查询OpenShamrock官方库版本信息'
       },
       {
-        "icon": 4,
-        "title": "#shamrock(测试)安装包",
-        "desc": "从github下载apk安装包发送到群聊/私聊"
+        icon: 4,
+        title: '#shamrock(测试)安装包',
+        desc: '从github下载apk安装包发送到群聊/私聊'
       }
     ]
   },
   {
-    "group": "WeChat",
-    "list": [
+    group: 'WeChat',
+    list: [
       {
-        "icon": 9,
-        "title": "#微信修改名称<新名称>",
-        "desc": "修改椰奶状态显示名称"
+        icon: 9,
+        title: '#微信修改名称<新名称>',
+        desc: '修改椰奶状态显示名称'
       }
     ]
   },
   {
-    "group": "其他",
-    "auth": "master",
-    "list": [
+    group: '其他',
+    auth: 'master',
+    list: [
       {
-        "icon": 16,
-        "title": "#设置主人",
-        "desc": "可以艾特指定用户"
+        icon: 16,
+        title: '#设置主人',
+        desc: '可以艾特指定用户'
       },
       {
-        "icon": 5,
-        "title": "#删除主人",
-        "desc": "艾特指定用户"
+        icon: 5,
+        title: '#删除主人',
+        desc: '艾特指定用户'
       },
       {
-        "icon": 18,
-        "title": "#铃音更新",
-        "desc": "更新插件"
+        icon: 18,
+        title: '#铃音更新',
+        desc: '更新插件'
       },
       {
-        "icon": 24,
-        "title": "#铃音版本",
-        "desc": "查看版本"
+        icon: 24,
+        title: '#铃音版本',
+        desc: '查看版本'
       }
     ]
   }

@@ -124,7 +124,9 @@ export default class guild {
       },
       getFriendMap: () => Bot[this.id].fl,
       getGroupList: () => Bot[this.id].gl,
-      getGuildList: () => Bot[this.id].tl
+      getGuildList: () => Bot[this.id].tl,
+      readMsg: async () => await common.recvMsg(this.id, 'QQGuild', true),
+      MsgTotal: async (type) => await common.MsgTotal(this.id, 'QQGuild', type, true)
     }
 
     /** 公域私域 */
@@ -194,7 +196,7 @@ export default class guild {
       } catch (err) {
         common.warn(this.id, `Bot无法在频道 ${qg.id} 中读取子频道列表，请给予权限...错误信息：${err.message}`)
       }
-      await common.init("Lain:restart")
+      await common.init('Lain:restart:QQGuild')
     }
   }
 

@@ -29,14 +29,13 @@ export class Restart extends plugin {
     if (state) return true
     state = true
     if (!this.e?.adapter) return false
-    this.key = "Lain:restart"
-
-    if (!this.key) return false
-
+    this.key = `Lain:restart:${this.e.adapter}`
+    // "Lain:restart:QQBot"
     await this.e.reply('开始执行重启，请稍等...')
     logger.mark(`${this.e.logFnc} 开始执行重启，请稍等...`)
 
     const data = JSON.stringify({
+      adapter: this.e.adapter,
       uin: this.e?.bot?.uin || this.e?.self_id || Bot.uin,
       isGroup: !!this.e.isGroup,
       id: this.e.isGroup ? this.e.group_id : this.e.user_id,

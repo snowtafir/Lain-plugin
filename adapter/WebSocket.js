@@ -3,21 +3,24 @@ import express from 'express'
 import fetch from 'node-fetch'
 import { createServer } from 'http'
 import common from '../model/common.js'
-import shamrock from './shamrock/app.js'
-import ComWeChat from './WeChat/ComWx.js'
+import shamrock from './shamrock/index.js'
+import ComWeChat from './WeChat/index.js'
+import { fileTypeFromBuffer } from 'file-type'
 
 export default class WebSocket {
-  constructor() {
+  constructor () {
     this.port = Bot.lain.cfg.port
     this.path = '/Shamrock'
     this.path_wx = '/ComWeChat'
   }
 
-  async server() {
+  async server () {
     /** 存储连接的bot对象 */
     Bot.shamrock = new Map()
     /** 保存监听器返回 */
     Bot.lain.on = new Map()
+    /** 微信登录 */
+    Bot.lain.loginMap = new Map()
     /** 创建Express应用程序 */
     const app = express()
     /** 创建HTTP服务器 */
@@ -42,20 +45,28 @@ export default class WebSocket {
     })
 
     /** QQBotApi */
-    app.get('/api/QQBot', (req, res) => {
+    app.get('/api/QQBot', async (req, res) => {
       const { token, name } = req.query
       common.mark('QQBotApi', `[收到请求] 访问文件：${name}`)
       /** 检查令牌有效性 */
       if (token !== Bot.lain.cfg.QQBotImgToken) return res.status(401).send('令牌无效')
       const _path = process.cwd() + `/plugins/Lain-plugin/resources/QQBotApi/${name}`
       if (!fs.existsSync(_path)) return res.status(404).send('啊咧，文件不存在捏')
+
+      /** 图片类型特殊处理 */
+      const type = await fileTypeFromBuffer(fs.readFileSync(_path))
+      if (type && type.mime.startsWith('image')) {
+        res.setHeader('Content-Type', type.mime)
+        res.setHeader('Content-Disposition', 'inline')
+      }
+
       /** 返回文件 */
       res.sendFile(_path, {}, (err) => {
         if (err) {
           common.error('QQBotApi', err)
         } else {
-          /** 10s后删除图片文件 */
-          setTimeout(() => { fs.unlink(_path, (err) => { if (err) common.error('QQBotApi', err) }) }, 10000)
+          /** 访问后删除文件 */
+          setTimeout(() => { fs.unlink(_path, (err) => { if (err) common.error('QQBotApi', err) }) }, Number(Bot.lain.cfg.QQBotDelFiles) * 100)
         }
       })
     })

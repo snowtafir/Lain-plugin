@@ -81,34 +81,43 @@ function warn(id, log) {
   logger.warn(id || '', log)
 }
 
+/**
+* @param id Bot的id、QQ
+* @param log 日志内容
+*/
+function trace(id, log) {
+  id = nickname(id)
+  logger.trace(id || '', log)
+}
+
+/**
+* @param id Bot的id、QQ
+* @param log 日志内容
+*/
+function fatal(id, log) {
+  id = nickname(id)
+  logger.fatal(id || '', log)
+}
+
 /** 适配器重启发送消息 */
 async function init(key = "Lain:restart") {
   let restart = await redis.get(key)
   if (restart) {
+    redis.del(key)
     restart = JSON.parse(restart)
     const uin = restart?.uin || Bot.uin
     let time = restart.time || new Date().getTime()
     const msg_id = restart?.msg_id || false
     time = (new Date().getTime() - time) / 1000
-    console.log(typeof uin)
     let msg = `重启成功：耗时${time.toFixed(2)}秒`
+    if (restart?.adapter === 'QQBot') msg = [{ type: 'reply', id: restart.msg_id }, msg]
     try {
       if (restart.isGroup) {
         Bot[uin].pickGroup(restart.id, msg_id).sendMsg(msg)
       } else {
         Bot[uin].pickUser(restart.id).sendMsg(msg)
       }
-    } catch (error) {
-      /** 发送失败后等待5s重试一次，适配器可能没连接bot */
-      await new Promise((resolve) => setTimeout(resolve, 5000))
-      msg = `重启成功：耗时${(time + 5).toFixed(2)}秒`
-      if (restart.isGroup) {
-        Bot[uin].pickGroup(restart.id, msg_id).sendMsg(msg)
-      } else {
-        Bot[uin].pickUser(restart.id, msg_id).sendMsg(msg)
-      }
-    }
-    redis.del(key)
+    } catch (error) { logger.warn(error) }
   }
 }
 
@@ -228,27 +237,41 @@ async function base64(path) {
 }
 
 /**
-* 三方图床
-* @param file 文件路径地址
-* @param url 上传接口
+* 三方云盘
+* @param file 文件，支持file://,buffer,base64://
 * @return url地址
 */
-async function uploadFile(file, url) {
+async function uploadFile (file) {
+  if (!(file instanceof Uint8Array || Buffer.isBuffer(file))) {
+    if (file.includes('file://') || !file.includes("base64://")) {
+      file = fs.readFileSync(file.replace('file://', ''))
+    } else {
+      file = Buffer.from(file.replace('base64://', ""), 'base64')
+    }
+  }
+  let url = Bot.lain.cfg.FigureBed
   const formData = new FormData()
-  formData.append("imgfile", new Blob([fs.readFileSync(file)], { type: "image/jpeg" }), "image.jpg")
-  return await fetch(url, {
-    method: "POST",
-    body: formData,
+  formData.append('imgfile', new Blob([file], { type: 'image/jpeg' }), 'image.jpg')
+  const res = await fetch(url, {
+    method: 'POST',
+    body: formData
   })
+  if (res.ok) {
+    const { result } = await res.json()
+    url = url.replace('/uploadimg', '') + result.path
+    info('Lain-plugin', `[上传文件成功] ${url}`)
+    return url
+  }
+  throw new Error('上传失败')
 }
 
 /**
 * QQ图床
 * @param file 文件路径地址
-* @param uin botQQ
+* @param uin botQQ 可选，未传入则调用Bot.uin
 * @return url地址
 */
-async function uploadQQ(file, uin) {
+async function uploadQQ(file, uin = Bot.uin) {
   const base64 = fs.readFileSync(file).toString("base64")
   const { message_id } = await Bot[uin].pickUser(uin).sendMsg([segment.image(`base64://${base64}`)])
   await Bot[uin].pickUser(uin).recallMsg(message_id)
@@ -390,7 +413,7 @@ function getFile(i) {
     } else if (fs.existsSync(i.replace(/^file:\/\/\//, ""))) {
       file = i.replace(/^file:\/\/\//, "file://")
     } else if (fs.existsSync(i)) {
-      file = i
+      file = `file://${i}`
     } else if (/^base64:\/\//.test(i)) {
       // 检查是否是base64格式的字符串
       type = "base64"
@@ -399,19 +422,55 @@ function getFile(i) {
       // 如果是url，则直接返回url
       type = "http"
       file = i
+    } else if (i.includes('protobuf://')) {
+      type = 'buffer'
+      file = Buffer.from(i, 'base64')
     } else {
-      log("Lain-plugin", "未知格式，无法处理：" + i, "error")
+      log("Lain-plugin", "未知格式，无法处理：" + i)
       type = "error"
       file = i
     }
   } else {
     // 留个容错
-    log("Lain-plugin", "未知格式，无法处理：" + i, "error")
+    log("Lain-plugin", "未知格式，无法处理：" + i)
     type = "error"
     file = i
   }
 
   return { type, file }
+}
+
+/**
+ * 保存、读取收到的消息次数
+ * @param {string|number} id BotID
+ * @param {string} adapter 适配器名称
+ * @param {boolean} read 传入true为读取，可选
+ * @return {number} 次数
+ */
+async function recvMsg (id, adapter, read = false) {
+  const key = `lain:recvMsg:${adapter}:${id}`
+  if (read) {
+    const msg = await redis.get(key)
+    return msg || 0
+  }
+  await redis.incr(key)
+}
+
+/**
+ * 保存、读取发送的消息次数
+ * @param {string|number} id BotID
+ * @param {string} adapter 适配器名称
+ * @param {boolean} read 传入true为读取，可选
+ * @param {string} type 发送类型 默认消息，可选image
+ * @return {number} 次数
+ */
+async function MsgTotal (id, adapter, type = 'text', read = false) {
+  const key = `lain:sendMsg:${adapter}:${id}:${type === 'text' ? 'text' : 'image'}`
+  if (read) {
+    const msg = await redis.get(key)
+    return msg || 0
+  }
+  await redis.incr(key)
 }
 
 export default {
@@ -422,6 +481,8 @@ export default {
   debug,
   mark,
   warn,
+  fatal,
+  trace,
   array,
   makeForwardMsg,
   base64,
@@ -433,5 +494,7 @@ export default {
   message_id,
   downloadFile,
   mkdirs,
-  getFile
+  getFile,
+  recvMsg,
+  MsgTotal
 }
