@@ -565,13 +565,6 @@ export default class StartQQBot {
       return { type: uploadType, file: await common.uploadFile(file) }
     }
 
-    /** 调用自己的服务器图床 */
-    try {
-      url = await this.addImg(file)
-      url = await this.uploadImg(url, type)
-      return { type: uploadType, file: url }
-    } catch (err) { logger.error(err) }
-
     /** 使用本地公网作为云盘 */
     let extname = ".jpg"
     if (uploadType == "audio") extname = ".mp3"
@@ -598,57 +591,5 @@ export default class StartQQBot {
       default:
         return { type: uploadType, file }
     }
-  }
-
-  /** 自己服务器上传用的 */
-  // 转制文件
-  async addImg(f) {
-    if (Buffer.isBuffer(f)) return f
-
-    if (typeof f === "string") {
-      let p = f
-
-      if (/^file:/i.test(f)) {
-        p = f.replace(/^file:\/\//i, "")
-        if (!fs.existsSync(p)) {
-          p = f.replace(/^file:\/\/\//i, "")
-          if (!fs.existsSync(p)) {
-            try {
-              p = url.fileURLToPath(f)
-            } catch (err) {
-              logger.warn("转制图片失败(File协议不正确).", f.replace(/base64:\/\/.*?(,|]|")/g, "base64://...$1"), err)
-            }
-          }
-        }
-      }
-
-      if (p.match(/^https?:\/\//))
-        return Buffer.from(await (await fetch(p)).arrayBuffer())
-
-      if (p.match(/^base64:\/\//))
-        return Buffer.from(p.replace(/^base64:\/\//, ""), "base64")
-
-      if (fs.existsSync(p))
-        return Buffer.from(fs.readFileSync(p))
-    }
-
-    logger.warn("转制图片失败，未知或未适配协议", (typeof f) == "object" ? JSON.stringify(f).replace(/base64:\/\/.*?(,|]|")/g, "base64://...$1") : f.toString().replace(/base64:\/\/.*?(,|]|")/g, "base64://...$1"))
-  }
-
-  // 上传图片
-  async uploadImg(base64data, type) {
-    // 发送POST请求
-    let url = await fetch("http://47.115.231.249:81/gj/bot_tp/", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ base64data, type: { image: "png", video: "mp4", audio: "silk" }?.[type] })
-    }).catch(error => {
-      logger.error("图片上传错误：", error);
-    });
-    url = await url.text()
-    logger.warn("上传图片：", url)
-    return url
   }
 }
