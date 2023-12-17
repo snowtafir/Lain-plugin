@@ -369,7 +369,7 @@ export default class StartQQBot {
       time: Date.now(),
       message_id: res?.msg_id
     }
-    console.log(res)
+    common.debug('Lain-plugin', res)
     return res
   }
 

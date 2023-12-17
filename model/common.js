@@ -409,11 +409,11 @@ function getFile (i) {
   } else if (typeof i === 'string') {
     // 检查是否是字符串类型
     if (fs.existsSync(i.replace(/^file:\/\//, ''))) {
-      file = `file://${i}`
+      file = i
     } else if (fs.existsSync(i.replace(/^file:\/\/\//, ''))) {
       file = i.replace(/^file:\/\/\//, 'file://')
     } else if (fs.existsSync(i)) {
-      file = i
+      file = `file://${i}`
     } else if (/^base64:\/\//.test(i)) {
       // 检查是否是base64格式的字符串
       type = 'base64'
