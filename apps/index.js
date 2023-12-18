@@ -114,22 +114,38 @@ export class Lain extends plugin {
   }
 
   async QQGuildAccount (e) {
-    const cfg = new yaml(Bot.lain._path + '/bot.yaml')
-    if (e.sub_type === 'friend') {
-      const msg = []
-      const config = cfg.data()
+    let cfg, msg, config
+    msg = []
+    if (e.sub_type !== 'friend') {return await e.reply('请私聊查看')}
+    else {
+      cfg = new yaml(Bot.lain._path + '/bot.yaml')
+      config = cfg.data()
       for (const i in config) {
         if (i === 'default') continue
-        const cfg = [
+        cfg = [
           config[i].sandbox ? 1 : 0,
           config[i].allMsg ? 1 : 0,
           config[i].appID,
           config[i].token
         ]
-        msg.push(`${Bot[i]?.nickname || '未知'}：${cfg.join(':')}`)
+        msg.push(`#QQ频道设置${cfg.join(':')}`)
+      }
+      cfg = new yaml(Bot.lain._path + '/QQbot.yaml')
+      config = cfg.data()
+      for (const i in config) {
+        if (i === 'ndefault') continue
+        cfg = [
+          config[i].sandbox ? 1 : 0,
+          config[i].allMsg ? 1 : 0,
+          config[i].removeAt ? 1 : 0,
+          config[i].appid,
+          config[i].token,
+          config[i].secret
+        ]
+        msg.push(`#QQ群设置${cfg.join(':')}`)
       }
       return await e.reply(`共${msg.length}个账号：\n${msg.join('\n')}`)
-    } else { return await e.reply('请私聊查看') }
+    }
   }
 
   async update (e) {
