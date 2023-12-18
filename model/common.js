@@ -396,9 +396,9 @@ function getFile (i) {
   let type = 'file'
 
   // 检查是否是Buffer类型
-  if (i?.type === 'Buffer' || i instanceof Uint8Array || Buffer.isBuffer(i || i?.data)) {
+  if (i?.type === 'Buffer' || i instanceof Uint8Array || Buffer.isBuffer(i?.data || i)) {
     type = 'buffer'
-    file = i || i?.data
+    file = i?.data || i
   } else if (i instanceof fs.ReadStream || i?.path) {
     // 检查是否是ReadStream类型
     if (fs.existsSync(i.path)) {
