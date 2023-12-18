@@ -364,7 +364,6 @@ export default class StartQQBot {
 
     res = {
       ...res,
-      seq: res?.group_code,
       rand: 1,
       time: Date.now(),
       message_id: res?.msg_id

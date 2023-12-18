@@ -82,3 +82,29 @@ AppSecret(机器人密钥)：`abcdefghijklmnopqrstuvwxyz`
 - 暂时只适配了一个网盘，如希望禁用内置网盘，可自行将配置文件中的网盘地址留空。
 
 </details>
+
+## 高阶能力：
+
+Markdown 源码:
+
+```
+![imagesize#618px #249px]({{.image}})
+```
+
+喵崽发送：
+
+```
+const file = 'https://resource5-1255303497.cos.ap-guangzhou.myqcloud.com/abcmouse_word_watch/other/mkd_img.png'
+const { width, height, url } = await Bot.imgProc(file)
+
+return await this.reply({
+    type: 'markdown', // 这里添加多一个类型，其他按照官方文档来。
+    custom_template_id: '101993071_1658748972',
+    params: [
+      { key: 'imagesize', values: [`text #${width}px #${height}px`] },
+      { key: 'image', values: [url] }
+    ]
+  })
+```
+
+参数按照[官方文档](https://bot.q.qq.com/wiki/develop/api-v2/server-inter/message/type/markdown.html#发送方式)发送即可，注意`type`，其他的自行参考文档。
