@@ -352,6 +352,7 @@ export default class StartQQBot {
     /** 分片发送图片 */
     if (image.length > 0) {
       image.forEach(async i => {
+        await common.sleep(500)
         try {
           res = await e.sendMsg.call(e.data, i)
         } catch (error) {
@@ -550,7 +551,7 @@ export default class StartQQBot {
         return { type: uploadType, file: url + path.basename(filePath) }
       case 'buffer':
         filePath = filePath + extname
-        fs.writeFileSync(filePath, file)
+        fs.writeFileSync(filePath, Buffer.from(file))
         return { type: uploadType, file: url + path.basename(filePath) }
       case 'base64':
         filePath = filePath + extname
