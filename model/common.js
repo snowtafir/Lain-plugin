@@ -279,16 +279,26 @@ async function uploadFile (file) {
 
 /**
 * QQ图床
-* @param file 文件路径地址
+* @param file 文件，支持file://,buffer,base64://
 * @param uin botQQ 可选，未传入则调用Bot.uin
 * @return url地址
 */
 async function uploadQQ (file, uin = Bot.uin) {
-  const base64 = fs.readFileSync(file).toString('base64')
-  const { message_id } = await Bot[uin].pickUser(uin).sendMsg([segment.image(`base64://${base64}`)])
-  await Bot[uin].pickUser(uin).recallMsg(message_id)
+  let base64
+  if (Buffer.isBuffer(file)) {
+    base64 = file.toString('base64')
+  } else if (file.startsWith('file://')) {
+    base64 = fs.readFileSync(file.slice(7)).toString('base64')
+  } else if (file.startsWith('base64://')) {
+    base64 = file.slice(9)
+  } else {
+    throw new Error('上传失败，未知格式的文件')
+  }
+  try {
+    const { message_id } = await Bot[uin].pickUser(uin).sendMsg([segment.image(`base64://${base64}`)])
+    await Bot[uin].pickUser(uin).recallMsg(message_id)
+  } catch { }
   const md5 = crypto.createHash('md5').update(Buffer.from(base64, 'base64')).digest('hex')
-  await sleep(1000)
   return `https://gchat.qpic.cn/gchatpic_new/0/0-0-${md5.toUpperCase()}/0?term=2&is_origin=0`
 }
 

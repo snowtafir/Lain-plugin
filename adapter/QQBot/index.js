@@ -528,15 +528,27 @@ export default class StartQQBot {
 
   /** 统一文件格式处理为url */
   async getFile (type, file, uploadType) {
-    const { FigureBed, port, QQBotImgIP, QQBotPort, QQBotImgToken } = Bot.lain.cfg
+    const { port, QQBotImgIP, QQBotPort, QQBotImgToken } = Bot.lain.cfg
     /** url直接返回 */
     if (type === 'http') return { type: uploadType, file }
-    /** 调用默认云盘 */
-    if ((!QQBotImgIP || QQBotImgIP === '127.0.0.1') && FigureBed) {
-      return { type: uploadType, file: await common.uploadFile(file) }
-    }
+    // /** 调用默认云盘 */
+    // if ((!QQBotImgIP || QQBotImgIP === '127.0.0.1') && FigureBed) {
+    //   return { type: uploadType, file: await common.uploadFile(file) }
+    // }
+
+    /** 云盘已经失效，较多人无公网，暂时性添加一个QQ图床使用 */
+    try {
+      const botList = Bot.adapter.filter(item => typeof item === 'number')
+      if ((!QQBotImgIP || QQBotImgIP === '127.0.0.1') && uploadType === 'image' && botList.length) {
+        common.mark(botList[0], '使用QQ图床发送图片')
+        const url = await Bot.uploadQQ(file, botList[0])
+        common.mark(botList[0], `QQ图床上传成功：${url}`)
+        return { type: uploadType, file: url }
+      }
+    } catch (error) { console.log(error) }
 
     /** 使用本地公网作为云盘 */
+    common.mark('Lain-plugin', '[QQBotApi]：使用公网')
     let extname = '.jpg'
     if (uploadType == 'audio') extname = '.mp3'
     else if (uploadType == 'video') extname = '.mp4'
