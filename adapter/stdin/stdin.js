@@ -1,6 +1,7 @@
 import { createInterface } from 'readline'
 import fs from 'node:fs'
 import { fileTypeFromBuffer } from 'file-type'
+import _ from "lodash"
 import common from '../../model/common.js'
 
 const uin = 'stdin'
@@ -112,7 +113,7 @@ async function makeBuffer(file) {
 async function fileType(data) {
   const file = {}
   try {
-    file.url = data
+    file.url = _.truncate(data, { length: 100 })
     file.buffer = await makeBuffer(data)
     file.type = await fileTypeFromBuffer(file.buffer)
     file.path = `${path}${Date.now()}.${file.type.ext}`

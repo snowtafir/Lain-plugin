@@ -5,6 +5,14 @@ import fetch, { Blob, FormData } from "node-fetch"
 import path from "path"
 import puppeteer from "../../../lib/puppeteer/puppeteer.js"
 
+/** 注册uin */
+if (!Bot?.adapter)
+  Bot.adapter = Bot.uin ? [ Bot.uin ] : []
+else {
+  if (!Bot.adapter.includes(Bot.uin))
+    Bot.adapter.push(Bot.uin)
+}
+
 /**
 * 休眠函数
 * @param ms 毫秒
@@ -243,7 +251,7 @@ async function base64(path) {
 */
 async function uploadFile (file) {
   if (!(file instanceof Uint8Array || Buffer.isBuffer(file))) {
-    if (file.includes('file://') || !file.includes("base64://")) {
+    if (file.includes('file://') || (!file.startsWith('base64://') && fs.existsSync(file))) {
       file = fs.readFileSync(file.replace('file://', ''))
     } else {
       file = Buffer.from(file.replace('base64://', ""), 'base64')
@@ -267,16 +275,29 @@ async function uploadFile (file) {
 
 /**
 * QQ图床
-* @param file 文件路径地址
+* @param file 文件，支持file://,buffer,base64://
 * @param uin botQQ 可选，未传入则调用Bot.uin
 * @return url地址
 */
-async function uploadQQ(file, uin = Bot.uin) {
-  const base64 = fs.readFileSync(file).toString("base64")
-  const { message_id } = await Bot[uin].pickUser(uin).sendMsg([segment.image(`base64://${base64}`)])
-  await Bot[uin].pickUser(uin).recallMsg(message_id)
-  const md5 = crypto.createHash("md5").update(Buffer.from(base64, "base64")).digest("hex")
-  await sleep(1000)
+async function uploadQQ (file, uin = Bot.uin) {
+  let base64
+  if (Buffer.isBuffer(file)) {
+    base64 = file.toString('base64')
+  } else if (file.startsWith('file://')) {
+    base64 = fs.readFileSync(file.slice(7)).toString('base64')
+  } else if (!file.startsWith('base64://') && fs.existsSync(file)) {
+    base64 = fs.readFileSync(file).toString('base64')
+  } else if (file.startsWith('base64://')) {
+    base64 = file.slice(9)
+  } else {
+    throw new Error('上传失败，未知格式的文件')
+  }
+  try {
+    let ret = await Bot[uin].pickUser(uin).sendMsg([segment.image(`base64://${base64}`)])
+    if (!ret?.message_id) throw "发送失败"
+    await Bot[uin].pickUser(uin).recallMsg(message_id)
+  } catch (err) { throw Error(err) }
+  const md5 = crypto.createHash('md5').update(Buffer.from(base64, 'base64')).digest('hex')
   return `https://gchat.qpic.cn/gchatpic_new/0/0-0-${md5.toUpperCase()}/0?term=2&is_origin=0`
 }
 
@@ -396,7 +417,7 @@ function getFile(i) {
   let type = "file"
 
   // 检查是否是Buffer类型
-  if (i?.type === "Buffer" || i instanceof Uint8Array) {
+  if (i?.type === "Buffer" || i instanceof Uint8Array || Buffer.isBuffer(i?.data || i)) {
     type = "buffer"
     file = i?.data || i
   } else if (i instanceof fs.ReadStream || i?.path) {

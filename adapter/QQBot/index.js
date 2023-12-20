@@ -296,7 +296,6 @@ export default class StartQQBot {
     if (!Array.isArray(e)) e = [e]
     e = common.array(e)
     let reply
-    let text = []
     const image = []
     const message = []
 
@@ -321,7 +320,7 @@ export default class StartQQBot {
               if (msg.type === "image") {
                 image.push(msg)
               } else {
-                text.push(msg.text)
+                message.push(msg.text)
               }
             })
             break
@@ -339,14 +338,12 @@ export default class StartQQBot {
       }
     }
 
-    if (image.length) {
-      if (text.length) message.push({ type: "text", text: text.join("\n") })
+    if (image.length > 0) {
       message.push(image[0])
       image.splice(0, 1)
       try { await common.MsgTotal(this.id, "QQBot", "image") } catch { }
     } else {
       try { await common.MsgTotal(this.id, "QQBot") } catch { }
-      if (text.length) message.push({ type: "text", text: text.join("\n") })
     }
 
     return { message, image, reply }
@@ -379,6 +376,7 @@ export default class StartQQBot {
     /** 分片发送图片 */
     if (image.length > 0) {
       image.forEach(async i => {
+        await common.sleep(500)
         try {
           res = await e.sendMsg.call(e.data, i)
           common.mark(this.id, `发送返回：${JSON.stringify(res)}`)
@@ -557,15 +555,34 @@ export default class StartQQBot {
 
   /** 统一文件格式处理为url */
   async getFile (type, file, uploadType) {
-    const { FigureBed, port, QQBotImgIP, QQBotPort, QQBotImgToken } = Bot.lain.cfg
+    const { port, QQBotImgIP, QQBotPort, QQBotImgToken } = Bot.lain.cfg
     /** url直接返回 */
     if (type === "http") return { type: uploadType, file }
-    /** 调用默认云盘 */
-    if ((!QQBotImgIP || QQBotImgIP === "127.0.0.1") && FigureBed) {
-      return { type: uploadType, file: await common.uploadFile(file) }
-    }
+    // /** 调用默认云盘 */
+    // if ((!QQBotImgIP || QQBotImgIP === "127.0.0.1") && FigureBed) {
+    //   return { type: uploadType, file: await common.uploadFile(file) }
+    // }
+
+    /** 云盘已经失效，较多人无公网，暂时性添加一个QQ图床使用 */
+    try {
+      const botList = Bot.adapter.filter(item => typeof item === 'number')
+      if ((!QQBotImgIP || QQBotImgIP === '127.0.0.1') && uploadType === 'image' && botList.length) {
+        common.mark(botList[0], '使用QQ图床发送图片')
+        const url = await Bot.uploadQQ(file, botList[0])
+        common.mark(botList[0], `QQ图床上传成功：${url}`)
+        return { type: uploadType, file: url }
+      }
+    } catch (error) { logger.error(error) }
+
+    /** 调用自己的服务器图床 */
+    try {
+      let url = await this.addImg(file)
+      url = await this.uploadImg(url, uploadType)
+      return { type: uploadType, file: url }
+    } catch (err) { logger.error(err) }
 
     /** 使用本地公网作为云盘 */
+    common.mark('Lain-plugin', '[QQBotApi]：使用公网')
     let extname = ".jpg"
     if (uploadType == "audio") extname = ".mp3"
     else if (uploadType == "video") extname = ".mp4"
@@ -580,7 +597,7 @@ export default class StartQQBot {
         return { type: uploadType, file: url + path.basename(filePath) }
       case "buffer":
         filePath = filePath + extname
-        fs.writeFileSync(filePath, file)
+        fs.writeFileSync(filePath, Buffer.from(file))
         return { type: uploadType, file: url + path.basename(filePath) }
       case "base64":
         filePath = filePath + extname
@@ -591,5 +608,57 @@ export default class StartQQBot {
       default:
         return { type: uploadType, file }
     }
+  }
+
+  /** 自己服务器上传用的 */
+  // 转制文件
+  async addImg(f) {
+    if (Buffer.isBuffer(f)) return f
+
+    if (typeof f === "string") {
+      let p = f
+
+      if (/^file:/i.test(f)) {
+        p = f.replace(/^file:\/\//i, "")
+        if (!fs.existsSync(p)) {
+          p = f.replace(/^file:\/\/\//i, "")
+          if (!fs.existsSync(p)) {
+            try {
+              p = url.fileURLToPath(f)
+            } catch (err) {
+              logger.warn("转制图片失败(File协议不正确).", f.replace(/base64:\/\/.*?(,|]|")/g, "base64://...$1"), err)
+            }
+          }
+        }
+      }
+
+      if (p.match(/^https?:\/\//))
+        return Buffer.from(await (await fetch(p)).arrayBuffer())
+
+      if (p.match(/^base64:\/\//))
+        return Buffer.from(p.replace(/^base64:\/\//, ""), "base64")
+
+      if (fs.existsSync(p))
+        return Buffer.from(fs.readFileSync(p))
+    }
+
+    logger.warn("转制图片失败，未知或未适配协议", (typeof f) == "object" ? JSON.stringify(f).replace(/base64:\/\/.*?(,|]|")/g, "base64://...$1") : f.toString().replace(/base64:\/\/.*?(,|]|")/g, "base64://...$1"))
+  }
+
+  // 上传图片
+  async uploadImg(base64data, type) {
+    // 发送POST请求
+    let url = await fetch("http://47.115.231.249:81/gj/bot_tp/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ base64data, type: { image: "png", video: "mp4", audio: "silk" }?.[type] })
+    }).catch(error => {
+      logger.error("图片上传错误：", error);
+    });
+    url = await url.text()
+    logger.warn("上传图片：", url)
+    return url
   }
 }
