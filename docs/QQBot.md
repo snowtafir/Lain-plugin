@@ -97,11 +97,13 @@ Markdown 源码：
 
 </details>
 
-<details><summary>全局 Markdown 消息附带发送按钮</summary>
+<details><summary>全局 Markdown 消息附带发送按钮编写</summary>
 
 请自行查看`./plugins/Lain-plugin/config/markdown.js`，参考其中的编写方法，可根据传入的消息在返回的`Markdown`消息中添加按钮一起返回。
 
-自定义函数目前仅支持同步，可返回数组或对象。
+支持异步、同步函数，可返回数组或对象。
+
+用户可自行接收e，插件会原封不动将e传递。
 
 </details>
 

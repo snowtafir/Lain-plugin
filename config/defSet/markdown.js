@@ -7,7 +7,8 @@ export let MDButton = [
 ]
 
 /** 对应按钮 */
-export function test () {
+export function test (e) {
+  /** 这里的e和插件接收的一致，自行使用~ */
   return [
     {
       type: 'button',

@@ -605,7 +605,7 @@ export default class StartQQBot {
       for (let i of MDButton) {
         const regExp = new RegExp(i.reg)
         if (regExp.test(e.msg)) {
-          const button = (await import('../../config/markdown.js'))[i.fnc]()
+          const button = await (await import('../../config/markdown.js'))[i.fnc](e)
           markdown.push(...(Array.isArray(button) ? button : [button]))
           break
         }
