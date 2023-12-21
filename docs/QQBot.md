@@ -61,7 +61,7 @@ AppSecret(机器人密钥)：`abcdefghijklmnopqrstuvwxyz`
 
 目前由于官方图片API的限制，发图需要使用在线url，我准备了3种方法，请注意查看以下
 
-- 方法1：内置了一个网盘，如果你没有设置公网，会默认调用网盘，支持图片、语音、视频。 ``已经失效。``
+- 方法1：编写一个全局变量`Bot.uploadFile`，接收一个参数，返回url，例如花瓣图床，起点图床等。
 
 - 方法2：前往 [./plugins/Lain-plugin/config/config.yaml](../config/config.yaml) 配置公网地址，端口为配置文件中的`HTTP`端口，如果有转发，请修改`实际端口`选项。
 
@@ -97,6 +97,13 @@ Markdown 源码：
 
 </details>
 
+<details><summary>全局 Markdown 消息附带发送按钮</summary>
+
+请自行查看`./plugins/Lain-plugin/config/markdown.js`，参考其中的编写方法，可根据传入的消息在返回的`Markdown`消息中添加按钮一起返回。
+
+自定义函数目前仅支持同步，可返回数组或对象。
+
+</details>
 
 <details><summary>自定义发送 Markdown 消息</summary>
 
@@ -127,3 +134,4 @@ return await this.reply({
 参数按照[官方文档](https://bot.q.qq.com/wiki/develop/api-v2/server-inter/message/type/markdown.html#发送方式)发送即可，注意`type`，其他的自行参考文档。
 
 </details>
+

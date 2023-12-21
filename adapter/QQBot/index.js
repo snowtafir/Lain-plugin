@@ -435,10 +435,14 @@ export default class StartQQBot {
     const { port, QQBotImgIP, QQBotPort, QQBotImgToken } = Bot.lain.cfg
     /** url直接返回 */
     if (type === 'http') return { type: uploadType, file }
-    // /** 调用默认云盘 */
-    // if ((!QQBotImgIP || QQBotImgIP === '127.0.0.1') && FigureBed) {
-    //   return { type: uploadType, file: await common.uploadFile(file) }
-    // }
+
+    /** 调用自定义图床 */
+    try {
+      if ((!QQBotImgIP || QQBotImgIP === '127.0.0.1') && uploadType === 'image' && Bot.uploadFile) {
+        common.mark('Lain-plugin', '使用自定义图床发送图片')
+        return { type: uploadType, file: await Bot.uploadFile(file) }
+      }
+    } catch { }
 
     /** 云盘已经失效，较多人无公网，暂时性添加一个QQ图床使用 */
     try {
@@ -540,18 +544,16 @@ export default class StartQQBot {
     let { message, image } = await this.message(msg)
 
     if (e.bot.config?.markdown) {
-      const custom_template_id = e.bot.config.markdown
-      allMsg.push(...await this.markdown(custom_template_id, message))
-      if (image.length) allMsg.push(...await this.markdown(custom_template_id, image))
+      allMsg.push(...await this.markdown(e, message))
+      if (image.length) allMsg.push(...await this.markdown(e, image))
     } else {
       allMsg.push(message)
       if (image.length) allMsg.push(image)
     }
 
     for (let i of allMsg) {
-      if (!i || !i.length) continue
-      console.log(JSON.stringify(i))
       try {
+        if (!i || !i.length) continue
         res = await e.sendMsg.call(e.data, i)
       } catch (error) {
         console.error(e.self_id, `\n发送消息失败：${error.response.data}`)
@@ -571,7 +573,8 @@ export default class StartQQBot {
   }
 
   /** 转换为全局md */
-  async markdown (custom_template_id, data) {
+  async markdown (e, data) {
+    const custom_template_id = e.bot.config.markdown
     const message = []
     let markdown = {
       type: 'markdown',
@@ -595,6 +598,20 @@ export default class StartQQBot {
       }
     }
     if (!markdown.params.length) return [message]
-    return message.length ? [[markdown], message] : [[markdown]]
+    markdown = [markdown]
+    /** 按钮添加 */
+    try {
+      const MDButton = (await import('../../config/markdown.js')).MDButton
+      for (let i of MDButton) {
+        const regExp = new RegExp(i.reg)
+        if (regExp.test(e.msg)) {
+          const button = (await import('../../config/markdown.js'))[i.fnc]()
+          markdown.push(...(Array.isArray(button) ? button : [button]))
+          break
+        }
+      }
+    } catch { }
+
+    return message.length ? [markdown, message] : [markdown]
   }
 }

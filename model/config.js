@@ -58,6 +58,7 @@ if (!fs.existsSync(_path + '/QQBot.yaml')) {
 }
 if (!fs.existsSync(_path + '/../resources/QQBotApi')) fs.mkdirSync(_path + '/../resources/QQBotApi')
 if (!fs.existsSync(process.cwd() + '/temp/WeXin')) fs.mkdirSync(process.cwd() + '/temp/WeXin')
+if (!fs.existsSync(_path + '/markdown.js')) fs.copyFileSync(_path + '/defSet/markdown.js', _path + '/markdown.js')
 
 const cfg = Yaml.parse(fs.readFileSync(_path + '/config.yaml', 'utf8'))
 const packYZ = JSON.parse(fs.readFileSync('./package.json', 'utf-8'))

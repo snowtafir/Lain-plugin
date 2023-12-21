@@ -2,7 +2,7 @@
 import fs from 'fs'
 import sizeOf from 'image-size'
 import crypto from 'crypto'
-import fetch, { Blob, FormData } from 'node-fetch'
+import fetch from 'node-fetch'
 
 /**
  * 处理传入的图片文件，返回图片宽、高、转存后的url
@@ -41,42 +41,9 @@ async function imgProc (file) {
   const { width, height } = dimensions
   const { port, QQBotImgIP, QQBotPort, QQBotImgToken } = Bot.lain.cfg
   let url = `http://${QQBotImgIP}:${QQBotPort || port}/api/QQBot?token=${QQBotImgToken}&name=${time}`
-  return { width, height, url }
-}
-
-/**
- * 上传文件到三方云盘
- * @param {string|Buffer} file - 文件，支持file://、base64://、Buffer
- * @returns {string} url - 文件上传后的url地址
- */
-async function uploadFile (file) {
-  if (!(Buffer.isBuffer(file) || file instanceof Uint8Array)) {
-    if (file.startsWith('file://')) {
-      file = fs.readFileSync(file.replace('file://', ''))
-    } else if (file.startsWith('base64://')) {
-      file = Buffer.from(file.replace('base64://', ''), 'base64')
-    } else {
-      throw new Error('无法识别文件类型')
-    }
-  }
-
-  let url = Bot.lain.cfg.FigureBed
-  const formData = new FormData()
-  formData.append('imgfile', new Blob([file], { type: 'image/jpeg' }), 'image.jpg')
-
-  const res = await fetch(url, {
-    method: 'POST',
-    body: formData
-  })
-
-  if (res.ok) {
-    const { result } = await res.json()
-    url = url.replace('/uploadimg', '') + result.path
-    console.log('上传成功：', url)
-    return url
-  }
-
-  throw new Error('上传失败')
+  let md5 = crypto.createHash('md5').update(buffer).digest('hex')
+  md5 = `https://gchat.qpic.cn/gchatpic_new/0/0-0-${md5.toUpperCase()}/0?term=2`
+  return { width, height, url, md5 }
 }
 
 /**
@@ -106,7 +73,6 @@ async function uploadQQ (file, uin = Bot.uin) {
 
 /** 赋值给全局Bot */
 Bot.imgProc = imgProc
-Bot.uploadFile = uploadFile
 Bot.uploadQQ = uploadQQ
 
-export { imgProc, uploadFile, uploadQQ }
+export { imgProc, uploadQQ }

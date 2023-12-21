@@ -5,3 +5,4 @@ config/QQBot.yaml
 resources/image
 resources/QQBotApi
 config/*json
+config/markdown.js
