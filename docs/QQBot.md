@@ -73,6 +73,25 @@ AppSecret(机器人密钥)：`abcdefghijklmnopqrstuvwxyz`
 
 <details><summary>Markdown 消息</summary>
 
+支持自定义全局模板名称，打开配置文件自行配置，`./plugins/Lain-plugin/config/config.yaml`
+
+配置后无需申请通用模板，经测试，只需要一个图文模板即可使用全局md。
+
+随后执行`#QQ群设置MD 机器人ID:模板ID`。
+
+```
+# QQBot全局md模板，需要使用#QQ群设置MD...设置id启用
+QQBotMD:
+  # 图片模板宽高 key名称
+  ImageSize:
+  # 图片模板url key名称
+  image:
+  # 文字模板 key名称
+  text:
+```
+
+如配置以上，无需查看以下。
+
 `此项配置同步 TRSS-Yunzai，设置后视为全局启用Markdown模板发送文本、图片消息`
 
 高阶能力 → 消息模板 → 添加 Markdown 模板

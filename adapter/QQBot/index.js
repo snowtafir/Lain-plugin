@@ -585,12 +585,12 @@ export default class StartQQBot {
     for (let i of data) {
       switch (i.type) {
         case 'text':
-          markdown.params.push({ key: 'text_start', values: [i.text.replace(/\n/g, '\r')] })
+          markdown.params.push({ key: Bot.lain.cfg.QQBotMD.text || 'text_start', values: [i.text.replace(/\n/g, '\r')] })
           break
         case 'image':
           const { width, height } = await Bot.imgProc(i.file)
-          markdown.params.push({ key: 'img_url', values: [i.file] })
-          markdown.params.push({ key: 'img_dec', values: [`text #${width}px #${height}px`] })
+          markdown.params.push({ key: Bot.lain.cfg.QQBotMD.image || 'img_url', values: [i.file] })
+          markdown.params.push({ key: Bot.lain.cfg.QQBotMD.ImageSize || 'img_dec', values: [`text #${width}px #${height}px`] })
           break
         default:
           message.push(i)

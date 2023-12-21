@@ -34,6 +34,14 @@ QQBotTips: false
 QQBotGroupId: ""
 # QQBotApi被访问后删除对应的文件，单位为秒，默认30s
 QQBotDelFiles: 30
+# QQBot全局md模板，需要使用#QQ群设置MD...设置id启用
+QQBotMD:
+  # 图片模板宽高 key名称
+  ImageSize:
+  # 图片模板url key名称
+  image:
+  # 文字模板 key名称
+  text:
 
 #-------- 以下是标准输入配置 --------
 # 标准输入开关
