@@ -436,9 +436,9 @@ export default class StartQQBot {
     /** url直接返回 */
     if (type === 'http') return { type: uploadType, file }
 
-    /** 调用自定义图床 */
+    /** 调用自定义图床 只要自定义方法存在，图片会强制性使用此方法 */
     try {
-      if ((!QQBotImgIP || QQBotImgIP === '127.0.0.1') && uploadType === 'image' && Bot.uploadFile) {
+      if (uploadType === 'image' && Bot?.uploadFile) {
         common.mark('Lain-plugin', '使用自定义图床发送图片')
         return { type: uploadType, file: await Bot.uploadFile(file) }
       }
@@ -556,9 +556,15 @@ export default class StartQQBot {
         if (!i || !i.length) continue
         res = await e.sendMsg.call(e.data, i)
       } catch (error) {
-        console.error(e.self_id, `\n发送消息失败：${error.response.data}`)
-        common.debug(e.self_id, error)
-        res = await e.sendMsg.call(e.data, `\n发送消息失败：\ncode:：${error.response.data.code}\nmessage：${error.response.data.message}`)
+        common.error(e.self_id, JSON.stringify(error))
+        let data = error?.response?.data
+        if (data) {
+          data = `\n发送消息失败：\ncode:：${error.response.data.code}\nmessage：${error.response.data.message}`
+        } else {
+          data = error?.message || error
+        }
+        console.error(error)
+        res = await e.sendMsg.call(e.data, data)
       }
     }
 

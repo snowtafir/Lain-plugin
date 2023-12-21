@@ -151,7 +151,7 @@ export class Lain extends plugin {
         ]
         msg.push(`#QQ频道设置${cfg.join(':')}`)
       }
-      cfg = new YamlParse(Bot.lain._path + '/QQbot.yaml')
+      cfg = new YamlParse(Bot.lain._path + '/QQBot.yaml')
       config = cfg.data()
       for (const i in config) {
         if (i === 'ndefault') continue
