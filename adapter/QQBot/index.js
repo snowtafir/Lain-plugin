@@ -277,102 +277,6 @@ export default class StartQQBot {
     }
   }
 
-  /** 转换message */
-  async message (e) {
-    if (!Array.isArray(e)) e = [e]
-    e = common.array(e)
-    let reply
-    let text = []
-    const image = []
-    const message = []
-
-    for (let i in e) {
-      try {
-        switch (e[i].type) {
-          case 'at':
-            break
-          case 'image':
-            image.push(await this.Upload(e[i], 'image'))
-            break
-          case 'video':
-            message.push(await this.Upload(e[i], 'video'))
-            break
-          case 'record':
-            message.push(await this.get_audio(e[i], 'audio'))
-            break
-          case 'text':
-          case 'forward':
-            (await this.HandleURL(e[i])).forEach(msg => {
-              if (msg.type === 'image') {
-                image.push(msg)
-              } else {
-                text.push(msg.text)
-              }
-            })
-            break
-          case 'reply':
-            reply = e[i]
-            message.push(e[i])
-            break
-          default:
-            message.push(e[i])
-            break
-        }
-      } catch (err) {
-        common.error('Lain-plugin', err)
-        message.push(e[i])
-      }
-    }
-
-    if (image.length) {
-      if (text.length) message.push({ type: 'text', text: text.join('\n') })
-      message.push(image[0])
-      image.splice(0, 1)
-      try { await common.MsgTotal(this.id, 'QQBot', 'image') } catch { }
-    } else {
-      try { await common.MsgTotal(this.id, 'QQBot') } catch { }
-      if (text.length) message.push({ type: 'text', text: text.join('\n') })
-    }
-
-    return { message, image, reply }
-  }
-
-  /** 快速回复 */
-  async reply (e, msg) {
-    let res
-    const { message, image } = await this.message(msg)
-    try {
-      res = await e.sendMsg.call(e.data, message)
-    } catch (error) {
-      common.error(e.self_id, `发送消息失败：${error?.data || error?.message || error}`)
-      common.debug(e.self_id, error)
-      res = await e.sendMsg.call(e.data, `发送消息失败：${error?.data || error?.message || error}`)
-    }
-
-    /** 分片发送图片 */
-    if (image.length > 0) {
-      image.forEach(async i => {
-        await common.sleep(500)
-        try {
-          res = await e.sendMsg.call(e.data, i)
-        } catch (error) {
-          common.error(e.self_id, `发送消息失败：${error?.data || error?.message || error}`)
-          common.debug(e.self_id, error)
-          res = await e.sendMsg.call(e.data, `发送消息失败：${error?.data || error?.message || error}`)
-        }
-      })
-    }
-
-    res = {
-      ...res,
-      rand: 1,
-      time: Date.now(),
-      message_id: res?.msg_id
-    }
-    common.debug('Lain-plugin', res)
-    return res
-  }
-
   /** 统一传入的格式并上传 */
   async Upload (i, uploadType) {
     const { type, file } = common.getFile(i)
@@ -574,5 +478,123 @@ export default class StartQQBot {
       default:
         return { type: uploadType, file }
     }
+  }
+
+  /** 转换message */
+  async message (data) {
+    data = common.array(data)
+    let reply
+    let text = []
+    const image = []
+    const message = []
+
+    for (let i in data) {
+      try {
+        switch (data[i].type) {
+          case 'at':
+            break
+          case 'image':
+            image.push(await this.Upload(data[i], 'image'))
+            break
+          case 'video':
+            message.push(await this.Upload(data[i], 'video'))
+            break
+          case 'record':
+            message.push(await this.get_audio(data[i], 'audio'))
+            break
+          case 'text':
+          case 'forward':
+            (await this.HandleURL(data[i])).forEach(msg => { msg.type === 'image' ? image.push(msg) : text.push(msg.text) })
+            break
+          case 'reply':
+            reply = data[i]
+            message.push(data[i])
+            break
+          default:
+            message.push(data[i])
+            break
+        }
+      } catch (err) {
+        common.error('Lain-plugin', err)
+        message.push(data[i])
+      }
+    }
+
+    if (image.length) {
+      if (text.length) message.push({ type: 'text', text: text.join('\n') })
+      message.push(image[0])
+      image.splice(0, 1)
+      try { await common.MsgTotal(this.id, 'QQBot', 'image') } catch { }
+    } else {
+      try { await common.MsgTotal(this.id, 'QQBot') } catch { }
+      if (text.length) message.push({ type: 'text', text: text.join('\n') })
+    }
+
+    return { message, image, reply }
+  }
+
+  /** 快速回复 */
+  async reply (e, msg) {
+    let res
+    const allMsg = []
+    let { message, image } = await this.message(msg)
+
+    if (e.bot.config?.markdown) {
+      const custom_template_id = e.bot.config.markdown
+      allMsg.push(...await this.markdown(custom_template_id, message))
+      if (image.length) allMsg.push(...await this.markdown(custom_template_id, image))
+    } else {
+      allMsg.push(message)
+      if (image.length) allMsg.push(image)
+    }
+
+    for (let i of allMsg) {
+      if (!i || !i.length) continue
+      console.log(JSON.stringify(i))
+      try {
+        res = await e.sendMsg.call(e.data, i)
+      } catch (error) {
+        console.error(e.self_id, `\n发送消息失败：${error.response.data}`)
+        common.debug(e.self_id, error)
+        res = await e.sendMsg.call(e.data, `\n发送消息失败：\ncode:：${error.response.data.code}\nmessage：${error.response.data.message}`)
+      }
+    }
+
+    res = {
+      ...res,
+      rand: 1,
+      time: Date.now(),
+      message_id: res?.msg_id
+    }
+    common.debug('Lain-plugin', res)
+    return res
+  }
+
+  /** 转换为全局md */
+  async markdown (custom_template_id, data) {
+    const message = []
+    let markdown = {
+      type: 'markdown',
+      custom_template_id,
+      params: []
+    }
+
+    for (let i of data) {
+      switch (i.type) {
+        case 'text':
+          markdown.params.push({ key: 'text_start', values: [i.text.replace(/\n/g, '\r')] })
+          break
+        case 'image':
+          const { width, height } = await Bot.imgProc(i.file)
+          markdown.params.push({ key: 'img_url', values: [i.file] })
+          markdown.params.push({ key: 'img_dec', values: [`text #${width}px #${height}px`] })
+          break
+        default:
+          message.push(i)
+          break
+      }
+    }
+    if (!markdown.params.length) return [message]
+    return message.length ? [[markdown], message] : [[markdown]]
   }
 }

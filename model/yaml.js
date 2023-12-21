@@ -57,7 +57,7 @@ export default class yaml {
     if (Array.isArray(value)) {
       value.push(val)
     } else if (value && typeof value === 'object') {
-      value = { ...value, val }
+      value = { ...value, ...val }
     } else {
       value = [val]
     }

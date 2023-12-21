@@ -61,7 +61,7 @@ AppSecret(机器人密钥)：`abcdefghijklmnopqrstuvwxyz`
 
 目前由于官方图片API的限制，发图需要使用在线url，我准备了3种方法，请注意查看以下
 
-- 方法1：内置了一个网盘，如果你没有设置公网，会默认调用网盘，支持图片、语音、视频。
+- 方法1：内置了一个网盘，如果你没有设置公网，会默认调用网盘，支持图片、语音、视频。 ``已经失效。``
 
 - 方法2：前往 [./plugins/Lain-plugin/config/config.yaml](../config/config.yaml) 配置公网地址，端口为配置文件中的`HTTP`端口，如果有转发，请修改`实际端口`选项。
 
@@ -69,21 +69,38 @@ AppSecret(机器人密钥)：`abcdefghijklmnopqrstuvwxyz`
 
 - 适配器自带指令前缀/转#，默认打开。
 
-## 网盘Api
+## 高阶能力
 
-<details><summary>展开/收起</summary>
+<details><summary>Markdown 消息</summary>
 
-- 网盘API 从网上收集的，非本人所属，侵权删~
+`此项配置同步 TRSS-Yunzai，设置后视为全局启用Markdown模板发送文本、图片消息`
 
-- 优先尝试内置网盘发图，失败后如有配置公网IP则使用公网IP发图，否则通过方法3给自己发图的方式上传图片，语音，视频等。
+高阶能力 → 消息模板 → 添加 Markdown 模板
 
-- 可通过锅巴配置填写公网IP，支持端口映射。
+模板名称：图文消息  
+使用场景：发送图文混排消息  
+Markdown 源码：
 
-- 暂时只适配了一个网盘，如希望禁用内置网盘，可自行将配置文件中的网盘地址留空。
+```
+{{.text_start}}![{{.img_dec}}]({{.img_url}}){{.text_end}}
+```
+
+配置模板参数
+| 模板参数 | 参数示例 |
+| - | - |
+| text_start | 开头文字 |
+| img_dec | 图片 |
+| img_url | https://qqminiapp.cdn-go.cn/open-platform/11d80dc9/img/robot.b167c62c.png |
+| text_end | 结束文字 | 
+
+保存 → 提交审核 → 审核完成后，输入 `#QQ群设置MD 机器人ID:模板ID`
 
 </details>
 
-## 高阶能力：
+
+<details><summary>自定义发送 Markdown 消息</summary>
+
+
 
 Markdown 源码:
 
@@ -108,3 +125,5 @@ return await this.reply({
 ```
 
 参数按照[官方文档](https://bot.q.qq.com/wiki/develop/api-v2/server-inter/message/type/markdown.html#发送方式)发送即可，注意`type`，其他的自行参考文档。
+
+</details>

@@ -101,7 +101,7 @@ async function uploadQQ (file, uin = Bot.uin) {
     await Bot[uin].pickUser(uin).recallMsg(message_id)
   } catch { }
   const md5 = crypto.createHash('md5').update(Buffer.from(base64, 'base64')).digest('hex')
-  return `https://gchat.qpic.cn/gchatpic_new/0/0-0-${md5.toUpperCase()}/0?term=2&is_origin=0`
+  return `https://gchat.qpic.cn/gchatpic_new/0/0-0-${md5.toUpperCase()}/0?term=2`
 }
 
 /** 赋值给全局Bot */
