@@ -606,7 +606,8 @@ export default class StartQQBot {
         const regExp = new RegExp(i.reg)
         if (regExp.test(e.msg)) {
           const button = await (await import('../../config/markdown.js'))[i.fnc](e)
-          markdown.push(...(Array.isArray(button) ? button : [button]))
+          /** 无返回不添加 */
+          if (button) markdown.push(...(Array.isArray(button) ? button : [button]))
           break
         }
       }
