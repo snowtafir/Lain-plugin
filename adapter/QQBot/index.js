@@ -6,6 +6,7 @@ import qrcode from 'qrcode'
 import { encode as encodeSilk } from 'silk-wasm'
 import Yaml from 'yaml'
 import common from '../../model/common.js'
+import Button from './plugins.js'
 
 export default class StartQQBot {
   /** 传入基本配置 */
@@ -611,17 +612,20 @@ export default class StartQQBot {
     markdown = [markdown]
     /** 按钮添加 */
     try {
-      const MDButton = (await import('../../config/markdown.js')).MDButton
-      for (let i of MDButton) {
-        const regExp = new RegExp(i.reg)
-        if (regExp.test(e.msg)) {
-          const button = await (await import('../../config/markdown.js'))[i.fnc](e)
-          /** 无返回不添加 */
-          if (button) markdown.push(...(Array.isArray(button) ? button : [button]))
-          break
+      for (let p of Button) {
+        for (let v of p.plugin.rule) {
+          const regExp = new RegExp(v.reg)
+          if (regExp.test(e.msg)) {
+            const button = await p[v.fnc](e)
+            /** 无返回不添加 */
+            if (button) markdown.push(...(Array.isArray(button) ? button : [button]))
+            break
+          }
         }
       }
-    } catch { }
+    } catch (error) {
+      common.error('Lain-plugin', error)
+    }
 
     return message.length ? [markdown, message] : [markdown]
   }

@@ -66,7 +66,11 @@ export default class WebSocket {
           common.error('QQBotApi', err)
         } else {
           /** 访问后删除文件 */
-          setTimeout(() => { fs.unlink(_path, (err) => { if (err) common.error('QQBotApi', err) }) }, Number(Bot.lain.cfg.QQBotDelFiles) * 100)
+          try {
+            setTimeout(() => {
+              fs.unlink(_path, (err) => { if (err) common.error('QQBotApi', err) })
+            }, Number(Bot.lain.cfg.QQBotDelFiles) * 100)
+          } catch { }
         }
       })
     })

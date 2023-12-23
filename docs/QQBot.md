@@ -118,11 +118,111 @@ Markdown 源码：
 
 <details><summary>全局 Markdown 消息附带发送按钮编写</summary>
 
-请自行查看`./plugins/Lain-plugin/config/markdown.js`，参考其中的编写方法，可根据传入的消息在返回的`Markdown`消息中添加按钮一起返回。
+- 插件开发者请在插件包目录创建 `lain.support.js`，和锅巴一样。
+- 个人用户可在 `plugins/example`文件夹创建 `lain.support.js`
+- 复制以下内容到 `lain.support.js` 中，自行编写正则和执行方法即可。
 
-支持异步、同步函数，可返回数组或对象。
+```javascript
+export default class Button {
+  constructor () {
+    this.plugin = {
+      // 插件名称
+      name: '状态按钮',
+      // 描述
+      dsc: '状态按钮',
+      // 优先级
+      priority: 100,
+      rule: [
+        {
+          /** 命令正则匹配 */
+          reg: '#状态',
+          /** 执行方法 */
+          fnc: 'state'
+        },
+        {
+          /** 命令正则匹配 */
+          reg: '#帮助',
+          /** 执行方法 */
+          fnc: 'help'
+        }
+      ]
+    }
+  }
 
-用户可自行接收e，插件会原封不动将e传递。
+  /** 执行方法 */
+  state (e) {
+    // e是接收消息，经喵崽处理过的，插件会原封不动传递过来，供开发者使用。
+    return [
+      {
+        type: 'button',
+        buttons: [
+          {
+            id: '1',
+            render_data: {
+              label: '角色1面板',
+              visited_label: '角色1面板'
+            },
+            action: {
+              type: 2,
+              permission: {
+                type: 2
+              },
+              data: '/角色1面板',
+              at_bot_show_channel_list: false
+            }
+          }
+        ]
+      },
+      {
+        type: 'button',
+        buttons: [
+          {
+            id: '2',
+            render_data: {
+              label: '角色1面板',
+              visited_label: '角色1面板'
+            },
+            action: {
+              type: 2,
+              permission: {
+                type: 2
+              },
+              data: '/角色1面板',
+              at_bot_show_channel_list: false
+            }
+          }
+        ]
+      }
+    ]
+  }
+
+  /** 执行方法 */
+  help (e) {
+    // e是接收消息，经喵崽处理过的，插件会原封不动传递过来，供开发者使用。
+    return {
+      type: 'button',
+      buttons: [
+        {
+          id: '1',
+          render_data: {
+            label: '角色1面板',
+            visited_label: '角色1面板'
+          },
+          action: {
+            type: 2,
+            permission: {
+              type: 2
+            },
+            data: '/角色1面板',
+            at_bot_show_channel_list: false
+          }
+        }
+      ]
+    }
+  }
+}
+
+```
 
 </details>
 
@@ -138,7 +238,7 @@ Markdown 源码:
 
 喵崽发送：
 
-```
+```javascript
 const file = 'https://resource5-1255303497.cos.ap-guangzhou.myqcloud.com/abcmouse_word_watch/other/mkd_img.png'
 const { width, height, url } = await Bot.imgProc(file)
 
