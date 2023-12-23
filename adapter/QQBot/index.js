@@ -439,8 +439,9 @@ export default class StartQQBot {
     /** 调用自定义图床 只要自定义方法存在，图片会强制性使用此方法 */
     try {
       if (uploadType === 'image' && Bot?.uploadFile) {
-        common.mark('Lain-plugin', '使用自定义图床发送图片')
-        return { type: uploadType, file: await Bot.uploadFile(file) }
+        const url = await Bot.uploadFile(file)
+        common.mark('Lain-plugin', `使用自定义图床发送图片：${url}`)
+        return { type: uploadType, file: url }
       }
     } catch { }
 
@@ -456,7 +457,6 @@ export default class StartQQBot {
     } catch (error) { console.log(error) }
 
     /** 使用本地公网作为云盘 */
-    common.mark('Lain-plugin', '[QQBotApi]：使用公网')
     let extname = '.jpg'
     if (uploadType == 'audio') extname = '.mp3'
     else if (uploadType == 'video') extname = '.mp4'
@@ -464,24 +464,29 @@ export default class StartQQBot {
     /** 统一使用时间戳命名，无后缀，根据类型补后缀 */
     let filePath = `${process.cwd()}/plugins/Lain-plugin/resources/QQBotApi/${Date.now()}`
     let url = `http://${QQBotImgIP}:${QQBotPort || port}/api/QQBot?token=${QQBotImgToken}&name=`
+
+    filePath = filePath + extname
+
     switch (type) {
       case 'file':
         filePath = filePath + path.extname(file)
         fs.copyFileSync(file.replace(/^file:\/\//, ''), filePath)
-        return { type: uploadType, file: url + path.basename(filePath) }
+        break
       case 'buffer':
-        filePath = filePath + extname
         fs.writeFileSync(filePath, Buffer.from(file))
-        return { type: uploadType, file: url + path.basename(filePath) }
+        break
       case 'base64':
-        filePath = filePath + extname
         fs.writeFileSync(filePath, file.replace(/^base64:\/\//, ''), 'base64')
-        return { type: uploadType, file: url + path.basename(filePath) }
+        break
       case 'http':
-        return { type: uploadType, file }
       default:
+        common.mark('Lain-plugin', `发送文件：${file}`)
         return { type: uploadType, file }
     }
+
+    file = url + path.basename(filePath)
+    common.mark('Lain-plugin', `使用公网发送文件：${file}`)
+    return { type: uploadType, file }
   }
 
   /** 转换message */
@@ -563,7 +568,6 @@ export default class StartQQBot {
         } else {
           data = error?.message || error
         }
-        console.error(error)
         res = await e.sendMsg.call(e.data, data)
       }
     }
