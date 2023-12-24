@@ -117,7 +117,7 @@ export default class message {
       },
       /** 踢 */
       kick: async () => {
-        return await Bot[id].client.guildApi.deleteGuildMember(msg.guild_id, msg.author.id)
+        return await Bot[this.id].client.guildApi.deleteGuildMember(msg.guild_id, msg.author.id)
       }
     }
 
@@ -203,6 +203,7 @@ export default class message {
         time: parseInt(Date.parse(reply.timestamp) / 1000),
         user_id: reply.author.id
       }
+      e.message.push({ type: 'at', qq: this.id, id: this.id })
     }
     /** 打印日志 */
     await this.log(e)

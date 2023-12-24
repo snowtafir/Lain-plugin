@@ -26,6 +26,7 @@ export default new class zaiMsg {
       /** 引用消息 */
       if (source) {
         e.source = source
+        e.message.push({ type: 'at', qq: self_id })
         if (typeof e.source === 'string') {
           common.error(user_id, e.source)
         } else {
