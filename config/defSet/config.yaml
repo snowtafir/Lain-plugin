@@ -42,6 +42,8 @@ QQBotMD:
   image:
   # 文字模板 key名称
   text:
+# QQBot方法3QQ图床指定QQ
+QQBotUin:
 
 #-------- 以下是标准输入配置 --------
 # 标准输入开关

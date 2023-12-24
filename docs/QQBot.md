@@ -65,7 +65,7 @@ AppSecret(机器人密钥)：`abcdefghijklmnopqrstuvwxyz`
 
 - 方法2：前往 [./plugins/Lain-plugin/config/config.yaml](../config/config.yaml) 配置公网地址，端口为配置文件中的`HTTP`端口，如果有转发，请修改`实际端口`选项。
 
-- 方法3：登录一个QQ机器人，使用QQ图床。备用方案，你只需要登录，ICQQ、shamrock、ntqq都可，此方法仅可发送图片。
+- 方法3：登录一个QQ机器人，随后前往[./plugins/Lain-plugin/config/config.yaml](../config/config.yaml)配置`QQBotUin`为QQ号，此方法仅可发送图片。
 
 - 适配器自带指令前缀/转#，默认打开。
 

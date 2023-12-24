@@ -398,7 +398,7 @@ function getFile (i) {
     } else {
       i = i.url
     }
-  } else {
+  } else if (typeof i === 'object') {
     i = i.file
   }
 

@@ -22,7 +22,8 @@ const configItems = [
   { key: 'QQBotGroupId', value: '', comment: '# QQBot默认进群后，推送提示显示的群号。' },
   { key: 'QQBotTips', value: false, comment: '# QQBot防倒卖崽提示' },
   { key: 'QQBotDelFiles', value: 30, comment: '# QQBotApi被访问后删除对应的文件，单位为秒，默认30s' },
-  { key: 'QQBotMD', value: '\n  # 图片模板宽高 key名称\n  ImageSize:\n  # 图片模板url key名称\n  image:\n  # 文字模板 key名称\n  text: ', comment: '# QQBot全局md模板，需要使用#QQ群设置MD...设置id启用' }
+  { key: 'QQBotMD', value: '\n  # 图片模板宽高 key名称\n  ImageSize:\n  # 图片模板url key名称\n  image:\n  # 文字模板 key名称\n  text: ', comment: '# QQBot全局md模板，需要使用#QQ群设置MD...设置id启用' },
+  { key: 'QQBotUin', value: '', comment: '# QQBot方法3QQ图床指定QQ' }
 ]
 
 /** 检查配置文件是否存在 */

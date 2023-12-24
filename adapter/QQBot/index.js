@@ -446,13 +446,13 @@ export default class StartQQBot {
       }
     } catch { }
 
-    /** 云盘已经失效，较多人无公网，暂时性添加一个QQ图床使用 */
+    /** 云盘已经失效，因为较多人无公网，暂时性添加一个QQ图床使用 */
     try {
-      const botList = Bot.adapter.filter(item => typeof item === 'number')
-      if ((!QQBotImgIP || QQBotImgIP === '127.0.0.1') && uploadType === 'image' && botList.length) {
-        common.mark(botList[0], '使用QQ图床发送图片')
+      const botList = Bot.lain.cfg.QQBotUin ? [Bot.lain.cfg.QQBotUin] : Bot.adapter.filter(item => typeof item === 'number')
+      if ((!QQBotImgIP || QQBotImgIP === '127.0.0.1') && uploadType === 'image' && (botList.length)) {
+        common.mark('Lain-plugin', `使用QQ图床发送图片：${botList[0]}`)
         const url = await Bot.uploadQQ(file, botList[0])
-        common.mark(botList[0], `QQ图床上传成功：${url}`)
+        common.mark('Lain-plugin', `QQ图床上传成功：${url}`)
         return { type: uploadType, file: url }
       }
     } catch (error) { console.log(error) }
@@ -554,7 +554,9 @@ export default class StartQQBot {
       if (image.length) allMsg.push(...await this.markdown(e, image))
     } else {
       allMsg.push(message)
-      if (image.length) allMsg.push(image)
+      if (image.length) {
+        allMsg.push(image)
+      }
     }
 
     for (let i of allMsg) {
@@ -599,6 +601,7 @@ export default class StartQQBot {
           markdown.params.push({ key: Bot.lain.cfg.QQBotMD.text || 'text_start', values: [i.text.replace(/\n/g, '\r')] })
           break
         case 'image':
+          if (/^http(s)?:\/\//.test(i.file)) i.file = await Bot.imgToUrl(i.file)
           const { width, height } = await Bot.imgProc(i.file)
           markdown.params.push({ key: Bot.lain.cfg.QQBotMD.image || 'img_url', values: [i.file] })
           markdown.params.push({ key: Bot.lain.cfg.QQBotMD.ImageSize || 'img_dec', values: [`text #${width}px #${height}px`] })
@@ -610,7 +613,14 @@ export default class StartQQBot {
     }
     if (!markdown.params.length) return [message]
     markdown = [markdown]
-    /** 按钮添加 */
+    /** 按钮 */
+    const button = await this.button(e)
+    if (button && button?.length) markdown.push(...button)
+    return message.length ? [markdown, message] : [markdown]
+  }
+
+  /** 按钮添加 */
+  async button (e) {
     try {
       for (let p of Button) {
         for (let v of p.plugin.rule) {
@@ -618,15 +628,13 @@ export default class StartQQBot {
           if (regExp.test(e.msg)) {
             const button = await p[v.fnc](e)
             /** 无返回不添加 */
-            if (button) markdown.push(...(Array.isArray(button) ? button : [button]))
-            break
+            if (button) return [...(Array.isArray(button) ? button : [button])]
+            return false
           }
         }
       }
     } catch (error) {
       common.error('Lain-plugin', error)
     }
-
-    return message.length ? [markdown, message] : [markdown]
   }
 }

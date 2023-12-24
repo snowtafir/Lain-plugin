@@ -60,6 +60,13 @@ async function uploadQQ (file, uin = Bot.uin) {
     base64 = fs.readFileSync(file.slice(7)).toString('base64')
   } else if (file.startsWith('base64://')) {
     base64 = file.slice(9)
+  } else if (/^http(s)?:\/\//.test(file)) {
+    let res = await fetch(file)
+    if (!res.ok) {
+      throw new Error(`请求错误！状态码: ${res.status}`)
+    } else {
+      base64 = Buffer.from(await res.arrayBuffer()).toString('base64')
+    }
   } else {
     throw new Error('上传失败，未知格式的文件')
   }
@@ -71,8 +78,27 @@ async function uploadQQ (file, uin = Bot.uin) {
   return `https://gchat.qpic.cn/gchatpic_new/0/0-0-${md5.toUpperCase()}/0?term=2`
 }
 
+/**
+ * 处理传入的图片文件，转为url
+ * 可以是http://、file://、base64://、buffer
+ * @param {string|Buffer} file - 传入的图片文件
+ * @returns {string} url - 有图床反图床，没图床调QQ，没QQ调公网。
+ */
+async function imgToUrl (file) {
+  const botList = Bot.lain.cfg.QQBotUin ? [Bot.lain.cfg.QQBotUin] : Bot.adapter.filter(item => typeof item === 'number')
+
+  if (Bot?.uploadFile) {
+    return await Bot.uploadFile(file)
+  } if (botList.length) {
+    return await uploadQQ(file, botList[0])
+  } else {
+    return await imgProc(file)
+  }
+}
+
 /** 赋值给全局Bot */
 Bot.imgProc = imgProc
 Bot.uploadQQ = uploadQQ
+Bot.imgToUrl = imgToUrl
 
-export { imgProc, uploadQQ }
+export { imgProc, uploadQQ, imgToUrl }
