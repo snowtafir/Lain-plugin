@@ -1,12 +1,6 @@
 import fs from 'fs'
 import moment from 'moment'
 import chokidar from 'chokidar'
-import common from '../../model/common.js'
-
-/** 热更文件夹 */
-const chokidarList = [
-  'example'
-]
 
 class Button {
   constructor () {
@@ -40,67 +34,58 @@ class Button {
    * @param {string} filePath - 文件路径
    * @param {string} eventType - 事件类型 ('add', 'change', 'unlink')
    */
-  handleFileChange (filePath, eventType) {
-    filePath = filePath.replace(/\\/g, '/')
+  async handleFileChange (filePath, eventType, state) {
+    filePath = './' + filePath.replace(/\\/g, '/')
     if (filePath.endsWith('.js')) {
       if (eventType === 'add') {
         this.unloadModule(filePath)
-        this.loadModule(filePath)
-        common.mark('Lain-plugin', `[新增按钮插件][${filePath}]`)
+        await this.loadModule(filePath)
+        if (!state) logger.mark(`[Lain-plugin][新增按钮插件][${filePath}]`)
       } else if (eventType === 'add' || eventType === 'change') {
         this.unloadModule(filePath)
-        this.loadModule(filePath)
-        common.mark('Lain-plugin', `[修改按钮插件][${filePath}]`)
+        await this.loadModule(filePath)
+        logger.mark(`[Lain-plugin][修改按钮插件][${filePath}]`)
       } else if (eventType === 'unlink') {
         this.unloadModule(filePath)
-        common.mark('Lain-plugin', `[卸载按钮插件][${filePath}]`)
+        logger.mark(`[Lain-plugin][卸载按钮插件][${filePath}]`)
       }
     }
   }
 
   /** 初始化 */
   async initialize () {
-    /** 热更新 */
-    chokidarList.map(folder => {
-      const watcher = chokidar.watch(`${this.plugin}/${folder}/lain.support.js`, { ignored: /[\/\\]\./, persistent: true })
-      watcher
-        .on('add', filePath => this.handleFileChange('./' + filePath, 'add'))
-        .on('change', filePath => this.handleFileChange('./' + filePath, 'change'))
-        .on('unlink', filePath => this.handleFileChange('./' + filePath, 'unlink'))
-
-      return watcher
-    })
-
     try {
+      const filesList = []
       /** 遍历插件目录 */
       const List = fs.readdirSync(this.plugin)
 
-      /** 遍历每个子文件夹，加载 lain.support.js 模块 */
       for (let folder of List) {
         const folderPath = this.plugin + `/${folder}`
-
         /** 检查是否为文件夹 */
         if (!fs.lstatSync(folderPath).isDirectory()) continue
-
-        /** 热更新交给监听器去创建 */
-        if (chokidarList.includes(folder)) continue
-
-        try {
-          const files = fs.readdirSync(folderPath)
-
-          for (let file of files) {
-            if (file === 'lain.support.js') {
-              await this.loadModule(folderPath + `/${file}`)
-            }
-          }
-        } catch (error) {
-          logger.error(`读取插件目录时出错：${error.message}`)
-        }
+        /** 保存插件包目录 */
+        filesList.push(this.plugin + `/${folder}/lain.support.js`)
       }
+
+      filesList.push(this.plugin + '/Lain-plugin/plugins/button')
+
+      /** 热更新 */
+      filesList.map(folder => {
+        let state = true
+        const watcher = chokidar.watch(folder, { ignored: /[\/\\]\./, persistent: true })
+        watcher
+          .on('add', async filePath => {
+            await this.handleFileChange(filePath, 'add', state)
+            if (state) state = false
+          })
+          .on('change', async filePath => await this.handleFileChange(filePath, 'change'))
+          .on('unlink', async filePath => await this.handleFileChange(filePath, 'unlink'))
+
+        return watcher
+      })
 
       /** 排序 */
       this.botModules.sort((a, b) => a.plugin.priority - b.plugin.priority)
-
       return this.botModules
     } catch (error) {
       logger.error(`读取插件目录时出错：${error.message}`)

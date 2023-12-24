@@ -119,7 +119,7 @@ Markdown 源码：
 <details><summary>全局 Markdown 消息附带发送按钮编写</summary>
 
 - 插件开发者请在插件包目录创建 `lain.support.js`，和锅巴一样。
-- 个人用户可在 `plugins/example`文件夹创建 `lain.support.js`
+- 个人用户可在 `plugins/Lain-plugin/plugins/button`文件夹创建 `js` 文件，可创建多个。
 - 复制以下内容到 `lain.support.js` 中，自行编写正则和执行方法即可。
 
 ```javascript
