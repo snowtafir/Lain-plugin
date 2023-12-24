@@ -514,7 +514,9 @@ export default class StartQQBot {
             break
           case 'text':
           case 'forward':
-            (await this.HandleURL(data[i])).forEach(msg => { msg.type === 'image' ? image.push(msg) : text.push(msg.text) })
+            if (data[i].text.trim()) {
+              (await this.HandleURL(data[i])).forEach(msg => msg.type === 'image' ? image.push(msg) : text.push(msg.text))
+            }
             break
           case 'reply':
             reply = data[i]
