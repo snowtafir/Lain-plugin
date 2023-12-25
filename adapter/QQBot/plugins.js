@@ -17,6 +17,8 @@ class Button {
       Plugin = new Plugin()
       Plugin.plugin._path = filePath
       this.botModules.push(Plugin)
+      /** 排序 */
+      this.botModules.sort((a, b) => a.plugin.priority - b.plugin.priority)
       logger.debug(`按钮模块 ${filePath} 已加载。`)
     } catch (error) {
       logger.error(`导入按钮模块 ${filePath} 时出错：${error.message}`)
@@ -27,6 +29,8 @@ class Button {
   unloadModule (filePath) {
     const index = this.botModules.findIndex(module => module.plugin._path === filePath)
     if (index !== -1) this.botModules.splice(index, 1)
+    /** 排序 */
+    this.botModules.sort((a, b) => a.plugin.priority - b.plugin.priority)
   }
 
   /**
@@ -84,8 +88,6 @@ class Button {
         return watcher
       })
 
-      /** 排序 */
-      this.botModules.sort((a, b) => a.plugin.priority - b.plugin.priority)
       return this.botModules
     } catch (error) {
       logger.error(`读取插件目录时出错：${error.message}`)
