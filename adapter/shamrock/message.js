@@ -26,7 +26,6 @@ export default new class zaiMsg {
       /** 引用消息 */
       if (source) {
         e.source = source
-        e.message.push({ type: 'at', qq: self_id })
         if (typeof e.source === 'string') {
           common.error(user_id, e.source)
         } else {
@@ -420,6 +419,9 @@ export async function message (id, msg, group_id, reply = true) {
           user_id: source.sender.user_id,
           raw_message
         }
+
+        /** 回复at */
+        message.push({ type: 'at', qq: Number(source.sender.user_id) })
       } catch (error) {
         logger.error(error)
       }

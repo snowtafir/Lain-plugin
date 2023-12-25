@@ -203,7 +203,7 @@ export default class message {
         time: parseInt(Date.parse(reply.timestamp) / 1000),
         user_id: reply.author.id
       }
-      e.message.push({ type: 'at', qq: this.id, id: this.id })
+      e.message.push({ type: 'at', qq: reply.author.id, id: reply.author.id })
     }
     /** 打印日志 */
     await this.log(e)
