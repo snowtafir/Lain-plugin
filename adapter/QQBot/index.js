@@ -245,9 +245,6 @@ export default class StartQQBot {
       e.friend = this.pickFriend(e.user_id)
     }
 
-    e.atme = true
-    e.atBot = true
-
     /** 添加适配器标识 */
     e.adapter = 'QQBot'
     e.user_id = `${this.id}-${e.user_id}`
