@@ -393,7 +393,7 @@ async function downloadFile (url, destPath, headers = {}, absolute = false) {
 
 function getFile (i) {
   if (i?.url) {
-    if (i.url.includes('gchat.qpic.cn') && !i.url.startsWith('https://')) {
+    if (i?.url?.includes('gchat.qpic.cn') && !i?.url?.startsWith('https://')) {
       i = 'https://' + i.url
     } else {
       i = i.url
