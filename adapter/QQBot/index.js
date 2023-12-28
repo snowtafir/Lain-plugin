@@ -301,14 +301,14 @@ export default class StartQQBot {
         const url = await Bot.audioToUrl(file)
         common.mark('Lain-plugin', `使用自定义服务器发送语音：${url}`)
         return { type, file: url }
-      } else {
+      } else if (type === 'video' && Bot?.videoToUrl) {
         /** 视频接口 */
         const url = await Bot.videoToUrl(file)
         common.mark('Lain-plugin', `使用自定义服务器发送视频：${url}`)
         return { type, file: url }
       }
     } catch (error) {
-      logger.error('自定义服务器调用错误，已跳过：', error)
+      logger.error('自定义服务器调用错误，已跳过')
     }
 
     /** QQ图床 */
@@ -327,7 +327,7 @@ export default class StartQQBot {
     const { width, height, url } = await Bot.FileToUrl(file, type)
     common.mark('Lain-plugin', `使用公网临时服务器：${url}`)
     /** 图片多返回两个宽高 */
-    return type === 'image' ? { type, file: url, width, height } : { type, url }
+    return type === 'image' ? { type, file: url, width, height } : { type, file: url }
   }
 
   /** 处理语音... */
@@ -369,7 +369,7 @@ export default class StartQQBot {
       await encodeSilk(fs.readFileSync(pcm), 48000)
         .then((silkData) => {
           /** 转silk完成，保存 */
-          fs.writeFileSync(silk, silkData.data)
+          fs.writeFileSync(silk, silkData?.data || silkData)
           /** 删除初始mp3文件 */
           fs.unlink(file, () => { })
           /** 删除pcm文件 */
@@ -475,56 +475,6 @@ export default class StartQQBot {
       return message
     }
     return [{ type: 'text', text: msg }]
-  }
-
-  /** 统一文件格式处理为url */
-  async getFile (file, type) {
-    /** 自定义图床、语音、视频 */
-    try {
-      /** 老接口，后续废除 */
-      if (type === 'image' && Bot?.uploadFile) {
-        const url = await Bot.uploadFile(file)
-        common.mark('Lain-plugin', `使用自定义图床发送图片：${url}`)
-        const { width, height } = sizeOf(await Bot.Buffer(file))
-        console.warn('[Bot.uploadFile]接口即将废除!')
-        return { type, file: url, width, height }
-      } else if (type === 'image' && Bot?.imageToUrl) {
-        /** 新接口 */
-        const { width, height, url } = await Bot.imageToUrl(file)
-        common.mark('Lain-plugin', `使用自定义图床发送图片：${url}`)
-        return { type, file: url, width, height }
-      } else if (type === 'audio' && Bot?.audioToUrl) {
-        /** 语音接口 */
-        const url = await Bot.audioToUrl(file)
-        common.mark('Lain-plugin', `使用自定义服务器发送语音：${url}`)
-        return { type, file: url }
-      } else if (type === 'video' && Bot?.videoToUrl) {
-        /** 视频接口 */
-        const url = await Bot.videoToUrl(file)
-        common.mark('Lain-plugin', `使用自定义服务器发送视频：${url}`)
-        return { type, file: url }
-      }
-    } catch (error) {
-      logger.error('自定义服务器调用错误，已跳过')
-    }
-
-    /** QQ图床 */
-    try {
-      if (type === 'image' && Bot.lain.cfg.QQBotUin) {
-        const { width, height, url } = await Bot.uploadQQ(file, Bot.lain.cfg.QQBotUin)
-        common.mark('Lain-plugin', `QQ图床上传成功：${url}`)
-        /** 图片多返回两个宽高 */
-        return type === 'image' ? { type, file: url, width, height } : { type, url }
-      }
-    } catch (error) {
-      logger.error('QQ图床调用错误，已跳过：', error)
-    }
-
-    /** 公网 */
-    const { width, height, url } = await Bot.FileToUrl(file, type)
-    common.mark('Lain-plugin', `使用公网临时服务器：${url}`)
-    /** 图片多返回两个宽高 */
-    return type === 'image' ? { type, file: url, width, height } : { type, url }
   }
 
   /** 转换message */
