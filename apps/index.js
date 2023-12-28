@@ -1,12 +1,12 @@
 import fs from 'fs'
-import yaml from '../model/yaml.js'
+import YamlParse from '../model/yaml.js'
 import { execSync } from 'child_process'
 import { update } from '../../other/update.js'
 import { xiaofei_music } from '../adapter/shamrock/xiaofei/music.js'
 import { xiaofei_weather } from '../adapter/shamrock/xiaofei/weather.js'
 
 export class Lain extends plugin {
-  constructor () {
+  constructor() {
     super({
       name: '铃音基本设置',
       priority: -50,
@@ -17,7 +17,7 @@ export class Lain extends plugin {
           permission: 'master'
         },
         {
-          reg: /^#QQ(群|群机器人|机器人)设置.+$/gi,
+          reg: /^#QQ(群|群机器人|机器人|Bot)设置.+$/gi,
           fnc: 'QQBot',
           permission: 'master'
         },
@@ -49,8 +49,8 @@ export class Lain extends plugin {
     })
   }
 
-  async QQGuildCfg (e) {
-    const cfg = new yaml(Bot.lain._path + '/config.yaml')
+  async QQGuildCfg(e) {
+    const cfg = new YamlParse(Bot.lain._path + '/config.yaml')
     if (e.msg.includes('分片转发')) {
       e.msg.includes('开启') ? cfg.set('forwar', true) : cfg.set('forwar', false)
       const msg = `分片转发已${cfg.get('forwar') ? '开启' : '关闭'}`
@@ -62,7 +62,7 @@ export class Lain extends plugin {
         if (!/^[0-9a-zA-Z]{32}$/.test(cmd[3])) return 'token 错误！'
 
         let bot
-        const cfg = new yaml(Bot.lain._path + '/bot.yaml')
+        const cfg = new YamlParse(Bot.lain._path + '/bot.yaml')
         /** 重复的appID，删除 */
         if (cfg.hasIn(cmd[2])) {
           cfg.del(cmd[2])
@@ -85,12 +85,16 @@ export class Lain extends plugin {
     }
   }
 
-  async QQBot (e) {
+  async QQBot(e) {
+    if (/^#QQ(群|群机器人|机器人|Bot)设置(md|markdown)/gi.test(e.msg)) {
+      return await e.reply(await this.markdown(e))
+    }
+
     const msg = async (e) => {
-      const cmd = e.msg.replace(/^#QQ(群|群机器人|机器人)设置/gi, '').replace(/：/g, ':').trim().split(':')
+      const cmd = e.msg.replace(/^#QQ(群|群机器人|机器人|Bot)设置/gi, '').replace(/：/g, ':').trim().split(':')
       if (cmd.length !== 6) return '格式错误...'
       let bot
-      const cfg = new yaml(Bot.lain._path + '/QQBot.yaml')
+      const cfg = new YamlParse(Bot.lain._path + '/QQBot.yaml')
       /** 重复的appID，删除 */
       if (cfg.hasIn(cmd[3])) {
         cfg.del(cmd[3])
@@ -113,12 +117,29 @@ export class Lain extends plugin {
     return await e.reply(await msg(e))
   }
 
-  async QQGuildAccount (e) {
+  async markdown(e) {
+    const cmd = e.msg.replace(/^#QQ(群|群机器人|机器人|Bot)设置(md|markdown)/gi, '').replace(/：/g, ':').trim().split(':')
+    if (cmd.length !== 2) return '格式错误...'
+    const cfg = new YamlParse(Bot.lain._path + '/QQBot.yaml')
+    const appid = cmd[0]
+
+    /** 删除并关闭全局md */
+    if (cfg.value(appid, 'markdown')) {
+      cfg.delVal(appid, 'markdown')
+      Bot[appid].config.markdown = ''
+      return `删除成功，已关闭 ${appid} 的全局markdown`
+    }
+
+    cfg.addVal(appid, { markdown: cmd[1] })
+    Bot[appid].config.markdown = cmd[1]
+    return `设置成功，已开启 ${appid} 的全局markdown`
+  }
+
+  async QQGuildAccount(e) {
     let cfg, msg, config
     msg = []
-    if (e.sub_type !== 'friend') {return await e.reply('请私聊查看')}
-    else {
-      cfg = new yaml(Bot.lain._path + '/bot.yaml')
+    if (e.sub_type !== 'friend') { return await e.reply('请私聊查看') } else {
+      cfg = new YamlParse(Bot.lain._path + '/bot.yaml')
       config = cfg.data()
       for (const i in config) {
         if (i === 'default') continue
@@ -130,7 +151,7 @@ export class Lain extends plugin {
         ]
         msg.push(`#QQ频道设置${cfg.join(':')}`)
       }
-      cfg = new yaml(Bot.lain._path + '/QQbot.yaml')
+      cfg = new YamlParse(Bot.lain._path + '/QQbot.yaml')
       config = cfg.data()
       for (const i in config) {
         if (i === 'ndefault') continue
@@ -148,7 +169,7 @@ export class Lain extends plugin {
     }
   }
 
-  async update (e) {
+  async update(e) {
     let new_update = new update()
     new_update.e = e
     new_update.reply = this.reply
@@ -167,7 +188,7 @@ export class Lain extends plugin {
     return true
   }
 
-  async user_id (e) {
+  async user_id(e) {
     const msg = []
     if (e.isMaster) msg.push(`Bot：${e.self_id}`)
     msg.push(`您的个人ID：${e.user_id}`)
@@ -182,16 +203,16 @@ export class Lain extends plugin {
   }
 
   /** 微信椰奶状态自定义名称 */
-  async ComName (e) {
+  async ComName(e) {
     const msg = e.msg.replace('#微信修改名称', '').trim()
-    const cfg = new yaml(Bot.lain._path + '/config.yaml')
+    const cfg = new YamlParse(Bot.lain._path + '/config.yaml')
     cfg.set('name', msg)
     Bot[Bot.lain.wc.uin].nickname = msg
     return await e.reply(`修改成功，新名称为：${msg}`, false, { at: true })
   }
 
   /** shamrock重载资源 */
-  async loadRes (e) {
+  async loadRes(e) {
     await e.reply('开始重载，请稍等...', true)
     let res = (await import('../adapter/shamrock/bot.js')).default
     res = new res(e.self_id)

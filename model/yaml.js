@@ -5,28 +5,28 @@ import lodash from 'lodash'
 /** 捏，可以保留注释哦 */
 export default class yaml {
   /** 传入路径 */
-  constructor (_path) {
+  constructor(_path) {
     this._path = _path
     this.parse()
   }
 
   /** 解析yaml */
-  parse () {
+  parse() {
     this.document = Yaml.parseDocument(fs.readFileSync(this._path, 'utf8'))
   }
 
   /** 获取对象 */
-  data () {
+  data() {
     return this.document.toJSON()
   }
 
   /* 检查指定键是否存在 */
-  hasIn (key) {
+  hasIn(key) {
     return this.document.hasIn([key])
   }
 
   /** 检查指定值是否存在 */
-  value (key, value) {
+  value(key, value) {
     const res = this.get(key)
     if (Array.isArray(res)) {
       return !!res.includes(value)
@@ -35,29 +35,29 @@ export default class yaml {
   }
 
   /** 获取指定键的值 */
-  get (key) {
+  get(key) {
     return lodash.get(this.data(), key)
   }
 
   /* 修改键值 */
-  set (key, value) {
+  set(key, value) {
     this.document.setIn([key], value)
     this.save()
   }
 
   /** 添加新的键值 不能是已有的键 */
-  addIn (key, value) {
+  addIn(key, value) {
     this.document.addIn([key], value)
     this.save()
   }
 
   /** 给指定的键添加新的键值、值 */
-  addVal (key, val) {
+  addVal(key, val) {
     let value = this.get(key)
     if (Array.isArray(value)) {
       value.push(val)
     } else if (value && typeof value === 'object') {
-      value = { ...value, val }
+      value = { ...value, ...val }
     } else {
       value = [val]
     }
@@ -66,13 +66,13 @@ export default class yaml {
   }
 
   /* 删除指定的键 */
-  del (key) {
+  del(key) {
     this.document.deleteIn([key])
     this.save()
   }
 
   /* 删除指定键的值 */
-  delVal (key, val) {
+  delVal(key, val) {
     const value = this.get(key)
     if (Array.isArray(value)) {
       const index = value.indexOf(val)
@@ -91,7 +91,7 @@ export default class yaml {
   }
 
   /** Yaml */
-  save () {
+  save() {
     try {
       fs.writeFileSync(this._path, this.document.toString(), 'utf8')
     } catch (err) {

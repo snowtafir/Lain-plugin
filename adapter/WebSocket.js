@@ -8,13 +8,13 @@ import ComWeChat from './WeChat/index.js'
 import { fileTypeFromBuffer } from 'file-type'
 
 export default class WebSocket {
-  constructor () {
+  constructor() {
     this.port = Bot.lain.cfg.port
     this.path = '/Shamrock'
     this.path_wx = '/ComWeChat'
   }
 
-  async server () {
+  async server() {
     /** 存储连接的bot对象 */
     Bot.shamrock = new Map()
     /** 保存监听器返回 */
@@ -66,7 +66,11 @@ export default class WebSocket {
           common.error('QQBotApi', err)
         } else {
           /** 访问后删除文件 */
-          setTimeout(() => { fs.unlink(_path, (err) => { if (err) common.error('QQBotApi', err) }) }, Number(Bot.lain.cfg.QQBotDelFiles) * 1000)
+          try {
+            setTimeout(() => {
+              if (fs.existsSync(_path)) fs.unlink(_path, (err) => { if (err) common.error('QQBotApi', err) })
+            }, Number(Bot.lain.cfg.QQBotDelFiles) * 100)
+          } catch { }
         }
       })
     })

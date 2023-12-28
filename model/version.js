@@ -40,7 +40,7 @@ const readLogFile = function (root, versionCount = 5) {
             // if (/0\s*$/.test(v) && versionCount > 0) {
             //   versionCount = 0
             // } else {
-              versionCount--
+            versionCount--
             // }
           }
 

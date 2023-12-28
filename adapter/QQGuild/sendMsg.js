@@ -1,8 +1,8 @@
 import fs from "fs"
 import lodash from "lodash"
 import qrcode from "qrcode"
-import fetch from "node-fetch"
-import { FormData, Blob } from "node-fetch"
+import fetch, { FormData, Blob } from "node-fetch"
+
 import common from "../../model/common.js"
 
 export default class SendMsg {

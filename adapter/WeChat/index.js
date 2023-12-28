@@ -190,7 +190,9 @@ class WeChat {
           /** 转发 */
           makeForwardMsg: async (forwardMsg) => {
             return await common.makeForwardMsg(forwardMsg)
-          }
+          },
+          /** 获取群成员列表 */
+          getMemberMap: async () => await this.getMemberMap(group_id)
         }
       },
       pickUser: (user_id) => {
@@ -290,6 +292,11 @@ class WeChat {
     common.info(this.id, 'PC微信加载资源成功...')
 
     await common.init('Lain:restart:WeChat')
+  }
+
+  /** 获取群成员列表 */
+  async getMemberMap(group_id) {
+    return await api.get_group_member_list(group_id)
   }
 }
 

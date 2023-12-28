@@ -6,7 +6,7 @@ import path from 'path'
 
 export default new class zaiMsg {
   /** 转换格式给云崽 */
-  async msg (data) {
+  async msg(data) {
     const { self_id, user_id, group_id, message_type, message_id, sender } = data
 
     let raw_message = data.raw_message
@@ -362,7 +362,7 @@ export default new class zaiMsg {
     return e
   }
 
-  async message (id, msg, group_id, reply = true) {
+  async message(id, msg, group_id, reply = true) {
     return await message(id, msg, group_id, reply)
   }
 }()
@@ -375,7 +375,7 @@ export default new class zaiMsg {
  * @param reply 是否处理引用消息
  * @return {Promise<{source: (*&{user_id, raw_message: string, reply: *, seq}), message: *[]}|{source: string, message: *[]}>}
  */
-export async function message (id, msg, group_id, reply = true) {
+export async function message(id, msg, group_id, reply = true) {
   const message = []
   let source
   let file
@@ -419,6 +419,9 @@ export async function message (id, msg, group_id, reply = true) {
           user_id: source.sender.user_id,
           raw_message
         }
+
+        /** 回复at */
+        message.push({ type: 'at', qq: Number(source.sender.user_id) })
       } catch (error) {
         logger.error(error)
       }
@@ -446,7 +449,7 @@ export async function message (id, msg, group_id, reply = true) {
  * @param group_id 群号
  * @return {string}
  */
-export function toRaw (msg = [], self_id, group_id) {
+export function toRaw(msg = [], self_id, group_id) {
   const raw_message = []
   for (let i of msg) {
     switch (i.type) {

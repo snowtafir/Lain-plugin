@@ -9,14 +9,14 @@ import SendMsg from './sendMsg.js'
 let resList = false
 
 export default class bot {
-  constructor (id) {
+  constructor(id) {
     /** 机器人QQ号 */
     this.id = id
     this.loadRes()
   }
 
   /** 加载资源 */
-  async loadRes () {
+  async loadRes() {
     const bot = Bot.shamrock.get(this.id)
     /** 构建基本参数 */
     Bot[this.id] = {
@@ -62,7 +62,7 @@ export default class bot {
     this.LoadList()
   }
 
-  async loadGroup (id = this.id) {
+  async loadGroup(id = this.id) {
     /** 获取群聊列表啦~ */
     let groupList
     for (let retries = 0; retries < 5; retries++) {
@@ -92,7 +92,7 @@ export default class bot {
     return groupList
   }
 
-  async loadGroupMemberList (groupId, id = this.id) {
+  async loadGroupMemberList(groupId, id = this.id) {
     /** 获取群成员，缓存到gml中 */
     try {
       let gml = {}
@@ -108,7 +108,7 @@ export default class bot {
     } catch (error) { }
   }
 
-  async loadFriendList (id = this.id) {
+  async loadFriendList(id = this.id) {
     /** 好友列表 */
     let friendList
     for (let retries = 0; retries < 5; retries++) {
@@ -137,7 +137,7 @@ export default class bot {
     common.debug(id, '加载好友列表完成')
   }
 
-  async LoadList () {
+  async LoadList() {
     try {
       if (resList) return '目前以有任务事件在加载中，请勿重复加载'
       resList = true
@@ -206,7 +206,7 @@ export default class bot {
   }
 
   /** 群对象 */
-  pickGroup (group_id) {
+  pickGroup(group_id) {
     const is_admin = Bot[this.id].gml.get(group_id)?.[this.id]?.role === 'admin'
     const is_owner = Bot[this.id].gml.get(group_id)?.[this.id]?.role === 'owner'
     return {
@@ -296,7 +296,7 @@ export default class bot {
     }
   }
 
-  pickFriend (user_id) {
+  pickFriend(user_id) {
     return {
       sendMsg: async (msg) => await this.sendMsg(user_id, msg, false),
       recallMsg: async (msg_id) => await this.recallMsg(msg_id),
@@ -321,7 +321,7 @@ export default class bot {
     }
   }
 
-  pickMember (group_id, user_id, refresh = false, cb = () => { }) {
+  pickMember(group_id, user_id, refresh = false, cb = () => { }) {
     if (!refresh) {
       /** 取缓存！！！别问为什么，因为傻鸟同步 */
       let member = Bot[this.id].gml.get(group_id)?.[user_id] || {}
@@ -338,18 +338,18 @@ export default class bot {
   }
 
   /** 设置精华 */
-  async setEssenceMessage (msg_id) {
+  async setEssenceMessage(msg_id) {
     let res = await api.set_essence_msg(this.id, msg_id)
     return res?.message === '成功' ? '加精成功' : res?.message
   }
 
   /** 移除群精华消息 **/
-  async removeEssenceMessage (msg_id) {
+  async removeEssenceMessage(msg_id) {
     let res = await api.delete_essence_msg(this.id, msg_id)
     return res?.message === '成功' ? '加精成功' : res?.message
   }
 
-  async getGroupMemberInfo (group_id, user_id, refresh) {
+  async getGroupMemberInfo(group_id, user_id, refresh) {
     /** 被自己坑了 */
     if (user_id == '88888' || user_id == 'stdin') user_id = this.id
     try {
@@ -362,7 +362,7 @@ export default class bot {
   }
 
   /** 退群 */
-  async quit (group_id) {
+  async quit(group_id) {
     return await api.set_group_leave(this.id, group_id)
   }
 
@@ -372,23 +372,23 @@ export default class bot {
    * @param {string|Array|object} msg - 消息内容
    * @param {boolean} isGroup 是否为群消息，默认是
    */
-  async sendMsg (id, msg, isGroup = true) {
+  async sendMsg(id, msg, isGroup = true) {
     const SendMsg = (await import('./sendMsg.js')).default
     return await (new SendMsg(this.id, isGroup)).message(msg, id)
   }
 
   /** 制作转发消息 */
-  async makeForwardMsg (message) {
+  async makeForwardMsg(message) {
     return await common.makeForwardMsg(message, true)
   }
 
   /** 撤回消息 */
-  async recallMsg (msg_id) {
+  async recallMsg(msg_id) {
     return await api.delete_msg(this.id, msg_id)
   }
 
   /** 获取禁言列表 */
-  async getMuteList (group_id) {
+  async getMuteList(group_id) {
     return await api.get_prohibited_member_list(this.id, group_id)
   }
 }

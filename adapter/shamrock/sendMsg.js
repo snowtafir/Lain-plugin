@@ -5,7 +5,7 @@ import api from './api.js'
 
 export default class SendMsg {
   /** 传入基本配置 */
-  constructor (id, isGroup = true) {
+  constructor(id, isGroup = true) {
     /** 机器人uin */
     this.id = id
     /** 是否群聊 */
@@ -15,7 +15,7 @@ export default class SendMsg {
   }
 
   /** 发送消息 */
-  async message (data, id, quote = false) {
+  async message(data, id, quote = false) {
     /** 将云崽过来的消息统一为数组 */
     data = common.array(data)
     /** 转为shamrock可以使用的格式 */
@@ -30,7 +30,7 @@ export default class SendMsg {
   }
 
   /** 转为shamrock可以使用的格式 */
-  async msg (data) {
+  async msg(data) {
     if (typeof data == 'string') data = [{ type: 'text', text: data }]
     if (!Array.isArray(data)) data = [data]
     const CQ = []
@@ -151,7 +151,7 @@ export default class SendMsg {
   }
 
   /** 统一文件格式 */
-  async getFile (i, type) {
+  async getFile(i, type) {
     const res = common.getFile(i)
     const { file } = res
     switch (res.type) {
@@ -169,7 +169,7 @@ export default class SendMsg {
   }
 
   /** 发送消息 */
-  async sendMsg (id, msg, CQ, node) {
+  async sendMsg(id, msg, CQ, node) {
     /** 打印日志 */
     common.info(this.id, `发送${this.isGroup ? '群' : '好友'}消息：[${id}]${CQ.join('')}`)
 

@@ -9,7 +9,7 @@ import api from './api.js'
 let pokeCD = 0
 
 class Shamrock {
-  async server (bot, request) {
+  async server(bot, request) {
     /** 获取机器人uin */
     const id = request.headers['x-self-id']
 
@@ -45,11 +45,11 @@ class Shamrock {
   }
 
   /** 转换为喵崽可处理的格式，随后交给喵崽处理 */
-  async message (data) {
+  async message(data) {
     return await loader.deal.call(pluginsLoader, await message.msg(data))
   }
 
-  async event (id, data) {
+  async event(id, data) {
     const event = {
       /** 产生连接 */
       lifecycle: async () => {

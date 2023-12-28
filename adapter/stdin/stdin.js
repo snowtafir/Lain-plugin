@@ -256,5 +256,5 @@ function sendForwardMsg(msg) {
   const messages = []
   for (const { message } of msg)
     messages.push(sendMsg(message))
-  return messages
+  return { data: messages }
 }

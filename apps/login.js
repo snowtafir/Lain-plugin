@@ -3,7 +3,7 @@ import common from '../model/common.js'
 import StartWeChat4u from '../adapter/WeChat-Web/index.js'
 
 export class WebWcChat extends plugin {
-  constructor () {
+  constructor() {
     super({
       name: '微信',
       dsc: '网页版微信机器人',
@@ -29,7 +29,7 @@ export class WebWcChat extends plugin {
     })
   }
 
-  async login () {
+  async login() {
     let login = false
     const id = `wx_${parseInt(Date.now() / 1000)}`
     await new StartWeChat4u(id)
@@ -57,7 +57,7 @@ export class WebWcChat extends plugin {
     }
   }
 
-  async account () {
+  async account() {
     const _path = fs.readdirSync('./plugins/Lain-plugin/config')
     const Jsons = _path.filter(file => file.endsWith('.json')).map(file => file.replace('.json', ''))
     if (Jsons.length > 0) {
@@ -67,7 +67,7 @@ export class WebWcChat extends plugin {
     }
   }
 
-  async delUser () {
+  async delUser() {
     const msg = this.e.msg.replace(/#微信删除/, '').trim()
     try {
       const _path = Bot.lain._path + `/${msg}.json`

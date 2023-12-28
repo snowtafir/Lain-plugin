@@ -5,14 +5,14 @@ import { fileTypeFromBuffer } from 'file-type'
 import common from '../../model/common.js'
 
 export default class StartWeChat4u {
-  constructor (id, config) {
+  constructor(id, config) {
     this.id = id
     this.config = config
     this.path = process.cwd() + "/temp/WeXin/"
     this.login()
   }
 
-  async login () {
+  async login() {
     let WeChat4u
 
     try {
@@ -120,12 +120,12 @@ export default class StartWeChat4u {
   }
 
   /** 关🐔 */
-  stop () {
+  stop() {
     this.bot.stop()
   }
 
   /** 处理接收的消息 */
-  async msg (msg) {
+  async msg(msg) {
     /** 屏蔽bot自身消息 */
     if (msg.isSendBySelf) return
     /** 屏蔽历史消息 */
@@ -295,7 +295,7 @@ export default class StartWeChat4u {
   }
 
   /** 处理回复消息格式、回复日志 */
-  async reply (peer_id, msg) {
+  async reply(peer_id, msg) {
     const message = await this.message(msg)
     message.forEach(async i => {
       /** 延迟下防止过快发送失败 */
@@ -339,7 +339,7 @@ export default class StartWeChat4u {
   }
 
   /** 转换yunzai过来的消息 */
-  async message (msg) {
+  async message(msg) {
     const message = []
     msg = common.array(msg)
     for (let i of msg) {
@@ -372,7 +372,7 @@ export default class StartWeChat4u {
   }
 
   /** 统一文件格式 */
-  async getFile (i, type = 'image') {
+  async getFile(i, type = 'image') {
     const res = common.getFile(i)
     let { file } = res
     let filename, ret
@@ -398,12 +398,12 @@ export default class StartWeChat4u {
         ret = await this.fileType(file)
         common.info(this.id, `发送消息：${type}${ret.filename}]`)
         return ret
-        // return { file: Buffer.from(file), filename }
+      // return { file: Buffer.from(file), filename }
       case 'base64':
         ret = await this.fileType(file)
         common.info(this.id, `发送消息：${type}${ret.filename}]`)
         return ret
-        // return { file: Buffer.from(file), filename }
+      // return { file: Buffer.from(file), filename }
       case 'http':
         common.info(this.id, `发送消息：${type}${file}]`)
         filename = path.extname(file) ? Date.now() + path.extname(file) : filename
@@ -431,7 +431,7 @@ export default class StartWeChat4u {
   }
 
   async makeBuffer(file) {
-  if (file.match(/^base64:\/\//))
+    if (file.match(/^base64:\/\//))
       return Buffer.from(file.replace(/^base64:\/\//, ''), 'base64')
     else if (file.match(/^https?:\/\//))
       return Buffer.from(await (await fetch(file)).arrayBuffer())

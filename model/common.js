@@ -7,7 +7,7 @@ import puppeteer from "../../../lib/puppeteer/puppeteer.js"
 
 /** 注册uin */
 if (!Bot?.adapter)
-  Bot.adapter = Bot.uin ? [ Bot.uin ] : []
+  Bot.adapter = Bot.uin ? [Bot.uin] : []
 else {
   if (!Bot.adapter.includes(Bot.uin))
     Bot.adapter.push(Bot.uin)
@@ -201,9 +201,9 @@ async function makeForwardMsg(data, node = false, e = {}) {
       const splitMsg = msg.split("\n").map(i => {
         if (!i || i.trim() === "") return {}
         if (Bot.lain.cfg.forwar) {
-          return { type: "forward", text: i.substring(0, 1000).trim().replace(/^\\n{1,3}|\\n{1,3}$/g, "") }
-        } else {
           return { type: "forward", text: i.substring(0, 100).trim().replace(/^\\n{1,3}|\\n{1,3}$/g, "") }
+        } else {
+          return { type: "forward", text: i.substring(0, 1000).trim().replace(/^\\n{1,3}|\\n{1,3}$/g, "") }
         }
       })
       allMsg.push(...splitMsg.slice(0, 50))
@@ -249,7 +249,7 @@ async function base64(path) {
 * @param file 文件，支持file://,buffer,base64://
 * @return url地址
 */
-async function uploadFile (file) {
+async function uploadFile(file) {
   if (!(file instanceof Uint8Array || Buffer.isBuffer(file))) {
     if (file.includes('file://') || (!file.startsWith('base64://') && fs.existsSync(file))) {
       file = fs.readFileSync(file.replace('file://', ''))
@@ -279,7 +279,7 @@ async function uploadFile (file) {
 * @param uin botQQ 可选，未传入则调用Bot.uin
 * @return url地址
 */
-async function uploadQQ (file, uin = Bot.uin) {
+async function uploadQQ(file, uin = Bot.uin) {
   let base64
   if (Buffer.isBuffer(file)) {
     base64 = file.toString('base64')
@@ -292,11 +292,9 @@ async function uploadQQ (file, uin = Bot.uin) {
   } else {
     throw new Error('上传失败，未知格式的文件')
   }
-  try {
-    let ret = await Bot[uin].pickUser(uin).sendMsg([segment.image(`base64://${base64}`)])
-    if (!ret?.message_id) throw "发送失败"
-    await Bot[uin].pickUser(uin).recallMsg(message_id)
-  } catch (err) { throw Error(err) }
+  let ret = await Bot[uin].pickUser(uin).sendMsg([segment.image(`base64://${base64}`)])
+  if (!ret?.message_id) throw "发送失败"
+  await Bot[uin].pickUser(uin).recallMsg(message_id)
   const md5 = crypto.createHash('md5').update(Buffer.from(base64, 'base64')).digest('hex')
   return `https://gchat.qpic.cn/gchatpic_new/0/0-0-${md5.toUpperCase()}/0?term=2&is_origin=0`
 }
@@ -409,7 +407,7 @@ function getFile(i) {
     } else {
       i = i.url
     }
-  } else {
+  } else if (typeof i === 'object') {
     i = i.file
   }
 
@@ -417,8 +415,11 @@ function getFile(i) {
   let type = "file"
 
   // 检查是否是Buffer类型
-  if (i?.type === "Buffer" || i instanceof Uint8Array || Buffer.isBuffer(i?.data || i)) {
-    type = "buffer"
+  if (i?.type === 'Buffer') {
+    type = 'buffer'
+    file = Buffer.from(i?.data)
+  } else if (i?.type === 'Buffer' || i instanceof Uint8Array || Buffer.isBuffer(i?.data || i)) {
+    type = 'buffer'
     file = i?.data || i
   } else if (i instanceof fs.ReadStream || i?.path) {
     // 检查是否是ReadStream类型
@@ -468,7 +469,7 @@ function getFile(i) {
  * @param {boolean} read 传入true为读取，可选
  * @return {number} 次数
  */
-async function recvMsg (id, adapter, read = false) {
+async function recvMsg(id, adapter, read = false) {
   const key = `lain:recvMsg:${adapter}:${id}`
   if (read) {
     const msg = await redis.get(key)
@@ -485,7 +486,7 @@ async function recvMsg (id, adapter, read = false) {
  * @param {string} type 发送类型 默认消息，可选image
  * @return {number} 次数
  */
-async function MsgTotal (id, adapter, type = 'text', read = false) {
+async function MsgTotal(id, adapter, type = 'text', read = false) {
   const key = `lain:sendMsg:${adapter}:${id}:${type === 'text' ? 'text' : 'image'}`
   if (read) {
     const msg = await redis.get(key)

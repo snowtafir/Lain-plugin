@@ -6,14 +6,14 @@ import common from '../model/common.js'
 const adapter = []
 
 /** 加载标准输入 */
-adapter.push(async function stdin () {
+adapter.push(async function stdin() {
   const stdin = (await import('./stdin/stdin.js')).default
   await stdin()
   return common.info('标准输入', '加载完成...您可以在控制台输入指令哦~')
 })
 
 /** 加载QQ频道适配器 */
-adapter.push(async function QQGuild () {
+adapter.push(async function QQGuild() {
   if (!fs.existsSync(Bot.lain._path + '/bot.yaml')) return
   const bot = Yaml.parse(fs.readFileSync(Bot.lain._path + '/bot.yaml', 'utf8'))
   for (const i in bot) {
@@ -29,7 +29,7 @@ adapter.push(async function QQGuild () {
 })
 
 /** QQBot适配器 */
-adapter.push(async function QQBot () {
+adapter.push(async function QQBot() {
   try {
     const cfg = fs.readFileSync(Bot.lain._path + '/QQBot.yaml', 'utf8')
     Object.entries(Yaml.parse(cfg)).forEach(async ([appid, cfg]) => {
@@ -41,13 +41,13 @@ adapter.push(async function QQBot () {
 })
 
 /** 启动HTTP服务器，加载shamrock、Com微信适配器 */
-adapter.push(async function httpServer () {
+adapter.push(async function httpServer() {
   const WebSocket = (await import('./WebSocket.js')).default
   return await (new WebSocket()).server()
 })
 
 /** 加载微信 */
-adapter.push(async function wechat4u () {
+adapter.push(async function wechat4u() {
   const StartWeChat4u = (await import('./WeChat-Web/index.js')).default
   const _path = fs.readdirSync('./plugins/Lain-plugin/config')
   const Jsons = _path.filter(file => file.endsWith('.json'))

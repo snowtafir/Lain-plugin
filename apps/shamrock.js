@@ -2,7 +2,7 @@ import { ShamrockRepoClient } from '../model/shamrock/shamrock.js'
 import Render from '../model/render.js'
 import common from '../model/common.js'
 import fs from 'fs'
-import path from "path"
+import path from 'path'
 
 export class shamrock extends plugin {
   constructor() {
