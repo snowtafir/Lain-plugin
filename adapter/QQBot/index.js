@@ -604,7 +604,7 @@ export default class StartQQBot {
 
     for (let i of allMsg) {
       try {
-        if (!i || !i.length) continue
+        if (!i || (Array.isArray(i) && !i.length)) continue
         res = await e.sendMsg.call(e.data, i)
       } catch (error) {
         common.error(e.self_id, JSON.stringify(error))
