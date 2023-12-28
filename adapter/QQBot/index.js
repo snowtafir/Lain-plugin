@@ -498,14 +498,14 @@ export default class StartQQBot {
         const url = await Bot.audioToUrl(file)
         common.mark('Lain-plugin', `使用自定义服务器发送语音：${url}`)
         return { type, file: url }
-      } else {
+      } else if (type === 'video' && Bot?.videoToUrl) {
         /** 视频接口 */
         const url = await Bot.videoToUrl(file)
         common.mark('Lain-plugin', `使用自定义服务器发送视频：${url}`)
         return { type, file: url }
       }
     } catch (error) {
-      logger.error('自定义服务器调用错误，已跳过：', error)
+      logger.error('自定义服务器调用错误，已跳过')
     }
 
     /** QQ图床 */
