@@ -598,7 +598,8 @@ export default class StartQQBot {
         for (const i of message) allMsg.push(...await this.markdown(e, i))
       }
     } else {
-      if (image.length) message = [message, ...image.map(i => [i])]
+      message = [message]
+      if (image.length) message.push(...image.map(i => [i]))
       allMsg.push(...message)
     }
 
