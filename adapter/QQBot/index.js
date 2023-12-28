@@ -589,13 +589,16 @@ export default class StartQQBot {
     let { message, image } = await this.message(msg)
 
     if (e.bot.config?.markdown) {
-      allMsg.push(...await this.markdown(e, message))
-      if (image.length) allMsg.push(...await this.markdown(e, image))
-    } else {
-      allMsg.push(message)
-      if (image.length) {
-        allMsg.push(image)
+      if (e.bot.config?.super_markdown) {
+        if (image.length) message = [...message, ...image]
+        allMsg.push(...await this.markdown(e, message))
+      } else {
+        if (image.length) message = [message, ...image.map(i => [i])]
+        for (const i of image) allMsg.push(...await this.markdown(e, i))
       }
+    } else {
+      if (image.length) message = [message, ...image.map(i => [i])]
+      allMsg.push(...message)
     }
 
     for (let i of allMsg) {
