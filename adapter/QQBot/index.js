@@ -320,7 +320,7 @@ export default class StartQQBot {
         return { type, file: url }
       }
     } catch (error) {
-      logger.error('自定义服务器调用错误，已跳过：')
+      logger.error('自定义服务器调用错误，已跳过：', error)
     }
 
     /** QQ图床 */
@@ -543,7 +543,7 @@ export default class StartQQBot {
 
   /** 快速回复 */
   async reply(e, msg) {
-    let res
+    let res, newMsg = []
     const allMsg = []
     let { message, image } = await this.message(msg)
 
@@ -552,12 +552,16 @@ export default class StartQQBot {
         if (image.length) message = [...message, ...image]
         allMsg.push(...await this.markdown(e, message))
       } else {
-        message = [message]
+        for (let i = 0; i < message.length; i += 10)
+          newMsg.push(message.slice(i, i + 10))
+        message = newMsg
         if (image.length) message.push(...image.map(i => [i]))
         for (const i of message) allMsg.push(...await this.markdown(e, i))
       }
     } else {
-      message = [message]
+      for (let i = 0; i < message.length; i += 10)
+        newMsg.push(message.slice(i, i + 10))
+      message = newMsg
       if (image.length) message.push(...image.map(i => [i]))
       allMsg.push(...message)
     }
