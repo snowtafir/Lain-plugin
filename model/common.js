@@ -1,6 +1,7 @@
 import chalk from 'chalk'
 import crypto from 'crypto'
 import fs from 'fs'
+import get_urls from 'get-urls'
 import fetch, { Blob, FormData } from 'node-fetch'
 import path from 'path'
 import puppeteer from '../../../lib/puppeteer/puppeteer.js'
@@ -50,63 +51,63 @@ function nickname (id) {
 * @param id Bot的id、QQ
 * @param log 日志内容
 */
-function info (id, log) {
+function info (id, ...log) {
   id = nickname(id)
-  logger.info(id || '', log)
+  logger.info(id || '', ...log)
 }
 
 /**
 * @param id Bot的id、QQ
 * @param log 日志内容
 */
-function error (id, log) {
+function error (id, ...log) {
   id = nickname(id)
-  logger.error(id || '', log)
+  logger.error(id || '', ...log)
 }
 
 /**
 * @param id Bot的id、QQ
 * @param log 日志内容
 */
-function mark (id, log) {
+function mark (id, ...log) {
   id = nickname(id)
-  logger.mark(id || '', log)
+  logger.mark(id || '', ...log)
 }
 
 /**
 * @param id Bot的id、QQ
 * @param log 日志内容
 */
-function debug (id, log) {
+function debug (id, ...log) {
   id = nickname(id)
-  logger.debug(id || '', log)
+  logger.debug(id || '', ...log)
 }
 
 /**
 * @param id Bot的id、QQ
 * @param log 日志内容
 */
-function warn (id, log) {
+function warn (id, ...log) {
   id = nickname(id)
-  logger.warn(id || '', log)
+  logger.warn(id || '', ...log)
 }
 
 /**
 * @param id Bot的id、QQ
 * @param log 日志内容
 */
-function trace (id, log) {
+function trace (id, ...log) {
   id = nickname(id)
-  logger.trace(id || '', log)
+  logger.trace(id || '', ...log)
 }
 
 /**
 * @param id Bot的id、QQ
 * @param log 日志内容
 */
-function fatal (id, log) {
+function fatal (id, ...log) {
   id = nickname(id)
-  logger.fatal(id || '', log)
+  logger.fatal(id || '', ...log)
 }
 
 /** 适配器重启发送消息 */
@@ -134,6 +135,8 @@ async function init (key = 'Lain:restart') {
 /** 将云崽过来的消息全部统一格式存放到数组里面 */
 function array (data) {
   let msg = []
+  /** Shamrock转发消息 */
+  if (typeof data === 'object' && data?.test && data?.data?.type === 'test') return data.message
   /** 将格式统一为对象 随后进行转换成api格式 */
   if (data?.[0]?.data?.type === 'test' || data?.[1]?.data?.type === 'test') {
     msg.push(...(data?.[0].msg || data?.[1].msg))
@@ -144,8 +147,8 @@ function array (data) {
       ? [{ type: 'text', text: i }]
       : Array.isArray(i)
         ? [].concat(...i.map(format => (typeof format === 'string'
-          ? [{ type: 'text', text: format }]
-          : typeof format === 'object' && format !== null ? [format] : [])))
+            ? [{ type: 'text', text: format }]
+            : typeof format === 'object' && format !== null ? [format] : [])))
         : typeof i === 'object' && i !== null ? [i] : []
     )))
   } else if (data instanceof fs.ReadStream) {
@@ -304,15 +307,33 @@ async function uploadQQ (file, uin = Bot.uin) {
 
 /**
 * 传入字符串 提取url 返回数组
-* @param url
+* @param {string} url 传入字符串，提取出所有url
+* @param {array} exclude - 排除的url
 */
-async function getUrls (url) {
+function getUrls (url, exclude = []) {
   let urls = []
   /** 中文不符合url规范 */
   url = url.replace(/[\u4e00-\u9fa5]/g, '|')
-  const get_urls = (await import('get-urls')).default
   try {
-    urls = [...get_urls(url, { normalizeProtocol: false, stripWWW: false, removeQueryParameters: false })]
+    urls = [...get_urls(url, {
+      exclude,
+      /** 去除 WWW */
+      stripWWW: false,
+      /** 规范化协议 */
+      normalizeProtocol: false,
+      /** 移除查询参数 */
+      removeQueryParameters: false,
+      /** 移除唯一斜杠 */
+      removeSingleSlash: false,
+      /** 查询参数排序 */
+      sortQueryParameters: false,
+      /** 去除认证信息 */
+      stripAuthentication: false,
+      /** 去除文本片段 */
+      stripTextFragment: false,
+      /** 移除末尾斜杠 */
+      removeTrailingSlash: false
+    })]
   } catch {
     log('Lain-plugin', '没有安装 get-urls 模块，建议执行pnpm install -P 进行安装使用更精准的替换url')
     const urlRegex = /(https?:\/\/)?(([0-9a-z.-]+\.[a-z]+)|(([0-9]{1,3}\.){3}[0-9]{1,3}))(:[0-9]+)?(\/[0-9a-z%/.\-_#]*)?(\?[0-9a-z=&%_\-.]*)?(\\#[0-9a-z=&%_\\-]*)?/ig
@@ -334,6 +355,20 @@ async function rendering (content, error) {
     tplFile: './plugins/Lain-plugin/resources/index.html'
   }
   const msg = await puppeteer.screenshot('Lain-plugin/Lain-plugin', data)
+  return msg.file
+}
+
+/** 通用渲染 */
+async function Rending (data, _path) {
+  const name = path.parse(_path).name
+  data = {
+    ...data,
+    saveId: name,
+    adapter: Bot.lain.adapter,
+    _plugin: 'Lain-plugin',
+    tplFile: `./plugins/Lain-plugin/resources/${_path}`
+  }
+  const msg = await puppeteer.screenshot(`Lain-plugin/${name}`, data)
   return msg.file
 }
 
@@ -505,5 +540,6 @@ export default {
   mkdirs,
   getFile,
   recvMsg,
-  MsgTotal
+  MsgTotal,
+  Rending
 }

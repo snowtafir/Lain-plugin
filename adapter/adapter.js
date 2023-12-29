@@ -5,6 +5,12 @@ import common from '../model/common.js'
 /** 适配器列表 */
 const adapter = []
 
+/** 启动HTTP服务器，加载shamrock、Com微信适配器 */
+adapter.push(async function httpServer () {
+  const WebSocket = (await import('./WebSocket.js')).default
+  return await (new WebSocket()).server()
+})
+
 /** 加载标准输入 */
 adapter.push(async function stdin () {
   const stdin = (await import('./stdin/stdin.js')).default
@@ -38,12 +44,6 @@ adapter.push(async function QQBot () {
       return new StartQQBot(cfg)
     })
   } catch (err) { return common.error('QQBot', `QQBot适配器加载失败,${err}`) }
-})
-
-/** 启动HTTP服务器，加载shamrock、Com微信适配器 */
-adapter.push(async function httpServer () {
-  const WebSocket = (await import('./WebSocket.js')).default
-  return await (new WebSocket()).server()
 })
 
 /** 加载微信 */

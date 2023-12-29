@@ -3,7 +3,7 @@ import fs from 'fs'
 import sizeOf from 'image-size'
 import path from 'path'
 import QQBot from 'qq-group-bot'
-import qrcode from 'qrcode'
+import QrCode from 'qrcode'
 import { encode as encodeSilk } from 'silk-wasm'
 import Yaml from 'yaml'
 import common from '../../model/common.js'
@@ -281,7 +281,7 @@ export default class StartQQBot {
 
   /** 统一传入的格式并上传 */
   async Upload (i, type) {
-    const { file } = common.getFile(i)
+    const { file } = Bot.toType(i)
     /** 自定义图床、语音、视频 */
     try {
       /** 新接口 */
@@ -332,7 +332,7 @@ export default class StartQQBot {
 
   /** 处理语音... */
   async get_audio (i) {
-    let { type, file } = common.getFile(i)
+    let { type, file } = Bot.toType(i)
     const filePath = process.cwd() + '/plugins/Lain-plugin/resources/QQBotApi'
     const pcm = path.join(filePath, `${Date.now()}.pcm`)
     const silk = path.join(filePath, `${Date.now()}.silk`)
@@ -437,44 +437,34 @@ export default class StartQQBot {
     const message = []
     if (msg?.text) msg = msg.text
     if (typeof msg !== 'string') return msg
-    /** 白名单url */
-    const whitelistUrl = Bot.lain.cfg.whitelist_Url
 
     /** 需要处理的url */
-    let urls = await common.getUrls(msg) || []
+    let urls = Bot.getUrls(msg, Bot.lain.cfg.whitelist_Url)
 
-    if (urls.length > 0) {
-      /** 检查url是否包含在白名单中的任何一个url */
-      urls = urls.filter(url => {
-        return !whitelistUrl.some(whitelistUrl => url.includes(whitelistUrl))
-      })
-
-      let promises = urls.map(i => {
-        return new Promise((resolve, reject) => {
-          common.mark('Lain-plugin', `url替换：${i}`)
-          qrcode.toBuffer(i, {
-            errorCorrectionLevel: 'H',
-            type: 'png',
-            margin: 4,
-            text: i
-          }, async (err, buffer) => {
-            if (err) reject(err)
-            const base64 = 'base64://' + buffer.toString('base64')
-            const Uint8Array = await common.rendering(base64, i)
-            message.push(await this.Upload({ type: 'image', file: Uint8Array }, 'image'))
-            msg = msg.replace(i, '[链接(请扫码查看)]')
-            msg = msg.replace(i.replace(/^http:\/\//g, ''), '[链接(请扫码查看)]')
-            msg = msg.replace(i.replace(/^https:\/\//g, ''), '[链接(请扫码查看)]')
-            resolve()
-          })
+    let promises = urls.map(link => {
+      return new Promise((resolve, reject) => {
+        common.mark('Lain-plugin', `url替换：${link}`)
+        QrCode.toBuffer(link, {
+          errorCorrectionLevel: 'H',
+          type: 'png',
+          margin: 4,
+          text: link
+        }, async (err, buffer) => {
+          if (err) reject(err)
+          const base64 = 'base64://' + buffer.toString('base64')
+          const Uint8Array = await common.Rending({ base64, link }, 'QRCode/QRCode.html')
+          message.push(await this.Upload({ type: 'image', file: Uint8Array }, 'image'))
+          msg = msg.replace(link, '[链接(请扫码查看)]')
+          msg = msg.replace(link.replace(/^http:\/\//g, ''), '[链接(请扫码查看)]')
+          msg = msg.replace(link.replace(/^https:\/\//g, ''), '[链接(请扫码查看)]')
+          resolve()
         })
       })
+    })
 
-      await Promise.all(promises)
-      message.unshift({ type: 'text', text: msg })
-      return message
-    }
-    return [{ type: 'text', text: msg }]
+    await Promise.all(promises)
+    message.unshift({ type: 'text', text: msg })
+    return message
   }
 
   /** 转换message */
@@ -536,7 +526,8 @@ export default class StartQQBot {
   async reply (e, msg) {
     let res
     const allMsg = []
-    let { message, image } = await this.message(msg)
+    let sendMsg = await this.message(msg)
+    let { message, image } = sendMsg
 
     if (e.bot.config?.markdown) {
       if (e.bot.config?.super_markdown) {
@@ -560,6 +551,17 @@ export default class StartQQBot {
       } catch (error) {
         common.error(e.self_id, JSON.stringify(error))
         let data = error?.response?.data
+        /** 全局模板的情况下发送失败转为发送普通消息 */
+        if (e.bot.config?.markdown) {
+          logger.mark('转普通消息发送')
+          try {
+            res = await e.sendMsg.call(e.data, i)
+          } catch (err) {
+            data = error?.response?.data || err
+            common.error(e.self_id, '你没救了少年...', err)
+          }
+        }
+
         if (data) {
           data = `\n发送消息失败：\ncode:：${error.response.data.code}\nmessage：${error.response.data.message}`
         } else {
