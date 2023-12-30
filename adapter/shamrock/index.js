@@ -27,10 +27,10 @@ class Shamrock {
 
   /** 收到请求 */
   async event (data) {
-    /** debug日志 */
-    common.debug(this.id, '[ws] received -> ', data)
     /** 解析得到的JSON */
     data = JSON.parse(data)
+    /** debug日志 */
+    common.debug(this.id, '[ws] received -> ', JSON.stringify(data))
     /** 带echo事件为主动请求得到的响应，另外保存 */
     if (data?.echo) return Bot.echo.set(data.echo, data)
     try {
@@ -901,9 +901,9 @@ class Shamrock {
             if (source) {
               let qq = Number(source.sender.user_id)
               let text = source.sender.nickname
-              message.push({ type: 'at', qq, text })
-              raw_message.push(`@${text}`)
-              log_message.push(`[回复] [@${text}:${qq}]`)
+              message.unshift({ type: 'at', qq, text })
+              raw_message.unshift(`@${text}`)
+              log_message.unshift(`[回复] [@${text}:${qq}]`)
             }
           }
           break
@@ -1126,7 +1126,7 @@ class Shamrock {
     let { message, raw_message, node } = await this.getShamrock(msg)
 
     if (quote) {
-      message.push({ type: 'reply', data: { id: e.message_id } })
+      message.unshift({ type: 'reply', data: { id: e.message_id } })
       raw_message = '[回复]' + raw_message
     }
 
@@ -1193,7 +1193,7 @@ class Shamrock {
           try {
             let file = await Bot.Base64(i.file, { http: true })
             /** 非链接需要先上传到手机 */
-            if (!/^http:\/\//.test(file)) {
+            if (!/^http(s)?:\/\//.test(file)) {
               const data = await api.download_file(this.id, `base64://${file}`)
               file = `file://${data.file}`
             }
