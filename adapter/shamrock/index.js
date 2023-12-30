@@ -235,7 +235,7 @@ class Shamrock {
       }
       default:
     }
-    return await Bot.emit('notice.group', await this.ICQQEvent(data))
+    return await Bot.emit('notice', await this.ICQQEvent(data))
   }
 
   /** 请求事件 */
@@ -784,8 +784,10 @@ class Shamrock {
       /** 私聊字段 */
       if (e?.sender_id) {
         e.notice_type = 'private'
+        e.group = { ...this.pickGroup(group_id) }
       } else {
         e.notice_type = 'group'
+        e.friend = { ...this.pickFriend(user_id) }
       }
     }
 
@@ -886,12 +888,13 @@ class Shamrock {
           message.push({ type: 'text', text: i.data.text })
           raw_message.push(i.data.text)
           log_message.push(i.data.text)
+          ToString.push(i.data.text)
           break
         /** 表情 */
         case 'face':
           message.push({ type: 'face', ...i.data })
-          raw_message.push(`[${faceMap[Number(i.data.id)]}]`)
-          log_message.push(`[${faceMap[Number(i.data.id)]}]`)
+          raw_message.push(`[${faceMap[Number(i.data.id)] || '动画表情'}]`)
+          log_message.push(`[${faceMap[Number(i.data.id)] || `动画表情:${i.data.id}`}]`)
           ToString.push(`{face:${i.data.id}}`)
           break
         /** 回复 */
