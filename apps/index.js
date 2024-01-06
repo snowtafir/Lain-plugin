@@ -4,6 +4,7 @@ import { execSync } from 'child_process'
 import { update } from '../../other/update.js'
 import { xiaofei_music } from '../adapter/shamrock/xiaofei/music.js'
 import { xiaofei_weather } from '../adapter/shamrock/xiaofei/weather.js'
+import { DAU } from '../adapter/QQBot/DAU.js'
 
 export class Lain extends plugin {
   constructor() {
@@ -44,6 +45,11 @@ export class Lain extends plugin {
           reg: /^#(重载|重新加载)资源/,
           fnc: 'loadRes',
           permission: 'master'
+        },
+        {
+          reg: "^#[Qq]+[Bb]ot[Dd][Aa][Uu]",
+          fnc: 'DAUStat',
+          permission: "master"
         }
       ]
     })
@@ -218,6 +224,19 @@ export class Lain extends plugin {
     res = new res(e.self_id)
     const msg = await res.LoadList()
     return await e.reply(msg, true)
+  }
+
+  DAUStat(e) {
+    const uin = this.e.msg.replace(/^#[Qq]+[Bb]ot[Dd][Aa][Uu]/, '') || this.e.bot.uin
+    const dau = DAU[uin]
+    if (!dau) return false
+    const msg = [
+      `\n上行消息量: ${dau.msg_count}`,
+      `下行消息量: ${dau.send_count}`,
+      `上行消息人数: ${dau.user_count}`,
+      `上行消息群数: ${dau.group_count}`
+    ]
+    e.reply(msg.join('\n'), true)
   }
 }
 

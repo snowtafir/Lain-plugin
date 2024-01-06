@@ -46,15 +46,15 @@ export default async function stdin() {
     stat: { start_time: parseInt(Date.now() / 1000), recv_msg_cnt: 0 },
     version: Bot.lain.adapter.stdin.version,
     /** 转发 */
-    makeForwardMsg: sendForwardMsg,
+    makeForwardMsg: (msg) => { return { type: "node", data: msg } },
     pickUser: () => {
       return {
         user_id,
         nickname: Bot.lain.cfg.stdin_nickname,
         sendMsg: msg => sendMsg(msg),
         recallMsg: msg_id => common.info(uin, `撤回消息：${msg_id}`),
-        makeForwardMsg: sendForwardMsg,
-        sendForwardMsg: msg => sendForwardMsg(msg),
+        makeForwardMsg: (msg) => { return { type: "node", data: msg } },
+        sendForwardMsg,
         sendFile: (file, name) => sendFile(file, name),
       }
     },
@@ -64,8 +64,8 @@ export default async function stdin() {
         nickname: Bot.lain.cfg.stdin_nickname,
         sendMsg: msg => sendMsg(msg),
         recallMsg: msg_id => common.info(uin, `撤回消息：${msg_id}`),
-        makeForwardMsg: sendForwardMsg,
-        sendForwardMsg: msg => sendForwardMsg(msg),
+        makeForwardMsg: (msg) => { return { type: "node", data: msg } },
+        sendForwardMsg,
         sendFile: (file, name) => sendFile(file, name),
       }
     },
@@ -75,8 +75,8 @@ export default async function stdin() {
         nickname: Bot.lain.cfg.stdin_nickname,
         sendMsg: msg => sendMsg(msg),
         recallMsg: msg_id => common.info(uin, `撤回消息：${msg_id}`),
-        makeForwardMsg: sendForwardMsg,
-        sendForwardMsg: msg => sendForwardMsg(msg),
+        makeForwardMsg: (msg) => { return { type: "node", data: msg } },
+        sendForwardMsg,
         sendFile: (file, name) => sendFile(file, name),
       }
     },
@@ -171,8 +171,8 @@ function msg(msg) {
     nickname: Bot.lain.cfg.stdin_nickname,
     sendMsg: msg => sendMsg(msg),
     recallMsg: msg_id => common.info(uin, `撤回消息：${msg_id}`),
-    makeForwardMsg: sendForwardMsg,
-    sendForwardMsg: msg => sendForwardMsg(msg),
+    makeForwardMsg: (msg) => { return { type: "node", data: msg } },
+    sendForwardMsg,
     sendFile: (file, name) => sendFile(file, name),
   }
 
@@ -230,7 +230,7 @@ async function sendMsg(msg) {
         sendForwardMsg(i.data)
         break
       default:
-        if (!Array.isArray(i?.data) || Object.keys(i.data) === 0) return { message_id: Date.now() }
+        if (!Array.isArray(i?.data) || Object.keys(i.data).length === 0) break
         i = JSON.stringify(i)
         if (i.match('\n')) i = `\n${i}`
         common.info(uin, `发送消息：${i}`)

@@ -6,8 +6,10 @@ import QQBot from 'qq-group-bot'
 import qrcode from 'qrcode'
 import { encode as encodeSilk } from 'silk-wasm'
 import Yaml from 'yaml'
+import moment from 'moment'
 import common from '../../model/common.js'
 import Button from './plugins.js'
+import { DAU, getDAU } from './DAU.js'
 
 export default class StartQQBot {
   /** 传入基本配置 */
@@ -88,6 +90,8 @@ export default class StartQQBot {
     this.gmlList('fl')
     /** 保存id到adapter */
     if (!Bot.adapter.includes(this.id)) Bot.adapter.push(this.id)
+    /** 读取旧DAU */
+    DAU[this.id] = await getDAU(this.id)
 
     /** 重启 */
     await common.init('Lain:restart:QQBot')
@@ -200,6 +204,14 @@ export default class StartQQBot {
         common.mark(this.id, `发送返回：${JSON.stringify(ret)}`)
       })
     }
+
+    /** 计算发送DAU */
+    DAU[this.id].send_count++
+    const time = moment(Date.now()).add(1, "days").format("YYYY-MM-DD 00:00:00")
+    const EX = Math.round(
+      (new Date(time).getTime() - new Date().getTime()) / 1000
+    )
+    redis.set(`QQBotDAU:send_count:${this.id}`, DAU[this.id].send_count * 1, { EX })
   }
 
   /** 发送群消息 */
@@ -216,6 +228,14 @@ export default class StartQQBot {
         common.mark(this.id, `发送返回：${JSON.stringify(ret)}`)
       })
     }
+
+    /** 计算发送DAU */
+    DAU[this.id].send_count++
+    const time = moment(Date.now()).add(1, "days").format("YYYY-MM-DD 00:00:00")
+    const EX = Math.round(
+      (new Date(time).getTime() - new Date().getTime()) / 1000
+    )
+    redis.set(`QQBotDAU:send_count:${this.id}`, DAU[this.id].send_count * 1, { EX })
   }
 
   /** 转换格式给云崽处理 */
@@ -269,6 +289,26 @@ export default class StartQQBot {
     if (!Bot[e.self_id].fl.get(e.user_id)) Bot[e.self_id].fl.set(e.user_id, { user_id: e.user_id })
     if (await redis.get(`lain:fl:${e.self_id}:${e.user_id}`)) redis.set(`lain:fl:${e.self_id}:${e.user_id}`, JSON.stringify({ user_id: e.user_id }))
 
+    /** 计算接收DAU */
+    let needSetRedis = false
+    DAU[this.id].msg_count++
+    if (data.group_id && !DAU[this.id].group_cache[data.group_id]) {
+      DAU[this.id].group_cache[data.group_id] = 1
+      DAU[this.id].group_count++
+      needSetRedis = true
+    }
+    if (data.user_id && !DAU[this.id].user_cache[data.user_id]) {
+      DAU[this.id].user_cache[data.user_id] = 1
+      DAU[this.id].user_count++
+      needSetRedis = true
+    }
+    const time = moment(Date.now()).add(1, "days").format("YYYY-MM-DD 00:00:00")
+    const EX = Math.round(
+      (new Date(time).getTime() - new Date().getTime()) / 1000
+    )
+    redis.set(`QQBotDAU:msg_count:${this.id}`, DAU[this.id].msg_count * 1, { EX })
+    if (needSetRedis) redis.set(`QQBotDAU:${this.id}`, JSON.stringify(DAU[this.id]), { EX })
+
     /** 保存消息次数 */
     try { common.recvMsg(e.self_id, e.adapter) } catch { }
     return e
@@ -296,17 +336,17 @@ export default class StartQQBot {
     const { file } = common.getFile(i)
     /** 自定义图床、语音、视频 */
     try {
-      /** 新接口 */
-      if (type === 'image' && Bot?.imageToUrl) {
-        const { width, height, url } = await Bot.imageToUrl(file)
-        common.mark('Lain-plugin', `使用自定义图床发送图片：${url}`)
-        return { type, file: url, width, height }
-      } else if (Bot?.uploadFile) {
+      if (Bot?.uploadFile) {
         /** 老接口，后续废除 */
         const url = await Bot.uploadFile(file, type)
         common.mark('Lain-plugin', `使用自定义图床发送文件：${url}`)
         const { width, height } = sizeOf(await Bot.Buffer(file))
         console.warn('[Bot.uploadFile]接口即将废除!')
+        return { type, file: url, width, height }
+      } else if (type === 'image' && Bot?.imageToUrl) {
+        /** 新接口 */
+        const { width, height, url } = await Bot.imageToUrl(file)
+        common.mark('Lain-plugin', `使用自定义图床发送图片：${url}`)
         return { type, file: url, width, height }
       } else if (type === 'audio' && Bot?.audioToUrl) {
         /** 语音接口 */
@@ -589,6 +629,15 @@ export default class StartQQBot {
       message_id: res?.msg_id
     }
     common.debug('Lain-plugin', res)
+
+    /** 计算发送时DAU */
+    DAU[this.id].send_count++
+    const time = moment(Date.now()).add(1, "days").format("YYYY-MM-DD 00:00:00")
+    const EX = Math.round(
+      (new Date(time).getTime() - new Date().getTime()) / 1000
+    )
+    redis.set(`QQBotDAU:send_count:${this.id}`, DAU[this.id].send_count * 1, { EX })
+
     return res
   }
 

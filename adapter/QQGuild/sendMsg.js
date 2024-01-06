@@ -54,6 +54,8 @@ export default class SendMsg {
           content.push(`<emoji:${i.text}>`)
           break
         case "text":
+          i.text = String(i.text).trim()
+          if (!i.text) break
           content.push(await this.HandleURL(i.text))
           break
         case "image":
@@ -74,6 +76,9 @@ export default class SendMsg {
           } else {
             content.push(await this.HandleURL(`${i.text}\n\n`))
           }
+          break
+        case "button":
+          common.warn(this.id, "暂未支持按钮")
           break
         default:
           content.push(JSON.stringify(i))
