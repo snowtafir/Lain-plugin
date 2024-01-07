@@ -77,7 +77,8 @@ export default class message {
       seq: msg.seq,
       time,
       uin: this.id,
-      user_id
+      user_id,
+      data: this.data
     }
 
     /** 构建message */
@@ -121,6 +122,31 @@ export default class message {
 
     /** 赋值 */
     e.member = member
+
+    /** 保存信息用于主动发消息 */
+    e.bot.fl.set(user_id, {
+      ...msg.author,
+      ...e.sender,
+      id: this.id,
+      guild_id: msg.guild_id,
+      channel_id: msg.channel_id,
+      group_id,
+      group_name,
+      guild_name,
+      channel_name
+    })
+
+    e.bot.gl.set(group_id, {
+      ...e.bot.gl.get(group_id),
+      id: this.id,
+      group_id,
+      group_name,
+      guild_id: msg.guild_id,
+      guild_name,
+      guild_type: 0,
+      channel_id: msg.channel_id,
+      channel_name
+    })
 
     /** 构建场景对应的方法 */
     if (type === "私信") {

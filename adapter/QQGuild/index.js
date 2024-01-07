@@ -92,9 +92,23 @@ export default class guild {
       },
       pickGroup: (groupId, msg_id = false) => {
         const [guild_id, channel_id] = groupId.replace("qg_", "").split('-')
+        const { group_name } = Bot[this.id].gl.get(groupId) || "未知"
         return {
           sendMsg: async (msg, quote = false) => {
-            return await (new SendMsg(this.id, { guild_id, channel_id }, "MESSAGE_CREATE", msg_id)).message(msg, quote)
+            return await (new SendMsg(this.id, { guild_id, channel_id }, "MESSAGE_CREATE", msg_id, group_name)).message(msg, quote)
+          },
+          /** 转发 */
+          makeForwardMsg: async (forwardMsg) => {
+            return await common.makeForwardMsg(forwardMsg)
+          }
+        }
+      },
+      pickFriend: (userId, msg_id = false) => {
+        const user_id = userId.replace("qg_", "")
+        const { guild_id, guild_name } = Bot[this.id].fl.get(userId)
+        return {
+          sendMsg: async (msg, quote = false) => {
+            return await (new SendMsg(this.id, { guild_id }, "DIRECT_MESSAGE_CREATE", msg_id, guild_name || "未知")).message(msg, quote)
           },
           /** 转发 */
           makeForwardMsg: async (forwardMsg) => {
@@ -131,6 +145,8 @@ export default class guild {
 
     /** 公域私域 */
     Bot[this.id].version.id = Bot[this.id].allMsg ? "私域" : "公域"
+
+    Bot[this.id].pickUser = Bot[this.id].pickFriend
 
     if (!Bot.adapter.includes(this.id)) Bot.adapter.push(this.id)
   }
