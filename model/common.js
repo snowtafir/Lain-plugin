@@ -227,21 +227,53 @@ async function makeForwardMsg(data, node = false, e = {}) {
   return message
 }
 
-/** 传入路径 返回字符串格式的base64 */
-async function base64(path) {
-  let file = path
-  try {
-    if (!fs.existsSync(file)) {
-      // 尝试去掉file://
-      file = file.replace(/^file:\/\//, "")
-      // 再次检查文件是否存在
-      if (!fs.existsSync(file)) {
-        file = path.replace(/^file:\/\/\//, "")
-        if (!fs.existsSync(file)) return
-      }
+/** 处理各种牛马格式的图片 返回二进制base64 TMD */
+async function base64(msg) {
+  let base64
+  /** 米游社公告类 */
+  let file = msg.file
+
+  /** 特殊处理本地文件 */
+  if (typeof file === "string") {
+    if (fs.existsSync(file.replace(/^file:[/]{0,2}/, ""))) {
+      base64 = fs.readFileSync(file.replace(/^file:[/]{0,2}/, ""))
+      return base64
     }
-    return fs.readFileSync(file, { encoding: "base64" })
-  } catch (err) { }
+    else if (fs.existsSync(file.replace(/^file:[/]{0,3}/, ""))) {
+      base64 = fs.readFileSync(file.replace(/^file:[/]{0,3}/, ""))
+      return base64
+    }
+  }
+
+  /** 套娃的二进制base64 */
+  if (file.type === "Buffer") {
+    if (!(file.data instanceof Uint8Array))
+      base64 = new Uint8Array(file.data)
+    else base64 = file.data
+  }
+  /** 天知道从哪里蹦出来的... */
+  else if (file instanceof fs.ReadStream) {
+    base64 = fs.readFileSync(`./${file.path}`)
+  }
+  /** Uint8Array */
+  else if (file instanceof Uint8Array) {
+    base64 = file
+  }
+
+  /** 检测是否为频道下发图片 复读表情包用... */
+  else if (typeof file === "string" && msg.url) {
+    base64 = new Uint8Array(await (await fetch(msg.url)).arrayBuffer())
+  }
+  /** 判断url是否为白名单，否则缓存图片转为二进制 */
+  else if (typeof file === "string" && /^(https|http):\/\//.test(file)) {
+    /** 下载图片转为base64 */
+    base64 = new Uint8Array(await (await fetch(file)).arrayBuffer())
+  }
+  /** 字符串格式的base64 */
+  else if (typeof file === "string") base64 = Buffer.from(file.replace(/^base64:\/\//, ""), "base64")
+  else logger.error("未适配字段，请反馈：", msg)
+
+  return base64
 }
 
 /**
@@ -505,6 +537,7 @@ export default {
   warn,
   fatal,
   trace,
+  nickname,
   array,
   makeForwardMsg,
   base64,

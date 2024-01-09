@@ -7,9 +7,12 @@ import qrcode from 'qrcode'
 import { encode as encodeSilk } from 'silk-wasm'
 import Yaml from 'yaml'
 import moment from 'moment'
+import { fileTypeFromBuffer } from 'file-type'
+
 import common from '../../model/common.js'
 import Button from './plugins.js'
 import { DAU, getDAU } from './DAU.js'
+
 
 export default class StartQQBot {
   /** 传入基本配置 */
@@ -333,7 +336,20 @@ export default class StartQQBot {
 
   /** 统一传入的格式并上传 */
   async Upload(i, type) {
-    const { file } = common.getFile(i)
+    let { file } = common.getFile(i)
+    /** 转换图片类型为png */
+    // 动态导入
+    const sharp = (await import("sharp")).default
+    if (sharp && type == "image") {
+      let file2 = await common.base64(segment.image(file))
+      let filetype = await fileTypeFromBuffer(file2)
+      logger.mark(common.nickname(this.id), "[原类型]", filetype)
+      if (!["jpg", "png"].includes(filetype?.ext)) {
+        file = await sharp(file2).jpeg({ quality: Bot.lain.cfg.quality }).toBuffer()
+        logger.mark(common.nickname(this.id), "[转换后类型]", await fileTypeFromBuffer(file))
+      }
+    }
+
     /** 自定义图床、语音、视频 */
     try {
       if (Bot?.uploadFile) {
