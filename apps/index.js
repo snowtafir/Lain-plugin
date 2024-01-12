@@ -1,4 +1,5 @@
 import fs from 'fs'
+import moment from "moment"
 import YamlParse from '../model/yaml.js'
 import { execSync } from 'child_process'
 import { update } from '../../other/update.js'
@@ -47,7 +48,7 @@ export class Lain extends plugin {
           permission: 'master'
         },
         {
-          reg: "^#[Qq]+[Bb]ot[Dd][Aa][Uu]",
+          reg: /^#?[Qq]+[Bb]ot[Dd][Aa][Uu]|#?[Dd][Aa][Uu]/,
           fnc: 'DAUStat',
           permission: "master"
         }
@@ -226,17 +227,31 @@ export class Lain extends plugin {
     return await e.reply(msg, true)
   }
 
-  DAUStat(e) {
-    const uin = this.e.msg.replace(/^#[Qq]+[Bb]ot[Dd][Aa][Uu]/, '') || this.e.bot.uin
+  async DAUStat(e) {
+    const uin = this.e.msg.replace(/#?[Qq]+[Bb]ot[Dd][Aa][Uu]|#?[Dd][Aa][Uu]/, '') || this.e.bot.uin
     const dau = DAU[uin]
     if (!dau) return false
-    const msg = [
-      `\n上行消息量: ${dau.msg_count}`,
+    let time = moment().format('YYYY-MM-DD')
+    let lasttime = moment().subtract(1, 'days').format('YYYY-MM-DD')
+    let lastdau = await redis.get(`QQBotDAU:${lasttime}:${uin}`)
+    if (lastdau) lastdau = JSON.parse(lastdau)
+    let msg = [
+      `${time}`,
+      `上行消息量: ${dau.msg_count}`,
       `下行消息量: ${dau.send_count}`,
       `上行消息人数: ${dau.user_count}`,
-      `上行消息群数: ${dau.group_count}`
+      `上行消息群数: ${dau.group_count}`,
+      `\n${lasttime}`
     ]
-    e.reply(msg.join('\n'), true)
+    if (lastdau?.msg_count || lastdau?.user_count) {
+      msg = msg.concat([
+        `上行消息量: ${lastdau.msg_count}`,
+        `下行消息量: ${lastdau.send_count}`,
+        `上行消息人数: ${lastdau.user_count}`,
+        `上行消息群数: ${lastdau.group_count}`
+      ])
+    } else msg.push("获取失败")
+    await e.reply(msg.join('\n'), true)
   }
 }
 

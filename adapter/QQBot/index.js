@@ -210,11 +210,12 @@ export default class StartQQBot {
 
     /** 计算发送DAU */
     DAU[this.id].send_count++
-    const time = moment(Date.now()).add(1, "days").format("YYYY-MM-DD 00:00:00")
+    const time = moment(Date.now()).add(2, "days").format("YYYY-MM-DD 00:00:00")
+    let now = moment().format('YYYY-MM-DD')
     const EX = Math.round(
       (new Date(time).getTime() - new Date().getTime()) / 1000
     )
-    redis.set(`QQBotDAU:send_count:${this.id}`, DAU[this.id].send_count * 1, { EX })
+    redis.set(`QQBotDAU:${now}:send_count:${this.id}`, DAU[this.id].send_count * 1, { EX })
   }
 
   /** 发送群消息 */
@@ -234,11 +235,12 @@ export default class StartQQBot {
 
     /** 计算发送DAU */
     DAU[this.id].send_count++
-    const time = moment(Date.now()).add(1, "days").format("YYYY-MM-DD 00:00:00")
+    const time = moment(Date.now()).add(2, "days").format("YYYY-MM-DD 00:00:00")
+    let now = moment().format('YYYY-MM-DD')
     const EX = Math.round(
       (new Date(time).getTime() - new Date().getTime()) / 1000
     )
-    redis.set(`QQBotDAU:send_count:${this.id}`, DAU[this.id].send_count * 1, { EX })
+    redis.set(`QQBotDAU:${now}:send_count:${this.id}`, DAU[this.id].send_count * 1, { EX })
   }
 
   /** 转换格式给云崽处理 */
@@ -305,12 +307,13 @@ export default class StartQQBot {
       DAU[this.id].user_count++
       needSetRedis = true
     }
-    const time = moment(Date.now()).add(1, "days").format("YYYY-MM-DD 00:00:00")
+    const time = moment(Date.now()).add(2, "days").format("YYYY-MM-DD 00:00:00")
+    let now = moment().format('YYYY-MM-DD')
     const EX = Math.round(
       (new Date(time).getTime() - new Date().getTime()) / 1000
     )
-    redis.set(`QQBotDAU:msg_count:${this.id}`, DAU[this.id].msg_count * 1, { EX })
-    if (needSetRedis) redis.set(`QQBotDAU:${this.id}`, JSON.stringify(DAU[this.id]), { EX })
+    redis.set(`QQBotDAU:${now}:msg_count:${this.id}`, DAU[this.id].msg_count * 1, { EX })
+    if (needSetRedis) redis.set(`QQBotDAU:${now}:${this.id}`, JSON.stringify(DAU[this.id]), { EX })
 
     /** 保存消息次数 */
     try { common.recvMsg(e.self_id, e.adapter) } catch { }
@@ -356,9 +359,13 @@ export default class StartQQBot {
         /** 老接口，后续废除 */
         const url = await Bot.uploadFile(file, type)
         common.mark('Lain-plugin', `使用自定义图床发送文件：${url}`)
-        const { width, height } = sizeOf(await Bot.Buffer(file))
+        let image = ""
+        if (type == "image") {
+          const { width, height } = sizeOf(await Bot.Buffer(file))
+          image = { width, height }
+        }
         console.warn('[Bot.uploadFile]接口即将废除!')
-        return { type, file: url, width, height }
+        return { type, file: url, ...image }
       } else if (type === 'image' && Bot?.imageToUrl) {
         /** 新接口 */
         const { width, height, url } = await Bot.imageToUrl(file)
@@ -592,6 +599,7 @@ export default class StartQQBot {
       try { await common.MsgTotal(this.id, 'QQBot', 'image') } catch { }
     } else {
       try { await common.MsgTotal(this.id, 'QQBot') } catch { }
+      message.unshift("\n")
     }
 
     return { message, image, reply }
@@ -648,11 +656,12 @@ export default class StartQQBot {
 
     /** 计算发送时DAU */
     DAU[this.id].send_count++
-    const time = moment(Date.now()).add(1, "days").format("YYYY-MM-DD 00:00:00")
+    const time = moment(Date.now()).add(2, "days").format("YYYY-MM-DD 00:00:00")
+    let now = moment().format('YYYY-MM-DD')
     const EX = Math.round(
       (new Date(time).getTime() - new Date().getTime()) / 1000
     )
-    redis.set(`QQBotDAU:send_count:${this.id}`, DAU[this.id].send_count * 1, { EX })
+    redis.set(`QQBotDAU:${now}:send_count:${this.id}`, DAU[this.id].send_count * 1, { EX })
 
     return res
   }

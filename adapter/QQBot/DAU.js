@@ -1,10 +1,14 @@
+import moment from "moment"
+
+
 /** 查询消息DAU */
 const DAU = {}
 
 async function getDAU(uin) {
-  const msg_count = (await redis.get(`QQBotDAU:msg_count:${uin}`)) || 0
-  const send_count = (await redis.get(`QQBotDAU:send_count:${uin}`)) || 0
-  let data = await redis.get(`QQBotDAU:${uin}`)
+  let time = moment().format('YYYY-MM-DD')
+  const msg_count = (await redis.get(`QQBotDAU:${time}:msg_count:${uin}`)) || 0
+  const send_count = (await redis.get(`QQBotDAU:${time}:send_count:${uin}`)) || 0
+  let data = await redis.get(`QQBotDAU:${time}:${uin}`)
   if (data) {
     data = JSON.parse(data)
     data.msg_count = msg_count
