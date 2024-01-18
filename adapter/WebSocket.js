@@ -1,17 +1,21 @@
-import fs from 'fs'
 import express from 'express'
 import fetch from 'node-fetch'
 import { createServer } from 'http'
-import common from '../model/common.js'
+import common from '../lib/common/common.js'
+import Cfg from '../lib/config/config.js'
 import shamrock from './shamrock/index.js'
 import ComWeChat from './WeChat/index.js'
-import { fileTypeFromBuffer } from 'file-type'
 
-export default class WebSocket {
+class WebSocket {
   constructor () {
-    this.port = Bot.lain.cfg.port
+    this.port = Cfg.port
     this.path = '/Shamrock'
     this.path_wx = '/ComWeChat'
+  }
+
+  /** run! */
+  start () {
+    this.server()
   }
 
   async server () {
@@ -21,6 +25,8 @@ export default class WebSocket {
     Bot.lain.on = new Map()
     /** 微信登录 */
     Bot.lain.loginMap = new Map()
+    /** 临时文件 */
+    Bot.Files = new Map()
     /** 创建Express应用程序 */
     const app = express()
     /** 创建HTTP服务器 */
@@ -45,34 +51,31 @@ export default class WebSocket {
     })
 
     /** QQBotApi */
-    app.get('/api/QQBot', async (req, res) => {
-      const { token, name } = req.query
-      common.mark('QQBotApi', `[收到请求] 访问文件：${name}`)
-      /** 检查令牌有效性 */
-      if (token !== Bot.lain.cfg.QQBotImgToken) return res.status(401).send('令牌无效')
-      const _path = process.cwd() + `/plugins/Lain-plugin/resources/QQBotApi/${name}`
-      if (!fs.existsSync(_path)) return res.status(404).send('啊咧，文件不存在捏')
+    app.get('/api/File', async (req, res) => {
+      const { ip } = req
+      const { token } = req.query
+      /** 收到日志 */
+      logger.mark('[GET请求] ' + logger.blue(`[${token}] <= [${req.get('host')}] <= [${ip}]`))
 
-      /** 图片类型特殊处理 */
-      const type = await fileTypeFromBuffer(fs.readFileSync(_path))
-      if (type && type.mime.startsWith('image')) {
-        res.setHeader('Content-Type', type.mime)
-        res.setHeader('Content-Disposition', 'inline')
-      }
+      try {
+        /** 读 */
+        const File = Bot.Files.get(token)
 
-      /** 返回文件 */
-      res.sendFile(_path, {}, (err) => {
-        if (err) {
-          common.error('QQBotApi', err)
+        /** 缓存有 */
+        if (File) {
+          res.setHeader('Content-Type', File.mime)
+          res.setHeader('Content-Disposition', 'inline')
+          logger.mark('[发送文件] ' + logger.blue(`[${token}] => [${File.md5}] => [${ip}]`))
+          res.send(File.buffer)
         } else {
-          /** 访问后删除文件 */
-          try {
-            setTimeout(() => {
-              if (fs.existsSync(_path)) fs.unlink(_path, (err) => { if (err) common.error('QQBotApi', err) })
-            }, Number(Bot.lain.cfg.QQBotDelFiles) * 100)
-          } catch { }
+          res.status(410).json({ status: 'failed', message: '资源过期' })
+          logger.mark('[请求返回] ' + logger.blue(`[${token}] => [文件已过期] => [${ip}]`))
         }
-      })
+      } catch (error) {
+        res.status(500).json({ status: 'failed', message: '哎呀，报错了捏' })
+        logger.mark('[请求返回] ' + logger.blue(`[${token}] => [服务器内部错误] => [${ip}]`))
+        logger.error(error)
+      }
     })
 
     /** 将WebSocket服务器实例与HTTP服务器关联 */
@@ -121,3 +124,5 @@ export default class WebSocket {
     })
   }
 }
+
+export default new WebSocket()

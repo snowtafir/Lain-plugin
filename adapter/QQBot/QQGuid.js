@@ -3,37 +3,35 @@ import fs from 'fs'
 import sizeOf from 'image-size'
 import lodash from 'lodash'
 import path from 'path'
-import { encode as encodeSilk } from 'silk-wasm'
 import Yaml from 'yaml'
 import MiaoCfg from '../../../../lib/config/config.js'
 import loader from '../../../../lib/plugins/loader.js'
 import common from '../../lib/common/common.js'
 import Cfg from '../../lib/config/config.js'
 import Button from './plugins.js'
+import { faceMap } from '../../model/shamrock/face.js'
 
-export default class adapterQQBot {
+export default class adapterQQGuild {
   /** 传入基本配置 */
-  constructor (sdk, start) {
-    /** 开发者id */
-    this.id = String(sdk.config.appid)
+  constructor (sdk) {
     /** sdk */
     this.sdk = sdk
     /** 基本配置 */
     this.config = sdk.config
+    /** 开发者id */
+    this.id = `qg_${this.config.appid}`
     /** 监听事件 */
-    if (!start) this.StartBot()
+    this.StartBot()
   }
 
   async StartBot () {
-    /** 群消息 */
-    this.sdk.on('message.group', async (data) => {
-      data = await this.message(data, true)
-      if (data) Bot.emit('message', data)
+    // 频道被动回复
+    this.sdk.on('message.guild', async (data) => {
+      Bot.emit('message', await this.GroupMessage(data))
     })
-    /** 私聊消息 */
-    this.sdk.on('message.private', async (data) => {
-      data = await this.message(data, true)
-      if (data) Bot.emit('message', data)
+    // 频道私信被动回复
+    this.sdk.on('message.direct', (data) => {
+      console.log(data)
     })
 
     const { id, avatar, username } = await this.sdk.getSelfInfo()
@@ -43,7 +41,7 @@ export default class adapterQQBot {
       config: this.config,
       bkn: 0,
       avatar,
-      adapter: 'QQBot',
+      adapter: 'QQGuild',
       uin: this.id,
       tiny_id: id,
       fl: new Map(),
@@ -53,13 +51,13 @@ export default class adapterQQBot {
       guilds: new Map(),
       nickname: username,
       stat: { start_time: Date.now() / 1000, recv_msg_cnt: 0 },
-      apk: Bot.lain.adapter.QQBot.apk,
-      version: Bot.lain.adapter.QQBot.version,
+      apk: Bot.lain.adapter.QQGuild.apk,
+      version: Bot.lain.adapter.QQGuild.version,
       getFriendMap: () => Bot[this.id].fl,
       getGroupList: () => Bot[this.id].gl,
       getGuildList: () => Bot[this.id].tl,
-      readMsg: async () => common.recvMsg(this.id, 'QQBot', true),
-      MsgTotal: async (type) => common.MsgTotal(this.id, 'QQBot', type, true),
+      readMsg: async () => common.recvMsg(this.id, 'QQGuild', true),
+      MsgTotal: async (type) => common.MsgTotal(this.id, 'QQGuild', type, true),
       pickGroup: (groupID) => this.pickGroup(groupID),
       pickUser: (userId) => this.pickFriend(userId),
       pickFriend: (userId) => this.pickFriend(userId),
@@ -67,14 +65,14 @@ export default class adapterQQBot {
       getGroupMemberInfo: (group_id, user_id) => Bot.getGroupMemberInfo(group_id, user_id)
     }
     /** 加载缓存中的群列表 */
-    this.gmlList('gl')
+    // this.gmlList('gl')
     /** 加载缓存中的好友列表 */
-    this.gmlList('fl')
+    // this.gmlList('fl')
     /** 保存id到adapter */
     if (!Bot.adapter.includes(String(this.id))) Bot.adapter.push(String(this.id))
 
     /** 重启 */
-    await common.init('Lain:restart:QQBot')
+    await common.init('Lain:restart:QQGuild')
     return `QQBot：[${username}(${this.id})] 连接成功!`
   }
 
@@ -91,6 +89,100 @@ export default class adapterQQBot {
         }
       })
     } catch { }
+  }
+
+  async GroupMessage (e) {
+    // let { self_id: tinyId, ...e } = data
+    let { self_id: _tiny_id, bot: _bot, ...data } = e
+    const { guild_id, channel_id, member, author, src_guild_id } = e
+    const { id: userId, username: nickname, avatar } = author
+
+    const group_id = `qg_${guild_id}-${channel_id}`
+    const user_id = `qg_${userId}`
+
+    const is_owner = member.roles && (member.roles.includes('4') || false)
+    const is_admin = member.roles && (member.roles.includes('2') || false)
+    const role = is_owner ? 'owner' : (is_admin ? 'admin' : 'member')
+    const group_name = await this.getGroupName(src_guild_id || guild_id, channel_id, '')
+
+    data.data = e
+    data.user_id = user_id
+    data.group_id = group_id
+    data.message_type = 'group'
+    data.sub_type = 'normal'
+    data.time = data.timestamp
+    data.atme = false
+    data.atall = false
+    data.self_id = this.id
+    /** 这些字段还需要补充 */
+    data.group_name = group_name
+    data.group = {}
+    data.sender = {
+      ...data.sender,
+      user_id,
+      nickname,
+      sub_id: 0,
+      card: '',
+      sex: 'unknown',
+      age: 0,
+      area: '',
+      level: 1,
+      role,
+      title: ''
+    }
+    data.member = {
+      card: '', // 名片
+      client: '', // 客户端对象
+      dm: false, // 是否是私聊
+      group: {}, // 群对象
+      group_id, // 群号
+      info: { ...data.sender }, // 群员资料
+      is_admin, // 是否是管理员
+      is_friend: false, // 是否是好友
+      is_owner, // 是否是群主
+      mute_left: 0, // 禁言剩余时间
+      target: user_id, // 目标
+      title: '', // 头衔
+      user_id, // 用户ID
+      getAvatarUrl: () => avatar,
+      kick: async () => await this.kick(),
+      mute: async () => await this.mute(),
+      recallMsg: async () => await this.recallMsg(),
+      sendMsg: async () => await this.sendMsg(),
+      setAdmin: async () => await this.setAdmin()
+    }
+    const { message, raw_message, log_message, ToString } = await this.getMessage(data.message)
+    data.message = message
+    data.raw_message = raw_message
+    data.toString = () => ToString
+    lain.info(this.id, `<频道:${group_name}(${group_id})><用户:${nickname}(${user_id})> <= ${log_message}`)
+    data.reply = async (msg) => await data.data.reply(msg)
+    return data
+  }
+
+  /** 获取群名称 */
+  async getGroupName (guildId, channelId, friend) {
+    const group_id = `qg_${guildId}-${channelId}`
+    let group_name = Bot.gl.get(group_id)
+    if (group_name) return group_name.group_name
+    const guild = await this.sdk.getGuildInfo(guildId)
+    group_name = guild.guild_name
+    if (friend) {
+      group_name = `来自"${group_name}"频道`
+
+      /** 一个子频道为一个群 */
+      Bot.gl.set(group_id, { group_name })
+      Bot[this.id].gl.set(group_id, { group_name })
+    } else {
+      let data = await this.sdk.getChannelInfo(channelId)
+      group_name = `${group_name}-${data.channel_name}`
+
+      /** 一个子频道为一个群 */
+      Bot.gl.set(group_id, { ...data, group_name })
+      Bot[this.id].gl.set(group_id, { ...data, group_name })
+    }
+
+    return group_name
   }
 
   /** 群对象 */
@@ -140,22 +232,69 @@ export default class adapterQQBot {
     }
   }
 
-  member (groupId, userId) {
-    const member = {
-      info: {
-        group_id: `${this.id}-${groupId}`,
-        user_id: `${this.id}-${userId}`,
-        nickname: '',
-        last_sent_time: ''
-      },
-      group_id: `${this.id}-${groupId}`,
-      is_admin: false,
-      is_owner: false,
-      /** 获取头像 */
-      getAvatarUrl: (size = 0) => `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${userId}`,
-      mute: async (time) => ''
-    }
-    return member
+  /** 处理消息事件 */
+  async getMessage (data) {
+    const message = []
+    const ToString = []
+    const raw_message = []
+    const log_message = []
+
+    data.forEach(i => {
+      switch (i.type) {
+        case 'text':
+          message.push(i)
+          raw_message.push(i.text)
+          log_message.push(i.text)
+          ToString.push(i.text)
+          break
+        case 'image':
+          message.push(i)
+          raw_message.push('[图片]')
+          log_message.push(`<图片:${i.url}>`)
+          ToString.push(`{image:${i.url}}`)
+          break
+        case 'face':
+          message.push(i)
+          raw_message.push(`[${faceMap[Number(i)] || '动画表情'}]`)
+          log_message.push(`<${faceMap[Number(i)] || `动画表情:${i}`}>`)
+          ToString.push(`{face:${i}}`)
+          break
+        case 'link':
+          message.push(i)
+          raw_message.push('[link]')
+          log_message.push(`<link:${i.channel_id}>`)
+          ToString.push(`{link:${i.channel_id}}`)
+          break
+        case 'at':
+          message.push({ ...i, qq: `qg_${i.user_id}`, text: i.username })
+          raw_message.push(`@${i.username}`)
+          log_message.push(`<提及:qg_${i.user_id}(${i.username})>`)
+          ToString.push(`{at:qg_${i.user_id}}`)
+          break
+        case 'markdown':
+          raw_message.push('[markdown]')
+          log_message.push(`<markdown:${JSON.stringify(i)}>`)
+          ToString.push(`{markdown:${JSON.stringify(i)}}`)
+          break
+        case 'button':
+          raw_message.push('[按钮]')
+          log_message.push(`<按钮:${JSON.stringify(i?.buttons || i)}>`)
+          ToString.push(`{button:${JSON.stringify(i?.buttons || i)}}`)
+          break
+        case 'ark':
+          raw_message.push(JSON.stringify(i))
+          log_message.push(`<ark:${JSON.stringify(i)}>`)
+          ToString.push(JSON.stringify(i))
+          break
+        default:
+          raw_message.push(JSON.stringify(i))
+          log_message.push(JSON.stringify(i))
+          ToString.push(JSON.stringify(i))
+          break
+      }
+    })
+
+    return { message, raw_message: raw_message.join(''), log_message: log_message.join(''), ToString: ToString.join('') }
   }
 
   /** 转换格式给云崽处理 */
@@ -225,7 +364,7 @@ export default class adapterQQBot {
     }
 
     /** 添加适配器标识 */
-    e.adapter = 'QQBot'
+    e.adapter = 'QQGuild'
     e.user_id = `${this.id}-${e.user_id}`
     e.group_id = `${this.id}-${e.group_id}`
     e.author.id = `${this.id}-${e.author.id}`
@@ -239,7 +378,7 @@ export default class adapterQQBot {
 
     /** 保存消息次数 */
     try { common.recvMsg(e.self_id, e.adapter) } catch { }
-    common.info(this.id, `<群:${e.group_id}><用户:${e.user_id}> => ${this.messageLog(e.message)}`)
+    common.info(this.id, `<频道:${e.group_id}><用户:${e.user_id}> <= ${this.messageLog(e.message)}`)
     return e
   }
 
@@ -324,7 +463,7 @@ export default class adapterQQBot {
   /** 小兔崽子 */
   async QQBotTips (data, groupId) {
     /** 首次进群后，推送防司马崽声明~ */
-    if (!await redis.get(`lain:QQBot:tips:${groupId}`)) {
+    if (!await redis.get(`lain:QQGuild:tips:${groupId}`)) {
       const msg = []
       const name = `「${Bot[this.id].nickname}」`
       msg.push('温馨提示：')
@@ -334,7 +473,7 @@ export default class adapterQQBot {
       msg.push('来自：Lain-plugin防倒卖崽提示，本提示仅在首次入群后触发~')
       if (Bot.lain.cfg.QQBotGroupId) msg.push(`\n如有疑问，请添加${name}官方群: ${Bot.lain.cfg.QQBotGroupId}~`)
       data.reply(msg.join('\n'))
-      redis.set(`lain:QQBot:tips:${groupId}`, JSON.stringify({ group_id: groupId }))
+      redis.set(`lain:QQGuild:tips:${groupId}`, JSON.stringify({ group_id: groupId }))
     }
   }
 
@@ -412,8 +551,8 @@ export default class adapterQQBot {
     }
 
     /** 消息次数 */
-    if (text.length) try { common.MsgTotal(this.id, 'QQBot') } catch { }
-    if (image.length) try { common.MsgTotal(this.id, 'QQBot', 'image') } catch { }
+    if (text.length) try { common.MsgTotal(this.id, 'QQGuild') } catch { }
+    if (image.length) try { common.MsgTotal(this.id, 'QQGuild', 'image') } catch { }
 
     switch (e.bot.config.markdown.type) {
       /** 关闭 */
@@ -705,7 +844,7 @@ export default class adapterQQBot {
     let e = {
       bot: Bot[this.id],
       group_id: groupID,
-      user_id: 'QQBot',
+      user_id: 'QQGuild',
       message: common.array(data)
     }
 

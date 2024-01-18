@@ -1,9 +1,5 @@
-import fs from 'fs'
-import path from 'path'
-import fetch from 'node-fetch'
 import api from './api.js'
-import common from '../../model/common.js'
-import { fileTypeFromBuffer } from 'file-type'
+import common from '../../lib/common/common.js'
 
 export default class SendMsg {
   /** 传入基本配置 */
@@ -57,10 +53,9 @@ export default class SendMsg {
             type: 'wx.emoji',
             data: { file_id: i.text }
           })
+          break
         case 'file':
-          break
         case 'record':
-          break
         case 'video':
           break
         case 'image':
@@ -96,7 +91,7 @@ export default class SendMsg {
     /** 发送图片 */
     if (ArrImg.length > 0) {
       res = await api.send_message(this.detail_type, this.group_id || this.user_id, ArrImg)
-      try { await common.MsgTotal(this.id, 'ComWeChat', 'image') } catch { }
+      try { common.MsgTotal(this.id, 'ComWeChat', 'image') } catch { }
     }
     return res
   }
@@ -107,46 +102,8 @@ export default class SendMsg {
     let type = 'data'
     let file = i.file
 
-    /** 特殊格式？... */
-    if (i.file?.type === 'Buffer') {
-      file = `base64://${Buffer.from(i.file.data).toString('base64')}`
-    }
-    /** 将二进制的base64转字符串 防止报错 */
-    else if (i.file instanceof Uint8Array) {
-      file = `base64://${Buffer.from(i.file).toString('base64')}`
-    }
-    /** 天知道从哪里蹦出来的... */
-    else if (i.file instanceof fs.ReadStream) {
-      file = `./${i.file.path}`
-    }
-    /** 去掉本地图片的前缀 */
-    else if (typeof i.file === 'string') {
-      file = i.file.replace(/^file:\/\//, '') || i.url
-      if (fs.existsSync(i.file.replace(/^file:\/\//, ''))) {
-        file = i.file.replace(/^file:\/\//, '')
-      } else if (fs.existsSync(i.file.replace(/^file:\/\/\//, ''))) {
-        file = i.file.replace(/^file:\/\/\//, '')
-      }
-    }
-
-    /** 本地文件 */
-    if (fs.existsSync(file)) {
-      name = path.basename(file)
-      file = fs.readFileSync(file).toString('base64')
-    }
-    /** base64 */
-    else if (/^base64:\/\//.test(file)) {
-      file = file.replace(/^base64:\/\//, '')
-      name = `${Date.now()}.${(await fileTypeFromBuffer(Buffer.from(file, 'base64'))).ext}`
-    }
-    /** url图片 */
-    else if (/^http(s)?:\/\//.test(file)) {
-      file = Buffer.from(await (await fetch(file)).arrayBuffer()).toString('base64')
-      name = `${Date.now()}.${(await fileTypeFromBuffer(Buffer.from(file, 'base64'))).ext}`
-    } else {
-      common.error(this.id, i)
-      return { type: 'text', data: { text: JSON.stringify(i) } }
-    }
+    file = await Bot.FormatFile(i.url || i.file)
+    file = await Bot.Base64(file)
 
     /** 上传文件 获取文件id */
     let file_id

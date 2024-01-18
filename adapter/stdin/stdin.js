@@ -1,6 +1,7 @@
 import fs from 'fs'
 import { createInterface } from 'readline'
-import common from '../../model/common.js'
+import common from '../../lib/common/common.js'
+import Cfg from '../../lib/config/config.js'
 const uin = 'stdin'
 
 export default async function stdin () {
@@ -18,8 +19,8 @@ export default async function stdin () {
     guilds: new Map(),
     id: uin,
     uin,
-    name: Bot.lain.cfg.stdin_nickname,
-    nickname: Bot.lain.cfg.stdin_nickname,
+    name: Cfg.Stdin.name,
+    nickname: Cfg.Stdin.name,
     avatar: `../../../../../plugins/Lain-plugin/resources/${avatar}`,
     stat: { start_time: Date.now() / 1000 },
     version: Bot.lain.adapter.stdin.version,
@@ -71,8 +72,8 @@ function msg (msg) {
   }
   /** 用户个人信息 */
   e.sender = {
-    card: Bot.lain.cfg.stdin_nickname,
-    nickname: Bot.lain.cfg.stdin_nickname,
+    card: Cfg.Stdin.name,
+    nickname: Cfg.Stdin.name,
     role: '',
     user_id
   }
@@ -81,7 +82,7 @@ function msg (msg) {
   const member = {
     info: {
       user_id,
-      nickname: Bot.lain.cfg.stdin_nickname,
+      nickname: Cfg.Stdin.name,
       last_sent_time: time
     },
     /** 获取头像 */
@@ -147,3 +148,5 @@ async function sendMsg (msg) {
   try { await common.MsgTotal(this.id, 'stdin') } catch { }
   return common.info(uin, `发送消息：${log.join('\n')}`)
 }
+
+common.info('Lain-plugin', '标准输入适配器加载完成')

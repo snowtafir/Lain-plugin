@@ -1,10 +1,12 @@
-// 提供全局变量供外部调用
-import crypto from 'crypto'
-import fs from 'fs'
-import get_urls from 'get-urls'
 import sizeOf from 'image-size'
+import QrCode from 'qrcode'
+import get_urls from 'get-urls'
+import fs from 'fs'
 import fetch from 'node-fetch'
-import common from '../../model/common.js'
+import crypto from 'crypto'
+import common from '../../lib/common/common.js'
+import Cfg from '../../lib/config/config.js'
+import { fileTypeFromBuffer } from 'file-type'
 
 /**
 * 传入文件，返回Buffer
@@ -137,18 +139,61 @@ Bot.uploadQQ = async function (file, uin = Bot.uin) {
 *   - {string} md5 - 文件的MD5哈希值
 */
 Bot.FileToUrl = async function (file, type = 'image') {
+  /** 转为buffer */
   const buffer = await Bot.Buffer(file)
-  const time = `${Date.now()}.${type === 'image' ? 'jpg' : (type === 'audio' ? 'mp3' : 'mp4')}`
-  fs.writeFileSync(process.cwd() + `/plugins/Lain-plugin/resources/QQBotApi/${time}`, buffer)
-
-  let width = 0
-  let height = 0
-  if (type === 'image') ({ width, height } = sizeOf(buffer))
-
-  const { port, QQBotImgIP, QQBotPort, QQBotImgToken } = Bot.lain.cfg
-  const url = `http://${QQBotImgIP}:${QQBotPort || port}/api/QQBot?token=${QQBotImgToken}&name=${time}`
+  /** 生成随机token */
+  const token = crypto.randomUUID()
+  /** 算下md5 */
   const md5 = crypto.createHash('md5').update(buffer).digest('hex').toUpperCase()
-  return { width, height, url, md5 }
+  /** 计算大小 */
+  const size = Buffer.byteLength(buffer) / 1024
+
+  let File = {
+    md5,
+    type,
+    token,
+    width: 0,
+    height: 0,
+    size,
+    buffer
+  }
+
+  /** 图片需要计算多两个参数 */
+  if (type === 'image') {
+    const { width, height } = sizeOf(buffer)
+    File.width = width
+    File.height = height
+  }
+
+  /** 语音类型 */
+  if (type === 'audio') {
+    File.mime = 'audio/silk'
+    File.type = 'silk'
+  } else {
+    /** 其他类型 */
+    try {
+      const { mime, ext } = await fileTypeFromBuffer(buffer)
+      File.mime = mime
+      File.type = ext
+    } catch (error) {
+      logger.error('未知类型：', error)
+      File.mime = 'application/octet-stream'
+      File.type = 'txt'
+    }
+  }
+
+  /** 保存 */
+  Bot.Files.set(token, File)
+  /** 定时删除 */
+  setTimeout(() => {
+    Bot.Files.delete(token)
+    logger.debug(`[缓存清理] => [token：${token}]`)
+  }, (Cfg.bot.ExpirationTime || 30) * 1000)
+  /** 获取基本配置 */
+  const { port, baseIP, baseUrl } = Cfg.Server
+  let url = `http://${baseIP}:${port}/api/File?token=${token}`
+  if (baseUrl) url = baseUrl.replace(/\/$/, '') + `/api/File?token=${token}`
+  return { width: File.width, height: File.height, url, md5 }
 }
 
 /**
@@ -220,11 +265,46 @@ Bot.toType = function (i) {
 }
 
 /**
+* 处理segment中的i.file，主要用于一些sb字段，标准化他们
+* @param file - i.file
+*/
+Bot.FormatFile = async function (file) {
+  switch (typeof file) {
+    case 'object':
+      /** 这里会有复读这样的直接原样不动把message发过来... */
+      if (file.url) {
+        if (file?.url?.includes('gchat.qpic.cn') && !file?.url?.startsWith('https://')) return `https://${file.url}`
+        return file.url
+      }
+
+      /** 老插件渲染出来的图有这个字段 */
+      if (file?.type === 'Buffer') return Buffer.from(file?.data)
+      if (Buffer.isBuffer(file) || file instanceof Uint8Array) return file
+
+      /** 流 */
+      if (file instanceof fs.ReadStream) return await Bot.Stream(file, { base: true })
+      return file
+    case 'string':
+      if (fs.existsSync(file.replace(/^file:\/\//, ''))) {
+        return file
+      } else if (fs.existsSync(file.replace(/^file:\/\/\//, ''))) {
+        return file.replace(/^file:\/\/\//, 'file://')
+      } else if (fs.existsSync(file)) {
+        return `file://${file}`
+      }
+      return file
+    default:
+      return file
+  }
+}
+
+/**
 * 传入字符串 提取url 返回数组
 * @param {string} url 传入字符串，提取出所有url
 * @param {array} exclude - 可选，需使用请传入数组，数组内为排除的url，即不返回数组内相近的url
 */
 Bot.getUrls = function (url, exclude = []) {
+  if (!Array.isArray(exclude)) exclude = [exclude]
   let urls = []
   /** 中文不符合url规范 */
   url = url.replace(/[\u4e00-\u9fa5]/g, '|')
@@ -248,4 +328,81 @@ Bot.getUrls = function (url, exclude = []) {
     removeTrailingSlash: false
   })
   return [...urls]
+}
+
+/**
+ * 快速生成md模板按钮
+ * @param {array} list
+ * @param {number} line 每行显示的按钮个数，默认3
+ *
+ * 举例：
+ * list =[
+      { label: '再来一题', data: '随机一题' },
+      { label: '查看题解' },
+      { label: '今日一题', data: '今日一题', enter: true },
+      { label: '今日一题', data: '今日一题', permission: { type:1, specify_user_ids:[] } }
+    ]
+ */
+Bot.Button = function (list, line = 3) {
+  let button = []
+  let arr = []
+  let index = 1
+  for (const i of list) {
+    arr.push({
+      id: String(Date.now()),
+      render_data: {
+        label: i.label,
+        style: i.style || 1
+      },
+      action: {
+        type: i.type || 2,
+        permission: i.permission || { type: 2 },
+        data: i.data || i.label,
+        enter: i.enter || false,
+        unsupport_tips: '暂不支持~'
+      }
+    })
+    if (index % line == 0 || index == list.length) {
+      button.push({
+        type: 'button',
+        buttons: arr
+      })
+      arr = []
+    }
+    index++
+  }
+  return button
+}
+
+/** 转换文本中的URL为图片 */
+Bot.HandleURL = async function (msg) {
+  const message = []
+  if (msg?.text) msg = msg.text
+  /** 需要处理的url */
+  let urls = Bot.getUrls(msg, Cfg.WhiteLink)
+
+  let promises = urls.map(link => {
+    return new Promise((resolve, reject) => {
+      common.mark('Lain-plugin', `url替换：${link}`)
+      QrCode.toBuffer(link, {
+        errorCorrectionLevel: 'H',
+        type: 'png',
+        margin: 4,
+        text: link
+      }, async (err, buffer) => {
+        if (err) reject(err)
+        const base64 = 'base64://' + buffer.toString('base64')
+        const file = await common.Rending({ base64, link }, 'QRCode/QRCode')
+        message.push({ type: 'image', file })
+        msg = msg.replace(link, '[链接(请扫码查看)]')
+        msg = msg.replace(link.replace(/^http:\/\//g, ''), '[链接(请扫码查看)]')
+        msg = msg.replace(link.replace(/^https:\/\//g, ''), '[链接(请扫码查看)]')
+        resolve()
+      })
+    })
+  })
+
+  await Promise.all(promises)
+  message.unshift({ type: 'text', text: msg })
+  return message
 }

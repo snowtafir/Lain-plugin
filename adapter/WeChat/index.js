@@ -1,18 +1,17 @@
 import { WebSocketServer } from 'ws'
 import api from './api.js'
 import SendMsg from './sendMsg.js'
-import e from './message.js'
-import common from '../../model/common.js'
+import GetMessage from './message.js'
+import common from '../../lib/common/common.js'
 import PluginsLoader from '../../../../lib/plugins/loader.js'
+import Cfg from '../../lib/config/config.js'
 
 class WeChat {
   /** 传入基本配置 */
   constructor () {
-    const { port, path } = Bot.lain.cfg
+    const port = Cfg.port
     /** 端口 */
     this.port = port
-    /** 路径 */
-    this.path = path
     /** bot名称 */
     this.id = 'ComWeChat'
   }
@@ -32,7 +31,7 @@ class WeChat {
   }
 
   async message (data) {
-    const { detail_type, interval, group_id, user_id, message, version } = data
+    const { detail_type, interval, group_id, user_id, version } = data
     if (!detail_type) return
 
     const eventHandler = {
@@ -57,21 +56,21 @@ class WeChat {
       group: async () => {
         common.info(this.id, `群消息：[${group_id}，${user_id}] ${data.alt_message}`)
         /** 转换消息 交由云崽处理 */
-        await Bot.emit('message', await (new e(this.id)).msg(data))
+        await Bot.emit('message', await (new GetMessage(this.id)).msg(data))
       },
 
       /** 好友消息 */
       private: async () => {
         common.info(this.id, `好友消息：[${user_id}] ${data.alt_message}`)
         /** 转换消息 交由云崽处理 */
-        await Bot.emit('message', await (new e(this.id)).msg(data))
+        await Bot.emit('message', await (new GetMessage(this.id)).msg(data))
       },
 
       /** 好友申请 */
       'wx.friend_request': async () => {
         common.info(this.id, '好友申请：' + `用户 ${data.user_id} 请求添加好友 请求理由：${data.content}`)
         /** 通过好友申请 */
-        if (Bot.lain.cfg.autoFriend == 1) {
+        if (Cfg.Other.ComWeChat.autoFriend == 1) {
           api.accept_friend(data.v3, data.v4)
           common.info(this.id, `已通过用户 ${data.user_id} 的好友申请`)
         }
@@ -111,14 +110,14 @@ class WeChat {
       'wx.get_private_poke': async () => {
         common.info(this.id, `好友消息：${data.from_user_id} 拍了拍 ${data.user_id}`)
         /** 转换消息 交由云崽处理 */
-        PluginsLoader.deal(await (new e(this.id)).msg(data))
+        PluginsLoader.deal(await (new GetMessage(this.id)).msg(data))
       },
 
       /** 群聊拍一拍 */
       'wx.get_group_poke': async () => {
         common.info(this.id, `群消息：${data.from_user_id} 拍了拍 ${data.user_id}`)
         /** 转换消息 交由云崽处理 */
-        PluginsLoader.deal(await (new e(this.id)).msg(data))
+        PluginsLoader.deal(await (new GetMessage(this.id)).msg(data))
       },
 
       /** 好友收到名片 */
@@ -164,7 +163,7 @@ class WeChat {
       id: this.id,
       name: botCfg.user_name,
       uin: this.id,
-      nickname: Bot.lain.cfg.name || botCfg.user_name,
+      nickname: Cfg.Other.ComWeChat.name || botCfg.user_name,
       avatar: botCfg?.['wx.avatar'],
       stat: { start_time: Date.now() / 1000, recv_msg_cnt: 0 },
       apk: Bot.lain.adapter.ComWeChat.apk,
@@ -317,3 +316,5 @@ ComWeChat.on('error', async error => {
 })
 
 export default ComWeChat
+
+common.info('Lain-plugin', 'ComWeChat适配器加载完成')

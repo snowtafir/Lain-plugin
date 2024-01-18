@@ -1,5 +1,3 @@
-`请给予机器人基础的权限...什么权限都没有的发个鬼消息啊= =`
-
  ![Visitor Count](https://profile-counter.glitch.me/Zyy955-Lain-plugin/count.svg)
 
 # 请勿轻信任何人的出售官方Bot，吃相别太难看。
@@ -35,8 +33,6 @@
 
 是否私域：`是`
 
-移除at：`是`
-
 AppID(机器人ID)：`123456789`
 
 Token(机器人令牌)：`abcdefghijklmnopqrstuvwxyz123456`
@@ -44,14 +40,19 @@ Token(机器人令牌)：`abcdefghijklmnopqrstuvwxyz123456`
 AppSecret(机器人密钥)：`abcdefghijklmnopqrstuvwxyz`
 
 
+- 3个指令，3选1
+- `#QQBot设置`  => 同时接频道、群
+- `#QQ群设置`   => 只连接群
+- `QQ频道设置`  => 只连接频道
+
 添加机器人：
 ```
-#QQ群设置 0:1:1:123456789:abcdefghijklmnopqrstuvwxyz123456:abcdefghijklmnopqrstuvwxyz
+#QQ群设置 0:1:123456789:abcdefghijklmnopqrstuvwxyz123456:abcdefghijklmnopqrstuvwxyz
 ```
 
 删除机器人：
 ```
-#QQ群设置 0:1:1:123456789:abcdefghijklmnopqrstuvwxyz123456:abcdefghijklmnopqrstuvwxyz
+#QQ群设置 0:1:123456789:abcdefghijklmnopqrstuvwxyz123456:abcdefghijklmnopqrstuvwxyz
 ```
 
 </details>
@@ -135,14 +136,14 @@ Bot.imageToUrl = async (file) => {
 
 <details><summary>Markdown 消息</summary>
 
-支持自定义全局模板名称，打开配置文件自行配置，`./plugins/Lain-plugin/config/config.yaml`
+支持自定义全局模板名称，打开配置文件自行配置，`./plugins/Lain-plugin/config/config/token.yaml`
 
 配置后无需申请通用模板，经测试，只需要一个图文模板即可使用全局md。
 
 随后执行`#QQ群设置MD 机器人ID:模板ID`。
 
 ```
-# QQBot全局md模板，需要使用#QQ群设置MD...设置id启用
+可自定义
 QQBotMD:
   # 图片模板宽高 key名称
   ImageSize:
@@ -167,12 +168,12 @@ Markdown 源码：
 ```
 
 配置模板参数
-| 模板参数 | 参数示例 |
-| - | - |
-| text_start | 开头文字 |
-| img_dec | 图片 |
-| img_url | https://qqminiapp.cdn-go.cn/open-platform/11d80dc9/img/robot.b167c62c.png |
-| text_end | 结束文字 | 
+| 模板参数   | 参数示例                                                                  |
+| ---------- | ------------------------------------------------------------------------- |
+| text_start | 开头文字                                                                  |
+| img_dec    | 图片                                                                      |
+| img_url    | https://qqminiapp.cdn-go.cn/open-platform/11d80dc9/img/robot.b167c62c.png |
+| text_end   | 结束文字                                                                  |
 
 保存 → 提交审核 → 审核完成后，输入 `#QQ群设置MD 机器人ID:模板ID`
 

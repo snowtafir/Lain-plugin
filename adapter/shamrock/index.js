@@ -1,7 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import { WebSocketServer } from 'ws'
-import common from '../../model/common.js'
+import common from '../../lib/common/common.js'
 import api from './api.js'
 import { faceMap, pokeMap } from '../../model/shamrock/face.js'
 
@@ -89,7 +89,7 @@ class Shamrock {
           Bot.gl.set(data.group_id, group)
           Bot[this.id].gl.set(data.group_id, group)
           // 加载或刷新该群的群成员列表
-          await Bot[this.id]._loadGroupMemberList(data.group_id, this.id)
+          this.loadGroupMemberList(data.group_id)
         }
       }
     })().catch(common.error)
@@ -97,6 +97,10 @@ class Shamrock {
       case 'group_recall':
         data.notice_type = 'group'
         data.sub_type = 'recall'
+        try {
+          let gl = Bot[this.id].gl.get(data.group_id)
+          data = { ...data, ...gl }
+        } catch { }
         if (data.operator_id === data.user_id) {
           common.info(this.id, `群消息撤回：[${data.group_id}，${data.user_id}] ${data.message_id}`)
         } else {
@@ -121,7 +125,7 @@ class Shamrock {
             }
           }
         }
-        break
+        return await Bot.emit('notice.group', await this.ICQQEvent(data))
       }
       case 'group_decrease': {
         data.notice_type = 'group'
@@ -140,7 +144,7 @@ class Shamrock {
             ? `成员[${data.user_id}]被[${data.operator_id}]踢出群聊：[${data.group_id}}]`
             : `成员[${data.user_id}]退出群聊[${data.group_id}}]`)
         }
-        break
+        return await Bot.emit('notice.group', await this.ICQQEvent(data))
       }
       case 'group_admin': {
         data.notice_type = 'group'
@@ -170,7 +174,7 @@ class Shamrock {
           }
           Bot[this.id].gml.set(data.group_id, { ...gml })
         }
-        break
+        return await Bot.emit('notice.group', await this.ICQQEvent(data))
       }
       case 'group_ban': {
         data.notice_type = 'group'
@@ -190,8 +194,8 @@ class Shamrock {
             : `成员[${data.target_id}]在群[${data.group_id}]被禁言${data.duration}秒`)
         }
         // 异步加载或刷新该群的群成员列表以更新禁言时长
-        Bot[this.id]._loadGroupMemberList(data.group_id, this.id)
-        break
+        this.loadGroupMemberList(data.group_id)
+        return await Bot.emit('notice.group', await this.ICQQEvent(data))
       }
       case 'notify':
         switch (data.sub_type) {
@@ -231,8 +235,17 @@ class Shamrock {
         user.card = data.card_new
         gml[data.user_id] = user
         Bot[this.id].gml.set(data.group_id, gml)
-        break
+        return await Bot.emit('notice.group', await this.ICQQEvent(data))
       }
+      case 'friend_recall':
+        data.sub_type = 'recall'
+        data.notice_type = 'friend'
+        try {
+          let fl = Bot[this.id].fl.get(data.user_id)
+          data = { ...data, ...fl }
+        } catch { }
+        common.info(this.id, `好友消息撤回：[${data.user_name}(${data.user_id})] ${data.message_id}`)
+        return await Bot.emit('notice.friend', await this.ICQQEvent(data))
       default:
     }
     return await Bot.emit('notice', await this.ICQQEvent(data))
@@ -244,6 +257,13 @@ class Shamrock {
     switch (data.request_type) {
       case 'group': {
         data.tips = data.comment
+        try {
+          let gl = Bot[this.id].gl.get(data.group_id)
+          let fl = await Bot[this.id].api.get_stranger_info(Number(data.user_id))
+          data = { ...data, ...gl, ...fl }
+          data.group_id = Number(data.group_id)
+          data.user_id = Number(data.user_id)
+        } catch { }
         if (data.sub_type === 'add') {
           common.info(this.id, `[${data.user_id}]申请入群[${data.group_id}]: ${data.tips}`)
         } else {
@@ -262,6 +282,13 @@ class Shamrock {
     switch (data.request_type) {
       case 'group': {
         data.tips = data.comment
+        try {
+          let gl = Bot[this.id].gl.get(data.group_id)
+          let fl = await Bot[this.id].api.get_stranger_info(Number(data.user_id))
+          data = { ...data, ...gl, ...fl }
+          data.group_id = Number(data.group_id)
+          data.user_id = Number(data.user_id)
+        } catch { }
         if (data.sub_type === 'add') {
           common.info(this.id, `[${data.user_id}]申请入群[${data.group_id}]: ${data.tips}`)
         } else {
@@ -272,6 +299,11 @@ class Shamrock {
       }
       case 'friend': {
         data.sub_type = 'add'
+        try {
+          let fl = await Bot[this.id].api.get_stranger_info(Number(data.user_id))
+          data = { ...data, ...fl }
+          data.user_id = Number(data.user_id)
+        } catch { }
         common.info(this.id, `[${data.user_id}]申请加机器人[${this.id}]好友: ${data.comment}`)
         break
       }
@@ -312,13 +344,13 @@ class Shamrock {
       getGroupList: () => Bot[this.id].gl,
       getGuildList: () => Bot[this.id].tl,
       getMuteList: async (group_id) => await this.getMuteList(group_id),
-      getChannelList: async (guild_id) => await this.getChannelList(guild_id),
+      getChannelList: async (guild_id) => this.getChannelList(guild_id),
       _loadGroup: this.loadGroup,
       _loadGroupMemberList: this.loadGroupMemberList,
       _loadFriendList: this.loadFriendList,
       _loadAll: this.LoadAll,
-      readMsg: async () => await common.recvMsg(this.id, 'shamrock', true),
-      MsgTotal: async (type) => await common.MsgTotal(this.id, 'shamrock', type, true),
+      readMsg: async () => common.recvMsg(this.id, 'shamrock', true),
+      MsgTotal: async (type) => common.MsgTotal(this.id, 'shamrock', type, true),
       api: new Proxy(api, {
         get: (target, prop) => {
           try {
@@ -556,6 +588,7 @@ class Shamrock {
        * @return {Promise<Awaited<unknown>[]>}
        */
       getChatHistory: async (msg_id, num, reply) => {
+        msg_id = Number(msg_id)
         let { messages } = await api.get_history_msg(this.id, 'private', user_id, null, num, msg_id)
         messages = messages.map(async m => {
           let result = await this.getMessage(m.message, null, reply)
@@ -747,7 +780,7 @@ class Shamrock {
         } catch {
           group_name = group_id
         }
-        e.log_message && common.info(this.id, `群消息：[${group_name || group_id}，${sender?.nickname || sender?.card}(${user_id})] ${e.log_message}`)
+        e.log_message && common.info(this.id, `<群:${group_name || group_id}><用户:${sender?.nickname || sender?.card}(${user_id})> <= ${e.log_message}`)
         /** 手动构建member */
         e.member = {
           info: {
@@ -762,31 +795,35 @@ class Shamrock {
           is_admin: sender?.role === 'admin' || false,
           is_owner: sender?.role === 'owner' || false,
           /** 获取头像 */
-          getAvatarUrl: (size = 0) => {
-            return `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${user_id}`
-          },
+          getAvatarUrl: (size = 0) => `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${user_id}`,
           /** 禁言 */
-          mute: async (time) => {
-            return await api.set_group_ban(this.id, group_id, user_id, time)
-          }
+          mute: async (time) => await api.set_group_ban(this.id, group_id, user_id, time)
         }
         e.group = { ...this.pickGroup(group_id) }
       } else {
         /** 私聊消息 */
-        e.log_message && common.info(this.id, `好友消息：[${sender?.nickname || sender?.card}(${user_id})] ${e.log_message}`)
+        e.log_message && common.info(this.id, `<好友:${sender?.nickname || sender?.card}(${user_id})> <= ${e.log_message}`)
         e.friend = { ...this.pickFriend(user_id) }
       }
     }
     /** 通知事件 */
     const noticePostType = async function () {
-      e.action = '戳了戳'
-      e.raw_message = `${e.operator_id} 戳了戳 ${e.user_id}`
-      /** 私聊字段 */
-      if (e?.sender_id) {
-        e.notice_type = 'private'
-        e.group = { ...this.pickGroup(group_id) }
-      } else {
+      if (e.sub_type === 'poke') {
+        e.action = e.poke_detail.action
+        e.raw_message = `${e.operator_id} ${e.action} ${e.user_id}`
+      }
+
+      if (e.group_id) {
         e.notice_type = 'group'
+        e.group = { ...this.pickGroup(group_id) }
+        let fl = await Bot[this.id].api.get_stranger_info(Number(e.user_id))
+        e.member = {
+          ...fl,
+          card: fl?.nickname,
+          nickname: fl?.nickname
+        }
+      } else {
+        e.notice_type = 'friend'
         e.friend = { ...this.pickFriend(user_id) }
       }
     }
@@ -806,6 +843,13 @@ class Shamrock {
           break
         }
         case 'group': {
+          try {
+            let gl = Bot[this.id].gl.get(e.group_id)
+            let fl = await Bot[this.id].api.get_stranger_info(Number(e.user_id))
+            e = { ...e, ...gl, ...fl }
+            e.group_id = Number(data.group_id)
+            e.user_id = Number(data.user_id)
+          } catch { }
           e.approve = async (approve = true) => {
             if (e.flag) return await api.set_group_add_request(this.id, e.flag, e.sub_type, approve)
             if (e.sub_type === 'add') {
@@ -847,6 +891,8 @@ class Shamrock {
     /** 添加适配器标识 */
     e.adapter = 'shamrock'
 
+    /** 某些事件需要e.bot，走监听器没有。 */
+    e.bot = Bot[this.id]
     /** 保存消息次数 */
     try { common.recvMsg(this.id, e.adapter) } catch { }
     return e
@@ -901,7 +947,7 @@ class Shamrock {
         case 'reply':
           if (reply) {
             source = await this.source(i, group_id)
-            if (source) {
+            if (source && group_id) {
               let qq = Number(source.sender.user_id)
               let text = source.sender.nickname
               message.unshift({ type: 'at', qq, text })
@@ -953,7 +999,7 @@ class Shamrock {
         case 'json':
           message.push({ type: 'json', ...i.data })
           raw_message.push('[json消息]')
-          log_message.push(`[json消息:${i.data}]`)
+          log_message.push(`[json消息:${i.data.data}]`)
           ToString.push(i.data.data)
           break
         /** XML消息 */
@@ -1105,6 +1151,7 @@ class Shamrock {
 
       source = {
         ...source,
+        time: source.message_id,
         seq: source.message_id,
         user_id: source.sender.user_id,
         message: raw_message,
@@ -1186,7 +1233,7 @@ class Shamrock {
           raw_message.push(`[${faceMap[Number(i.id)]}]`)
           break
         case 'text':
-          if (typeof value !== 'number' && !i.text.trim()) break
+          if (typeof i.text !== 'number' && !i.text.trim()) break
           message.push({ type: 'text', data: { text: i.text } })
           raw_message.push(i.text)
           break
@@ -1228,6 +1275,7 @@ class Shamrock {
           try {
             /** 笨比复读! */
             if (i?.url) i.file = i.url
+            i.file = await Bot.FormatFile(i.file)
             let file = await Bot.Base64(i.file, { http: true })
             /** 判断是否为http */
             if (!/^http(s)?:\/\//.test(file)) {
@@ -1325,3 +1373,5 @@ shamrock.on('connection', async (bot, request) => new Shamrock(bot, request))
 shamrock.on('error', async error => logger.error(error))
 
 export default shamrock
+
+common.info('Lain-plugin', 'Shamrock适配器加载完成')
