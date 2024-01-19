@@ -1180,7 +1180,7 @@ class Shamrock {
     }
 
     if (e.isGroup) return await api.send_group_msg(this.id, id, message, raw_message, node)
-    return await api.send_private_msg(this.id, id, message, raw_message)
+    return await api.send_private_msg(this.id, id, message, raw_message, node)
   }
 
   /**
