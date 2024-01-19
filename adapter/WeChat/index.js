@@ -40,7 +40,7 @@ class AdapterComWeChat {
     switch (data.detail_type) {
       /** 连接建立成功 */
       case 'connect':
-        lain.debug('Lain-plugin', `<Bot:${this.OneBot}><host:${this.host}> 反向WebSocket连接建立成功`)
+        lain.info('Lain-plugin', `<Bot:${this.OneBot}><host:${this.host}> 反向WebSocket连接建立成功`)
         break
       /** 心跳 */
       case 'heartbeat':
@@ -104,18 +104,21 @@ class AdapterComWeChat {
 
   /** 通知事件 */
   async notice (data) {
-    lain.info(this.id, JSON.stringify(data))
-    // /** 处理事件 */
-    // switch (data.detail_type) {
-    //   /** 私聊消息删除 */
-    //   case 'private_message_delete':
-    //     lain.debug('Lain-plugin', `<Bot:${this.OneBot}><host:${this.host}> 反向WebSocket连接建立成功`)
-    //     break
-    //   /** 群消息删除 */
-    //   case 'group_message_delete':
-    //     lain.debug('Lain-plugin', `<Bot:${this.OneBot}><host:${this.host}> 心跳：${JSON.stringify(data)}`)
-    //     break
-    // }
+    /** 处理事件 */
+    switch (data.detail_type) {
+      /** 私聊拍一拍 */
+      case 'wx.get_private_poke':
+        /** 转置消息后给喵崽 */
+        return await Bot.emit('notice', await this.ICQQMessage(data))
+      /** 群聊拍一拍 */
+      case 'wx.get_group_poke':
+        /** 转置消息后给喵崽 */
+        return await Bot.emit('notice', await this.ICQQMessage(data))
+      /** 未知事件 */
+      default:
+        lain.mark('Lain-plugin', `<Bot:${this.OneBot}><host:${this.host}> 未知事件：${JSON.stringify(data)}`)
+        break
+    }
   }
 
   /** 注册Bot */
@@ -184,6 +187,7 @@ class AdapterComWeChat {
       /** 自身参数 */
       Bot[this.id].fl.set(i.user_id, i)
     }
+    lain.info('Lain-plugin', `<Bot:${this.OneBot}><host:${this.host}> 加载了${Bot[this.id].fl.size}个好友，${Bot[this.id].gl.size}个群聊`)
   }
 
   /** 发送请求 */
@@ -218,7 +222,26 @@ class AdapterComWeChat {
   /** 消息转换为ICQQ格式 */
   async ICQQMessage (data) {
     if (!data.message) data.message = [{ type: 'poke', data: { id: '' } }]
-    const { message, ToString, raw_message, log_message } = await this.getMessage(data.message)
+    let { message, ToString, raw_message, log_message } = await this.getMessage(data.message)
+
+    /** 私聊拍一拍 需要提前处理，否则会导致user_id错误 */
+    if (data.detail_type === 'wx.get_private_poke') {
+      data.target_id = data.user_id
+      data.operator_id = data.from_user_id
+      data.user_id = data.from_user_id
+      data.action = '戳了戳'
+      log_message = `${data.operator_id} 戳了戳 ${data.target_id}`
+      message = null
+    }
+    /** 群聊拍一拍 */
+    if (data.detail_type === 'wx.get_group_poke') {
+      data.action = '戳了戳'
+      data.target_id = data.user_id
+      data.operator_id = data.from_user_id
+      log_message = `${data.operator_id} 戳了戳 ${data.target_id}`
+      message = null
+    }
+
     const { group_id, detail_type, message_id, user_id } = data
     const sub_type = /^private$|^wx.get_private_poke$/.test(detail_type) ? 'friend' : 'normal'
 
@@ -282,25 +305,16 @@ class AdapterComWeChat {
     data.recall = () => '暂未支持'
     data.reply = async (msg) => group_id ? await this.sendGroupMsg(group_id, msg) : await this.sendFriendMsg(user_id, msg)
 
-    /** 私聊拍一拍 */
     if (data.detail_type === 'wx.get_private_poke') {
-      data.action = '戳了戳'
       data.sub_type = 'poke'
       data.post_type = 'notice'
       data.notice_type = 'private'
-      data.user_id = data.from_user_id
-      data.target_id = data.user_id
-      data.operator_id = data.from_user_id
-      data.user_id = data.from_user_id
     }
     /** 群聊拍一拍 */
     if (data.detail_type === 'wx.get_group_poke') {
-      data.action = '戳了戳'
       data.sub_type = 'poke'
       data.post_type = 'notice'
       data.notice_type = 'group'
-      data.target_id = data.user_id
-      data.operator_id = data.from_user_id
     }
 
     /** 保存消息次数 */

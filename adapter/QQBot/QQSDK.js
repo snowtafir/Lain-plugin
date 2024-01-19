@@ -53,12 +53,12 @@ export default class QQSDK {
     /** 修改sdk日志为喵崽日志 */
     this.sdk.logger = {
       info: log => this.logger(log),
-      trace: log => logger.trace(this.id, log),
-      debug: log => logger.debug(this.id, log),
-      mark: log => logger.mark(this.id, log),
-      warn: log => logger.warn(this.id, log),
-      error: log => logger.error(this.id, log),
-      fatal: log => logger.fatal(this.id, log)
+      trace: log => lain.trace(this.id, log),
+      debug: log => lain.debug(this.id, log),
+      mark: log => lain.mark(this.id, log),
+      warn: log => lain.warn(this.id, log),
+      error: log => lain.error(this.id, log),
+      fatal: log => lain.fatal(this.id, log)
     }
   }
 
