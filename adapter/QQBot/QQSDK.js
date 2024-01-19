@@ -7,8 +7,10 @@ export default class QQSDK {
   }
 
   async start () {
+    /** appid */
+    this.id = this.config.appid
     /** 移除at */
-    this.config.removeAt = false
+    this.config.removeAt = true
     /** QQBotID */
     this.QQBot = this.config.appid
     /** QQGuidID */

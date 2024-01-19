@@ -21,8 +21,6 @@ class Shamrock {
     this.bot.on('message', (data) => this.event(data))
     /** 监听连接关闭事件 */
     bot.on('close', () => logger.warn(`[Lain-plugin] [${this.version}，${this.QQVersion}] QQ ${this.id} 连接已断开`))
-    /** 主动请求后得到的响应 */
-    Bot.echo = new Map()
   }
 
   /** 收到请求 */
@@ -32,10 +30,10 @@ class Shamrock {
     /** debug日志 */
     common.debug(this.id, '[ws] received -> ', JSON.stringify(data))
     /** 带echo事件为主动请求得到的响应，另外保存 */
-    if (data?.echo) return Bot.echo.set(data.echo, data)
+    if (data?.echo) return lain.echo.set(data.echo, data)
     try {
       /** 处理事件 */
-      try { this[data?.post_type](data) } catch { logger.error(`[Shamrock][未知事件] ${JSON.stringify(data)}`) }
+      this[data?.post_type](data)
     } catch (error) {
       /** 处理错误打印日志 */
       logger.error('[Shamrock]事件处理错误', error)
@@ -329,6 +327,7 @@ class Shamrock {
       stat: { start_time: Date.now() / 1000, recv_msg_cnt: 0 },
       apk: { display: this.QQVersion.split(' ')[0], version: this.QQVersion.split(' ')[1] },
       version: { id: 'shamrock', name: '三叶草', version: this.version.replace('Shamrock/', '') },
+      // sendApi: async (action, params) => await this.sendApi(action, params),
       pickMember: (group_id, user_id) => this.pickMember(group_id, user_id),
       pickUser: (user_id) => this.pickFriend(Number(user_id)),
       pickFriend: (user_id) => this.pickFriend(Number(user_id)),
@@ -780,7 +779,7 @@ class Shamrock {
         } catch {
           group_name = group_id
         }
-        e.log_message && common.info(this.id, `<群:${group_name || group_id}><用户:${sender?.nickname || sender?.card}(${user_id})> <= ${e.log_message}`)
+        e.log_message && common.info(this.id, `<群:${group_name || group_id}><用户:${sender?.nickname || sender?.card}(${user_id})> -> ${e.log_message}`)
         /** 手动构建member */
         e.member = {
           info: {
@@ -802,7 +801,7 @@ class Shamrock {
         e.group = { ...this.pickGroup(group_id) }
       } else {
         /** 私聊消息 */
-        e.log_message && common.info(this.id, `<好友:${sender?.nickname || sender?.card}(${user_id})> <= ${e.log_message}`)
+        e.log_message && common.info(this.id, `<好友:${sender?.nickname || sender?.card}(${user_id})> -> ${e.log_message}`)
         e.friend = { ...this.pickFriend(user_id) }
       }
     }
@@ -924,7 +923,7 @@ class Shamrock {
             let groupMemberList = Bot[this.id].gml.get(group_id)?.[qq]
             let at = groupMemberList?.nickname || groupMemberList?.card || qq
             raw_message.push(`@${at}`)
-            log_message.push(at == qq ? `@${qq}` : `[@${at}:${qq}]`)
+            log_message.push(at == qq ? `@${qq}` : `<@${at}:${qq}>`)
           } catch (err) {
             raw_message.push(`@${i.data.qq}`)
             log_message.push(`@${i.data.qq}`)
@@ -940,7 +939,7 @@ class Shamrock {
         case 'face':
           message.push({ type: 'face', ...i.data })
           raw_message.push(`[${faceMap[Number(i.data.id)] || '动画表情'}]`)
-          log_message.push(`[${faceMap[Number(i.data.id)] || `动画表情:${i.data.id}`}]`)
+          log_message.push(`<${faceMap[Number(i.data.id)] || `动画表情:${i.data.id}`}>`)
           ToString.push(`{face:${i.data.id}}`)
           break
         /** 回复 */
@@ -952,7 +951,7 @@ class Shamrock {
               let text = source.sender.nickname
               message.unshift({ type: 'at', qq, text })
               raw_message.unshift(`@${text}`)
-              log_message.unshift(`[回复] [@${text}:${qq}]`)
+              log_message.unshift(`<回复:${text}(${qq})>`)
             }
           }
           break
@@ -960,21 +959,21 @@ class Shamrock {
         case 'image':
           message.push({ type: 'image', ...i.data })
           raw_message.push('[图片]')
-          log_message.push(`[图片:${i.data?.url || i.data.file}]`)
+          log_message.push(`<图片:${i.data?.url || i.data.file}>`)
           ToString.push(`{image:${i.data.file}}`)
           break
         /** 语音 */
         case 'record':
           message.push({ type: 'record', ...i.data })
           raw_message.push('[语音]')
-          log_message.push(`[语音:${i.data?.url || i.data.file}]`)
+          log_message.push(`<语音:${i.data?.url || i.data.file}>`)
           ToString.push(`{record:${i.data.file}}`)
           break
         /** 视频 */
         case 'video':
           message.push({ type: 'video', ...i.data })
           raw_message.push('[视频]')
-          log_message.push(`[视频:${i.data?.url || i.data.file}]`)
+          log_message.push(`<视频:${i.data?.url || i.data.file}>`)
           ToString.push(`{video:${i.data.file}}`)
           break
         /** 文件 */
@@ -982,7 +981,7 @@ class Shamrock {
           file = { ...i.data, fid: i.data.id }
           message.push({ type: 'file', ...i.data, fid: i.data.id })
           raw_message.push('[文件]')
-          log_message.push(`[视频:${i.data?.url || i.data.file}]`)
+          log_message.push(`<视频:${i.data?.url || i.data.file}>`)
           ToString.push(`{file:${i.data.id}}`)
           /** 存一手，给获取函数 */
           redis.set(i.data.id, JSON.stringify(i.data))
@@ -992,112 +991,112 @@ class Shamrock {
           /** 不理解为啥为啥不是node... */
           message.push({ type: 'node', ...i.data })
           raw_message.push('[转发消息]')
-          log_message.push(`[转发消息:${JSON.stringify(i.data)}]`)
+          log_message.push(`<转发消息:${JSON.stringify(i.data)}>`)
           ToString.push(`{forward:${i.data.id}}`)
           break
         /** JSON 消息 */
         case 'json':
           message.push({ type: 'json', ...i.data })
           raw_message.push('[json消息]')
-          log_message.push(`[json消息:${i.data.data}]`)
+          log_message.push(`<json消息:${i.data.data}>`)
           ToString.push(i.data.data)
           break
         /** XML消息 */
         case 'xml':
           message.push({ type: 'xml', ...i.data })
           raw_message.push('[xml消息]')
-          log_message.push(`[xml消息:${i.data}]`)
+          log_message.push(`<xml消息:${i.data}>`)
           ToString.push(i.data.data)
           break
         /** 篮球 */
         case 'basketball':
           message.push({ type: 'basketball', ...i.data })
           raw_message.push('[篮球]')
-          log_message.push(`[篮球:${i.data.id}]`)
+          log_message.push(`<篮球:${i.data.id}>`)
           ToString.push(`{basketball:${i.data.id}}`)
           break
         /** 新猜拳 */
         case 'new_rps':
           message.push({ type: 'new_rps', ...i.data })
           raw_message.push('[猜拳]')
-          log_message.push(`[猜拳:${i.data.id}]`)
+          log_message.push(`<猜拳:${i.data.id}>`)
           ToString.push(`{new_rps:${i.data.id}}`)
           break
         /** 新骰子 */
         case 'new_dice':
           message.push({ type: 'new_dice', ...i.data })
           raw_message.push('[骰子]')
-          log_message.push(`[骰子:${i.data.id}]`)
+          log_message.push(`<骰子:${i.data.id}>`)
           ToString.push(`{new_dice:${i.data.id}}`)
           break
         /** 骰子 (NTQQ废弃) */
         case 'dice':
           message.push({ type: 'dice', ...i.data })
           raw_message.push('[骰子]')
-          log_message.push(`[骰子:${i.data.id}]`)
+          log_message.push(`<骰子:${i.data.id}>`)
           ToString.push(`{dice:${i.data}}`)
           break
         /** 剪刀石头布 (NTQQ废弃) */
         case 'rps':
           message.push({ type: 'rps', ...i.data })
           raw_message.push('[剪刀石头布]')
-          log_message.push(`[剪刀石头布:${i.data.id}]`)
+          log_message.push(`<剪刀石头布:${i.data.id}>`)
           ToString.push(`{rps:${i.data}}`)
           break
         /** 戳一戳 */
         case 'poke':
           message.push({ type: 'poke', ...i.data })
           raw_message.push(`[${pokeMap[Number(i.data.id)]}]`)
-          log_message.push(`[${pokeMap[Number(i.data.id)]}]`)
+          log_message.push(`<${pokeMap[Number(i.data.id)]}>`)
           ToString.push(`{poke:${i.data.id}}`)
           break
         /** 戳一戳(双击头像) */
         case 'touch':
           message.push({ type: 'touch', ...i.data })
           raw_message.push('[双击头像]')
-          log_message.push(`[双击头像:${i.data.id}]`)
+          log_message.push(`<<双击头像:${i.data.id}>`)
           ToString.push(`{touch:${i.data.id}}`)
           break
         /** 音乐 */
         case 'music':
           message.push({ type: 'music', ...i.data })
           raw_message.push('[音乐]')
-          log_message.push(`[音乐:${i.data.id}]`)
+          log_message.push(`<音乐:${i.data.id}>`)
           ToString.push(`{music:${i.data.id}}`)
           break
         /** 音乐(自定义) */
         case 'custom':
           message.push({ type: 'custom', ...i.data })
           raw_message.push('[自定义音乐]')
-          log_message.push(`[自定义音乐:${i.data.url}]`)
+          log_message.push(`<自定义音乐:${i.data.url}>`)
           ToString.push(`{custom:${i.data.url}}`)
           break
         /** 天气 */
         case 'weather':
           message.push({ type: 'weather', ...i.data })
           raw_message.push('[天气]')
-          log_message.push(`[天气:${i.data.city}]`)
+          log_message.push(`<天气:${i.data.city}>`)
           ToString.push(`{weather:${i.data.city}}`)
           break
         /** 位置 */
         case 'location':
           message.push({ type: 'location', ...i.data })
           raw_message.push('[位置分享]')
-          log_message.push(`[位置分享:${i.data.lat}-${i.data.lon}]`)
+          log_message.push(`<位置分享:${i.data.lat}-${i.data.lon}>`)
           ToString.push(`{location:${i.data.lat}-${i.data.lon}}`)
           break
         /** 链接分享 */
         case 'share':
           message.push({ type: 'share', ...i.data })
           raw_message.push('[链接分享]')
-          log_message.push(`[链接分享:${i.data.url}]`)
+          log_message.push(`<<链接分享:${i.data.url}>`)
           ToString.push(`{share:${i.data.url}}`)
           break
         /** 礼物 */
         case 'gift':
           message.push({ type: 'gift', ...i.data })
           raw_message.push('[礼物]')
-          log_message.push(`[礼物:${i.data.id}]`)
+          log_message.push(`<礼物:${i.data.id}>`)
           ToString.push(`{gift:${i.data.id}}`)
           break
         default:
@@ -1226,11 +1225,11 @@ class Shamrock {
       switch (i.type) {
         case 'at':
           message.push({ type: 'at', data: { qq: Number(i.qq) } })
-          raw_message.push(`[@${i.qq}]`)
+          raw_message.push(`<@${i.qq}>`)
           break
         case 'face':
           message.push({ type: 'face', data: { id: Number(i.id) } })
-          raw_message.push(`[${faceMap[Number(i.id)]}]`)
+          raw_message.push(`<${faceMap[Number(i.id)]}>`)
           break
         case 'text':
           if (typeof i.text !== 'number' && !i.text.trim()) break
@@ -1248,7 +1247,7 @@ class Shamrock {
               file = `file://${data.file}`
             }
             message.push({ type: 'record', data: { file } })
-            raw_message.push(`[语音:${i.file}]`)
+            raw_message.push(`<语音:${i.file}>`)
           } catch (err) {
             common.error(this.id, '语音上传失败:', err)
             /** 都报错了还发啥？...我以前写的什么牛马 */
@@ -1269,7 +1268,7 @@ class Shamrock {
             message.push({ type: 'text', data: { text: JSON.stringify(err) } })
             raw_message.push(JSON.stringify(err))
           }
-          raw_message.push(`[视频:${i.file}]`)
+          raw_message.push(`<视频:${i.file}>`)
           break
         case 'image':
           try {
@@ -1280,9 +1279,9 @@ class Shamrock {
             /** 判断是否为http */
             if (!/^http(s)?:\/\//.test(file)) {
               file = `base64://${file}`
-              raw_message.push('[图片:base64://...]')
+              raw_message.push('<图片:base64://...>')
             } else {
-              raw_message.push(`[图片:${file}]`)
+              raw_message.push(`<图片:${file}>`)
             }
             message.push({ type: 'image', data: { file } })
           } catch (err) {
@@ -1292,22 +1291,22 @@ class Shamrock {
           break
         case 'poke':
           message.push({ type: 'poke', data: { type: i.id, id: 0, strength: i?.strength || 0 } })
-          raw_message.push(`[${pokeMap[Number(i.id)]}]` || `[戳一戳:${i.id}]`)
+          raw_message.push(`<${pokeMap[Number(i.id)]}>` || `<戳一戳:${i.id}>`)
           break
         case 'touch':
           message.push({ type: 'touch', data: { id: i.id } })
-          raw_message.push(`[拍一拍:${i.id}]`)
+          raw_message.push(`<拍一拍:${i.id}>`)
           break
         case 'weather':
           message.push({ type: 'weather', data: { code: i.code, city: i.city } })
-          raw_message.push(`[天气:${i?.city || i?.code}]`)
+          raw_message.push(`<天气:${i?.city || i?.code}>`)
           break
         case 'json':
           try {
             let json = i.data
             if (typeof i.data !== 'string') json = JSON.stringify(i.data)
             message.push({ type: 'json', data: { data: json } })
-            raw_message.push(`[json:${json}]`)
+            raw_message.push(`<json:${json}>`)
           } catch (err) {
             message.push({ type: 'text', data: { text: JSON.stringify(err) } })
             raw_message.push(JSON.stringify(err))
@@ -1315,13 +1314,13 @@ class Shamrock {
           break
         case 'music':
           message.push({ type: 'music', data: i.data })
-          raw_message.push(`[音乐:${i.data.type},id:${i.data.id}]`)
+          raw_message.push(`<音乐:${i.data.type},id:${i.data.id}>`)
           break
         case 'location':
           try {
             const { lat, lng: lon } = data
             message.push({ type: 'location', data: { lat, lon } })
-            raw_message.push(`[位置:纬度=${lat},经度=${lon}]`)
+            raw_message.push(`<位置:纬度=${lat},经度=${lon}>`)
           } catch (err) {
             message.push({ type: 'text', data: { text: JSON.stringify(err) } })
             raw_message.push(JSON.stringify(err))
@@ -1331,7 +1330,7 @@ class Shamrock {
           try {
             const { url, title, image, content } = data
             message.push({ type: 'share', data: { url, title, content, image } })
-            raw_message.push(`[链接分享:${url},标题=${title},图片链接=${image},内容=${content}]`)
+            raw_message.push(`<链接分享:${url},标题=${title},图片链接=${image},内容=${content}>`)
           } catch (err) {
             message.push({ type: 'text', data: { text: JSON.stringify(err) } })
             raw_message.push(JSON.stringify(err))
@@ -1344,12 +1343,12 @@ class Shamrock {
         case 'node':
           node = true
           message.push({ type: 'node', data: { ...i.data } })
-          raw_message.push(`[转发消息:${i.data.id}]`)
+          raw_message.push(`<转发消息:${i.data.id}>`)
           break
         default:
           // 为了兼容更多字段，不再进行序列化，风险是有可能未知字段导致Shamrock崩溃
           message.push({ type: i.type, data: { ...i.data } })
-          raw_message.push(`[${i.type}:${JSON.stringify(i.data)}]`)
+          raw_message.push(`<${i.type}:${JSON.stringify(i.data)}>`)
           break
       }
     }

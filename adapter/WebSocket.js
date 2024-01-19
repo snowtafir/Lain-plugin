@@ -19,14 +19,14 @@ class WebSocket {
   }
 
   async server () {
-    /** 存储连接的bot对象 */
-    Bot.shamrock = new Map()
     /** 保存监听器返回 */
-    Bot.lain.on = new Map()
+    lain.echo = new Map()
+    /** 主动请求后得到的响应 */
+    lain.echo = new Map()
     /** 微信登录 */
     Bot.lain.loginMap = new Map()
     /** 临时文件 */
-    Bot.Files = new Map()
+    lain.Files = new Map()
     /** 创建Express应用程序 */
     const app = express()
     /** 创建HTTP服务器 */
@@ -55,11 +55,11 @@ class WebSocket {
       const { ip } = req
       const { token } = req.query
       /** 收到日志 */
-      logger.mark('[GET请求] ' + logger.blue(`[${token}] <= [${req.get('host')}] <= [${ip}]`))
+      logger.mark('[GET请求] ' + logger.blue(`[${token}] ->[${req.get('host')}] ->[${ip}]`))
 
       try {
         /** 读 */
-        const File = Bot.Files.get(token)
+        const File = lain.Files.get(token)
 
         /** 缓存有 */
         if (File) {

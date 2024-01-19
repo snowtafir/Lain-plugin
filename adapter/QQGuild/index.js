@@ -5,6 +5,7 @@ import loader from '../../../../lib/plugins/loader.js'
 import common from '../../lib/common/common.js'
 import Cfg from '../../lib/config/config.js'
 import { faceMap } from '../../model/shamrock/face.js'
+import { FormData } from 'node-fetch'
 
 export default class adapterQQGuild {
   /** 传入基本配置 */
@@ -174,7 +175,8 @@ export default class adapterQQGuild {
   async ICQQEvent (data, friend) {
     data = data.msg
     const { src_guild_id, author, guild_id, channel_id, member, timestamp } = data
-    const { id: user_id, username: nickname, avatar } = author
+    let { id: user_id, username: nickname, avatar } = author
+    user_id = `qg_${user_id}`
     let is_owner = !friend && member.roles.includes('4')
     let is_admin = !friend && member.roles.includes('2')
     let role = is_owner ? 'owner' : (is_admin ? 'admin' : 'member')
@@ -199,9 +201,9 @@ export default class adapterQQGuild {
       seq: data.seq,
       time,
       uin: this.id,
-      user_id: `qg_${user_id}`,
+      user_id,
       sender: {
-        user_id: `qg_${user_id}`,
+        user_id,
         nickname,
         sub_id: 521220816,
         card: nickname,
@@ -239,6 +241,12 @@ export default class adapterQQGuild {
     /** 构建message */
     let { message, raw_message, log_message, ToString } = await this.getMessage(data)
 
+    /** 移除首个at 需要为公域 */
+    if (!this.allMsg) {
+      const index = message.findIndex(i => i.type === 'at' && i.qq === this.tiny_id)
+      if (index !== -1) message.splice(index, 1)
+    }
+
     /** 构建场景对应的方法 */
     if (friend) {
       /** 私聊消息 */
@@ -249,10 +257,10 @@ export default class adapterQQGuild {
         getAvatarUrl: () => avatar,
         getChatHistory: async (msg_id) => this.getChatHistory(channel_id, msg_id)
       }
-      log_message && common.info(this.id, `<私信:${group_name}(${group_id})><用户:${nickname}(${user_id})> <= ${log_message}`)
+      log_message && common.info(this.id, `<私信:${group_name}(${group_id})><用户:${nickname}(${user_id})> -> ${log_message}`)
     } else {
       e.group = { ...this.pickGroup(group_id), is_admin, is_owner }
-      log_message && common.info(this.id, `<频道:${group_name}(${group_id})><用户:${nickname}(${user_id})> <= ${log_message}`)
+      log_message && common.info(this.id, `<频道:${group_name}(${group_id})><用户:${nickname}(${user_id})> -> ${log_message}`)
     }
 
     /** 快速撤回 */
@@ -631,7 +639,7 @@ export default class adapterQQGuild {
 
   /** 主动私信消息 */
   async sendFriendMsg (guild_id, user_id, message) {
-    let friend = await this.friendMessage((guild_id, user_id))
+    let friend = await this.friendMessage((guild_id, user_id.replace('qg_', '')))
     guild_id = friend.guild_id
     message = await this.QQGuildMessage(message)
     let data
@@ -840,7 +848,7 @@ export default class adapterQQGuild {
   /** 获取操作人信息 */
   async guildMember (guild_id, user_id) {
     try {
-      let { data } = await this.client.guildApi.guildMember(guild_id, user_id)
+      let { data } = await this.client.guildApi.guildMember(guild_id, user_id.replace('qg_', ''))
       return `${data.nick}(${user_id})`
     } catch {
       return user_id

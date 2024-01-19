@@ -183,10 +183,10 @@ Bot.FileToUrl = async function (file, type = 'image') {
   }
 
   /** 保存 */
-  Bot.Files.set(token, File)
+  lain.Files.set(token, File)
   /** 定时删除 */
   setTimeout(() => {
-    Bot.Files.delete(token)
+    lain.Files.delete(token)
     logger.debug(`[缓存清理] => [token：${token}]`)
   }, (Cfg.bot.ExpirationTime || 30) * 1000)
   /** 获取基本配置 */

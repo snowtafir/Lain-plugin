@@ -1,8 +1,8 @@
 import fs from 'fs'
+import './lib/init.js'
 import './model/config.js'
 import './adapter/adapter.js'
 import './adapter/Bot/bot.js'
-import './lib/init.js'
 
 let ret = []
 let apps = {}

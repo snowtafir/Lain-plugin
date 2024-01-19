@@ -155,7 +155,7 @@ export default class adapterQQGuild {
     data.message = message
     data.raw_message = raw_message
     data.toString = () => ToString
-    lain.info(this.id, `<频道:${group_name}(${group_id})><用户:${nickname}(${user_id})> <= ${log_message}`)
+    lain.info(this.id, `<频道:${group_name}(${group_id})><用户:${nickname}(${user_id})> -> ${log_message}`)
     data.reply = async (msg) => await data.data.reply(msg)
     return data
   }
@@ -378,7 +378,7 @@ export default class adapterQQGuild {
 
     /** 保存消息次数 */
     try { common.recvMsg(e.self_id, e.adapter) } catch { }
-    common.info(this.id, `<频道:${e.group_id}><用户:${e.user_id}> <= ${this.messageLog(e.message)}`)
+    common.info(this.id, `<频道:${e.group_id}><用户:${e.user_id}> -> ${this.messageLog(e.message)}`)
     return e
   }
 

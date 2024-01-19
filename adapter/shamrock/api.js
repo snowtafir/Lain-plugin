@@ -448,18 +448,6 @@ let api = {
   },
 
   /**
-  * 上传私聊文件
-  * @param {string} id - 机器人QQ 通过e.bot、Bot调用无需传入
-  * @param {number} user_id - 对方 QQ 号
-  * @param {string} file - 本地文件路径
-  * @param {string} name - 文件名称
-  */
-  async upload_private_file (id, user_id, file, name) {
-    const params = { user_id, file, name }
-    return await this.SendApi(id, 'upload_private_file', params)
-  },
-
-  /**
   * 点赞
   * @param {string} id - 机器人QQ 通过e.bot、Bot调用无需传入
   * @param {number} user_id - 对方 QQ 号
@@ -600,7 +588,7 @@ let api = {
     if (token) {
       headers.Authorization = `Bearer ${token}`
     }
-    const bot = Bot.shamrock.get(String(id))
+    const bot = Bot[id]
     if (!bot) return common.error(id, '不存在此Bot')
     let res = await fetch(baseUrl + '/' + action + query, {
       headers,
@@ -771,9 +759,9 @@ let api = {
     Bot[id].ws.send(JSON.stringify({ echo, action, params }))
 
     for (let i = 0; i < 1200; i++) {
-      const data = await Bot.echo.get(echo)
+      const data = await lain.echo.get(echo)
       if (data) {
-        Bot.echo.delete(echo)
+        lain.echo.delete(echo)
         if (data.status === 'ok') {
           return data.data
         } else {

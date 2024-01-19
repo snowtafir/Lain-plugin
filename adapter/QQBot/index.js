@@ -239,7 +239,7 @@ export default class adapterQQBot {
 
     /** 保存消息次数 */
     try { common.recvMsg(e.self_id, e.adapter) } catch { }
-    common.info(this.id, `<群:${e.group_id}><用户:${e.user_id}> => ${this.messageLog(e.message)}`)
+    common.info(this.id, `<群:${e.group_id}><用户:${e.user_id}> -> ${this.messageLog(e.message)}`)
     return e
   }
 

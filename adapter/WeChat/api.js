@@ -130,9 +130,9 @@ const api = {
     Bot.lain.wc.send(JSON.stringify({ echo, action, params }))
 
     for (let i = 0; i < 40; i++) {
-      const data = await Bot.lain.on.get(echo)
+      const data = await lain.echo.get(echo)
       if (data) {
-        Bot.lain.on.delete(echo)
+        lain.echo.delete(echo)
         try {
           if (Object.keys(data?.data).length > 0 && data?.data) return data.data
           return data
