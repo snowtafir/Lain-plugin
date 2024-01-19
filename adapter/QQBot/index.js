@@ -616,6 +616,10 @@ export default class adapterQQBot {
       if (Bot?.audioToUrl) {
         const url = await Bot.audioToUrl(`file://${silk}`)
         common.mark('Lain-plugin', `使用自定义服务器发送语音：${url}`)
+        setTimeout(() => {
+          fs.unlink(silk, err => {
+          })
+        }, (Cfg.Server.InvalidTime || 30) * 1000)
         return { type, file: url }
       }
     } catch (error) {
@@ -625,6 +629,10 @@ export default class adapterQQBot {
     /** 公网 */
     const { url } = await Bot.FileToUrl(`file://${silk}`, type)
     common.mark('Lain-plugin', `使用公网临时服务器：${url}`)
+    setTimeout(() => {
+      fs.unlink(silk, err => {
+      })
+    }, (Cfg.Server.InvalidTime || 30) * 1000)
     return { type, file: url }
   }
 

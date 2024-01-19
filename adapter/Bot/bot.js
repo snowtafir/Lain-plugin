@@ -188,7 +188,7 @@ Bot.FileToUrl = async function (file, type = 'image') {
   setTimeout(() => {
     lain.Files.delete(token)
     logger.debug(`[缓存清理] => [token：${token}]`)
-  }, (Cfg.bot.ExpirationTime || 30) * 1000)
+  }, (Cfg.Server.InvalidTime || 30) * 1000)
   /** 获取基本配置 */
   const { port, baseIP, baseUrl } = Cfg.Server
   let url = `http://${baseIP}:${port}/api/File?token=${token}`
