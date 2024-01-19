@@ -5,7 +5,7 @@ import loader from '../../../../lib/plugins/loader.js'
 import common from '../../lib/common/common.js'
 import Cfg from '../../lib/config/config.js'
 import { faceMap } from '../../model/shamrock/face.js'
-import { FormData } from 'node-fetch'
+import { Blob, FormData } from 'node-fetch'
 
 export default class adapterQQGuild {
   /** 传入基本配置 */
