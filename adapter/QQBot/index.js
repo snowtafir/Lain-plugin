@@ -591,7 +591,7 @@ export default class adapterQQBot {
     /** 保存为MP3文件 */
     fs.writeFileSync(mp3, await Bot.Buffer(file))
     /** mp3 转 pcm */
-    await this.runFfmpeg(file, pcm)
+    await this.runFfmpeg(mp3, pcm)
     common.mark('Lain-plugin', 'mp3 => pcm 完成!')
     common.mark('Lain-plugin', 'pcm => silk 进行中!')
 
@@ -601,7 +601,7 @@ export default class adapterQQBot {
         /** 转silk完成，保存 */
         fs.writeFileSync(silk, silkData?.data || silkData)
         /** 删除初始mp3文件 */
-        fs.unlink(file, () => { })
+        fs.unlink(mp3, () => { })
         /** 删除pcm文件 */
         fs.unlink(pcm, () => { })
         common.mark('Lain-plugin', 'pcm => silk 完成!')
