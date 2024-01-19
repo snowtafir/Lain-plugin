@@ -71,7 +71,7 @@ export default class QQSDK {
         return ''
       } else if (/^send to Group/.test(data)) {
         data = data.replace(/^send to Group\([^)]+\): /, `<发群聊:${this.id}-${data.match(/\(([^)]+)\)/)[1]}> => `)
-        lain.info(this.QQBot, data)
+        return lain.info(this.QQBot, data)
       }
     } catch { }
     return logger.info(data)
