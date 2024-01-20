@@ -386,7 +386,7 @@ export default class adapterQQBot {
           }
           break
         case 'at':
-          if ([1, '1', 4, '4'].includes(e.bot.config.markdown.type)) text.push(`<@${(i.qq || i.id).trim().split('-')[1]}>`)
+          if (e.bot.config.markdown.type) text.push(`<@${(i.qq || i.id).trim().split('-')[1]}>`)
           break
         case 'image':
           image.push(await this.getImage(i?.url || i.file))
@@ -746,7 +746,7 @@ export default class adapterQQBot {
       }
 
       /** 模板转普通消息 */
-      if (Bot[this.id].config.markdown.type == 1) {
+      if (Bot[this.id].config.markdown.type) {
         const message = []
         for (const item of copyMsg) {
           if (item.type !== 'markdown') continue
