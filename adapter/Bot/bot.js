@@ -188,7 +188,7 @@ Bot.FileToUrl = async function (file, type = 'image') {
   setTimeout(() => {
     lain.Files.delete(token)
     logger.debug(`[缓存清理] => [token：${token}]`)
-  }, (Cfg.bot.ExpirationTime || 30) * 1000)
+  }, (Cfg.Server.InvalidTime || 30) * 1000)
   /** 获取基本配置 */
   const { port, baseIP, baseUrl } = Cfg.Server
   let url = `http://${baseIP}:${port}/api/File?token=${token}`
@@ -348,26 +348,31 @@ Bot.Button = function (list, line = 3) {
   let arr = []
   let index = 1
   for (const i of list) {
-    arr.push({
-      id: String(Date.now()),
-      render_data: {
-        label: i.label,
-        style: i.style || 1
-      },
-      action: {
-        type: i.type || 2,
-        permission: i.permission || { type: 2 },
-        data: i.data || i.label,
-        enter: i.enter || false,
-        unsupport_tips: '暂不支持~'
-      }
-    })
-    if (index % line == 0 || index == list.length) {
-      button.push({
-        type: 'button',
-        buttons: arr
+    if (Array.isArray(i)) {
+      button.push(...Bot.Button(i, 10))
+    }
+    else {
+      arr.push({
+        id: String(Date.now()),
+        render_data: {
+          label: i.label,
+          style: i.style || 1
+        },
+        action: {
+          type: i.type || i.link ? 0 : 2,
+          permission: i.permission || { type: 2 },
+          data: i.data || i.callback || i.link || i.label,
+          enter: i.enter || 'callback' in i || false,
+          unsupport_tips: '暂不支持~'
+        }
       })
-      arr = []
+      if (index % line == 0 || index == list.length) {
+        button.push({
+          type: 'button',
+          buttons: arr
+        })
+        arr = []
+      }
     }
     index++
   }
