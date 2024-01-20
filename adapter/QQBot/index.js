@@ -454,7 +454,6 @@ export default class adapterQQBot {
           } else {
             /** 返回数组，无需处理，直接发送即可 */
             if (text.length) message.push(text.length < 4 ? text.join('') : text.join('\n'))
-            if (text.length) Pieces.push(...text)
             if (image.length) message.push(image.shift())
             if (image.length) Pieces.push(...image)
           }
@@ -617,8 +616,7 @@ export default class adapterQQBot {
         const url = await Bot.audioToUrl(`file://${silk}`)
         common.mark('Lain-plugin', `使用自定义服务器发送语音：${url}`)
         setTimeout(() => {
-          fs.unlink(silk, err => {
-          })
+          fs.unlink(silk, err => { logger.error(err) })
         }, (Cfg.Server.InvalidTime || 30) * 1000)
         return { type, file: url }
       }
@@ -630,8 +628,7 @@ export default class adapterQQBot {
     const { url } = await Bot.FileToUrl(`file://${silk}`, type)
     common.mark('Lain-plugin', `使用公网临时服务器：${url}`)
     setTimeout(() => {
-      fs.unlink(silk, err => {
-      })
+      fs.unlink(silk, err => { logger.error(err) })
     }, (Cfg.Server.InvalidTime || 30) * 1000)
     return { type, file: url }
   }
