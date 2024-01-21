@@ -599,7 +599,6 @@ export default class StartQQBot {
       try { await common.MsgTotal(this.id, 'QQBot', 'image') } catch { }
     } else {
       try { await common.MsgTotal(this.id, 'QQBot') } catch { }
-      message.unshift("\n")
     }
 
     return { message, image, reply }
@@ -623,8 +622,11 @@ export default class StartQQBot {
         for (const i of message) allMsg.push(...await this.markdown(e, i))
       }
     } else {
-      for (let i = 0; i < message.length; i += 10)
-        newMsg.push(message.slice(i, i + 10))
+      for (let i = 0; i < message.length; i += 10) {
+        let split_msg = message.slice(i, i + 10)
+        split_msg.unshift("\n")
+        newMsg.push(split_msg)
+      }
       message = newMsg
       if (image.length) message.push(...image.map(i => [i]))
       allMsg.push(...message)

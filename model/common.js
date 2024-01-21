@@ -246,7 +246,7 @@ async function base64(msg) {
   }
 
   /** 套娃的二进制base64 */
-  if (file.type === "Buffer") {
+  if (file?.type === "Buffer") {
     if (!(file.data instanceof Uint8Array))
       base64 = new Uint8Array(file.data)
     else base64 = file.data
