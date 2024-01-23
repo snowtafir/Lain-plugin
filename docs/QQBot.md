@@ -177,6 +177,15 @@ Markdown 源码：
 
 保存 → 提交审核 → 审核完成后，输入 `#QQ群设置MD 机器人ID:模板ID`
 
+~~模板名称：合并转发~~  
+~~使用场景：发送合并转发消息~~  
+~~Markdown 源码：~~
+
+```
+{{.text_0}}{{.text_1}}{{.text_2}}{{.text_3}}{{.text_4}}{{.text_5}}{{.text_6}}{{.text_7}}{{.text_8}}{{.text_9}}
+```
+~~使用方法: 发送 `#QQBotmd4`~~ (*待实现*)
+
 </details>
 
 <details><summary>全局 Markdown 消息附带发送按钮编写</summary>
@@ -192,98 +201,62 @@ export default class Button {
   constructor () {
     this.plugin = {
       // 插件名称
-      name: '状态按钮',
+      name: '按钮示例',
       // 描述
-      dsc: '状态按钮',
-      // 优先级
+      dsc: '按钮示例',
+      // 按钮优先级
       priority: 100,
       rule: [
         {
           /** 命令正则匹配 */
-          reg: '#状态',
+          reg: '^#?测试$',
           /** 执行方法 */
-          fnc: 'state'
+          fnc: 'test'
         },
-        {
-          /** 命令正则匹配 */
-          reg: '#帮助',
-          /** 执行方法 */
-          fnc: 'help'
-        }
       ]
     }
   }
 
   /** 执行方法 */
-  state (e) {
-    // e是接收消息，经喵崽处理过的，插件会原封不动传递过来，供开发者使用。
-    return [
-      {
-        type: 'button',
-        buttons: [
-          {
-            id: '1',
-            render_data: {
-              label: '角色1面板',
-              visited_label: '角色1面板'
-            },
-            action: {
-              type: 2,
-              permission: {
-                type: 2
-              },
-              data: '/角色1面板',
-              at_bot_show_channel_list: false
-            }
-          }
-        ]
-      },
-      {
-        type: 'button',
-        buttons: [
-          {
-            id: '2',
-            render_data: {
-              label: '角色1面板',
-              visited_label: '角色1面板'
-            },
-            action: {
-              type: 2,
-              permission: {
-                type: 2
-              },
-              data: '/角色1面板',
-              at_bot_show_channel_list: false
-            }
-          }
-        ]
-      }
+  test (e) {
+    const button = []
+  
+    const list1 = [  // 方法1: 传入二维数组，适用于不定列数按钮
+      [
+        { label: '0.0' },  // 外显和内容相同的按钮
+        { label: '0.1' , enter: true },  // 外显和内容相同的回车按钮
+        { label: '0.2' , data: 'test1' },  // 外显和内容不同的按钮
+        { label: '0.3' , callback: 'test2' },  // 外显和内容不同的回车按钮
+      ],
+      [  
+        { label: '1.0' , link: 'https://im.qq.com/index/' },  // 跳转到链接的按钮
+
+        /* style: 0 - 灰色线框, 1 - 蓝色线框 */
+        { label: '1.1' , style: '0' },  // 灰色线框按钮
+
+        /* type: 0 - http或小程序, 1 - 回调后台接口, 2 - 自动在输入框 @bot data */
+        { label: '1.2' , type: '1' },  // 回调后台接口的按钮
+
+        /* permission.type: 0 - 指定用户可操作(群, 需填写specify_user_ids), 1 - 仅管理者可操作, 2 - 所有人可操作, 3 - 指定身份组可操作(频道, 需填写specify_role_ids) */
+        { label: '1.3' , permission: { type: '0' , specify_user_ids: [ e.user_openid ] } },  // 附带权限的按钮
+
+        { label: '1.4' , data: 'test4' , style: '0' , type: '1' , permission: { type: '0' , specify_user_ids: [ e.user_openid ] } },
+      ],
     ]
-  }
+    button.push(...Bot.Button(list1))  // 调用Bot.Button制作按钮
 
-  /** 执行方法 */
-  help (e) {
-    // e是接收消息，经喵崽处理过的，插件会原封不动传递过来，供开发者使用。
-    return {
-      type: 'button',
-      buttons: [
-        {
-          id: '1',
-          render_data: {
-            label: '角色1面板',
-            visited_label: '角色1面板'
-          },
-          action: {
-            type: 2,
-            permission: {
-              type: 2
-            },
-            data: '/角色1面板',
-            at_bot_show_channel_list: false
-          }
-        }
-      ]
-    }
+    const list2 = [  // 方法2: 传入一维数组，适用于固定列数的按钮
+      { label: '0' },
+      { label: '1' },
+
+      { label: '2' },
+      { label: '3' },
+
+      { label: '4' },
+    ]
+    button.push(...Bot.Button( list2 , 2 ))  // 调用Bot.Button制作按钮，第二个参数为固定列数
+
+    return button  // 返回制作完成的按钮
   }
 }
 
