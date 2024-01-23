@@ -359,7 +359,7 @@ Bot.Button = function (list, line = 3) {
           style: i.style || 1
         },
         action: {
-          type: i.type || i.link ? 0 : 2,
+          type: i.type || (i.link ? 0 : 2),
           permission: i.permission || { type: 2 },
           data: i.data || i.callback || i.link || i.label,
           enter: i.enter || 'callback' in i || false,
