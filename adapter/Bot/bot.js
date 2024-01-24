@@ -265,10 +265,21 @@ Bot.toType = function (i) {
 }
 
 /**
-* 处理segment中的i.file，主要用于一些sb字段，标准化他们
-* @param file - i.file
+* 处理segment中的i||i.file，主要用于一些sb字段，标准化他们
+* @param {string|object} file - i.file
 */
 Bot.FormatFile = async function (file) {
+  const str = function () {
+    if (fs.existsSync(file.replace(/^file:\/\//, ''))) {
+      return file
+    } else if (fs.existsSync(file.replace(/^file:\/\/\//, ''))) {
+      return file.replace(/^file:\/\/\//, 'file://')
+    } else if (fs.existsSync(file)) {
+      return `file://${file}`
+    }
+    return file
+  }
+
   switch (typeof file) {
     case 'object':
       /** 这里会有复读这样的直接原样不动把message发过来... */
@@ -283,16 +294,12 @@ Bot.FormatFile = async function (file) {
 
       /** 流 */
       if (file instanceof fs.ReadStream) return await Bot.Stream(file, { base: true })
+
+      /** i.file */
+      if (file.file) return str(file.file)
       return file
     case 'string':
-      if (fs.existsSync(file.replace(/^file:\/\//, ''))) {
-        return file
-      } else if (fs.existsSync(file.replace(/^file:\/\/\//, ''))) {
-        return file.replace(/^file:\/\/\//, 'file://')
-      } else if (fs.existsSync(file)) {
-        return `file://${file}`
-      }
-      return file
+      return str(file)
     default:
       return file
   }

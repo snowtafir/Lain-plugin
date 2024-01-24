@@ -67,10 +67,10 @@ export default class QQSDK {
     if (typeof data !== 'string') return lain.info(this.id, data)
     data = data.trim()
     try {
-      if (/^(recv from Group|recv from Guild)/.test(data)) {
+      if (/^(recv from Group|recv from Guild|send to Channel)/.test(data)) {
         return ''
       } else if (/^send to Group/.test(data)) {
-        data = data.replace(/^send to Group\([^)]+\): /, `<发群聊:${this.id}-${data.match(/\(([^)]+)\)/)[1]}> => `)
+        data = data.replace(/^send to Group\([^)]+\): /, `<发送群聊:${this.id}-${data.match(/\(([^)]+)\)/)[1]}> => `)
         return lain.info(this.QQBot, data)
       }
     } catch { }
