@@ -33,6 +33,9 @@ class WebSocket {
     /** 创建HTTP服务器 */
     this.Server = createServer(app)
 
+    /** 设置静态文件服务 */
+    app.use('/api/File', express.static(process.cwd() + '/temp/FileToUrl'))
+
     /** 解除端口占用api */
     app.get('/api/close-server', async (req, res) => {
       const ip = req.ip
@@ -64,11 +67,10 @@ class WebSocket {
 
         /** 缓存有 */
         if (File) {
-          const path = fs.createReadStream(File.path)
           res.setHeader('Content-Type', File.mime)
           res.setHeader('Content-Disposition', 'inline')
           logger.mark('[发送文件] ' + logger.blue(`[${token}] => [${File.md5}] => [${ip}]`))
-          path.pipe(res)
+          fs.createReadStream(File.path).pipe(res)
         } else {
           res.status(410).json({ status: 'failed', message: '资源过期' })
           logger.mark('[请求返回] ' + logger.blue(`[${token}] => [文件已过期] => [${ip}]`))
