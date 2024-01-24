@@ -154,8 +154,7 @@ Bot.FileToUrl = async function (file, type = 'image') {
     token,
     width: 0,
     height: 0,
-    size,
-    buffer
+    size
   }
 
   /** 图片需要计算多两个参数 */
@@ -182,6 +181,10 @@ Bot.FileToUrl = async function (file, type = 'image') {
     }
   }
 
+  const path = `./temp/FileToUrl/${md5}.${File.type}`
+  fs.writeFileSync(path, file)
+  File.path = path
+
   /** 保存 */
   lain.Files.set(token, File)
   /** 定时删除 */
@@ -194,6 +197,45 @@ Bot.FileToUrl = async function (file, type = 'image') {
   let url = `http://${baseIP}:${port}/api/File?token=${token}`
   if (baseUrl) url = baseUrl.replace(/\/$/, '') + `/api/File?token=${token}`
   return { width: File.width, height: File.height, url, md5 }
+}
+
+/**
+* 传入文件，返回本地路径
+* 可以是http://、file://、base64://、buffer
+* @param {file://|base64://|http://|buffer} file
+* @param {string} _path - 可选，不传默认为图片
+*/
+Bot.FileToPath = async function (file, _path) {
+  if (!_path) _path = `./temp/FileToUrl/${Date.now()}.png`
+  if (Buffer.isBuffer(file) || file instanceof Uint8Array) {
+    fs.writeFileSync(_path, file)
+    return _path
+  } else if (file instanceof fs.ReadStream) {
+    const buffer = await Bot.Stream(file)
+    fs.writeFileSync(_path, buffer)
+    return _path
+  } else if (fs.existsSync(file.replace(/^file:\/\//, ''))) {
+    fs.copyFileSync(file.replace(/^file:\/\//, ''), _path)
+    return _path
+  } else if (fs.existsSync(file.replace(/^file:\/\/\//, ''))) {
+    fs.copyFileSync(file.replace(/^file:\/\/\//, ''), _path)
+    return _path
+  } else if (file.startsWith('base64://')) {
+    const buffer = Buffer.from(file.replace(/^base64:\/\//, ''), 'base64')
+    fs.writeFileSync(_path, buffer)
+    return _path
+  } else if (/^http(s)?:\/\//.test(file)) {
+    const res = await fetch(file)
+    if (!res.ok) {
+      throw new Error(`请求错误！状态码: ${res.status}`)
+    } else {
+      const buffer = Buffer.from(await res.arrayBuffer())
+      fs.writeFileSync(_path, buffer)
+      return _path
+    }
+  } else {
+    throw new Error('传入的文件类型不符合规则，只接受url、buffer、file://路径或者base64编码的图片')
+  }
 }
 
 /**

@@ -1,10 +1,11 @@
 import express from 'express'
-import fetch from 'node-fetch'
+import fs from 'fs'
 import { createServer } from 'http'
+import fetch from 'node-fetch'
 import common from '../lib/common/common.js'
 import Cfg from '../lib/config/config.js'
-import shamrock from './shamrock/index.js'
 import ComWeChat from './WeChat/index.js'
+import shamrock from './shamrock/index.js'
 
 class WebSocket {
   constructor () {
@@ -63,10 +64,11 @@ class WebSocket {
 
         /** 缓存有 */
         if (File) {
+          const path = fs.createReadStream(File.path)
           res.setHeader('Content-Type', File.mime)
           res.setHeader('Content-Disposition', 'inline')
           logger.mark('[发送文件] ' + logger.blue(`[${token}] => [${File.md5}] => [${ip}]`))
-          res.send(File.buffer)
+          path.pipe(res)
         } else {
           res.status(410).json({ status: 'failed', message: '资源过期' })
           logger.mark('[请求返回] ' + logger.blue(`[${token}] => [文件已过期] => [${ip}]`))
