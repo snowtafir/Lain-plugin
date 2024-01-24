@@ -55,22 +55,24 @@ class WebSocket {
     })
 
     /** QQBotApi */
-    app.get('/api/File', async (req, res) => {
+    app.get('/api/File/:token', async (req, res) => {
       const { ip } = req
-      const { token } = req.query
+      const token = req.params.token
+      const filePath = process.cwd() + '/temp/FileToUrl/' + req.params.token
       /** 收到日志 */
       logger.mark('[GET请求] ' + logger.blue(`[${token}] ->[${req.get('host')}] ->[${ip}]`))
 
       try {
         /** 读 */
-        const File = lain.Files.get(token)
+        const File = lain.Files.get(filePath)
 
         /** 缓存有 */
         if (File) {
-          res.setHeader('Content-Type', File.mime)
+          // res.setHeader('Content-Type', File.mime)
+          res.setHeader('Content-Type', 'application/octet-stream')
           res.setHeader('Content-Disposition', 'inline')
           logger.mark('[发送文件] ' + logger.blue(`[${token}] => [${File.md5}] => [${ip}]`))
-          fs.createReadStream(File.path).pipe(res)
+          fs.createReadStream(filePath).pipe(res)
         } else {
           res.status(410).json({ status: 'failed', message: '资源过期' })
           logger.mark('[请求返回] ' + logger.blue(`[${token}] => [文件已过期] => [${ip}]`))
