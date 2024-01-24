@@ -371,6 +371,7 @@ export default class adapterQQBot {
   async getQQBot (data, e) {
     data = common.array(data)
     let reply
+    let button = []
     const text = []
     const image = []
     const message = []
@@ -401,8 +402,10 @@ export default class adapterQQBot {
         case 'reply':
           reply = i
           break
-        case 'ark':
         case 'button':
+          button.push(i)
+          break
+        case 'ark':
         case 'markdown':
           message.push(i)
           break
@@ -429,11 +432,12 @@ export default class adapterQQBot {
       case '1':
         /** 返回数组，无需处理，直接发送即可 */
         if (image.length) {
-          Pieces.push(await this.markdown(e, text.length ? [{ type: 'text', text: text.join('\n') }, image.shift()] : [image.shift()]))
-          if (image.length) Pieces.push(await this.markdown(e, [...image]))
+          Pieces.push([...await this.markdown(e, text.length ? [{ type: 'text', text: text.join('\n') }, image.shift()] : [image.shift()]), ...button])
+          if (image.length) Pieces.push([...await this.markdown(e, [...image]), ...button])
         } else if (text.length) {
-          Pieces.push(await this.markdown(e, [{ type: 'text', text: text.join('\n') }]))
+          Pieces.push([...await this.markdown(e, [{ type: 'text', text: text.join('\n') }]), ...button])
         }
+        button = []
         break
       /** 正则模式，遍历插件，按需替换发送 */
       case 2:
@@ -505,6 +509,8 @@ export default class adapterQQBot {
         }
         break
     }
+
+    if (button.length) message.push(...button)
 
     /** 合并为一个数组 */
     return { Pieces: message.length ? [message, ...Pieces] : Pieces, reply }
