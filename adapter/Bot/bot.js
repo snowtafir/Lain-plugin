@@ -357,8 +357,7 @@ Bot.Button = function (list, line = 3) {
   for (const i of list) {
     if (Array.isArray(i)) {
       button.push(...Bot.Button(i, 10))
-    }
-    else {
+    } else {
       arr.push({
         id: String(Date.now()),
         render_data: {

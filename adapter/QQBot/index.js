@@ -230,8 +230,9 @@ export default class adapterQQBot {
     e.group_id = `${this.id}-${e.group_id}`
     e.author.id = `${this.id}-${e.author.id}`
     e.sender.user_id = e.user_id
-    e.sender.card = e.user_id
-    e.sender.nickname = e.user_id
+    /** 为什么本体会从群名片拿uid啊? */
+    e.sender.card = ''
+    e.sender.nickname = ''
 
     /** 缓存好友列表 */
     if (!Bot[e.self_id].fl.get(e.user_id)) Bot[e.self_id].fl.set(e.user_id, { user_id: e.user_id })
@@ -370,6 +371,7 @@ export default class adapterQQBot {
   async getQQBot (data, e) {
     data = common.array(data)
     let reply
+    let button = []
     const text = []
     const image = []
     const message = []
@@ -386,7 +388,7 @@ export default class adapterQQBot {
           }
           break
         case 'at':
-          if ([1, '1', 4, '4'].includes(e.bot.config.markdown.type)) text.push(`<@${(i.qq || i.id).trim().split('-')[1]}>`)
+          if (e.bot.config.markdown.type) text.push(`<@${(i.qq || i.id).trim().split('-')[1]}>`)
           break
         case 'image':
           image.push(await this.getImage(i?.url || i.file))
@@ -400,8 +402,10 @@ export default class adapterQQBot {
         case 'reply':
           reply = i
           break
-        case 'ark':
         case 'button':
+          button.push(i)
+          break
+        case 'ark':
         case 'markdown':
           message.push(i)
           break
@@ -428,11 +432,12 @@ export default class adapterQQBot {
       case '1':
         /** 返回数组，无需处理，直接发送即可 */
         if (image.length) {
-          Pieces.push(await this.markdown(e, text.length ? [{ type: 'text', text: text.join('\n') }, image.shift()] : [image.shift()]))
-          if (image.length) Pieces.push(await this.markdown(e, [...image]))
+          Pieces.push([...await this.markdown(e, text.length ? [{ type: 'text', text: text.join('\n') }, image.shift()] : [image.shift()]), ...button])
+          if (image.length) Pieces.push([...await this.markdown(e, [...image]), ...button])
         } else if (text.length) {
-          Pieces.push(await this.markdown(e, [{ type: 'text', text: text.join('\n') }]))
+          Pieces.push([...await this.markdown(e, [{ type: 'text', text: text.join('\n') }]), ...button])
         }
+        button = []
         break
       /** 正则模式，遍历插件，按需替换发送 */
       case 2:
@@ -504,6 +509,8 @@ export default class adapterQQBot {
         }
         break
     }
+
+    if (button.length) message.push(...button)
 
     /** 合并为一个数组 */
     return { Pieces: message.length ? [message, ...Pieces] : Pieces, reply }
@@ -746,7 +753,7 @@ export default class adapterQQBot {
       }
 
       /** 模板转普通消息 */
-      if (Bot[this.id].config.markdown.type == 1) {
+      if (Bot[this.id].config.markdown.type) {
         const message = []
         for (const item of copyMsg) {
           if (item.type !== 'markdown') continue
