@@ -141,8 +141,6 @@ Bot.uploadQQ = async function (file, uin = Bot.uin) {
 Bot.FileToUrl = async function (file, type = 'image') {
   /** 转为buffer */
   const buffer = await Bot.Buffer(file)
-  /** 生成随机token */
-  const token = crypto.randomUUID()
   /** 算下md5 */
   const md5 = crypto.createHash('md5').update(buffer).digest('hex').toUpperCase()
   /** 计算大小 */
@@ -151,7 +149,6 @@ Bot.FileToUrl = async function (file, type = 'image') {
   let File = {
     md5,
     type,
-    token,
     width: 0,
     height: 0,
     size
@@ -181,21 +178,26 @@ Bot.FileToUrl = async function (file, type = 'image') {
     }
   }
 
-  const path = `./temp/FileToUrl/${md5}.${File.type}`
-  fs.writeFileSync(path, file)
+  /** 文件名称 */
+  const filename = md5 + `.${File.type}`
+  /** 路径 */
+  const path = `./temp/FileToUrl/${filename}`
+
+  fs.writeFileSync(path, buffer)
   File.path = path
+  File.filename = filename
 
   /** 保存 */
-  lain.Files.set(token, File)
+  lain.Files.set(filename, File)
   /** 定时删除 */
   setTimeout(() => {
-    lain.Files.delete(token)
-    logger.debug(`[缓存清理] => [token：${token}]`)
+    lain.Files.delete(filename)
+    logger.debug(`[缓存清理] => [filename：${filename}]`)
   }, (Cfg.Server.InvalidTime || 30) * 1000)
   /** 获取基本配置 */
   const { port, baseIP, baseUrl } = Cfg.Server
-  let url = `http://${baseIP}:${port}/api/File?token=${token}`
-  if (baseUrl) url = baseUrl.replace(/\/$/, '') + `/api/File?token=${token}`
+  let url = `http://${baseIP}:${port}/api/File/${filename}`
+  if (baseUrl) url = baseUrl.replace(/\/$/, '') + `/api/File/${filename}`
   return { width: File.width, height: File.height, url, md5 }
 }
 
