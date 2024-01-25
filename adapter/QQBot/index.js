@@ -450,7 +450,7 @@ export default class adapterQQBot {
             /** 返回数组，拆出来和按钮合并 */
             if (image.length) {
               markdown.push(...await this.markdown(e, text.length ? [{ type: 'text', text: text.join('\n') }, image.shift()] : [image.shift()], false))
-              if (image.length) markdown.push(...await this.markdown(e, [...image]))
+              if (image.length) for (const img of image) markdown.push(...await this.markdown(e, [img]))
             } else if (text.length) {
               markdown.push(...await this.markdown(e, [{ type: 'text', text: text.join('\n') }], false))
             }
