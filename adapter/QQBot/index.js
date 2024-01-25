@@ -432,12 +432,12 @@ export default class adapterQQBot {
       case '1':
         /** 返回数组，无需处理，直接发送即可 */
         if (image.length) {
-          Pieces.push([...await this.markdown(e, text.length ? [{ type: 'text', text: text.join('\n') }, image.shift()] : [image.shift()]), ...button])
-          if (image.length) Pieces.push([...await this.markdown(e, [...image]), ...button])
+          Pieces.push([...(await this.markdown(e, text.length ? [{ type: 'text', text: text.join('\n') }, image.shift()] : [image.shift()])), ...button])
+          if (image.length) for (const img of image) Pieces.push([...(await this.markdown(e, [img])), ...button])
         } else if (text.length) {
-          Pieces.push([...await this.markdown(e, [{ type: 'text', text: text.join('\n') }]), ...button])
+          Pieces.push([...(await this.markdown(e, [{ type: 'text', text: text.join('\n') }])), ...button])
         }
-        button = []
+        button.length = 0
         break
       /** 正则模式，遍历插件，按需替换发送 */
       case 2:
@@ -794,8 +794,9 @@ export default class adapterQQBot {
     try {
       logger.debug('发送回复消息：', JSON.stringify(msg))
       return { ok: true, data: await e.data.reply(msg) }
-    } catch (error) {
-      common.error(e.self_id, JSON.stringify(error))
+    } catch (err) {
+      const error = err.message || err
+      common.error(e.self_id, error)
       return { ok: false, data: error }
     }
   }

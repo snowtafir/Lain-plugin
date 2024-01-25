@@ -8,3 +8,6 @@ ComWeChat:           # PC微信
 
 WeXin:               # 网页版微信
   autoFriend: 1      # 自动同意加好友 1-同意 0-不处理
+
+# 定时清理缓存临时文件夹 每天凌晨4点
+DelFileCron: 0 4 * * *
