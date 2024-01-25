@@ -446,16 +446,13 @@ export default class adapterQQBot {
           /** 先走一遍按钮正则，匹配到按钮则修改为markdown */
           const button = await this.button(e)
           if (button && button?.length) {
-            const markdown = []
             /** 返回数组，拆出来和按钮合并 */
             if (image.length) {
-              markdown.push(...await this.markdown(e, text.length ? [{ type: 'text', text: text.join('\n') }, image.shift()] : [image.shift()], false))
-              if (image.length) for (const img of image) markdown.push(...await this.markdown(e, [img]))
+              Pieces.push([...await this.markdown(e, text.length ? [{ type: 'text', text: text.join('\n') }, image.shift()] : [image.shift()], false), ...button])
+              if (image.length) for (const img of image) Pieces.push([...await this.markdown(e, [img], false), ...button])
             } else if (text.length) {
-              markdown.push(...await this.markdown(e, [{ type: 'text', text: text.join('\n') }], false))
+              Pieces.push([...await this.markdown(e, [{ type: 'text', text: text.join('\n') }], false), ...button])
             }
-            /** 加入按钮 */
-            Pieces.push([...markdown, ...button])
           } else {
             /** 返回数组，无需处理，直接发送即可 */
             if (text.length) message.push(text.length < 4 ? text.join('') : text.join('\n'))
