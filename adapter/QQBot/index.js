@@ -434,10 +434,11 @@ export default class adapterQQBot {
         if (image.length) {
           Pieces.push([...(await this.markdown(e, text.length ? [{ type: 'text', text: text.join('\n') }, image.shift()] : [image.shift()])), ...button])
           if (image.length) for (const img of image) Pieces.push([...(await this.markdown(e, [img])), ...button])
+          button.length = 0
         } else if (text.length) {
           Pieces.push([...(await this.markdown(e, [{ type: 'text', text: text.join('\n') }])), ...button])
+          button.length = 0
         }
-        button.length = 0
         break
       /** 正则模式，遍历插件，按需替换发送 */
       case 2:
