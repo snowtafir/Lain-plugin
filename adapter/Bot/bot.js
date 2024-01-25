@@ -413,7 +413,7 @@ Bot.Button = function (list, line = 3) {
           permission: i.permission || { type: 2 },
           data: i.data || i.callback || i.link || i.label,
           enter: i.enter || 'callback' in i || false,
-          unsupport_tips: '暂不支持~'
+          unsupport_tips: '_err'
         }
       })
       if (index % line == 0 || index == list.length) {
