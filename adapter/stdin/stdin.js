@@ -101,6 +101,7 @@ export default async function stdin() {
 }
 
 async function makeBuffer(file) {
+  if (Buffer.isBuffer(file)) return file
   if (file.match(/^base64:\/\//))
     return Buffer.from(file.replace(/^base64:\/\//, ''), 'base64')
   else if (file.match(/^https?:\/\//))

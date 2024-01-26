@@ -191,7 +191,7 @@ async function makeForwardMsg(data, node = false, e = {}) {
     if (Array.isArray(msg)) {
       msg.forEach(i => {
         if (typeof i === "string") {
-          allMsg.push({ type: "forward", text: i.trim().replace(/^\\n{1,3}|\\n{1,3}$/g, "") })
+          allMsg.push({ type: "forward", text: "\n" + i.trim() })
         } else {
           allMsg.push(i)
         }
@@ -201,9 +201,9 @@ async function makeForwardMsg(data, node = false, e = {}) {
       const splitMsg = msg.split("\n").map(i => {
         if (!i || i.trim() === "") return {}
         if (Bot.lain.cfg.forwar) {
-          return { type: "forward", text: i.substring(0, 100).trim().replace(/^\\n{1,3}|\\n{1,3}$/g, "") }
+          return { type: "forward", text: "\n" + i.substring(0, 100).trim() }
         } else {
-          return { type: "forward", text: i.substring(0, 1000).trim().replace(/^\\n{1,3}|\\n{1,3}$/g, "") }
+          return { type: "forward", text: "\n" + i.substring(0, 1000).trim() }
         }
       })
       allMsg.push(...splitMsg.slice(0, 50))
@@ -212,7 +212,7 @@ async function makeForwardMsg(data, node = false, e = {}) {
       allMsg.push(msg)
     } else if (typeof msg === "string") {
       /** 普通文本 */
-      allMsg.push({ type: "forward", text: msg.replace(/^\\n{1,3}|\\n{1,3}$/g, "") })
+      allMsg.push({ type: "forward", text: "\n" + msg })
     } else {
       await log("未兼容的字段：", msg)
     }
