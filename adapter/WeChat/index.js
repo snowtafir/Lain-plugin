@@ -451,9 +451,12 @@ class AdapterComWeChat {
           raw_message.push(`<@:${i.qq || i.id}>`)
           break
         case 'text':
-          if (typeof i.text !== 'number' && !i.text.trim()) break
-          message.push({ type: 'text', data: { text: i.text } })
-          raw_message.push(i.text)
+        case 'forward':
+          if (String(i.text).trim()) {
+            if (i.type === 'forward') i.text = String(i.text).trim() + '\n'
+            message.push({ type: 'text', data: { text: i.text } })
+            raw_message.push(i.text)
+          }
           break
         case 'file':
         case 'record':
@@ -482,10 +485,6 @@ class AdapterComWeChat {
             message.push(await this.get_file_id('image', i.file))
             raw_message.push(`<图片:${data.data.file_id}>`)
           }
-          break
-        case 'forward':
-          message.push({ type: 'text', data: { text: i.text } })
-          raw_message.push(i.text)
           break
         case 'face':
         default:

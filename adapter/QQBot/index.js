@@ -376,12 +376,14 @@ export default class adapterQQBot {
     const image = []
     const message = []
     const Pieces = []
+    let normalMsg = []
 
     for (let i of data) {
       switch (i.type) {
         case 'text':
         case 'forward':
           if (String(i.text).trim()) {
+            if (i.type === 'forward') i.text = String(i.text).trim() + '\n'
             for (let item of (await Bot.HandleURL(i.text.trim()))) {
               item.type === 'image' ? image.push(await this.getImage(item.file)) : text.push(item.text)
             }
@@ -418,6 +420,19 @@ export default class adapterQQBot {
     /** 消息次数 */
     if (text.length) try { common.MsgTotal(this.id, 'QQBot') } catch { }
     if (image.length) try { common.MsgTotal(this.id, 'QQBot', 'image') } catch { }
+
+    /** 浅拷贝一次消息为普通消息，用于模板发送失败重发 */
+    if (e.bot.config.markdown.type) {
+      /** 拷贝源消息 */
+      const copyMessage = JSON.parse(JSON.stringify(message))
+      const copyImage = JSON.parse(JSON.stringify(image))
+      if (text.length) copyMessage.push(text.length < 4 ? text.join('') : text.join('\n'))
+      if (copyImage.length) copyMessage.push(copyImage.shift())
+      if (copyImage.length) normalMsg.push(...copyImage)
+      if (button.length) copyMessage.push(...button)
+      /** 合并为一个数组 */
+      normalMsg = copyMessage.length ? [copyMessage, ...normalMsg] : normalMsg
+    }
 
     switch (e.bot.config.markdown.type) {
       /** 关闭 */
@@ -511,7 +526,7 @@ export default class adapterQQBot {
     if (button.length) message.push(...button)
 
     /** 合并为一个数组 */
-    return { Pieces: message.length ? [message, ...Pieces] : Pieces, reply }
+    return { Pieces: message.length ? [message, ...Pieces] : Pieces, reply, normalMsg }
   }
 
   /** 处理图片 */
@@ -731,63 +746,34 @@ export default class adapterQQBot {
   /** 快速回复 */
   async sendReplyMsg (e, msg) {
     let res
-    const { Pieces } = await this.getQQBot(msg, e)
+    const { Pieces, normalMsg } = await this.getQQBot(msg, e)
 
     for (const i in Pieces) {
-      /** 拷贝源消息 */
-      const copyMsg = JSON.parse(JSON.stringify(Pieces[i]))
       if (!Pieces[i] || Object.keys(Pieces[i]).length === 0) continue
       let { ok, data } = await this.sendMsg(e, Pieces[i])
-      if (ok) {
-        res = data
-        continue
-      }
+      if (ok) { res = data; continue }
 
-      /** 处理好文本以待发送 */
-      if (data && data?.response) {
-        data = `\n发送消息失败：\ncode:：${data.response.data.code}\nmessage：${data.response.data.message}`
-      } else {
-        data = data?.message || JSON.stringify(data)
-      }
+      /** 错误文本处理 */
+      data = data.match(/code\(\d+\): .*/)[0] || data
 
-      /** 模板转普通消息 */
+      /** 模板转普通消息并终止发送剩余消息 */
       if (Bot[this.id].config.markdown.type) {
-        const message = []
-        for (const item of copyMsg) {
-          if (item.type !== 'markdown') continue
-          item.params.forEach(obj => {
-            switch (obj.key) {
-              case 'text_start':
-                message.push({ type: 'text', text: obj.values[0] })
-                break
-              case 'img_url':
-                message.push({ type: 'image', file: obj.values[0] })
-                break
-              case 'img_dec':
-              default:
-                break
-            }
-          })
+        let val
+        for (const p of normalMsg) try { val = await this.sendMsg(e, p) } catch { }
+        if (val.ok) {
+          return this.returnResult(val.data)
+        } else {
+          /** 发送错误消息告知用户 */
+          const val = await this.sendMsg(e, data)
+          return this.returnResult(val.data)
         }
-        const val = await this.sendMsg(e, message)
-        if (val.ok) continue
       }
-
-      /** 发送错误消息告知用户 */
-      const val = await this.sendMsg(e, data)
-      res = val.data
     }
 
-    res = {
-      ...res,
-      rand: 1,
-      time: Date.now(),
-      message_id: res?.msg_id
-    }
-    common.debug('Lain-plugin', res)
-    return res
+    return this.returnResult(res)
   }
 
+  /** 发送消息 */
   async sendMsg (e, msg) {
     try {
       logger.debug('发送回复消息：', JSON.stringify(msg))
@@ -797,6 +783,20 @@ export default class adapterQQBot {
       common.error(e.self_id, error)
       return { ok: false, data: error }
     }
+  }
+
+  /** 返回结果 */
+  returnResult (res) {
+    const { id, timestamp } = res
+    const time = (new Date(timestamp)).getTime()
+    res = {
+      ...res,
+      rand: 1,
+      time,
+      message_id: id
+    }
+    common.debug('Lain-plugin', res)
+    return res
   }
 }
 
