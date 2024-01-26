@@ -384,13 +384,18 @@ export default class adapterQQBot {
         case 'forward':
           if (String(i.text).trim()) {
             if (i.type === 'forward') i.text = String(i.text).trim() + '\n'
+            /** 禁止用户从文本键入@全体成员 */
+            i.text = i.text.replace('@everyone', 'everyone')
             for (let item of (await Bot.HandleURL(i.text.trim()))) {
               item.type === 'image' ? image.push(await this.getImage(item.file)) : text.push(item.text)
             }
           }
           break
         case 'at':
-          if (e.bot.config.markdown.type) text.push(`<@${(i.qq || i.id).trim().split('-')[1]}>`)
+          if (e.bot.config.markdown.type) {
+            if ((i.qq || i.id) === 'all') text.push('@everyone')
+            else text.push(`<@${(i.qq || i.id).trim().split('-')[1]}>`)
+          }
           break
         case 'image':
           image.push(await this.getImage(i?.url || i.file))
