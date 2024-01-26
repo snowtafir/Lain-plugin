@@ -507,6 +507,28 @@ export default class StartQQBot {
     })
   }
 
+  /** 转换整个文本为二维码 */
+  async ConversionLink(data) {
+    const form = new FormData();
+    form.append('format', 'url');
+    form.append('content', data);
+    // form.append('lexer', 'text')
+    form.append('expiry_days', '7')
+    form.append('expiry_seconds', '0')
+    form.append('private', 'false')
+
+    const res = await fetch('https://paste.mozilla.org/api/', {
+      method: 'POST',
+      body: form
+    });
+    const url = (await res.text()).trim()
+    if (res.status != 200) {
+      common.warn(this.id, res.headers)
+      return false
+    }
+    return "base64://" + (await qrcode.toBuffer(url, { errorCorrectionLevel: 'H', type: 'png', margin: 4, text: url })).toString("base64")
+  }
+
   /** 转换文本中的URL为图片 */
   async HandleURL(msg) {
     const message = []
@@ -518,6 +540,14 @@ export default class StartQQBot {
     /** 需要处理的url */
     let urls = await common.getUrls(msg) || []
 
+    if (urls.length > 1 || msg.length > 500) {
+      let base64 = await this.ConversionLink(msg)
+      if (base64) {
+        const Uint8Array = await common.rendering(base64, msg)
+        message.push(await this.Upload({ type: 'image', file: Uint8Array }, 'image'))
+        return message
+      }
+    }
     if (urls.length > 0) {
       /** 检查url是否包含在白名单中的任何一个url */
       urls = urls.filter(url => {
