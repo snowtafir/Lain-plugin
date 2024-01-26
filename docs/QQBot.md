@@ -134,33 +134,16 @@ Bot.imageToUrl = async (file) => {
 
 ## 高阶能力
 
-<details><summary>Markdown 消息</summary>
-
-支持自定义全局模板名称，打开配置文件自行配置，`./plugins/Lain-plugin/config/config/token.yaml`
-
-配置后无需申请通用模板，经测试，只需要一个图文模板即可使用全局md。
-
-随后执行`#QQ群设置MD 机器人ID:模板ID`。
-
-```
-可自定义
-QQBotMD:
-  # 图片模板宽高 key名称
-  ImageSize:
-  # 图片模板url key名称
-  image:
-  # 文字模板 key名称
-  text:
-```
-
-如配置以上，无需查看以下。
-
-`此项配置同步 TRSS-Yunzai，设置后视为全局启用Markdown模板发送文本、图片消息`
-
 高阶能力 → 消息模板 → 添加 Markdown 模板
 
-模板名称：图文消息  
-使用场景：发送图文混排消息  
+<details><summary>图文消息</summary>
+
+模板名称：图文消息
+
+使用场景：发送图文混排消息
+
+请复制后去除源码前后的 ` 标记
+
 Markdown 源码：
 
 ```
@@ -168,23 +151,65 @@ Markdown 源码：
 ```
 
 配置模板参数
-| 模板参数   | 参数示例                                                                  |
-| ---------- | ------------------------------------------------------------------------- |
-| text_start | 开头文字                                                                  |
-| img_dec    | 图片                                                                      |
-| img_url    | https://qqminiapp.cdn-go.cn/open-platform/11d80dc9/img/robot.b167c62c.png |
-| text_end   | 结束文字                                                                  |
+| 模板参数   | 参数示例                                                          号位文字 |
+| ---------- | -------------------------------------------------------------------------- |
+| text_start | 开头文字                                                          号位文字 |
+| img_dec    | 图片                                                              号位文字 |
+| img_url    | https://qqminiapp.cdn-go.cn/open-platform/11d80dc9/img/robot.b167c62c.png  |
+| text_end   | 结束文字                                                          号位文字 |
 
-保存 → 提交审核 → 审核完成后，输入 `#QQ群设置MD 机器人ID:模板ID`
+保存 → 提交审核 → 审核完成后，输入 `#QQBot设置MD 机器人ID:模板ID`
 
-~~模板名称：合并转发~~  
-~~使用场景：发送合并转发消息~~  
-~~Markdown 源码：~~
+
+```
+温馨提示：
+支持自定义全局模板名称，打开配置文件自行配置，`./plugins/Lain-plugin/config/config/token.yaml`
+
+配置后无需申请通用模板，经测试，只需要一个图文模板即可使用全局md。
+
+随后执行`#QQ群设置MD 机器人ID:模板ID`。
+```
+
+</details>
+
+<details><summary>纯文模板</summary>
+
+模板名称：合并转发
+
+使用场景：发送合并转发消息
+
+请复制后去除源码前后的 ` 标记
+
+### 我更推荐你用此模板，支持多图，Markdown语法。 
+
+Markdown 源码：
 
 ```
 {{.text_0}}{{.text_1}}{{.text_2}}{{.text_3}}{{.text_4}}{{.text_5}}{{.text_6}}{{.text_7}}{{.text_8}}{{.text_9}}
 ```
-~~使用方法: 发送 `#QQBotmd4`~~ (*待实现*)
+
+配置模板参数
+| 模板参数 | 参数示例  |
+| -------- | --------- |
+| text_0   | 0号位文字 |
+| text_1   | 1号位文字 |
+| text_2   | 2号位文字 |
+| text_3   | 3号位文字 |
+| text_4   | 4号位文字 |
+| text_5   | 5号位文字 |
+| text_6   | 6号位文字 |
+| text_7   | 7号位文字 |
+| text_8   | 8号位文字 |
+| text_9   | 9号位文字 |
+
+
+保存 → 提交审核 → 审核完成
+
+将`./plugins/Lain-plugin/plugins/纯文模板.js`复制到`./plugins/example`
+
+对机器人输入 `#QQBot设置MD 机器人ID:模板ID`
+
+随后输入 `#QQBotMD 机器人ID:4`
 
 </details>
 

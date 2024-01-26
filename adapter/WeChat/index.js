@@ -451,9 +451,12 @@ class AdapterComWeChat {
           raw_message.push(`<@:${i.qq || i.id}>`)
           break
         case 'text':
-          if (typeof i.text !== 'number' && !i.text.trim()) break
-          message.push({ type: 'text', data: { text: i.text } })
-          raw_message.push(i.text)
+        case 'forward':
+          if (String(i.text).trim()) {
+            if (i.type === 'forward') i.text = String(i.text).trim() + '\n'
+            message.push({ type: 'text', data: { text: i.text } })
+            raw_message.push(i.text)
+          }
           break
         case 'file':
         case 'record':
@@ -483,10 +486,6 @@ class AdapterComWeChat {
             raw_message.push(`<图片:${data.data.file_id}>`)
           }
           break
-        case 'forward':
-          message.push({ type: 'text', data: { text: i.text } })
-          raw_message.push(i.text)
-          break
         case 'face':
         default:
           // 为了兼容更多字段，不再进行序列化，风险是有可能未知字段导致Shamrock崩溃
@@ -499,7 +498,7 @@ class AdapterComWeChat {
     return { message, raw_message }
   }
 
-  /** 上传图片 */
+  /** 上传文件、图片 */
   async get_file_id (type, i) {
     const file = await Bot.Base64(i)
     const buffer = await Bot.Buffer(`base64://${file}`)
@@ -518,6 +517,36 @@ class AdapterComWeChat {
     } else {
       return { type, data: { file_id } }
     }
+  }
+
+  /** 群对象 */
+  pickGroup (group_id) {
+    return {
+      is_admin: false,
+      is_owner: false,
+      /** 发送消息 */
+      sendMsg: async (msg) => await this.sendGroupMsg(group_id, msg),
+      recallMsg: async () => '',
+      /** 制作转发 */
+      makeForwardMsg: async (message) => await this.makeForwardMsg(message),
+      sendFile: async (filePath) => await this.get_file_id('file', filePath)
+    }
+  }
+
+  /** 好友对象 */
+  pickFriend (user_id) {
+    return {
+      sendMsg: async (msg) => await this.sendFriendMsg(user_id, msg),
+      recallMsg: async () => '',
+      makeForwardMsg: async (message) => await this.makeForwardMsg(message),
+      getAvatarUrl: () => '',
+      sendFile: async (filePath) => await this.get_file_id('file', filePath)
+    }
+  }
+
+  /** 群成员列表 */
+  async getMemberMap (group_id) {
+    return await this.sendApi('get_group_list', { group_id })
   }
 }
 
