@@ -382,38 +382,49 @@ Bot.getUrls = function (url, exclude = []) {
 }
 
 /**
- * 快速生成md模板按钮
- * @param {array} list
- * @param {number} line 每行显示的按钮个数，默认3
- *
- * 举例：
- * list =[
-      { label: '再来一题', data: '随机一题' },
-      { label: '查看题解' },
-      { label: '今日一题', data: '今日一题', enter: true },
-      { label: '今日一题', data: '今日一题', permission: { type:1, specify_user_ids:[] } }
-    ]
+ * Bot.Button 是一个函数，用于生成按钮列表。
+ * @param {Array} list - 包含按钮信息的数组。每个对象可以有以下属性：
+ *   @param {string} text - 按钮的显示文本。
+ *   @param {number} style - 按钮的显示的颜色，0-灰色，1-蓝色。
+ *   @param {string} data - 按钮的自定义回复内容。
+ *   @param {boolean} send - 如果为 true，则直接发送内容。
+ *   @param {boolean} admin - 如果为 true，则仅管理员可以点击此按钮。
+ *   @param {Array} list - 包含有权限点击此按钮的用户 id 的数组。
+ *   @param {Array} role - 包含有权限点击此按钮的用户组 id 的数组（仅频道可用）。
+ *   @param {boolean} reply - 如果为 true，则点击后自动添加引用回复。
+ *   @param {string} link - 按钮的 http 跳转链接。
+ *   以上参数，均可自行组合。
+ * @param {number} [line=3] - 按钮的行数。
+ * @returns {Array} button - 返回包含按钮信息的数组。
  */
 Bot.Button = function (list, line = 3) {
-  let button = []
-  let arr = []
+  let id = 0
   let index = 1
+  let arr = []
+  let button = []
+
   for (const i of list) {
     if (Array.isArray(i)) {
       button.push(...Bot.Button(i, 10))
     } else {
       arr.push({
-        id: String(Date.now()),
+        id: String(id),
         render_data: {
-          label: i.label,
-          style: i.style || 1
+          label: i.text || i.label || i.link,
+          style: String(i.style || 1),
+          visited_label: i.text || i.label || i.link
         },
         action: {
           type: i.type || (i.link ? 0 : 2),
-          permission: i.permission || { type: 2 },
-          data: i.data || i.callback || i.link || i.label,
-          enter: i.enter || 'callback' in i || false,
-          unsupport_tips: '_err'
+          reply: i.reply || false,
+          permission: i.permission || {
+            type: (i.admin && 1) || (i.list && 0) || (i.role && 3) || 2,
+            specify_user_ids: i.admin || [],
+            specify_role_ids: i.role || []
+          },
+          data: i.text || i.data || i.callback || i.link || i.label,
+          enter: i.send || i.enter || 'callback' in i || false,
+          unsupport_tips: i.tips || 'err'
         }
       })
       if (index % line == 0 || index == list.length) {
@@ -424,6 +435,7 @@ Bot.Button = function (list, line = 3) {
         arr = []
       }
     }
+    id++
     index++
   }
   return button
