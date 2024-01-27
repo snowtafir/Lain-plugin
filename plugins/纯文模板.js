@@ -6,7 +6,7 @@
 
 import plugin from '../Lain-plugin/adapter/QQBot/plugins.js'
 
-Bot.Markdown = async function (e, data) {
+Bot.Markdown = async function (e, data, button = []) {
   let text = []
   const image = []
   const message = []
@@ -34,7 +34,7 @@ Bot.Markdown = async function (e, data) {
     for (const i in text) message.push({ text: text?.[i], image: image?.[i] })
   }
 
-  return await combination(e, message)
+  return await combination(e, message, button)
 }
 
 /** 处理md标记 */
@@ -71,7 +71,7 @@ function sort (arr) {
 }
 
 /** 组合 */
-async function combination (e, data) {
+async function combination (e, data, but) {
   const all = []
   /** 按9分类 */
   data = sort(data)
@@ -93,7 +93,7 @@ async function combination (e, data) {
     if (p[length - 1]?.image) params.push({ key: `text_${length}`, values: [`](${p[length - 1].image.file})`] })
 
     /** 转为md */
-    let markdown = {
+    const markdown = {
       type: 'markdown',
       custom_template_id: e.bot.config.markdown.id,
       params
@@ -101,7 +101,7 @@ async function combination (e, data) {
 
     /** 按钮 */
     const button = await Button(e)
-    button && button?.length ? all.push([markdown, ...button]) : all.push(markdown)
+    button && button?.length ? all.push([markdown, ...button, ...but]) : all.push([markdown, ...but])
   }
   return all
 }

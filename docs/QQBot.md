@@ -16,13 +16,13 @@
 
 添加机器人(删除机器人同理)：**是=1 否=0**
 ```
-#QQ群设置 沙盒:私域:移除at:机器人ID:机器人令牌:机器人密钥
+// 请认真查看例子中的说明
+#QQBot设置 沙盒:私域:移除at:机器人ID:机器人令牌:机器人密钥
 ```
 
 查看机器人：
 ```
-// 暂不可用
-#QQ频道账号
+#QQBot账号
 ```
 
 ## 使用例子
@@ -213,12 +213,12 @@ Markdown 源码：
 
 </details>
 
-<details><summary>全局 Markdown 消息附带发送按钮编写</summary>
+<details><summary>Markdown 消息附带发送按钮编写</summary>
 
 按钮仓库：[lava081/button](https://gitee.com/lava081/button)
 
 - 插件开发者请在插件包目录创建 `lain.support.js`，和锅巴一样。
-- 个人用户可在 `plugins/Lain-plugin/plugins/button`文件夹创建 `js` 文件，可创建多个。
+- 个人用户可在 `plugins/Lain-plugin/plugins/button`文件夹创建 `js` 文件、文件夹，可创建多个。
 - 复制以下内容到 `lain.support.js` 中，自行编写正则和执行方法即可。
 
 ```javascript
@@ -287,6 +287,35 @@ export default class Button {
 
 ```
 
+#### 基本参数
+
+| 序号 | 键    | 注释                   |
+| ---- | ----- | ---------------------- |
+| 1    | text  | 文本内容               |
+| 2    | text  | 按钮颜色               |
+| 3    | data  | 自定义回复内容         |
+| 4    | send  | 直接发送内容           |
+| 5    | admin | 仅管理员可点           |
+| 6    | list  | 仅指定用户可点         |
+| 7    | role  | 仅指定用户可点 - 频道  |
+| 8    | reply | 点击后自动添加引用回复 |
+| 9    | link  | http跳转               |
+
+```javascript
+// text和link均可作为主键与其他任何键进行单个、多个组合
+const list = [
+  { text: '普通文本' },
+  { text: '灰色按钮', style: 0 },
+  { text: '显示的文字', data: '实际的文本' },
+  { text: '直接发送文本', send: true },
+  { text: '仅管理员可点', admin: true },
+  { text: '仅列表用户可点', list: ['用户1', '用户2'] },
+  { text: '引用回复', reply: true },
+  { link: 'http连接' }
+]
+
+```
+
 </details>
 
 <details><summary>自定义发送 Markdown 消息</summary>
@@ -318,4 +347,3 @@ return await this.reply({
 参数按照[官方文档](https://bot.q.qq.com/wiki/develop/api-v2/server-inter/message/type/markdown.html#发送方式)发送即可，注意`type`，其他的自行参考文档。
 
 </details>
-

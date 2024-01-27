@@ -386,8 +386,15 @@ export default class adapterQQBot {
             if (i.type === 'forward') i.text = String(i.text).trim() + '\n'
             /** 禁止用户从文本键入@全体成员 */
             i.text = i.text.replace('@everyone', 'everyone')
-            for (let item of (await Bot.HandleURL(i.text.trim()))) {
-              item.type === 'image' ? image.push(await this.getImage(item.file)) : text.push(item.text)
+            /** 模板1、4使用按钮替换连接 */
+            if (e.bot.config.markdown.type == 1 || e.bot.config.markdown.type == 4) {
+              for (let p of (this.HandleURL(i.text.trim()))) {
+                p.type === 'button' ? button.push(p) : text.push(p.text)
+              }
+            } else {
+              for (let p of (await Bot.HandleURL(i.text.trim()))) {
+                p.type === 'image' ? image.push(await this.getImage(p.file)) : text.push(p.text)
+              }
             }
           }
           break
@@ -431,7 +438,7 @@ export default class adapterQQBot {
       /** 拷贝源消息 */
       const copyMessage = JSON.parse(JSON.stringify(message))
       const copyImage = JSON.parse(JSON.stringify(image))
-      if (text.length) copyMessage.push(text.length < 4 ? text.join('') : text.join('\n'))
+      if (text.length) copyMessage.push(text.join(''))
       if (copyImage.length) copyMessage.push(copyImage.shift())
       if (copyImage.length) normalMsg.push(...copyImage)
       if (button.length) copyMessage.push(...button)
@@ -443,7 +450,7 @@ export default class adapterQQBot {
       /** 关闭 */
       case 0:
       case '0':
-        if (text.length) message.push(text.length < 4 ? text.join('') : text.join('\n'))
+        if (text.length) message.push(text.join(''))
         if (image.length) message.push(image.shift())
         if (image.length) Pieces.push(...image)
         break
@@ -476,7 +483,7 @@ export default class adapterQQBot {
             }
           } else {
             /** 返回数组，无需处理，直接发送即可 */
-            if (text.length) message.push(text.length < 4 ? text.join('') : text.join('\n'))
+            if (text.length) message.push(text.join(''))
             if (image.length) message.push(image.shift())
             if (image.length) Pieces.push(...image)
           }
@@ -487,7 +494,7 @@ export default class adapterQQBot {
       /** 原样发送并遍历插件，自动补发一条按钮模板消息 */
       case 3:
       case '3':
-        if (text.length) message.push(text.length < 4 ? text.join('') : text.join('\n'))
+        if (text.length) message.push(text.join(''))
         if (image.length) message.push(image.shift())
         if (image.length) Pieces.push(...image)
         /** 按钮模板 */
@@ -513,15 +520,18 @@ export default class adapterQQBot {
         try {
           /** 返回数组，无需处理，直接发送即可 */
           if (image.length && text.length) {
-            Pieces.push(...await Bot.Markdown(e, [{ type: 'text', text: text.join('\n') }, ...image]))
+            Pieces.push(...await Bot.Markdown(e, [{ type: 'text', text: text.join('\n') }, ...image], button))
+            button.length = 0
           } else if (image.length) {
-            Pieces.push(...await Bot.Markdown(e, image))
+            Pieces.push(...await Bot.Markdown(e, image, button))
+            button.length = 0
           } else if (text.length) {
-            Pieces.push(...await Bot.Markdown(e, [{ type: 'text', text: text.join('\n') }]))
+            Pieces.push(...await Bot.Markdown(e, [{ type: 'text', text: text.join('\n') }], button))
+            button.length = 0
           }
         } catch (_err) {
           console.error(_err)
-          if (text.length) message.push(text.length < 4 ? text.join('') : text.join('\n'))
+          if (text.length) message.push(text.join(''))
           if (image.length) message.push(image.shift())
           if (image.length) Pieces.push(...image)
         }
@@ -802,6 +812,23 @@ export default class adapterQQBot {
     }
     common.debug('Lain-plugin', res)
     return res
+  }
+
+  /** 转换文本中的URL为图片 */
+  HandleURL (msg) {
+    const message = []
+    if (msg?.text) msg = msg.text
+    /** 需要处理的url */
+    let urls = Bot.getUrls(msg, Cfg.WhiteLink)
+
+    urls.forEach(link => {
+      message.push(...Bot.Button([{ link }]), 1)
+      msg = msg.replace(link, '[链接(请点击按钮查看)]')
+      msg = msg.replace(link.replace(/^http:\/\//g, ''), '[链接(请点击按钮查看)]')
+      msg = msg.replace(link.replace(/^https:\/\//g, ''), '[链接(请点击按钮查看)]')
+    })
+    message.unshift({ type: 'text', text: msg })
+    return message
   }
 }
 
