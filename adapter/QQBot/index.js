@@ -84,10 +84,12 @@ export default class adapterQQBot {
       const List = await redis.keys(`lain:${type}:${this.id}:*`)
       List.forEach(async i => {
         const id = await redis.get(i)
+        const info = JSON.parse(id)
+        info.uin = this.id
         if (type === 'gl') {
-          Bot[this.id].gl.set(id, JSON.parse(id))
+          Bot[this.id].gl.set(id, info)
         } else {
-          Bot[this.id].fl.set(id, JSON.parse(id))
+          Bot[this.id].fl.set(id, info)
         }
       })
     } catch { }
@@ -212,7 +214,7 @@ export default class adapterQQBot {
         const groupId = `${this.id}-${e.group_id}`
         if (!Bot[e.self_id].gl.get(groupId)) Bot[e.self_id].gl.set(groupId, { group_id: groupId })
         /** 缓存群列表 */
-        if (await redis.get(`lain:gl:${e.self_id}:${groupId}`)) redis.set(`lain:gl:${e.self_id}:${groupId}`, JSON.stringify({ group_id: groupId }))
+        if (await redis.get(`lain:gl:${e.self_id}:${groupId}`)) redis.set(`lain:gl:${e.self_id}:${groupId}`, JSON.stringify({ group_id: groupId, uin: this.id }))
         /** 防倒卖崽 */
         if (Bot.lain.cfg.QQBotTips) await this.QQBotTips(data, groupId)
       } catch { }

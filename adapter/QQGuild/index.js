@@ -116,7 +116,7 @@ export default class adapterQQGuild {
         Bot[this.id].guilds.set(`qg_${guild.id}`, data)
         for (const channel of data) {
           const group_id = `qg_${guild.id}-${channel.id}`
-          const value = { ...channel, group_name: `${guild.name}-${channel.name}` }
+          const value = { ...channel, group_name: `${guild.name}-${channel.name}`, uin: this.id }
           /** 一个子频道为一个群 */
           Bot.gl.set(group_id, value)
           Bot[this.id].gl.set(group_id, value)
@@ -396,15 +396,15 @@ export default class adapterQQGuild {
       group_name = `来自"${group_name}"频道`
 
       /** 一个子频道为一个群 */
-      Bot.gl.set(group_id, { group_name })
-      Bot[this.id].gl.set(group_id, { group_name })
+      Bot.gl.set(group_id, { group_name, uin: this.id })
+      Bot[this.id].gl.set(group_id, { group_name, uin: this.id })
     } else {
       let { data } = await this.client.channelApi.channel(channelId)
       group_name = `${group_name}-${data.name}`
 
       /** 一个子频道为一个群 */
-      Bot.gl.set(group_id, { ...data, group_name })
-      Bot[this.id].gl.set(group_id, { ...data, group_name })
+      Bot.gl.set(group_id, { ...data, group_name, uin: this.id })
+      Bot[this.id].gl.set(group_id, { ...data, group_name, uin: this.id })
     }
 
     return group_name

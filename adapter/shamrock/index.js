@@ -447,6 +447,7 @@ class Shamrock {
 
     if (groupList && typeof groupList === 'object') {
       for (const i of groupList) {
+        i.uin = this.id
         /** 给锅巴用 */
         Bot.gl.set(i.group_id, i)
         /** 自身参数 */
@@ -466,6 +467,8 @@ class Shamrock {
         user.card = user.nickname
         gml[user.user_id] = user
       }
+      gml.uin = this.id
+      Bot.gml.set(groupId, gml)
       Bot[id].gml.set(groupId, gml)
       common.debug(id, `加载[${groupId}]群成员完成`)
     } catch (error) { }
@@ -490,6 +493,7 @@ class Shamrock {
     if (friendList && typeof friendList === 'object') {
       for (let i of friendList) {
         i.nickname = i.user_name || i.user_displayname || i.user_remark
+        i.uin = this.id
         /** 给锅巴用 */
         Bot.fl.set(i.user_id, i)
         /** 自身参数 */
