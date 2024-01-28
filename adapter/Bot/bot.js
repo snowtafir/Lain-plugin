@@ -403,7 +403,18 @@ Bot.Button = function (list, line = 3) {
   let arr = []
   let button = []
 
-  for (const i of list) {
+  for (let i of list) {
+    /** 处理用户id */
+    if (i.list && i.list.length) {
+      const list = []
+      i.list.forEach(p => {
+        p = p.split('-')
+        p = p[1] || p[0]
+        list.push(p)
+      })
+      i.list = list
+    }
+
     if (Array.isArray(i)) {
       button.push(...Bot.Button(i, 10))
     } else {
@@ -419,10 +430,10 @@ Bot.Button = function (list, line = 3) {
           reply: i.reply || false,
           permission: i.permission || {
             type: (i.admin && 1) || (i.list && 0) || (i.role && 3) || 2,
-            specify_user_ids: i.admin || [],
+            specify_user_ids: i.list || [],
             specify_role_ids: i.role || []
           },
-          data: i.text || i.data || i.callback || i.link || i.label,
+          data: i.link || i.data || i.text || i.label || i.callback,
           enter: i.send || i.enter || 'callback' in i || false,
           unsupport_tips: i.tips || 'err'
         }

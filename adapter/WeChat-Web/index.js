@@ -161,8 +161,23 @@ export default class StartWeChat4u {
     switch (msg.MsgType) {
       /** 文本 */
       case this.bot.CONF.MSGTYPE_TEXT:
-        text = msg.Content?.match(/\n(.+)/)?.[1] || msg.Content
-        message.push({ type: 'text', text })
+        // console.log(this.bot.user)
+        // console.log(this.bot.contacts)
+        // console.log(msg.Content)
+        // console.log(msg.FromUserName)
+        // console.log(msg.ToUserName)
+
+        // 防空
+        let content = msg.Content || ''
+        // 记录消息是否来自群聊
+        const isGroupMessage = msg.FromUserName.startsWith('@@')
+        // 如果是群消息匹配第一个换行符后的所有内容，匹配到了就取第一个捕获组的内容
+        // 否则保留Content
+        text = isGroupMessage ? (content.match(/\n(.+)/s) || [null, ''])[1] : content
+        message.push({
+          type: 'text',
+          text
+        })
         toString += text
         common.info(this.id, `收到消息：${text}`)
         break

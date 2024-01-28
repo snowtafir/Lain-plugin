@@ -173,6 +173,7 @@ class AdapterComWeChat {
     const group_list = await this.sendApi('get_group_list', {})
 
     for (const i of group_list) {
+      i.uin = this.id
       /** 给锅巴用 */
       Bot.gl.set(i.group_id, i)
       /** 自身参数 */
@@ -182,6 +183,7 @@ class AdapterComWeChat {
     /** 微信好友列表 */
     const friend_list = await this.sendApi('get_friend_list', {})
     for (const i of friend_list) {
+      i.uin = this.id
       /** 给锅巴用 */
       Bot.fl.set(i.user_id, i)
       /** 自身参数 */
