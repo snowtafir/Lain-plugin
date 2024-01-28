@@ -615,9 +615,22 @@ export default class adapterQQBot {
 
   /** 处理语音 */
   async getAudio (file) {
-    // return { type: 'audio', file: await Bot.audioToUrl(file) }
+    try {
+      /** 自定义语音接口 */
+      if (Bot?.silkToUrl) {
+        const url = await Bot.silkToUrl(file)
+        if (url) {
+          common.mark('Lain-plugin', `<云转码:${url}>`)
+          return { type: 'audio', file: url }
+        }
+      }
+    } catch (error) {
+      logger.debug(error)
+      logger.error('云转码失败')
+    }
+
     const type = 'audio'
-    const _path = Bot.lain._path + '/../resources/QQBotApi'
+    const _path = process.cwd() + '/resources'
     const mp3 = path.join(_path, `${Date.now()}.mp3`)
     const pcm = path.join(_path, `${Date.now()}.pcm`)
     const silk = path.join(_path, `${Date.now()}.silk`)
