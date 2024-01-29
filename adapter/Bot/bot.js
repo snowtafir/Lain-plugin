@@ -422,7 +422,7 @@ Bot.Button = function (list, line = 3) {
         id: String(id),
         render_data: {
           label: i.text || i.label || i.link,
-          style: String(i.style || 1),
+          style: (i.style == 0) ? 0 : 1,
           visited_label: i.text || i.label || i.link
         },
         action: {
