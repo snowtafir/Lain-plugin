@@ -422,7 +422,7 @@ Bot.Button = function (list, line = 3) {
         id: String(id),
         render_data: {
           label: i.text || i.label || i.link,
-          style: String(i.style || 1),
+          style: (i.style == 0) ? 0 : 1,
           visited_label: i.text || i.label || i.link
         },
         action: {
@@ -433,7 +433,7 @@ Bot.Button = function (list, line = 3) {
             specify_user_ids: i.list || [],
             specify_role_ids: i.role || []
           },
-          data: i.link || i.data || i.text || i.label || i.callback,
+          data: i.data || i.callback || i.link || i.text || i.label,
           enter: i.send || i.enter || 'callback' in i || false,
           unsupport_tips: i.tips || 'err'
         }

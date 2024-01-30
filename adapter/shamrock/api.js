@@ -725,7 +725,7 @@ let api = {
       group_name = group_id
     }
     /** 打印日志 */
-    common.info(id, `<发群聊:${group_name}> => ${raw_message}`)
+    common.info(id, `<发送群聊:${group_name}> => ${raw_message}`)
 
     /** 保存发送记录 */
     if (raw_message.includes('[图片:')) {

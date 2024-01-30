@@ -32,19 +32,19 @@ export default class QQSDK {
       this.config.intents.push('GROUP_AT_MESSAGE_CREATE')
     }
 
-    /** 是否启用频道 暂不启用 如需使用，请切换至dev分支 */
-    // if (this.config.model == 0 || this.config.model == 1) {
-    //   /** 频道变更事件 */
-    //   this.config.intents.push('GUILDS')
-    //   /** 频道成员变更事件 */
-    //   this.config.intents.push('GUILD_MEMBERS')
-    //   /** 频道私信事件 */
-    //   this.config.intents.push('DIRECT_MESSAGE')
-    //   /** 频道消息表态事件 */
-    //   this.config.intents.push('GUILD_MESSAGE_REACTIONS')
-    //   /** 公域 私域事件 */
-    //   this.sandbox ? this.config.intents.push('GUILD_MESSAGES') : this.config.intents.push('PUBLIC_GUILD_MESSAGES')
-    // }
+    /** 是否启用频道 */
+    if (this.config.model == 0 || this.config.model == 1) {
+      /** 频道变更事件 */
+      this.config.intents.push('GUILDS')
+      /** 频道成员变更事件 */
+      this.config.intents.push('GUILD_MEMBERS')
+      /** 频道私信事件 */
+      this.config.intents.push('DIRECT_MESSAGE')
+      /** 频道消息表态事件 */
+      this.config.intents.push('GUILD_MESSAGE_REACTIONS')
+      /** 公域 私域事件 */
+      this.sandbox ? this.config.intents.push('GUILD_MESSAGES') : this.config.intents.push('PUBLIC_GUILD_MESSAGES')
+    }
 
     /** 创建机器人 */
     this.sdk = new QQBot(this.config)
@@ -67,10 +67,10 @@ export default class QQSDK {
     if (typeof data !== 'string') return lain.info(this.id, data)
     data = data.trim()
     try {
-      if (/^(recv from Group|recv from Guild)/.test(data)) {
+      if (/^(recv from Group|recv from Guild|send to Channel)/.test(data)) {
         return ''
       } else if (/^send to Group/.test(data)) {
-        data = data.replace(/^send to Group\([^)]+\): /, `<发群聊:${this.id}-${data.match(/\(([^)]+)\)/)[1]}> => `)
+        data = data.replace(/^send to Group\([^)]+\): /, `<发送群聊:${this.id}-${data.match(/\(([^)]+)\)/)[1]}> => `)
         return lain.info(this.QQBot, data)
       }
     } catch { }

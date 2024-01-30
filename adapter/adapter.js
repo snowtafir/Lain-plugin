@@ -5,7 +5,7 @@ import WebSocket from './WebSocket.js'
 import stdin from './stdin/stdin.js'
 import QQSDK from './QQBot/QQSDK.js'
 import QQBot from './QQBot/index.js'
-import QQGuild from './QQGuild/index.js'
+import QQGuild from './QQBot/QQGuild.js'
 import WeChat4u from './WeChat-Web/index.js'
 
 /** 启动HTTP服务器，加载shamrock、Com微信适配器 */
@@ -22,26 +22,20 @@ if (Object.values(Cfg.getToken()).length) {
         const SDK = new QQSDK(bot)
         await SDK.start()
         await new QQBot(SDK.sdk)
-        // await new QQGuild(SDK.sdk)
+        await new QQGuild(SDK.sdk)
       } catch (err) {
         logger.debug(err)
         return lain.error('Lain-plugin', `QQBot [${bot.appid}] 启动失败`, err?.data || err?.message || err)
       }
     }
-  })
-}
-
-/** 加载QQ频道适配器 */
-if (Object.values(Cfg.getToken()).length) {
-  Object.values(Cfg.getToken()).forEach(async bot => {
-    if (bot.model == 0 || bot.model == 1) {
+    if (bot.model == 1) {
       try {
-        /** 同时创建连接会出bug...sbTX */
-        if (bot.model == 0) await common.sleep(5000)
-        const Guild = new QQGuild(bot)
-        logger.debug(Guild, '开始连接')
+        const SDK = new QQSDK(bot)
+        await SDK.start()
+        await new QQGuild(SDK.sdk)
       } catch (err) {
-        return common.error('Lain-plugin', 'QQGuild适配器加载失败：', err)
+        logger.debug(err)
+        return lain.error('Lain-plugin', `QQGuild [${bot.appid}] 启动失败`, err?.data || err?.message || err)
       }
     }
   })

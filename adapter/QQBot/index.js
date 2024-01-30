@@ -32,7 +32,7 @@ export default class adapterQQBot {
     })
     /** 私聊消息 */
     this.sdk.on('message.private', async (data) => {
-      data = await this.message(data, true)
+      data = await this.message(data)
       if (data) Bot.emit('message', data)
     })
 

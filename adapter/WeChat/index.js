@@ -431,7 +431,7 @@ class AdapterComWeChat {
       message,
       detail_type: 'group'
     }
-    lain.info(this.id, `<发群聊:${group_id}> => ${raw_message}`)
+    lain.info(this.id, `<发送群聊:${group_id}> => ${raw_message}`)
     return await this.sendApi('send_message', params)
   }
 
