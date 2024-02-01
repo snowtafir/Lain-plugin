@@ -35,7 +35,7 @@
 
 AppID(机器人ID)：`123456789`
 
-Token(机器人令牌)：`abcdefghijklmnopqrstuvwxyz123456`
+Token(机器人令牌)：`abcdefghijklmnopqrstuvwxyz123456`   // 目前该配置sdk已废除，但是目前本插件还会保留一段时间。
 
 AppSecret(机器人密钥)：`abcdefghijklmnopqrstuvwxyz`
 
