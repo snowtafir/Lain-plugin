@@ -11,6 +11,11 @@ export class adapter extends plugin {
       priority: 1,
       rule: [
         {
+          reg: /^#QQ(群|Bot|频道)设置(QQ图床|前缀|防倒卖(群号)?).+/i,
+          fnc: 'other',
+          permission: 'master'
+        },
+        {
           reg: /^#QQ(群|Bot|频道)?设置(?!MD|markdown).+/i,
           fnc: 'bot',
           permission: 'master'
@@ -30,11 +35,6 @@ export class adapter extends plugin {
           fnc: 'type',
           permission: 'master'
         },
-        {
-          reg: /^#QQ(群|Bot|频道)设置(QQ图床|前缀|防倒卖(群号)?).+/i,
-          fnc: 'other',
-          permission: 'master'
-        }
       ]
     })
   }
@@ -257,7 +257,8 @@ export class adapter extends plugin {
       self_id = msg[0]
     } else {
       if (this.e?.adapter === 'QQBot') self_id = this.e.self_id
-      return await this.reply('格式错误!', true, { at: true })
+      else 
+        return await this.reply('格式错误!', true, { at: true })
     }
     if (cfg.value('token', self_id)) {
       let val = cfg.get('token')
@@ -270,6 +271,7 @@ export class adapter extends plugin {
       } else if (this.e.msg.includes('防倒卖')) {
         val[self_id].other['Tips-GroupId'] = Number(msg[1] || msg[0]) || String(msg[1] || msg[0])
       }
+      await this.reply(`bot(${self_id}):修改配置文件`, true, { at: true })
       /** 保存 */
       cfg.set('token', val)
       /** 渲染 */
