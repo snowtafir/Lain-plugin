@@ -100,26 +100,24 @@ export class adapter extends plugin {
 
     try {
       await this.reply('正在建立连接，请稍等~', true, { at: true })
+      const SDK = new QQSDK(config)
+      await SDK.start()
       switch (config.model) {
         case 0:
           /** 同时接群和频道 */
           try {
-            const SDK = new QQSDK(config)
-            await SDK.start()
             const QQB = new QQBot(SDK.sdk, true)
             await this.reply(await QQB.StartBot())
             await common.sleep(5000)
-            return await this.reply(await new QQGuild(config, true).StartBot())
+            return await this.reply(await new QQGuild(SDK.sdk, true).StartBot())
           } catch {
             return await this.reply('连接失败，请查看控制台日志')
           }
         case 1:
           /** 开始连接QQ频道Bot */
-          return await this.reply(await new QQGuild(config, true).StartBot())
+          return await this.reply(await new QQGuild(SDK.sdk, true).StartBot())
         case 2:
           try {
-            const SDK = new QQSDK(config)
-            await SDK.start()
             const bot = new QQBot(SDK.sdk, true)
             return await this.reply(await bot.StartBot())
           } catch {
