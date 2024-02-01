@@ -26,7 +26,7 @@ export class adapter extends plugin {
           permission: 'master'
         },
         {
-          reg: /^#QQ(群|Bot|频道)(MD|markdown)(\d{9}:)?[01234]{1}$/i,
+          reg: /^#QQ(群|Bot|频道)(MD|markdown) ?(\d{9}:)?[01234]{1}$/i,
           fnc: 'type',
           permission: 'master'
         },

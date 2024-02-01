@@ -17,7 +17,7 @@
 添加机器人(删除机器人同理)：**是=1 否=0**
 ```
 // 请认真查看例子中的说明
-#QQBot设置 沙盒:私域:移除at:机器人ID:机器人令牌:机器人密钥
+#QQBot设置 沙盒:私域:机器人ID:机器人令牌:机器人密钥
 ```
 
 查看机器人：
@@ -69,7 +69,11 @@ AppSecret(机器人密钥)：`abcdefghijklmnopqrstuvwxyz`
   - 视频：编写一个全局变量`Bot.videoToUrl`，接收一个参数，返回 `url`。
 - 方法2：前往 [./plugins/Lain-plugin/config/config.yaml](../config/config.yaml) 配置公网地址，端口为配置文件中的`HTTP`端口，如果有转发，请修改`实际端口`选项。
 - 方法3：登录一个QQ机器人，随后前往[./plugins/Lain-plugin/config/config.yaml](../config/config.yaml)配置`QQBotUin`为QQ号，此方法仅可发送图片。
-- 适配器自带指令前缀/转#，默认打开。
+- 适配器自带指令前缀/转#，默认打开。若需关闭请发送
+```
+#QQBot设置前缀关闭
+```
+或者编辑 [config/token.yaml](../config/token.yaml) 配置文件，关闭将 `/` 转换为 `#`
 
 
 <details><summary>方法1图床编写参考</summary>
@@ -161,13 +165,14 @@ Markdown 源码：
 保存 → 提交审核 → 审核完成后，输入 `#QQBot设置MD 机器人ID:模板ID`
 
 
-```
 温馨提示：
 支持自定义全局模板名称，打开配置文件自行配置，`./plugins/Lain-plugin/config/config/token.yaml`
 
 配置后无需申请通用模板，经测试，只需要一个图文模板即可使用全局md。
 
-随后执行`#QQ群设置MD 机器人ID:模板ID`。
+随后执行
+```
+#QQ群设置MD 机器人ID:模板ID`。
 ```
 
 </details>
@@ -207,9 +212,15 @@ Markdown 源码：
 
 将`./plugins/Lain-plugin/plugins/纯文模板.js`复制到`./plugins/example`
 
-对机器人输入 `#QQBot设置MD 机器人ID:模板ID`
+对机器人输入 
+```
+#QQBot设置MD 机器人ID:模板ID
+```
 
-随后输入 `#QQBotMD 机器人ID:4`
+随后输入 
+```
+#QQBotMD 机器人ID:4
+```
 
 </details>
 
