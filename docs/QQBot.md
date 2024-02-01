@@ -45,12 +45,12 @@ AppSecret(机器人密钥)：`abcdefghijklmnopqrstuvwxyz`
 - `#QQ群设置`   => 只连接群
 - `QQ频道设置`  => 只连接频道
 
-添加机器人：
+添加群机器人：
 ```
 #QQ群设置 0:1:123456789:abcdefghijklmnopqrstuvwxyz123456:abcdefghijklmnopqrstuvwxyz
 ```
 
-删除机器人：
+删除群机器人：
 ```
 #QQ群设置 0:1:123456789:abcdefghijklmnopqrstuvwxyz123456:abcdefghijklmnopqrstuvwxyz
 ```
@@ -172,7 +172,7 @@ Markdown 源码：
 
 随后执行
 ```
-#QQ群设置MD 机器人ID:模板ID`。
+#QQ群设置MD 机器人ID:模板ID
 ```
 
 </details>
