@@ -365,6 +365,9 @@ export default class StartWeChat4u {
     let { file } = res
     let filename
 
+    // 存储MIME类型和对应的文件扩展名
+    const mimeTypes={"image/jpeg":".jpg","image/png":".png","image/gif":".gif","image/bmp":".bmp","image/svg+xml":".svg","text/plain":".txt","text/html":".html","text/css":".css","text/javascript":".js","application/javascript":".js","application/json":".json","application/xml":".xml","application/pdf":".pdf","application/zip":".zip","application/gzip":".gz","application/octet-stream":".bin","audio/mpeg":".mp3","audio/x-wav":".wav","video/mp4":".mp4","video/x-msvideo":".avi","video/quicktime":".mov","application/msword":".doc","application/vnd.openxmlformats-officedocument.wordprocessingml.document":".docx","application/vnd.ms-excel":".xls","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":".xlsx","application/vnd.ms-powerpoint":".ppt","application/vnd.openxmlformats-officedocument.presentationml.presentation":".pptx","application/x-rar-compressed":".rar","application/x-tar":".tar","application/vnd.oasis.opendocument.text":".odt","application/vnd.oasis.opendocument.spreadsheet":".ods","application/vnd.oasis.opendocument.presentation":".odp","text/csv":".csv","text/markdown":".md","application/x-httpd-php":".php","application/java-archive":".jar","application/x-shockwave-flash":".swf","application/x-font-ttf":".ttf","application/font-woff":".woff","application/font-woff2":".woff2","application/vnd.ms-fontobject":".eot","image/webp":".webp","image/tiff":".tiff","image/vnd.adobe.photoshop":".psd","application/x-sql":".sql","application/x-httpd-php":".php","application/vnd.apple.installer+xml":".mpkg","application/vnd.mozilla.xul+xml":".xul","application/vnd.google-earth.kml+xml":".kml","application/vnd.google-earth.kmz":".kmz","application/x-7z-compressed":".7z","application/x-deb":".deb","application/x-sh":".sh","application/x-csh":".csh","text/x-python":".py","application/vnd.visio":".vsd","application/x-msdownload":".exe","application/x-iso9660-image":".iso","application/x-bzip2":".bz2","application/x-httpd-php-source":".phps","application/x-httpd-php3":".php3","application/x-httpd-php3-preprocessed":".php3p","application/x-httpd-php4":".php4","application/x-httpd-php5":".php5"};
+
     if (type == 'image') {
       type = '[图片:'
       filename = Date.now() + '.jpg'
@@ -390,8 +393,25 @@ export default class StartWeChat4u {
         return { file: Buffer.from(file), filename }
       case 'http':
         common.info(this.id, `发送消息：${type}${file}]`)
+        const url = file
+        let extension = path.extname(url)
+        filename = Date.now() + (extension || '')
+
+         // 如果URL没有扩展名，使用fetch来获取MIME类型
+        if (!extension) {
+          try {
+            const response = await fetch(url)
+            const contentType = response.headers.get('Content-Type')
+            if (contentType in mimeTypes) {
+              extension = mimeTypes[contentType]
+              filename = Date.now() + extension
+            }
+          } catch (error) {
+            console.error('取扩展名时出错了:', error)
+          }
+        }
         file = Buffer.from(await (await fetch(file)).arrayBuffer())
-        return { file, filename: Date.now() + path.extname(file) || filename }
+        return { file, filename }
       default:
         common.info(this.id, `发送消息：${type}${file}]`)
         return { file, filename }
