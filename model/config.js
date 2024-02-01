@@ -41,8 +41,8 @@ Bot.lain = {
       },
       /** 依赖包 */
       apk: {
-        display: 'qq-guild-bot',
-        version: dependencies['qq-guild-bot'].replace('^', '')
+        display: 'qq-group-bot',
+        version: dependencies['qq-group-bot'].replace('^', '')
       }
     },
     ComWeChat: {

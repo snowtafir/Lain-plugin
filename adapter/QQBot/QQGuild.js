@@ -59,6 +59,7 @@ export default class adapterQQGuild {
       getGroupMemberInfo: (group_id, user_id) => Bot.getGroupMemberInfo(group_id, user_id)
     }
 
+    if (!this.config.allMsg) Bot[this.id].version.id = '公域'
     if (!Bot.adapter.includes(String(this.id))) Bot.adapter.push(String(this.id))
 
     /** 重启 */
