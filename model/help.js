@@ -12,7 +12,7 @@ export const helpCfg = {
 }
 export const helpList = [
   {
-    group: 'QQBot ---> #QQBot设置 沙盒:私域:移除at:appID:token:secret',
+    group: 'QQBot ---> #QQBot设置 沙盒:私域:appID:token:secret',
     list: [
       {
         icon: 1,
