@@ -12,7 +12,7 @@ export const helpCfg = {
 }
 export const helpList = [
   {
-    group: 'QQBot ---> #QQ群设置 沙盒:私域:移除at:appID:token:secret',
+    group: 'QQBot ---> #QQBot设置 沙盒:私域:移除at:appID:token:secret',
     list: [
       {
         icon: 1,
@@ -20,35 +20,29 @@ export const helpList = [
         desc: '是=1 否=0 再次添加为删除'
       },
       {
-        icon: 3,
-        title: '#QQ频道账号',
-        desc: '查看机器人'
-      }
-    ],
-    auth: false
-  },
-  {
-    group: 'QQGuild --> #QQ频道设置 沙盒:私域:appid:token',
-    list: [
-      {
-        icon: 23,
+        icon: 13,
         title: '#QQ频道设置',
         desc: '是=1 否=0 再次添加为删除'
       },
       {
-        icon: 13,
-        title: '#QQ频道账号',
-        desc: '查看已经获取面板信息的角色列表'
+        icon: 23,
+        title: '#QQBot设置',
+        desc: '同时连接群和频道'
+      },
+      {
+        icon: 3,
+        title: '#QQBot账号',
+        desc: '查看机器人'
       },
       {
         icon: 6,
-        title: '#QQ频道解除私信',
-        desc: '解除私信3条后等待回复问题...每天仅可发送两次私信主动消息'
+        title: '#QQBot设置MD',
+        desc: '机器人ID:模板ID'
       },
       {
-        icon: 7,
-        title: '#ID',
-        desc: '获取个人id、频道id'
+        icon: 8,
+        title: '#QQBotMD 2',
+        desc: '0=关闭 1=全局 2=仅正则 3=与内容分离'
       }
     ]
   },
@@ -105,6 +99,11 @@ export const helpList = [
         icon: 24,
         title: '#铃音版本',
         desc: '查看版本'
+      },
+      {
+        icon: 7,
+        title: '#ID',
+        desc: '获取个人id、群id'
       }
     ]
   }
