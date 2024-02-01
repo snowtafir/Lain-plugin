@@ -68,7 +68,7 @@ export class adapter extends plugin {
     const cfg = new YAML(lain._pathCfg + '/token.yaml')
     const QQSDK = (await import('../adapter/QQBot/QQSDK.js')).default
     const QQBot = (await import('../adapter/QQBot/index.js')).default
-    const QQGuild = (await import('../adapter/QQGuild/index.js')).default
+    const QQGuild = (await import('../adapter/QQBot/QQGuild.js')).default
 
     /** 最低要求 */
     if (msg.length < 4) return await this.reply('格式错误', true, { at: true })
