@@ -7,6 +7,7 @@ default:
     allMsg: true                          # QQ频道接收全部消息  true-私域  false-公域
     token:                                # 机器人令牌
     secret:                               # 机器人密钥
+    maxRetry: 10                          # 重连次数
     markdown:                             # QQBot高阶能力
       id:                                 # 模板ID
       type: 0                             # 0-关闭  1-全局  2-正则模式  3-按钮模式   详情请查看文档
