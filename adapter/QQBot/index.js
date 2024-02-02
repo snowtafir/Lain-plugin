@@ -232,9 +232,9 @@ export default class adapterQQBot {
     e.group_id = `${this.id}-${e.group_id}`
     e.author.id = `${this.id}-${e.author.id}`
     e.sender.user_id = e.user_id
-    /** 为什么本体会从群名片拿uid啊? */
-    e.sender.card = ''
-    e.sender.nickname = ''
+    /** 为什么本体会从群名片拿uid啊? */ /** 自动绑定，神奇吧 */
+    e.sender.card = e.sender.user_openid
+    e.sender.nickname = e.user_id
 
     /** 缓存好友列表 */
     if (!Bot[e.self_id].fl.get(e.user_id)) Bot[e.self_id].fl.set(e.user_id, { user_id: e.user_id })
