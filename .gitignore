@@ -10,3 +10,4 @@ config/*json
 config/markdown.js
 plugins/button
 /.idea
+/src

@@ -113,6 +113,7 @@ async function Button (e) {
       for (let v of p.plugin.rule) {
         const regExp = new RegExp(v.reg)
         if (regExp.test(e.msg)) {
+          p.e = e
           const button = await p[v.fnc](e)
           /** 无返回不添加 */
           if (button) return [...(Array.isArray(button) ? button : [button])]

@@ -650,9 +650,9 @@ export default class adapterQQBot {
         /** 转silk完成，保存 */
         fs.writeFileSync(silk, silkData?.data || silkData)
         /** 删除初始mp3文件 */
-        fs.unlink(mp3, () => { })
+        fs.promises.unlink(mp3, () => { })
         /** 删除pcm文件 */
-        fs.unlink(pcm, () => { })
+        fs.promises.unlink(pcm, () => { })
         common.mark('Lain-plugin', 'pcm => silk 完成!')
       })
       .catch((err) => {
@@ -666,7 +666,7 @@ export default class adapterQQBot {
         const url = await Bot.audioToUrl(`file://${silk}`)
         common.mark('Lain-plugin', `使用自定义服务器发送语音：${url}`)
         setTimeout(() => {
-          fs.unlink(silk, err => { logger.error(err) })
+          fs.promises.unlink(silk, err => { logger.error(err) })
         }, (Cfg.Server.InvalidTime || 30) * 1000)
         return { type, file: url }
       }
@@ -678,7 +678,7 @@ export default class adapterQQBot {
     const { url } = await Bot.FileToUrl(`file://${silk}`, type)
     common.mark('Lain-plugin', `使用公网临时服务器：${url}`)
     setTimeout(() => {
-      fs.unlink(silk, err => { logger.error(err) })
+      fs.promises.unlink(silk, err => { logger.error(err) })
     }, (Cfg.Server.InvalidTime || 30) * 1000)
     return { type, file: url }
   }
@@ -720,6 +720,7 @@ export default class adapterQQBot {
         for (let v of p.plugin.rule) {
           const regExp = new RegExp(v.reg)
           if (regExp.test(e.msg)) {
+            p.e = e
             const button = await p[v.fnc](e)
             /** 无返回不添加 */
             if (button) return [...(Array.isArray(button) ? button : [button])]
