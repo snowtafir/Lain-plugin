@@ -96,7 +96,7 @@ export default class adapterQQGuild {
     data.self_id = this.id
     /** 这些字段还需要补充 */
     data.group_name = group_name
-    data.group = {}
+    data.group = { ...this.pickGroup(group_id) }
     data.sender = {
       ...data.sender,
       user_id,
@@ -115,7 +115,7 @@ export default class adapterQQGuild {
       card: '', // 名片
       client: '', // 客户端对象
       dm: false, // 是否是私聊
-      group: {}, // 群对象
+      group: { ...this.pickGroup(group_id) },
       group_id, // 群号
       info: { ...data.sender }, // 群员资料
       is_admin, // 是否是管理员

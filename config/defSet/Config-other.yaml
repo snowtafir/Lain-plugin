@@ -11,3 +11,6 @@ WeXin:               # 网页版微信
 
 # 定时清理缓存临时文件夹 每天凌晨4点
 DelFileCron: 0 4 * * *
+
+# ICQQ魔法语音 需要一个群发送
+recordGroup_id: 

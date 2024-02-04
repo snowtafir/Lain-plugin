@@ -617,6 +617,17 @@ export default class adapterQQBot {
 
   /** 处理语音 */
   async getAudio (file) {
+    /** icqq高清语音 */
+    if (typeof file === 'string' && file.startsWith('protobuf://')) {
+      let group_id = Cfg.Other.recordGroup_id
+      if (!group_id) throw new Error('没有配置 recordGroup_id，无法处理莫发语音，请前往other.yaml进行配置')
+      group_id = Number(group_id)
+      file = await Bot.pickGroup(group_id).sendMsg({ type: 'record', file })
+      file = await Bot.getMsg(file.message_id)
+      /** 这逼玩意就是个mp3... */
+      file = file.message[0].url
+    }
+
     try {
       /** 自定义语音接口 */
       if (Bot?.silkToUrl) {
@@ -785,7 +796,7 @@ export default class adapterQQBot {
       if (ok) { res = data; continue }
 
       /** 错误文本处理 */
-      data = data.match(/code\(\d+\): .*/)[0] || data
+      data = data.match(/code\(\d+\): .*/)?.[0] || data
 
       /** 模板转普通消息并终止发送剩余消息 */
       if (Bot[this.id].config.markdown.type) {
