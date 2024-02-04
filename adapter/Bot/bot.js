@@ -315,7 +315,7 @@ Bot.toType = function (i) {
 Bot.FormatFile = async function (file) {
   const str = function () {
     if (fs.existsSync(file.replace(/^file:\/\//, ''))) {
-      return file
+      return `file://${file.replace(/^file:\/\//, '')}`
     } else if (fs.existsSync(file.replace(/^file:\/\/\//, ''))) {
       return file.replace(/^file:\/\/\//, 'file://')
     } else if (fs.existsSync(file)) {

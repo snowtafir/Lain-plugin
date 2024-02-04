@@ -352,7 +352,9 @@ export default class adapterQQGuild {
           messageLog.push(`<@:${i.qq || i.id}>`)
           break
         case 'image':
+          /** 暂不清楚为什么sdk不支持发送file:// */
           i.file = await Bot.FormatFile(i.url || i.file)
+          i.file = await Bot.Buffer(i.file)
           image.push(i)
           messageLog.push(`<图片:${typeof i.file === 'string' ? i.file.replace(/base64:\/\/.*/, 'base64://...') : 'base64://...'}>`)
           break
