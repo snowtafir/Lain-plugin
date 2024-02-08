@@ -795,6 +795,7 @@ export default class adapterQQBot {
 
   /** 快速回复 */
   async sendReplyMsg (e, msg) {
+    if (typeof msg === 'string' && msg.includes('歌曲分享失败：')) return false
     let res
     const { Pieces, normalMsg } = await this.getQQBot(msg, e)
 
