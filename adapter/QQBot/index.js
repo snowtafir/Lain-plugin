@@ -3,6 +3,7 @@ import fs from 'fs'
 import sizeOf from 'image-size'
 import lodash from 'lodash'
 import path from 'path'
+import moment from 'moment'
 import { encode as encodeSilk } from 'silk-wasm'
 import Yaml from 'yaml'
 import MiaoCfg from '../../../../lib/config/config.js'
@@ -10,6 +11,8 @@ import loader from '../../../../lib/plugins/loader.js'
 import common from '../../lib/common/common.js'
 import Cfg from '../../lib/config/config.js'
 import Button from './plugins.js'
+
+lain.DAU = {}
 
 export default class adapterQQBot {
   /** 传入基本配置 */
@@ -72,7 +75,8 @@ export default class adapterQQBot {
     this.gmlList('fl')
     /** 保存id到adapter */
     if (!Bot.adapter.includes(String(this.id))) Bot.adapter.push(String(this.id))
-
+    /** 初始化dau统计 */
+    lain.DAU[this.id] = await this.getDAU()
     /** 重启 */
     await common.init('Lain:restart:QQBot')
     return `QQBot：[${username}(${this.id})] 连接成功!`
@@ -243,6 +247,8 @@ export default class adapterQQBot {
     /** 保存消息次数 */
     try { common.recvMsg(e.self_id, e.adapter) } catch { }
     common.info(this.id, `<群:${e.group_id}><用户:${e.user_id}> -> ${this.messageLog(e.message)}`)
+    /** dau统计 */
+    this.msg_count(data)
     return e
   }
 
@@ -761,6 +767,7 @@ export default class adapterQQBot {
       if (reply) i = Array.isArray(i) ? [...i, reply] : [i, reply]
       this.sdk.sendPrivateMessage(userId, i, this.sdk)
       logger.debug('发送主动好友消息：', JSON.stringify(i))
+      this.send_count()
     })
   }
 
@@ -781,6 +788,7 @@ export default class adapterQQBot {
     Pieces.forEach(i => {
       if (reply) i = Array.isArray(i) ? [...i, reply] : [i, reply]
       this.sdk.sendGroupMessage(groupID, i, this.sdk)
+      this.send_count()
       logger.debug('发送主动群消息：', JSON.stringify(i))
     })
   }
@@ -818,6 +826,7 @@ export default class adapterQQBot {
   /** 发送消息 */
   async sendMsg (e, msg) {
     try {
+      this.send_count()
       logger.debug('发送回复消息：', JSON.stringify(msg))
       return { ok: true, data: await e.data.reply(msg) }
     } catch (err) {
@@ -856,6 +865,75 @@ export default class adapterQQBot {
     })
     message.unshift({ type: 'text', text: msg })
     return message
+  }
+
+  /** 获取日期 */
+  getNowDate () {
+    const date = new Date()
+    const dtf = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit' })
+    const [{ value: month }, , { value: day }, , { value: year }] = dtf.formatToParts(date)
+    return `${year}-${month}-${day}`
+  }
+
+  /** 初始化 */
+  async getDAU () {
+    const time = this.getNowDate()
+    const msg_count = (await redis.get(`QQBotDAU:msg_count:${this.id}`)) || 0
+    const send_count = (await redis.get(`QQBotDAU:send_count:${this.id}`)) || 0
+    let data = await redis.get(`QQBotDAU:${this.id}`)
+    if (data) {
+      data = JSON.parse(data)
+      data.msg_count = Number(msg_count)
+      data.send_count = Number(send_count)
+      data.time = time
+      return data
+    } else {
+      return {
+        user_count: 0, // 上行消息人数
+        group_count: 0, // 上行消息群数
+        msg_count, // 上行消息量
+        send_count, // 下行消息量
+        user_cache: {},
+        group_cache: {},
+        time
+      }
+    }
+  }
+
+  /** dau统计 */
+  async dau () {
+    lain.DAU[this.id].send_count++
+    const time = moment(Date.now()).add(1, 'days').format('YYYY-MM-DD 00:00:00')
+    const EX = Math.round((new Date(time).getTime() - new Date().getTime()) / 1000)
+    redis.set(`QQBotDAU:send_count:${this.id}`, lain.DAU[this.id].send_count * 1, { EX })
+  }
+
+  /** 下行消息量 */
+  send_count () {
+    lain.DAU[this.id].send_count++
+    const time = moment(Date.now()).add(1, 'days').format('YYYY-MM-DD 00:00:00')
+    const EX = Math.round((new Date(time).getTime() - new Date().getTime()) / 1000)
+    redis.set(`QQBotDAU:send_count:${this.id}`, lain.DAU[this.id].send_count * 1, { EX })
+  }
+
+  /** 上行消息量 */
+  msg_count (data) {
+    let needSetRedis = false
+    lain.DAU[this.id].msg_count++
+    if (data.group_id && !lain.DAU[this.id].group_cache[data.group_id]) {
+      lain.DAU[this.id].group_cache[data.group_id] = 1
+      lain.DAU[this.id].group_count++
+      needSetRedis = true
+    }
+    if (data.user_id && !lain.DAU[this.id].user_cache[data.user_id]) {
+      lain.DAU[this.id].user_cache[data.user_id] = 1
+      lain.DAU[this.id].user_count++
+      needSetRedis = true
+    }
+    const time = moment(Date.now()).add(1, 'days').format('YYYY-MM-DD 00:00:00')
+    const EX = Math.round((new Date(time).getTime() - new Date().getTime()) / 1000)
+    if (needSetRedis) redis.set(`QQBotDAU:${this.id}`, JSON.stringify(lain.DAU[this.id]), { EX })
+    redis.set(`QQBotDAU:msg_count:${this.id}`, lain.DAU[this.id].msg_count * 1, { EX })
   }
 }
 
