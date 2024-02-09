@@ -85,6 +85,9 @@ pnpm config set sharp_binary_host "https://npmmirror.com/mirrors/sharp" && pnpm 
 
 <details><summary>最后求个爱发电~您的支持是我更新的动力</summary>
 
+[新爱发电](https://afdian.net/a/lain52)
+
+
 ![爱发电](https://cdn.jsdelivr.net/gh/Zyy955/imgs/img/202308271209508.jpeg)
 
 </details>
