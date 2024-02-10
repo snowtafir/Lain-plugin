@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import { join } from 'node:path'
 import moment from 'moment'
 import schedule from 'node-schedule'
+import Cfg from '../lib/config/config.js'
 import puppeteer from '../../../lib/puppeteer/puppeteer.js'
 import _ from 'lodash'
 
@@ -19,7 +20,9 @@ export class QQBotDAU extends plugin {
       ]
     })
     // 每天零点清除DAU统计并保存到文件
-    schedule.scheduleJob('0 0 0 * * ?', () => this.Task())
+    schedule.scheduleJob('0 0 0 * * ?', () => {
+      if (Cfg.Other.QQBotdau) this.Task()
+    })
   }
 
   async DAUStat () {

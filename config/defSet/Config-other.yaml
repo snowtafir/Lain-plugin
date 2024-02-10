@@ -14,3 +14,6 @@ DelFileCron: 0 4 * * *
 
 # ICQQ魔法语音 需要一个群发送
 recordGroup_id: 
+
+# QQBotdau统计
+QQBotdau: true

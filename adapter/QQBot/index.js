@@ -76,7 +76,7 @@ export default class adapterQQBot {
     /** 保存id到adapter */
     if (!Bot.adapter.includes(String(this.id))) Bot.adapter.push(String(this.id))
     /** 初始化dau统计 */
-    lain.DAU[this.id] = await this.getDAU()
+    if (Cfg.Other.QQBotdau) lain.DAU[this.id] = await this.getDAU()
     /** 重启 */
     await common.init('Lain:restart:QQBot')
     return `QQBot：[${username}(${this.id})] 连接成功!`
@@ -903,6 +903,7 @@ export default class adapterQQBot {
 
   /** dau统计 */
   async dau () {
+    if (!Cfg.Other.QQBotdau) return
     lain.DAU[this.id].send_count++
     const time = moment(Date.now()).add(1, 'days').format('YYYY-MM-DD 00:00:00')
     const EX = Math.round((new Date(time).getTime() - new Date().getTime()) / 1000)
@@ -911,6 +912,7 @@ export default class adapterQQBot {
 
   /** 下行消息量 */
   send_count () {
+    if (!Cfg.Other.QQBotdau) return
     lain.DAU[this.id].send_count++
     const time = moment(Date.now()).add(1, 'days').format('YYYY-MM-DD 00:00:00')
     const EX = Math.round((new Date(time).getTime() - new Date().getTime()) / 1000)
@@ -919,6 +921,7 @@ export default class adapterQQBot {
 
   /** 上行消息量 */
   msg_count (data) {
+    if (!Cfg.Other.QQBotdau) return
     let needSetRedis = false
     lain.DAU[this.id].msg_count++
     if (data.group_id && !lain.DAU[this.id].group_cache[data.group_id]) {
