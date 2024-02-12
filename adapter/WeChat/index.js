@@ -413,7 +413,7 @@ class AdapterComWeChat {
 
   /** 发好友消息 */
   async sendFriendMsg (user_id, data) {
-    const { message, raw_message } = await this.ComWeChatMessage(data)
+    const { message, raw_message } = await this.ComWeChatMessage(data, true)
     const params = {
       user_id,
       message,
@@ -436,7 +436,7 @@ class AdapterComWeChat {
   }
 
   /** 转换为ComWeChat能使用的格式 */
-  async ComWeChatMessage (data) {
+  async ComWeChatMessage (data, friend) {
     /** 标准化消息内容 */
     data = common.array(data)
     /** 保存 Shamrock标准 message */
@@ -449,6 +449,7 @@ class AdapterComWeChat {
     for (let i of data) {
       switch (i.type) {
         case 'at':
+          if (friend) break
           message.push({ type: 'mention', data: { user_id: i.qq || i.id } })
           raw_message.push(`<@:${i.qq || i.id}>`)
           break
