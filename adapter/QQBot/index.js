@@ -408,8 +408,23 @@ export default class adapterQQBot {
           break
         case 'at':
           if (e.bot.config.markdown.type) {
-            if ((i.qq || i.id) === 'all') text.push('@everyone')
-            else text.push(`<@${(i.qq || i.id).trim().split('-')[1]}>`)
+            if ((i.qq || i.id) === 'all') {
+              text.push('@everyone')
+            } else {
+              let qq
+
+              if (Bot.QQToOpenid) {
+                try {
+                  qq = await Bot.QQToOpenid(i.qq || i.id, e)
+                  text.push(`<@${qq}>`)
+                  break
+                } catch { }
+              }
+
+              qq = String(i.qq || i.id).trim().split('-')
+              qq = qq[1] || qq[0]
+              text.push(`<@${qq}>`)
+            }
           }
           break
         case 'image':
