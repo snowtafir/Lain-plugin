@@ -586,7 +586,7 @@ export default class adapterQQBot {
         return { type, file: url, width, height }
       }
     } catch (error) {
-      logger.error('自定义服务器调用错误，已跳过')
+      logger.error('[调用错误][自定义图床] 将继续公网发送图片')
       logger.error(error)
     }
 
@@ -599,7 +599,7 @@ export default class adapterQQBot {
         return { type, file: url, width, height }
       }
     } catch (error) {
-      logger.error('QQ图床调用错误，已跳过：')
+      logger.error('[调用错误][QQ图床] 将继续公网发送图片')
       logger.error(error)
     }
 
@@ -621,7 +621,8 @@ export default class adapterQQBot {
         return { type, file: url }
       }
     } catch (error) {
-      logger.error('自定义视频服务器调用错误，已跳过')
+      logger.error('[调用错误][自定义服务器] 将继续公网发送视频')
+      logger.error(error)
     }
 
     /** 现成url直接发 */
@@ -659,8 +660,8 @@ export default class adapterQQBot {
         }
       }
     } catch (error) {
-      logger.debug(error)
       logger.error('云转码失败')
+      logger.error(error)
     }
 
     const type = 'audio'
@@ -703,7 +704,7 @@ export default class adapterQQBot {
         return { type, file: url }
       }
     } catch (error) {
-      logger.error('自定义服务器调用错误，已跳过')
+      logger.error('[调用错误][自定义服务器] 将继续公网发送语音')
     }
 
     /** 公网 */
