@@ -855,13 +855,13 @@ export default class adapterQQBot {
 
   /** 返回结果 */
   returnResult (res) {
-    const { id, timestamp } = res
+    const { timestamp } = res
     const time = (new Date(timestamp)).getTime()
     res = {
       ...res,
       rand: 1,
       time,
-      message_id: id
+      message_id: res?.id
     }
     common.debug('Lain-plugin', res)
     return res
