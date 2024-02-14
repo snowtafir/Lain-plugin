@@ -283,6 +283,8 @@ class AdapterComWeChat {
         card: user_name,
         role: 'member'
       },
+      getAvatarUrl: async () => (await this.sendApi('get_group_member_info', { group_id, user_id }))?.['wx.avatar'],
+      
       toString: () => ToString
     }
 
