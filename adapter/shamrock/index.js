@@ -961,7 +961,7 @@ class Shamrock {
           break
         /** 图片 */
         case 'image':
-          message.push({ type: 'image', ...i.data })
+          message.push({ ...i.data, type: 'image' })
           raw_message.push('[图片]')
           log_message.push(`<图片:${i.data?.url || i.data.file}>`)
           ToString.push(`{image:${i.data.file}}`)
