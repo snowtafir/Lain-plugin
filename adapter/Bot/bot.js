@@ -418,7 +418,15 @@ Bot.Button = function (list, line = 3) {
     if (Array.isArray(i)) {
       button.push(...Bot.Button(i, 10))
     } else {
-      arr.push({
+      if (typeof i.permission === 'string') {
+        if (i.permission === 'xxx') {
+          i.list = []
+        } else {
+          i.list = [ i.permission ]
+        }
+        i.permission = false
+      }
+      let Button = {
         id: String(id),
         render_data: {
           label: i.text || i.label || i.link,
@@ -433,11 +441,18 @@ Bot.Button = function (list, line = 3) {
             specify_user_ids: i.list || [],
             specify_role_ids: i.role || []
           },
-          data: i.data || i.callback || i.link || i.text || i.label,
+          data: i.data || i.input || i.callback || i.link || i.text || i.label,
           enter: i.send || i.enter || 'callback' in i || false,
           unsupport_tips: i.tips || 'err'
         }
-      })
+      }
+      if (i.QQBot) {
+        if (i.QQBot.render_data)
+          Object.assign(Button.render_data, i.QQBot.render_data)
+        if (i.QQBot.action)
+          Object.assign(Button.action, i.QQBot.action)
+      }
+      arr.push(Button)
       if (index % line == 0 || index == list.length) {
         button.push({
           type: 'button',
