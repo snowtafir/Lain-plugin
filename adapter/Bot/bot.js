@@ -422,7 +422,8 @@ Bot.Button = function (list, line = 3) {
         if (i.permission === 'xxx') {
           i.list = []
         } else {
-          i.list = [ i.permission ]
+          const openid = i.permission.split('-')
+          i.list = [ openid[1] || openid[0] ]
         }
         i.permission = false
       }
@@ -437,7 +438,7 @@ Bot.Button = function (list, line = 3) {
           type: i.type || (i.link ? 0 : 2),
           reply: i.reply || false,
           permission: i.permission || {
-            type: (i.admin && 1) || (i.list && 0) || (i.role && 3) || 2,
+            type: (i.admin && 1) || (i.list && '0') || (i.role && 3) || 2,
             specify_user_ids: i.list || [],
             specify_role_ids: i.role || []
           },
