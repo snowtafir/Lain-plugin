@@ -560,6 +560,10 @@ class Shamrock {
        */
       getChatHistory: async (msg_id, num, reply) => {
         let { messages } = await api.get_group_msg_history(this.id, group_id, num, msg_id)
+        if (!messages) {
+          logger.warn('获取历史消息失败')
+          return []
+        }
         let group = Bot[this.id].gl.get(group_id)
         messages = messages.map(async m => {
           m.group_name = group?.group_name || group_id
