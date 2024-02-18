@@ -28,7 +28,18 @@ export default class adapterQQGuild {
       data && Bot.emit('message', data)
     })
 
-    const { id, avatar, username } = await this.sdk.getSelfInfo()
+    // 有点怪 先简单处理下
+    let id, avatar, username
+    try {
+      const info = await this.sdk.getSelfInfo()
+      id = info.id
+      avatar = info.avatar
+      username = info.username
+    } catch {
+      id = this.id
+      avatar = 'https://cdn.jsdelivr.net/gh/Zyy955/imgs/img/202402020757587.gif'
+      username = 'QQBot'
+    }
 
     Bot[this.id] = {
       sdk: this.sdk,
@@ -352,9 +363,7 @@ export default class adapterQQGuild {
           messageLog.push(`<@:${i.qq || i.id}>`)
           break
         case 'image':
-          /** 暂不清楚为什么sdk不支持发送file:// */
           i.file = await Bot.FormatFile(i.url || i.file)
-          i.file = await Bot.Buffer(i.file)
           image.push(i)
           messageLog.push(`<图片:${typeof i.file === 'string' ? i.file.replace(/base64:\/\/.*/, 'base64://...') : 'base64://...'}>`)
           break

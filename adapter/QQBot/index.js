@@ -39,7 +39,18 @@ export default class adapterQQBot {
       if (data) Bot.emit('message', data)
     })
 
-    const { id, avatar, username } = await this.sdk.getSelfInfo()
+    // 有点怪 先简单处理下
+    let id, avatar, username
+    try {
+      const info = await this.sdk.getSelfInfo()
+      id = info.id
+      avatar = info.avatar
+      username = info.username
+    } catch {
+      id = this.id
+      avatar = 'https://cdn.jsdelivr.net/gh/Zyy955/imgs/img/202402020757587.gif'
+      username = 'QQBot'
+    }
 
     Bot[this.id] = {
       sdk: this.sdk,
@@ -461,7 +472,7 @@ export default class adapterQQBot {
       /** 拷贝源消息 */
       const copyMessage = JSON.parse(JSON.stringify(message))
       const copyImage = JSON.parse(JSON.stringify(image))
-      if (text.length) copyMessage.push(text.join(''))
+      if (text.length) copyMessage.push({ type: 'text', text: text.join('') })
       if (copyImage.length) copyMessage.push(copyImage.shift())
       if (copyImage.length) normalMsg.push(...copyImage)
       if (button.length) copyMessage.push(...button)
@@ -473,7 +484,7 @@ export default class adapterQQBot {
       /** 关闭 */
       case 0:
       case '0':
-        if (text.length) message.push(text.join(''))
+        if (text.length) message.push({ type: 'text', text: text.join('') })
         if (image.length) message.push(image.shift())
         if (image.length) Pieces.push(...image)
         break
@@ -506,7 +517,7 @@ export default class adapterQQBot {
             }
           } else {
             /** 返回数组，无需处理，直接发送即可 */
-            if (text.length) message.push(text.join(''))
+            if (text.length) message.push({ type: 'text', text: text.join('') })
             if (image.length) message.push(image.shift())
             if (image.length) Pieces.push(...image)
           }
@@ -517,7 +528,7 @@ export default class adapterQQBot {
       /** 原样发送并遍历插件，自动补发一条按钮模板消息 */
       case 3:
       case '3':
-        if (text.length) message.push(text.join(''))
+        if (text.length) message.push({ type: 'text', text: text.join('') })
         if (image.length) message.push(image.shift())
         if (image.length) Pieces.push(...image)
         /** 按钮模板 */
@@ -554,7 +565,7 @@ export default class adapterQQBot {
           }
         } catch (_err) {
           console.error(_err)
-          if (text.length) message.push(text.join(''))
+          if (text.length) message.push({ type: 'text', text: text.join('') })
           if (image.length) message.push(image.shift())
           if (image.length) Pieces.push(...image)
         }
@@ -845,7 +856,12 @@ export default class adapterQQBot {
     try {
       this.send_count()
       logger.debug('发送回复消息：', JSON.stringify(msg))
-      return { ok: true, data: await e.data.reply(msg) }
+      msg = Array.isArray(msg) ? [{ type: 'reply', id: e.message_id }, ...msg] : [{ type: 'reply', id: e.message_id }, msg]
+      if (e.group_id) {
+        return { ok: true, data: await this.sdk.sendGroupMessage(e.data.group_id, msg, this.sdk) }
+      } else {
+        return { ok: true, data: await this.sdk.sendPrivateMessage(e.data.user_id, msg, this.sdk) }
+      }
     } catch (err) {
       const error = err.message || err
       common.error(e.self_id, error)

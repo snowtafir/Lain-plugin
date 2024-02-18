@@ -149,7 +149,7 @@ class AdapterComWeChat {
       sendPrivateMsg: async (user_id, msg) => await this.sendFriendMsg(user_id, msg),
       getGroupMemberInfo: async (group_id, user_id, no_cache) => await this.getGroupMemberInfo(group_id, user_id, no_cache),
       removeEssenceMessage: async (msg_id) => await this.removeEssenceMessage(msg_id),
-      makeForwardMsg: async (message) => await common.makeForwardMsg(message, true),
+      makeForwardMsg: async (message) => await common.makeForwardMsg(message,),
       getMsg: (msg_id) => '',
       quit: (group_id) => this.quit(group_id),
       getFriendMap: () => Bot[this.id].fl,
