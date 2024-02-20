@@ -27,8 +27,8 @@ export const helpList = [
       },
       {
         icon: 4,
-        title: '#qqbotdau',
-        desc: '查询当日消息量'
+        title: '#Dau',
+        desc: '查询近两日消息量'
       }
     ]
   },
