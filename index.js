@@ -4,6 +4,7 @@ import './lib/bot.js'
 import './model/config.js'
 import './adapter/adapter.js'
 import './adapter/Bot/bot.js'
+import './adapter/Bot/icqq.js'
 
 let ret = []
 let apps = {}

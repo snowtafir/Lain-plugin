@@ -193,6 +193,7 @@ export default class adapterQQBot {
     }
 
     for (let v of loader.priority) {
+      // slint-disable-next-line new-cap
       let p = new v.class(e)
       p.e = e
       /** 判断是否启用功能 */
@@ -596,13 +597,19 @@ export default class adapterQQBot {
         console.warn('[Bot.uploadFile]接口即将废除，请查看文档更换新接口！')
         return { type, file: url, width, height }
       }
+      /** ICQQ */
+      if (lain?.file?.uploadImage) {
+        const { url, width, height } = await lain.file.uploadImage(file)
+        common.mark('Lain-plugin', `使用ICQQ发送图片：${url}`)
+        return { type, file: url, width, height }
+      }
     } catch (error) {
       logger.error('[调用错误][自定义图床] 将继续公网发送图片')
       logger.error(error)
     }
 
     try {
-      /** QQ图床 */
+      /** QQ图床 预留 */
       const QQ = Bot[this.id].config.other.QQ
       if (QQ) {
         const { width, height, url } = await Bot.uploadQQ(file, QQ)
@@ -631,6 +638,12 @@ export default class adapterQQBot {
         common.mark('Lain-plugin', `使用自定义服务器发送视频：${url}`)
         return { type, file: url }
       }
+      /** ICQQ */
+      if (lain?.file?.uploadVideo) {
+        const url = await lain.file.uploadVideo(file)
+        common.mark('Lain-plugin', `使用ICQQ发送视频：${url}`)
+        return { type, file: url }
+      }
     } catch (error) {
       logger.error('[调用错误][自定义服务器] 将继续公网发送视频')
       logger.error(error)
@@ -652,13 +665,7 @@ export default class adapterQQBot {
   async getAudio (file) {
     /** icqq高清语音 */
     if (typeof file === 'string' && file.startsWith('protobuf://')) {
-      let group_id = Cfg.Other.recordGroup_id
-      if (!group_id) throw new Error('没有配置 recordGroup_id，无法处理莫发语音，请前往other.yaml进行配置')
-      group_id = Number(group_id)
-      file = await Bot.pickGroup(group_id).sendMsg({ type: 'record', file })
-      file = await Bot.getMsg(file.message_id)
-      /** 这逼玩意就是个mp3... */
-      file = file.message[0].url
+      return { type: 'audio', file: await lain.file.getPttUrl(lain.file.proto(file)[3]) }
     }
 
     try {
@@ -669,6 +676,12 @@ export default class adapterQQBot {
           common.mark('Lain-plugin', `<云转码:${url}>`)
           return { type: 'audio', file: url }
         }
+      }
+      /** ICQQ */
+      if (lain?.file?.uploadPtt) {
+        const url = await lain.file.uploadPtt(file)
+        common.mark('Lain-plugin', `使用ICQQ发送语音：${url}`)
+        return { type: 'audio', file: url }
       }
     } catch (error) {
       logger.error('云转码失败')

@@ -154,6 +154,7 @@ export default class adapterQQGuild {
     }
 
     for (let v of loader.priority) {
+      // eslint-disable-next-line new-cap
       let p = new v.class(data)
       p.e = data
       /** 判断是否启用功能 */
