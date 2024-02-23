@@ -50,9 +50,10 @@ pnpm config set sharp_binary_host "https://npmmirror.com/mirrors/sharp" && pnpm 
 
 - [标准输入](./docs/stdin.md)
 - [PC微信](./docs/WeChat.md)
-- [Shamrock、Lagrange.Core](./docs/Shamrock.md)
+- [Shamrock](./docs/Shamrock.md)
 - [QQBot(群和频道)](./docs/QQBot.md)
 - [网页版微信](./docs/WeXin.md)
+- [Lagrange.Core](./docs/Lagrange.Core.md)
 
 ## 4.设置主人
 
