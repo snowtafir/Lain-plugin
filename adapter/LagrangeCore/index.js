@@ -5,22 +5,18 @@ import common from '../../lib/common/common.js'
 import api from './api.js'
 import { faceMap, pokeMap } from '../../model/shamrock/face.js'
 
-class Shamrock {
+class LagrangeCore {
   constructor (bot, request) {
     /** 存一下 */
     bot.request = request
     /** 机器人QQ号 */
     this.id = Number(request.headers['x-self-id'])
-    /** Shamrock版本 */
-    this.version = request.headers['user-agent']
-    /** QQ登录协议版本 */
-    this.QQVersion = request.headers['x-qq-version']
     /** ws */
     this.bot = bot
     /** 监听事件 */
     this.bot.on('message', (data) => this.event(data))
     /** 监听连接关闭事件 */
-    bot.on('close', () => logger.warn(`[Lain-plugin] [${this.version}，${this.QQVersion}] QQ ${this.id} 连接已断开`))
+    bot.on('close', () => logger.warn(`[Lain-plugin] [Lagrange.OneBot] QQ ${this.id} 连接已断开`))
   }
 
   /** 收到请求 */
@@ -36,8 +32,8 @@ class Shamrock {
       this[data?.post_type](data)
     } catch (error) {
       /** 处理错误打印日志 */
-      logger.error('[Shamrock]事件处理错误', error)
-      logger.mark('[Shamrock]事件处理错误', data)
+      logger.error('[LagrangeCore]事件处理错误', error)
+      logger.mark('[LagrangeCore]事件处理错误', data)
     }
   }
 
@@ -47,14 +43,14 @@ class Shamrock {
       /** 生命周期 */
       case 'lifecycle':
         this.LoadBot()
-        common.info('Lain-plugin', `[${this.version}，${this.QQVersion}] QQ ${this.id} 建立连接成功，正在加载资源中`)
+        common.info('Lain-plugin', `[Lagrange.OneBot] QQ ${this.id} 建立连接成功，正在加载资源中`)
         break
       /** 心跳 */
       case 'heartbeat':
-        common.debug('Lain-plugin', `[${this.version}，${this.QQVersion}] QQ ${this.id} 收到心跳：${JSON.stringify(data.status, null, 2)}`)
+        common.debug('Lain-plugin', `[Lagrange.OneBot] QQ ${this.id} 收到心跳：${JSON.stringify(data.status, null, 2)}`)
         break
       default:
-        logger.error(`[Shamrock][未知事件] ${JSON.stringify(data)}`)
+        logger.error(`[LagrangeCore][未知事件] ${JSON.stringify(data)}`)
         break
     }
   }
@@ -70,7 +66,7 @@ class Shamrock {
     data.post_type = 'message'
     /** 屏蔽由喵崽处理过后发送后的消息 */
     await common.sleep(1500)
-    if (await redis.get(`Shamrock:${this.id}:${data.message_id}`)) return
+    if (await redis.get(`LagrangeCore:${this.id}:${data.message_id}`)) return
     /** 转置消息后给喵崽 */
     await Bot.emit('message', await this.ICQQEvent(data))
   }
@@ -320,13 +316,10 @@ class Shamrock {
       tl: new Map(),
       gml: new Map(),
       guilds: new Map(),
-      adapter: 'shamrock',
+      adapter: 'LagrangeCore',
       uin: this.id,
       tiny_id: String(this.id),
       avatar: `https://q1.qlogo.cn/g?b=qq&s=0&nk=${this.id}`,
-      stat: { start_time: Date.now() / 1000, recv_msg_cnt: 0 },
-      apk: { display: this.QQVersion.split(' ')[0], version: this.QQVersion.split(' ')[1] },
-      version: { id: 'shamrock', name: '三叶草', version: this.version.replace('Shamrock/', '') },
       // sendApi: async (action, params) => await this.sendApi(action, params),
       pickMember: (group_id, user_id) => this.pickMember(group_id, user_id),
       pickUser: (user_id) => this.pickFriend(Number(user_id)),
@@ -348,8 +341,8 @@ class Shamrock {
       _loadGroupMemberList: this.loadGroupMemberList,
       _loadFriendList: this.loadFriendList,
       _loadAll: this.LoadAll,
-      readMsg: async () => common.recvMsg(this.id, 'shamrock', true),
-      MsgTotal: async (type) => common.MsgTotal(this.id, 'shamrock', type, true),
+      readMsg: async () => common.recvMsg(this.id, 'LagrangeCore', true),
+      MsgTotal: async (type) => common.MsgTotal(this.id, 'LagrangeCore', type, true),
       api: new Proxy(api, {
         get: (target, prop) => {
           try {
@@ -365,8 +358,19 @@ class Shamrock {
       })
     }
 
+    const version_info = await api.SendApi(this.id, 'get_version_info', {})
+    /** 获取版本信息 */
+    this.version = version_info
+    /** QQ登录协议版本 */
+    this.QQVersion = version_info.nt_protocol
+    const apk = version_info.nt_protocol.split('|')
+
+    Bot[this.id].stat = { start_time: Date.now() / 1000, recv_msg_cnt: 0 }
+    Bot[this.id].apk = { display: apk[0].trim(), version: apk[1].trim() }
+    Bot[this.id].version = { id: 'QQ', name: version_info.app_name, version: version_info.app_version }
+
     /** 重启 */
-    await common.init('Lain:restart:shamrock')
+    await common.init('Lain:restart:LagrangeCore')
     /** 保存uin */
     if (!Bot.adapter.includes(this.id)) Bot.adapter.push(this.id)
     /** 加载缓存资源 */
@@ -395,41 +399,41 @@ class Shamrock {
     ])
 
     // let { token } = await api.get_csrf_token(uin, "qun.qq.com")
-    try {
-      let { cookies } = await api.get_cookies(this.id)
-      if (cookies) {
-        let match = cookies.match(/skey=([^;]+)/)
-        if (match) {
-          let skey = match[1]
-          let n = 5381
-          for (let e = skey || '', r = 0, o = e.length; r < o; ++r) {
-            n += (n << 5) + e.charAt(r).charCodeAt(0)
-          }
-          Bot[this.id].bkn = 2147483647 & n
-        }
-      }
-    } catch (err) {
-      common.warn(this.id, 'Shamrock获取bkn失败。')
-    }
+    // try {
+    //   let { cookies } = await api.get_cookies(this.id)
+    //   if (cookies) {
+    //     let match = cookies.match(/skey=([^;]+)/)
+    //     if (match) {
+    //       let skey = match[1]
+    //       let n = 5381
+    //       for (let e = skey || '', r = 0, o = e.length; r < o; ++r) {
+    //         n += (n << 5) + e.charAt(r).charCodeAt(0)
+    //       }
+    //       Bot[this.id].bkn = 2147483647 & n
+    //     }
+    //   }
+    // } catch (err) {
+    //   common.warn(this.id, 'LagrangeCore获取bkn失败。')
+    // }
 
     Bot[this.id].cookies = {}
-    let domains = ['aq.qq.com', 'buluo.qq.com', 'connect.qq.com', 'docs.qq.com', 'game.qq.com', 'gamecenter.qq.com', 'haoma.qq.com', 'id.qq.com', 'kg.qq.com', 'mail.qq.com', 'mma.qq.com', 'office.qq.com', 'openmobile.qq.com', 'qqweb.qq.com', 'qun.qq.com', 'qzone.qq.com', 'ti.qq.com', 'v.qq.com', 'vip.qq.com', 'y.qq.com', '']
-    for (let domain of domains) {
-      api.get_cookies(this.id, domain).then(ck => {
-        ck = ck?.cookies
-        if (ck) {
-          try {
-            // 适配椰奶逆天的ck转JSON方法
-            ck = ck.trim().replace(/\w+=;/g, '').replace(/\w+=$/g, '')
-          } catch (err) { }
-        }
-        Bot[this.id].cookies[domain] = ck
-      }).catch(error => {
-        common.debug(this.id, `${domain} 获取cookie失败：${error}`)
-      })
-    }
+    // let domains = ['aq.qq.com', 'buluo.qq.com', 'connect.qq.com', 'docs.qq.com', 'game.qq.com', 'gamecenter.qq.com', 'haoma.qq.com', 'id.qq.com', 'kg.qq.com', 'mail.qq.com', 'mma.qq.com', 'office.qq.com', 'openmobile.qq.com', 'qqweb.qq.com', 'qun.qq.com', 'qzone.qq.com', 'ti.qq.com', 'v.qq.com', 'vip.qq.com', 'y.qq.com', '']
+    // for (let domain of domains) {
+    //   api.get_cookies(this.id, domain).then(ck => {
+    //     ck = ck?.cookies
+    //     if (ck) {
+    //       try {
+    //         // 适配椰奶逆天的ck转JSON方法
+    //         ck = ck.trim().replace(/\w+=;/g, '').replace(/\w+=$/g, '')
+    //       } catch (err) { }
+    //     }
+    //     Bot[this.id].cookies[domain] = ck
+    //   }).catch(error => {
+    //     common.debug(this.id, `${domain} 获取cookie失败：${error}`)
+    //   })
+    // }
 
-    const log = `Shamrock加载资源成功：加载了${Bot[this.id].fl.size}个好友，${Bot[this.id].gl.size}个群。`
+    const log = `LagrangeCore加载资源成功：加载了${Bot[this.id].fl.size}个好友，${Bot[this.id].gl.size}个群。`
     common.info(this.id, log)
     return log
   }
@@ -440,7 +444,7 @@ class Shamrock {
     for (let retries = 0; retries < 5; retries++) {
       groupList = await api.get_group_list(id)
       if (!(groupList && Array.isArray(groupList))) {
-        common.error(this.id, `Shamrock群列表获取失败，正在重试：${retries + 1}`)
+        common.error(this.id, `LagrangeCore群列表获取失败，正在重试：${retries + 1}`)
       }
       await common.sleep(50)
     }
@@ -480,14 +484,14 @@ class Shamrock {
     for (let retries = 0; retries < 5; retries++) {
       friendList = await api.get_friend_list(id)
       if (!(friendList && Array.isArray(friendList))) {
-        common.error(this.id, `Shamrock好友列表获取失败，正在重试：${retries + 1}`)
+        common.error(this.id, `LagrangeCore好友列表获取失败，正在重试：${retries + 1}`)
       }
       await common.sleep(50)
     }
 
     /** 好友列表获取失败 */
     if (!friendList || !(typeof friendList === 'object')) {
-      common.error(this.id, 'Shamrock好友列表获取失败次数过多，已停止重试')
+      common.error(this.id, 'LagrangeCore好友列表获取失败次数过多，已停止重试')
     }
 
     if (friendList && typeof friendList === 'object') {
@@ -517,7 +521,7 @@ class Shamrock {
       /** 撤回消息 */
       recallMsg: async (msg_id) => await this.recallMsg(msg_id),
       /** 制作转发 */
-      makeForwardMsg: async (message) => await this.makeForwardMsg(message),
+      makeForwardMsg: async (message) => await common.makeForwardMsg(message),
       /** 戳一戳 */
       pokeMember: async (operator_id) => await api.group_touch(this.id, group_id, operator_id),
       /** 禁言 */
@@ -582,7 +586,7 @@ class Shamrock {
     return {
       sendMsg: async (msg) => await this.sendFriendMsg(user_id, msg, false),
       recallMsg: async (msg_id) => await this.recallMsg(msg_id),
-      makeForwardMsg: async (message) => await this.makeForwardMsg(message),
+      makeForwardMsg: async (message) => await common.makeForwardMsg(message),
       getAvatarUrl: (size = 0) => `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${user_id}`,
       sendFile: async (filePath) => await this.upload_private_file(user_id, filePath),
       /** 获取文件下载地址 */
@@ -700,7 +704,7 @@ class Shamrock {
       member.card = member.nickname
       return member
     } catch {
-      return { card: 'shamrock', nickname: 'shamrock' }
+      return { card: 'LagrangeCore', nickname: 'LagrangeCore' }
     }
   }
 
@@ -710,44 +714,44 @@ class Shamrock {
   }
 
   /** 制作转发消息 */
-  async makeForwardMsg (data) {
-    if (!Array.isArray(data)) data = [data]
-    let makeForwardMsg = {
-      /** 标记下，视为转发消息，防止套娃 */
-      test: true,
-      message: [],
-      data: { type: 'test', text: 'forward', app: 'com.tencent.multimsg', meta: { detail: { news: [{ text: '1' }] }, resid: '', uniseq: '', summary: '' } }
-    }
+  // async makeForwardMsg (data) {
+  //   if (!Array.isArray(data)) data = [data]
+  //   let makeForwardMsg = {
+  //     /** 标记下，视为转发消息，防止套娃 */
+  //     test: true,
+  //     message: [],
+  //     data: { type: 'test', text: 'forward', app: 'com.tencent.multimsg', meta: { detail: { news: [{ text: '1' }] }, resid: '', uniseq: '', summary: '' } }
+  //   }
 
-    let msg = []
-    for (let i in data) {
-      /** 该死的套娃，能不能死一死啊... */
-      if (typeof data[i] === 'object' && (data[i]?.test || data[i]?.message?.test)) {
-        if (data[i]?.message?.test) {
-          makeForwardMsg.message.push(...data[i].message.message)
-        } else {
-          makeForwardMsg.message.push(...data[i].message)
-        }
-      } else {
-        if (!data[i]?.message) continue
-        msg.push(data[i].message)
-      }
-    }
+  //   let msg = []
+  //   for (let i in data) {
+  //     /** 该死的套娃，能不能死一死啊... */
+  //     if (typeof data[i] === 'object' && (data[i]?.test || data[i]?.message?.test)) {
+  //       if (data[i]?.message?.test) {
+  //         makeForwardMsg.message.push(...data[i].message.message)
+  //       } else {
+  //         makeForwardMsg.message.push(...data[i].message)
+  //       }
+  //     } else {
+  //       if (!data[i]?.message) continue
+  //       msg.push(data[i].message)
+  //     }
+  //   }
 
-    if (msg.length) {
-      for (let i of msg) {
-        let { message, raw_message } = await this.getShamrock(i)
+  //   if (msg.length) {
+  //     for (let i of msg) {
+  //       let { message, raw_message } = await this.getLagrangeCore(i)
 
-        try {
-          const { message_id } = await api.send_private_msg(this.id, this.id, message, raw_message)
-          makeForwardMsg.message.push({ type: 'node', data: { id: message_id } })
-        } catch (err) {
-          common.error(this.id, err)
-        }
-      }
-    }
-    return makeForwardMsg
-  }
+  //       try {
+  //         const { message_id } = await api.send_private_msg(this.id, this.id, message, raw_message)
+  //         makeForwardMsg.message.push({ type: 'node', data: { id: message_id } })
+  //       } catch (err) {
+  //         common.error(this.id, err)
+  //       }
+  //     }
+  //   }
+  //   return makeForwardMsg
+  // }
 
   /** 撤回消息 */
   async recallMsg (msg_id) {
@@ -896,7 +900,7 @@ class Shamrock {
     e.getAvatarUrl = (size = 0) => `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${this.id}`
 
     /** 添加适配器标识 */
-    e.adapter = 'shamrock'
+    e.adapter = 'LagrangeCore'
 
     /** 某些事件需要e.bot，走监听器没有。 */
     e.bot = Bot[this.id]
@@ -1180,10 +1184,10 @@ class Shamrock {
  * @param {boolean} quote - 是否引用回复
  */
   async sendReplyMsg (e, id, msg, quote) {
-    let { message, raw_message, node } = await this.getShamrock(msg)
+    let { message, raw_message, node } = await this.getLagrangeCore(msg)
 
     if (quote) {
-      message.unshift({ type: 'reply', data: { id: e.message_id } })
+      message.unshift({ type: 'reply', data: { id: String(e.message_id) } })
       raw_message = '[回复]' + raw_message
     }
 
@@ -1197,7 +1201,7 @@ class Shamrock {
    * @param {string|object|array} msg - 消息内容
    */
   async sendFriendMsg (user_id, msg) {
-    const { message, raw_message, node } = await this.getShamrock(msg)
+    const { message, raw_message, node } = await this.getLagrangeCore(msg)
     return await api.send_private_msg(this.id, user_id, message, raw_message, node)
   }
 
@@ -1207,19 +1211,19 @@ class Shamrock {
    * @param {string|object|array} msg - 消息内容
    */
   async sendGroupMsg (group_id, msg) {
-    const { message, raw_message, node } = await this.getShamrock(msg)
+    const { message, raw_message, node } = await this.getLagrangeCore(msg)
     return await api.send_group_msg(this.id, group_id, message, raw_message, node)
   }
 
   /**
-   * 转换message为Shamrock格式
+   * 转换message为LagrangeCore格式
    * @param {string|Array|object} data - 消息内容
    */
-  async getShamrock (data) {
+  async getLagrangeCore (data) {
     /** 标准化消息内容 */
     data = common.array(data)
     let node = false
-    /** 保存 Shamrock标准 message */
+    /** 保存 LagrangeCore标准 message */
     let message = []
     /** 打印的日志 */
     let raw_message = []
@@ -1227,12 +1231,12 @@ class Shamrock {
     /** chatgpt-plugin */
     if (data?.[0]?.type === 'xml') data = data?.[0].msg
 
-    /** 转为Shamrock标准 message */
+    /** 转为LagrangeCore标准 message */
     for (let i of data) {
       if (i?.node) node = true
       switch (i.type) {
         case 'at':
-          message.push({ type: 'at', data: { qq: Number(i.qq) } })
+          message.push({ type: 'at', data: { qq: String(i.qq) } })
           raw_message.push(`<@${i.qq}>`)
           break
         case 'face':
@@ -1345,7 +1349,7 @@ class Shamrock {
           }
           break
         case 'forward':
-          message.push({ type: 'text', data: { text: i.text } })
+          message.push({ type: 'text', data: { text: `${i.text}\n` } })
           raw_message.push(i.text)
           break
         case 'node':
@@ -1354,7 +1358,7 @@ class Shamrock {
           raw_message.push(`<转发消息:${i.data.id}>`)
           break
         default:
-          // 为了兼容更多字段，不再进行序列化，风险是有可能未知字段导致Shamrock崩溃
+          // 为了兼容更多字段，不再进行序列化，风险是有可能未知字段导致LagrangeCore崩溃
           message.push({ type: i.type, data: { ...i.data } })
           raw_message.push(`<${i.type}:${JSON.stringify(i.data)}>`)
           break
@@ -1370,15 +1374,15 @@ class Shamrock {
   }
 }
 
-/** Shamrock的WebSocket服务器实例 */
-const shamrock = new WebSocketServer({ noServer: true })
+/** LagrangeCore的WebSocket服务器实例 */
+const LagrangeCoreWS = new WebSocketServer({ noServer: true })
 
 /** 连接 */
-shamrock.on('connection', async (bot, request) => new Shamrock(bot, request))
+LagrangeCoreWS.on('connection', async (bot, request) => new LagrangeCore(bot, request))
 
 /** 捕获错误 */
-shamrock.on('error', async error => logger.error(error))
+LagrangeCoreWS.on('error', async error => logger.error(error))
 
-export default shamrock
+export default LagrangeCoreWS
 
-common.info('Lain-plugin', 'Shamrock适配器加载完成')
+common.info('Lain-plugin', 'LagrangeCore适配器加载完成')

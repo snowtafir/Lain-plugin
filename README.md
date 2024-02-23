@@ -50,7 +50,7 @@ pnpm config set sharp_binary_host "https://npmmirror.com/mirrors/sharp" && pnpm 
 
 - [标准输入](./docs/stdin.md)
 - [PC微信](./docs/WeChat.md)
-- [Shamrock](./docs/Shamrock.md)
+- [Shamrock、Lagrange.Core](./docs/Shamrock.md)
 - [QQBot(群和频道)](./docs/QQBot.md)
 - [网页版微信](./docs/WeXin.md)
 
@@ -76,6 +76,7 @@ pnpm config set sharp_binary_host "https://npmmirror.com/mirrors/sharp" && pnpm 
 - PC微信：`ComWeChat`
 - QQBot：`QQBot`
 - 网页版微信：`WeXin`
+- LagrangeCore: `LagrangeCore`
 
 ## 适配进度
 - [√] 标准输入
@@ -83,8 +84,9 @@ pnpm config set sharp_binary_host "https://npmmirror.com/mirrors/sharp" && pnpm 
 - [√] QQ频道适配器
 - [√] PC微信适配器
 - [√] 网页版微信适配器
-- [√] `shamrock适配器`
+- [√] Shamrock适配器
 - [√] QQBot适配器
+- [√] LagrangeCore
 
 <details><summary>最后求个爱发电~您的支持是我更新的动力</summary>
 
@@ -111,3 +113,4 @@ pnpm config set sharp_binary_host "https://npmmirror.com/mirrors/sharp" && pnpm 
 - [qq-group-bot](https://github.com/lc-cn/qq-group-bot)
 - [QQBot按钮库](https://gitee.com/lava081/button)
 - [xiaoye12123](https://gitee.com/xiaoye12123)
+- [Lagrange.Core](https://github.com/LagrangeDev/Lagrange.Core)

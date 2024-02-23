@@ -50,4 +50,4 @@
 - [ ] 处理群申请和好友申请
 - [√] 上传和发送文件
 
-如需使用`yenai-plugin`，请使用为`shamrock`专门适配的椰奶：[yenai-plugin](https://github.com/yeyang52/yenai-plugin)
+如需使用`yenai-plugin`，请使用为`shamrock`专门适配的椰奶：[yenai-plugin](https://github.com/Zyy955/yenai-plugin)
