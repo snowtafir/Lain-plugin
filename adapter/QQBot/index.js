@@ -953,6 +953,7 @@ export default class adapterQQBot {
   /** dau统计 */
   async dau () {
     if (!Cfg.Other.QQBotdau) return
+    if (!lain.DAU[this.id]) lain.DAU[this.id] = await this.getDAU()
     lain.DAU[this.id].send_count++
     const time = moment(Date.now()).add(1, 'days').format('YYYY-MM-DD 00:00:00')
     const EX = Math.round((new Date(time).getTime() - new Date().getTime()) / 1000)
@@ -960,8 +961,9 @@ export default class adapterQQBot {
   }
 
   /** 下行消息量 */
-  send_count () {
+  async send_count () {
     if (!Cfg.Other.QQBotdau) return
+    if (!lain.DAU[this.id]) lain.DAU[this.id] = await this.getDAU()
     lain.DAU[this.id].send_count++
     const time = moment(Date.now()).add(1, 'days').format('YYYY-MM-DD 00:00:00')
     const EX = Math.round((new Date(time).getTime() - new Date().getTime()) / 1000)

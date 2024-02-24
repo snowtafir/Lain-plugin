@@ -170,30 +170,31 @@ export class QQBotDAU extends plugin {
 
   Task () {
     const yearMonth = moment().format('YYYY-MM')
-    const time = this.getNowDate()
-    const path = join(process.cwd(), 'data', 'QQBotDAU')
+    /** 根目录路径 */
+    const path = process.cwd() + '/data/QQBotDAU'
+    /** 根目录不存在则创建 */
     if (!fs.existsSync(path)) fs.mkdirSync(path)
     for (const key in lain.DAU) {
       try {
-        const data = lain.DAU[key]
-        delete data.user_cache
-        delete data.group_cache
-        lain.DAU[key] = {
-          user_count: 0,
-          group_count: 0,
-          msg_count: 0,
-          send_count: 0,
-          user_cache: {},
-          group_cache: {},
-          time
-        }
-        if (!fs.existsSync(join(path, key))) fs.mkdirSync(join(path, key))
-        let filePath = join(path, key, `${yearMonth}.json`)
-        let file = fs.existsSync(filePath) ? JSON.parse(fs.readFileSync(filePath, 'utf8')) : []
-        file.push(data)
+        /** 跳过小于今天的 格式：2024-02-08 */
+        const time = this.getNowDate()
+        if (lain.DAU[key].time >= time) continue
+
+        /** 继续检测文件夹 */
+        if (!fs.existsSync(path + `/${key}`)) fs.mkdirSync(path + `/${key}`)
+        /** 删除掉多余的键值 */
+        delete lain.DAU[key].user_cache
+        delete lain.DAU[key].group_cache
+        /** json文件路径 */
+        let filePath = path + `/${key}/${yearMonth}.json`
+        /** 存在则解析，不存在则赋值为空数组 */
+        const file = fs.existsSync(filePath) ? JSON.parse(fs.readFileSync(filePath, 'utf8')) : []
+        file.push(lain.DAU[key])
+        /** 写入 */
         fs.writeFile(filePath, JSON.stringify(file, '', '\t'), 'utf-8', () => { })
+        delete lain.DAU[key]
       } catch (error) {
-        logger.error('清除DAU数据出错,key: ' + key, error)
+        logger.error('保存DAU数据出错,key: ' + key, error)
       }
     }
   }
