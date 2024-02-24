@@ -146,14 +146,14 @@ export default class adapterQQBot {
       sendMsg: async (msg) => await this.sendFriendMsg(userId, msg),
       makeForwardMsg: async (data) => await common.makeForwardMsg(data),
       getChatHistory: async () => [],
-      getAvatarUrl: async (size = 0, id = String(userId)) => { return id.match('-') ? `https://q.qlogo.cn/qqapp/${id.replace('-', '/')}/${size}` : `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${id}` }
+      getAvatarUrl: async (size = 0, id = Number(userId) ? String(userId) : `${this.id}-${userId}`) => { return id.match('-') ? `https://q.qlogo.cn/qqapp/${id.replace('-', '/')}/${size}` : `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${id}` }
     }
   }
 
   pickMember (groupID, userID) {
     return {
       member: this.member(groupID, userID),
-      getAvatarUrl: (size = 0, id = String(userID)) => { return id.match('-') ? `https://q.qlogo.cn/qqapp/${id.replace('-', '/')}/${size}` : `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${id}` }
+      getAvatarUrl: (size = 0, id = Number(userID) ? String(userID) : `${this.id}-${userID}`) => { return id.match('-') ? `https://q.qlogo.cn/qqapp/${id.replace('-', '/')}/${size}` : `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${id}` }
     }
   }
 
@@ -169,7 +169,7 @@ export default class adapterQQBot {
       is_admin: false,
       is_owner: false,
       /** 获取头像 */
-      getAvatarUrl: (size = 0, id = String(userId)) => { return id.match('-') ? `https://q.qlogo.cn/qqapp/${id.replace('-', '/')}/${size}` : `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${id}` },
+      getAvatarUrl: (size = 0, id = Number(userId) ? String(userId) : `${this.id}-${userId}`) => { return id.match('-') ? `https://q.qlogo.cn/qqapp/${id.replace('-', '/')}/${size}` : `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${id}` },
       mute: async (time) => ''
     }
     return member
