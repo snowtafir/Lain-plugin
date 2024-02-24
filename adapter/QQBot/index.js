@@ -146,14 +146,14 @@ export default class adapterQQBot {
       sendMsg: async (msg) => await this.sendFriendMsg(userId, msg),
       makeForwardMsg: async (data) => await common.makeForwardMsg(data),
       getChatHistory: async () => [],
-      getAvatarUrl: async (size = 0, id = Number(userId) ? String(userId) : `${this.id}-${userId}`) => { return id.match('-') ? `https://q.qlogo.cn/qqapp/${id.replace('-', '/')}/${size}` : `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${id}` }
+      getAvatarUrl: (size = 0) => this.getAvatarUrl(size, userId)
     }
   }
 
   pickMember (groupID, userID) {
     return {
       member: this.member(groupID, userID),
-      getAvatarUrl: (size = 0, id = Number(userID) ? String(userID) : `${this.id}-${userID}`) => { return id.match('-') ? `https://q.qlogo.cn/qqapp/${id.replace('-', '/')}/${size}` : `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${id}` }
+      getAvatarUrl: (size = 0) => this.getAvatarUrl(size, userID)
     }
   }
 
@@ -169,10 +169,14 @@ export default class adapterQQBot {
       is_admin: false,
       is_owner: false,
       /** 获取头像 */
-      getAvatarUrl: (size = 0, id = Number(userId) ? String(userId) : `${this.id}-${userId}`) => { return id.match('-') ? `https://q.qlogo.cn/qqapp/${id.replace('-', '/')}/${size}` : `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${id}` },
+      getAvatarUrl: (size = 0) => this.getAvatarUrl(size, userId),
       mute: async (time) => ''
     }
     return member
+  }
+
+  getAvatarUrl (size = 0, id) {
+    return Number(id) ? `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${id}` : `https://q.qlogo.cn/qqapp/${this.id}/${id.split('-')[1] || id}/${size}`
   }
 
   /** 转换格式给云崽处理 */
@@ -222,7 +226,7 @@ export default class adapterQQBot {
     /** 将收到的消息转为字符串 */
     e.toString = () => e.raw_message
     /** 获取对应用户头像 */
-    e.getAvatarUrl = (size = 0, id = String(e.user_id)) => { return id.match('-') ? `https://q.qlogo.cn/qqapp/${id.replace('-', '/')}/${size}` : `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${id}` }
+    e.getAvatarUrl = (size = 0) => this.getAvatarUrl(size, data.user_id)
 
     /** 构建场景对应的方法 */
     if (isGroup) {
