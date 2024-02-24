@@ -11,3 +11,4 @@ config/markdown.js
 plugins/button
 /.idea
 /src
+adapter/Bot/icqqs.js

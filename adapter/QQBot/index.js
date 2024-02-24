@@ -602,7 +602,7 @@ export default class adapterQQBot {
         return { type, file: url, width, height }
       }
       /** ICQQ */
-      if (lain?.file?.uploadImage) {
+      if (Cfg.ICQQ && lain?.file?.uploadImage) {
         const { url, width, height } = await lain.file.uploadImage(file)
         common.mark('Lain-plugin', `使用ICQQ发送图片：${url}`)
         return { type, file: url, width, height }
@@ -643,7 +643,7 @@ export default class adapterQQBot {
         return { type, file: url }
       }
       /** ICQQ */
-      if (lain?.file?.uploadVideo) {
+      if (Cfg.ICQQ && lain?.file?.uploadVideo) {
         const url = await lain.file.uploadVideo(file)
         common.mark('Lain-plugin', `使用ICQQ发送视频：${url}`)
         return { type, file: url }
@@ -682,7 +682,7 @@ export default class adapterQQBot {
         }
       }
       /** ICQQ */
-      if (lain?.file?.uploadPtt) {
+      if (Cfg.ICQQ && lain?.file?.uploadPtt) {
         const url = await lain.file.uploadPtt(file)
         common.mark('Lain-plugin', `使用ICQQ发送语音：${url}`)
         return { type: 'audio', file: url }
