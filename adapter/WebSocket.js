@@ -26,8 +26,6 @@ class WebSocket {
   async server () {
     /** 保存监听器返回 */
     lain.echo = new Map()
-    /** 主动请求后得到的响应 */
-    lain.echo = new Map()
     /** 微信登录 */
     Bot.lain.loginMap = new Map()
     /** 临时文件 */

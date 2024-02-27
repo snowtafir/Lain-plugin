@@ -678,7 +678,7 @@ let api = {
   * @param {object} message - 发送内容
   * @param {string} raw_message - 发送内容日志
   */
-  async send_private_msg (id, user_id, message, raw_message, node) {
+  async send_private_msg (id, user_id, message, raw_message) {
     let user_name
     try {
       user_name = Bot[id].fl.get(user_id)?.user_name
@@ -690,21 +690,36 @@ let api = {
     common.info(id, `<发好友:${user_name}> => ${raw_message}`)
 
     /** 保存发送记录 */
-    if (raw_message.includes('[图片:')) {
-      try { common.MsgTotal(id, 'shamrock', 'image') } catch { }
-    } else {
-      try { common.MsgTotal(id, 'shamrock') } catch { }
+    // if (raw_message.includes('[图片:')) {
+    //   try { common.MsgTotal(id, 'shamrock', 'image') } catch { }
+    // } else {
+    //   try { common.MsgTotal(id, 'shamrock') } catch { }
+    // }
+
+    /** 从message中提取合并转发 */
+    let res
+    const msg = []
+    const node = []
+    message.forEach((item) => {
+      if (item.type === 'forward') node.push(item)
+      msg.push(item)
+    })
+
+    if (node.length > 0) {
+      for (const message of node) {
+        res = await this.SendApi(id, 'send_private_msg', { user_id, message })
+      }
+      return res
     }
 
-    if (node) return await api.send_private_forward_msg(id, user_id, message)
+    if (msg.length > 0) {
+      const params = { user_id, message }
+      res = await this.SendApi(id, 'send_private_msg', params)
+    }
 
-    const params = { user_id, message }
-    const data = await this.SendApi(id, 'send_private_msg', params)
-    /** 储存自身发送的消息 */
-    try { redis.set(`Shamrock:${id}:${data.message_id}`, JSON.stringify(data), { EX: 120 }) } catch { }
     return {
-      ...data,
-      seq: data.message_id,
+      ...res,
+      seq: res.message_id,
       rand: 1
     }
   },
@@ -716,7 +731,7 @@ let api = {
   * @param {object} message - 发送内容
   * @param {string} raw_message - 发送内容日志
   */
-  async send_group_msg (id, group_id, message, raw_message, node) {
+  async send_group_msg (id, group_id, message, raw_message) {
     let group_name
     try {
       group_name = Bot[id].gl.get(group_id)?.group_name
@@ -727,22 +742,29 @@ let api = {
     /** 打印日志 */
     common.info(id, `<发送群聊:${group_name}> => ${raw_message}`)
 
-    /** 保存发送记录 */
-    if (raw_message.includes('[图片:')) {
-      try { common.MsgTotal(id, 'shamrock', 'image') } catch { }
-    } else {
-      try { common.MsgTotal(id, 'shamrock') } catch { }
+    let res
+    const msg = []
+    const node = []
+    message.forEach((item) => {
+      if (item.type === 'forward') node.push(item)
+      msg.push(item)
+    })
+
+    if (node.length > 0) {
+      for (const message of node) {
+        res = await this.SendApi(id, 'send_group_msg', { group_id, message })
+      }
+      return res
     }
 
-    if (node) return await api.send_group_forward_msg(id, group_id, message)
+    if (msg.length > 0) {
+      const params = { group_id, message }
+      res = await this.SendApi(id, 'send_group_msg', params)
+    }
 
-    const params = { group_id, message }
-    const data = await this.SendApi(id, 'send_group_msg', params)
-    /** 储存自身发送的消息 */
-    try { redis.set(`Shamrock:${id}:${data.message_id}`, JSON.stringify(data), { EX: 120 }) } catch { }
     return {
-      ...data,
-      seq: data.message_id,
+      ...res,
+      seq: res.message_id,
       rand: 1
     }
   },
@@ -755,25 +777,24 @@ let api = {
   */
   async SendApi (id, action, params) {
     const echo = randomUUID()
-    common.debug(id, '[ws] send -> ' + JSON.stringify({ echo, action, params }))
-    Bot[id].ws.send(JSON.stringify({ echo, action, params }))
+    /** 序列化 */
+    const log = JSON.stringify({ echo, action, params })
 
+    common.debug(id, '[ws] send -> ' + log)
+    Bot[id].ws.send(log)
+
+    /** 等待响应 */
     for (let i = 0; i < 1200; i++) {
-      const data = await lain.echo.get(echo)
+      const data = lain.echo[echo]
       if (data) {
-        lain.echo.delete(echo)
-        if (data.status === 'ok') {
-          return data.data
-        } else {
-          common.error('Lain-plugin', data)
-          throw data
-        }
+        delete lain.echo[echo]
+        if (data.status === 'ok') return data.data
+        else common.error(id, data); throw data
       } else {
         await common.sleep(50)
       }
     }
-
-    return '获取失败'
+    throw new Error({ status: 'error', message: '请求超时' })
   }
 }
 

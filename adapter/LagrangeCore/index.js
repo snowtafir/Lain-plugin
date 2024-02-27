@@ -1,9 +1,10 @@
+import { randomUUID } from 'crypto'
 import fs from 'fs'
 import path from 'path'
 import { WebSocketServer } from 'ws'
 import common from '../../lib/common/common.js'
-import api from './api.js'
 import { faceMap, pokeMap } from '../../model/shamrock/face.js'
+import api from './api.js'
 
 class LagrangeCore {
   constructor (bot, request) {
@@ -26,7 +27,10 @@ class LagrangeCore {
     /** debug日志 */
     common.debug(this.id, '[ws] received -> ', JSON.stringify(data))
     /** 带echo事件为主动请求得到的响应，另外保存 */
-    if (data?.echo) return lain.echo.set(data.echo, data)
+    if (data?.echo) {
+      lain.echo[data.echo] = data
+      return true
+    }
     try {
       /** 处理事件 */
       this[data?.post_type](data)
@@ -88,9 +92,7 @@ class LagrangeCore {
       }
     })().catch(common.error)
     switch (data.notice_type) {
-      case 'group_recall':
-        data.notice_type = 'group'
-        data.sub_type = 'recall'
+      case 'group':
         try {
           let gl = Bot[this.id].gl.get(data.group_id)
           data = { ...data, ...gl }
@@ -320,7 +322,7 @@ class LagrangeCore {
       uin: this.id,
       tiny_id: String(this.id),
       avatar: `https://q1.qlogo.cn/g?b=qq&s=0&nk=${this.id}`,
-      // sendApi: async (action, params) => await this.sendApi(action, params),
+      sendApi: async (action, params) => await this.sendApi(action, params),
       pickMember: (group_id, user_id) => this.pickMember(group_id, user_id),
       pickUser: (user_id) => this.pickFriend(Number(user_id)),
       pickFriend: (user_id) => this.pickFriend(Number(user_id)),
@@ -329,7 +331,7 @@ class LagrangeCore {
       sendPrivateMsg: async (user_id, msg) => await this.sendFriendMsg(Number(user_id), msg),
       getGroupMemberInfo: async (group_id, user_id, no_cache) => await this.getGroupMemberInfo(Number(group_id), Number(user_id), no_cache),
       removeEssenceMessage: async (msg_id) => await this.removeEssenceMessage(msg_id),
-      makeForwardMsg: async (message) => await common.makeForwardMsg(message, true),
+      makeForwardMsg: async (message) => await this.makeForwardMsg(message),
       getMsg: (msg_id) => '',
       quit: (group_id) => this.quit(group_id),
       getFriendMap: () => Bot[this.id].fl,
@@ -382,6 +384,7 @@ class LagrangeCore {
     /** 获取bot自身信息 */
     const info = await api.get_login_info(this.id)
     Bot[this.id].nickname = info?.nickname || ''
+    this.nickname = info?.nickname || ''
     let _this = this
     await Promise.all([
       // 加载群信息
@@ -521,7 +524,7 @@ class LagrangeCore {
       /** 撤回消息 */
       recallMsg: async (msg_id) => await this.recallMsg(msg_id),
       /** 制作转发 */
-      makeForwardMsg: async (message) => await common.makeForwardMsg(message),
+      makeForwardMsg: async (message) => await this.makeForwardMsg(message),
       /** 戳一戳 */
       pokeMember: async (operator_id) => await api.group_touch(this.id, group_id, operator_id),
       /** 禁言 */
@@ -586,7 +589,7 @@ class LagrangeCore {
     return {
       sendMsg: async (msg) => await this.sendFriendMsg(user_id, msg, false),
       recallMsg: async (msg_id) => await this.recallMsg(msg_id),
-      makeForwardMsg: async (message) => await common.makeForwardMsg(message),
+      makeForwardMsg: async (message) => await this.makeForwardMsg(message),
       getAvatarUrl: (size = 0) => `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${user_id}`,
       sendFile: async (filePath) => await this.upload_private_file(user_id, filePath),
       /** 获取文件下载地址 */
@@ -714,44 +717,43 @@ class LagrangeCore {
   }
 
   /** 制作转发消息 */
-  // async makeForwardMsg (data) {
-  //   if (!Array.isArray(data)) data = [data]
-  //   let makeForwardMsg = {
-  //     /** 标记下，视为转发消息，防止套娃 */
-  //     test: true,
-  //     message: [],
-  //     data: { type: 'test', text: 'forward', app: 'com.tencent.multimsg', meta: { detail: { news: [{ text: '1' }] }, resid: '', uniseq: '', summary: '' } }
-  //   }
+  async makeForwardMsg (data) {
+    if (!Array.isArray(data)) data = [data]
+    let makeForwardMsg = {
+      /** 标记下，视为转发消息，防止套娃 */
+      test: true,
+      message: [],
+      data: { type: 'test', text: 'forward', app: 'com.tencent.multimsg', meta: { detail: { news: [{ text: '1' }] }, resid: '', uniseq: '', summary: '' } }
+    }
 
-  //   let msg = []
-  //   for (let i in data) {
-  //     /** 该死的套娃，能不能死一死啊... */
-  //     if (typeof data[i] === 'object' && (data[i]?.test || data[i]?.message?.test)) {
-  //       if (data[i]?.message?.test) {
-  //         makeForwardMsg.message.push(...data[i].message.message)
-  //       } else {
-  //         makeForwardMsg.message.push(...data[i].message)
-  //       }
-  //     } else {
-  //       if (!data[i]?.message) continue
-  //       msg.push(data[i].message)
-  //     }
-  //   }
+    let msg = []
+    for (let i in data) {
+      /** 该死的套娃，能不能死一死啊... */
+      if (typeof data[i] === 'object' && (data[i]?.test || data[i]?.message?.test)) {
+        if (data[i]?.message?.test) {
+          makeForwardMsg.message.push(...data[i].message.message)
+        } else {
+          makeForwardMsg.message.push(...data[i].message)
+        }
+      } else {
+        if (!data[i]?.message) continue
+        msg.push(data[i].message)
+      }
+    }
 
-  //   if (msg.length) {
-  //     for (let i of msg) {
-  //       let { message, raw_message } = await this.getLagrangeCore(i)
-
-  //       try {
-  //         const { message_id } = await api.send_private_msg(this.id, this.id, message, raw_message)
-  //         makeForwardMsg.message.push({ type: 'node', data: { id: message_id } })
-  //       } catch (err) {
-  //         common.error(this.id, err)
-  //       }
-  //     }
-  //   }
-  //   return makeForwardMsg
-  // }
+    if (msg.length) {
+      for (let i of msg) {
+        try {
+          const { message: content } = await this.getLagrangeCore(i)
+          const id = await this.sendApi('send_forward_msg', { messages: [{ type: 'node', data: { name: this.nickname || 'LagrangeCore', uin: String(this.id), content } }] })
+          makeForwardMsg.message.push({ type: 'forward', data: { id } })
+        } catch (err) {
+          common.error(this.id, err)
+        }
+      }
+    }
+    return makeForwardMsg
+  }
 
   /** 撤回消息 */
   async recallMsg (msg_id) {
@@ -1000,7 +1002,6 @@ class LagrangeCore {
           break
         /** 转发 */
         case 'forward':
-          /** 不理解为啥为啥不是node... */
           message.push({ type: 'node', ...i.data })
           raw_message.push('[转发消息]')
           log_message.push(`<转发消息:${JSON.stringify(i.data)}>`)
@@ -1184,15 +1185,15 @@ class LagrangeCore {
  * @param {boolean} quote - 是否引用回复
  */
   async sendReplyMsg (e, id, msg, quote) {
-    let { message, raw_message, node } = await this.getLagrangeCore(msg)
+    let { message, raw_message } = await this.getLagrangeCore(msg)
 
     if (quote) {
       message.unshift({ type: 'reply', data: { id: String(e.message_id) } })
       raw_message = '[回复]' + raw_message
     }
 
-    if (e.isGroup) return await api.send_group_msg(this.id, id, message, raw_message, node)
-    return await api.send_private_msg(this.id, id, message, raw_message, node)
+    if (e.isGroup) return await api.send_group_msg(this.id, id, message, raw_message)
+    return await api.send_private_msg(this.id, id, message, raw_message)
   }
 
   /**
@@ -1201,8 +1202,8 @@ class LagrangeCore {
    * @param {string|object|array} msg - 消息内容
    */
   async sendFriendMsg (user_id, msg) {
-    const { message, raw_message, node } = await this.getLagrangeCore(msg)
-    return await api.send_private_msg(this.id, user_id, message, raw_message, node)
+    const { message, raw_message } = await this.getLagrangeCore(msg)
+    return await api.send_private_msg(this.id, user_id, message, raw_message)
   }
 
   /**
@@ -1211,8 +1212,8 @@ class LagrangeCore {
    * @param {string|object|array} msg - 消息内容
    */
   async sendGroupMsg (group_id, msg) {
-    const { message, raw_message, node } = await this.getLagrangeCore(msg)
-    return await api.send_group_msg(this.id, group_id, message, raw_message, node)
+    const { message, raw_message } = await this.getLagrangeCore(msg)
+    return await api.send_group_msg(this.id, group_id, message, raw_message)
   }
 
   /**
@@ -1222,7 +1223,6 @@ class LagrangeCore {
   async getLagrangeCore (data) {
     /** 标准化消息内容 */
     data = common.array(data)
-    let node = false
     /** 保存 LagrangeCore标准 message */
     let message = []
     /** 打印的日志 */
@@ -1233,7 +1233,6 @@ class LagrangeCore {
 
     /** 转为LagrangeCore标准 message */
     for (let i of data) {
-      if (i?.node) node = true
       switch (i.type) {
         case 'at':
           message.push({ type: 'at', data: { qq: String(i.qq) } })
@@ -1349,13 +1348,8 @@ class LagrangeCore {
           }
           break
         case 'forward':
-          message.push({ type: 'text', data: { text: `${i.text}\n` } })
-          raw_message.push(i.text)
-          break
-        case 'node':
-          node = true
-          message.push({ type: 'node', data: { ...i.data } })
-          raw_message.push(`<转发消息:${i.data.id}>`)
+          message.push(i)
+          raw_message.push(`<转发消息:${i.id}>`)
           break
         default:
           // 为了兼容更多字段，不再进行序列化，风险是有可能未知字段导致LagrangeCore崩溃
@@ -1367,10 +1361,34 @@ class LagrangeCore {
 
     raw_message = raw_message.join('')
 
-    /** 合并转发 */
-    if (node) raw_message = `[转发消息:${JSON.stringify(message)}]`
+    return { message, raw_message }
+  }
 
-    return { message, raw_message, node }
+  /**
+  * 发送 WebSocket 请求
+  * @param {string} action - 请求 API 端点
+  * @param {string} params - 请求参数
+  */
+  async sendApi (action, params) {
+    const echo = randomUUID()
+    /** 序列化 */
+    const log = JSON.stringify({ echo, action, params })
+
+    common.debug(this.id, '[ws] send -> ' + log)
+    this.bot.send(log)
+
+    /** 等待响应 */
+    for (let i = 0; i < 1200; i++) {
+      const data = lain.echo[echo]
+      if (data) {
+        delete lain.echo[echo]
+        if (data.status === 'ok') return data.data
+        else common.error(this.id, data); throw data
+      } else {
+        await common.sleep(50)
+      }
+    }
+    throw new Error({ status: 'error', message: '请求超时' })
   }
 }
 
