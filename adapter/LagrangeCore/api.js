@@ -673,48 +673,29 @@ let api = {
 
   /**
   * 发送好友消息
-  * @param {string} id - 机器人QQ 通过e.bot、Bot调用无需传入
+  * @param {string} uin - 机器人QQ 通过e.bot、Bot调用无需传入
   * @param {number} user_id - 目标QQ
   * @param {object} message - 发送内容
   * @param {string} raw_message - 发送内容日志
   */
-  async send_private_msg (id, user_id, message, raw_message) {
+  async send_private_msg (uin, user_id, message, raw_message, node) {
     let user_name
     try {
-      user_name = Bot[id].fl.get(user_id)?.user_name
+      user_name = Bot[uin].fl.get(user_id)?.user_name
       user_name = user_name ? `${user_name}(${user_id})` : user_id
     } catch {
       user_name = user_id
     }
     /** 打印日志 */
-    common.info(id, `<发好友:${user_name}> => ${raw_message}`)
+    common.info(uin, `<发好友:${user_name}> => ${raw_message}`)
 
-    /** 保存发送记录 */
-    // if (raw_message.includes('[图片:')) {
-    //   try { common.MsgTotal(id, 'shamrock', 'image') } catch { }
-    // } else {
-    //   try { common.MsgTotal(id, 'shamrock') } catch { }
-    // }
-
-    /** 从message中提取合并转发 */
     let res
-    const msg = []
-    const node = []
-    message.forEach((item) => {
-      if (item.type === 'forward') node.push(item)
-      msg.push(item)
-    })
-
-    if (node.length > 0) {
-      for (const message of node) {
-        res = await this.SendApi(id, 'send_private_msg', { user_id, message })
-      }
-      return res
-    }
-
-    if (msg.length > 0) {
+    if (node) {
+      const id = await this.SendApi(uin, 'send_forward_msg', { messages: message.map(i => i.data) })
+      res = await this.SendApi(uin, 'send_private_msg', { user_id, message: { type: 'forward', data: { id } } })
+    } else {
       const params = { user_id, message }
-      res = await this.SendApi(id, 'send_private_msg', params)
+      res = await this.SendApi(uin, 'send_private_msg', params)
     }
 
     return {
@@ -726,40 +707,29 @@ let api = {
 
   /**
   * 发送群聊消息
-  * @param {string} id - 机器人QQ 通过e.bot、Bot调用无需传入
+  * @param {string} uin - 机器人QQ 通过e.bot、Bot调用无需传入
   * @param {number} group_id - 目标群号
   * @param {object} message - 发送内容
   * @param {string} raw_message - 发送内容日志
   */
-  async send_group_msg (id, group_id, message, raw_message) {
+  async send_group_msg (uin, group_id, message, raw_message, node) {
     let group_name
     try {
-      group_name = Bot[id].gl.get(group_id)?.group_name
+      group_name = Bot[uin].gl.get(group_id)?.group_name
       group_name = group_name ? `${group_name}(${group_id})` : group_id
     } catch {
       group_name = group_id
     }
     /** 打印日志 */
-    common.info(id, `<发送群聊:${group_name}> => ${raw_message}`)
+    common.info(uin, `<发送群聊:${group_name}> => ${raw_message}`)
 
     let res
-    const msg = []
-    const node = []
-    message.forEach((item) => {
-      if (item.type === 'forward') node.push(item)
-      msg.push(item)
-    })
-
-    if (node.length > 0) {
-      for (const message of node) {
-        res = await this.SendApi(id, 'send_group_msg', { group_id, message })
-      }
-      return res
-    }
-
-    if (msg.length > 0) {
+    if (node) {
+      const id = await this.SendApi(uin, 'send_forward_msg', { messages: message.map(i => i.data) })
+      res = await this.SendApi(uin, 'send_group_msg', { group_id, message: { type: 'forward', data: { id } } })
+    } else {
       const params = { group_id, message }
-      res = await this.SendApi(id, 'send_group_msg', params)
+      res = await this.SendApi(uin, 'send_group_msg', params)
     }
 
     return {

@@ -745,8 +745,8 @@ class LagrangeCore {
       for (let i of msg) {
         try {
           const { message: content } = await this.getLagrangeCore(i)
-          const id = await this.sendApi('send_forward_msg', { messages: [{ type: 'node', data: { name: this.nickname || 'LagrangeCore', uin: String(this.id), content } }] })
-          makeForwardMsg.message.push({ type: 'forward', data: { id } })
+          // const id = await this.sendApi('send_forward_msg', { messages: [{ type: 'node', data: { name: this.nickname || 'LagrangeCore', uin: String(this.id), content } }] })
+          makeForwardMsg.message.push({ type: 'node', data: { type: 'node', data: { name: this.nickname || 'LagrangeCore', uin: String(this.id), content } } })
         } catch (err) {
           common.error(this.id, err)
         }
@@ -1185,15 +1185,15 @@ class LagrangeCore {
  * @param {boolean} quote - 是否引用回复
  */
   async sendReplyMsg (e, id, msg, quote) {
-    let { message, raw_message } = await this.getLagrangeCore(msg)
+    let { message, raw_message, node } = await this.getLagrangeCore(msg)
 
     if (quote) {
       message.unshift({ type: 'reply', data: { id: String(e.message_id) } })
       raw_message = '[回复]' + raw_message
     }
 
-    if (e.isGroup) return await api.send_group_msg(this.id, id, message, raw_message)
-    return await api.send_private_msg(this.id, id, message, raw_message)
+    if (e.isGroup) return await api.send_group_msg(this.id, id, message, raw_message, node)
+    return await api.send_private_msg(this.id, id, message, raw_message, node)
   }
 
   /**
@@ -1202,8 +1202,8 @@ class LagrangeCore {
    * @param {string|object|array} msg - 消息内容
    */
   async sendFriendMsg (user_id, msg) {
-    const { message, raw_message } = await this.getLagrangeCore(msg)
-    return await api.send_private_msg(this.id, user_id, message, raw_message)
+    const { message, raw_message, node } = await this.getLagrangeCore(msg)
+    return await api.send_private_msg(this.id, user_id, message, raw_message, node)
   }
 
   /**
@@ -1212,8 +1212,8 @@ class LagrangeCore {
    * @param {string|object|array} msg - 消息内容
    */
   async sendGroupMsg (group_id, msg) {
-    const { message, raw_message } = await this.getLagrangeCore(msg)
-    return await api.send_group_msg(this.id, group_id, message, raw_message)
+    const { message, raw_message, node } = await this.getLagrangeCore(msg)
+    return await api.send_group_msg(this.id, group_id, message, raw_message, node)
   }
 
   /**
@@ -1221,6 +1221,7 @@ class LagrangeCore {
    * @param {string|Array|object} data - 消息内容
    */
   async getLagrangeCore (data) {
+    let node = data?.test || false
     /** 标准化消息内容 */
     data = common.array(data)
     /** 保存 LagrangeCore标准 message */
@@ -1243,7 +1244,7 @@ class LagrangeCore {
           raw_message.push(`<${faceMap[Number(i.id)]}>`)
           break
         case 'text':
-          if (typeof i.text !== 'number' && !i.text.trim()) break
+          if (i.text && typeof i.text !== 'number' && !i.text.trim()) break
           message.push({ type: 'text', data: { text: i.text } })
           raw_message.push(i.text)
           break
@@ -1351,6 +1352,7 @@ class LagrangeCore {
           message.push(i)
           raw_message.push(`<转发消息:${i.id}>`)
           break
+        case 'node':
         default:
           // 为了兼容更多字段，不再进行序列化，风险是有可能未知字段导致LagrangeCore崩溃
           message.push({ type: i.type, data: { ...i.data } })
@@ -1361,7 +1363,7 @@ class LagrangeCore {
 
     raw_message = raw_message.join('')
 
-    return { message, raw_message }
+    return { message, raw_message, node }
   }
 
   /**
