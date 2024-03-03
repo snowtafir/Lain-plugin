@@ -197,7 +197,7 @@ export default class adapterQQBot {
     }
 
     for (let v of loader.priority) {
-      // slint-disable-next-line new-cap
+      // eslint-disable-next-line new-cap
       let p = new v.class(e)
       p.e = e
       /** 判断是否启用功能 */
@@ -952,43 +952,56 @@ export default class adapterQQBot {
 
   /** dau统计 */
   async dau () {
-    if (!Cfg.Other.QQBotdau) return
-    if (!lain.DAU[this.id]) lain.DAU[this.id] = await this.getDAU()
-    lain.DAU[this.id].send_count++
-    const time = moment(Date.now()).add(1, 'days').format('YYYY-MM-DD 00:00:00')
-    const EX = Math.round((new Date(time).getTime() - new Date().getTime()) / 1000)
-    redis.set(`QQBotDAU:send_count:${this.id}`, lain.DAU[this.id].send_count * 1, { EX })
+    try {
+      if (!Cfg.Other.QQBotdau) return
+      if (!lain.DAU[this.id]) lain.DAU[this.id] = await this.getDAU()
+      lain.DAU[this.id].send_count++
+      const time = moment(Date.now()).add(1, 'days').format('YYYY-MM-DD 00:00:00')
+      const EX = Math.round((new Date(time).getTime() - new Date().getTime()) / 1000)
+      redis.set(`QQBotDAU:send_count:${this.id}`, lain.DAU[this.id].send_count * 1, { EX })
+    } catch (error) {
+      logger.error(error)
+    }
   }
 
   /** 下行消息量 */
   async send_count () {
-    if (!Cfg.Other.QQBotdau) return
-    if (!lain.DAU[this.id]) lain.DAU[this.id] = await this.getDAU()
-    lain.DAU[this.id].send_count++
-    const time = moment(Date.now()).add(1, 'days').format('YYYY-MM-DD 00:00:00')
-    const EX = Math.round((new Date(time).getTime() - new Date().getTime()) / 1000)
-    redis.set(`QQBotDAU:send_count:${this.id}`, lain.DAU[this.id].send_count * 1, { EX })
+    try {
+      if (!Cfg.Other.QQBotdau) return
+      if (!lain.DAU[this.id]) lain.DAU[this.id] = await this.getDAU()
+      lain.DAU[this.id].send_count++
+      const time = moment(Date.now()).add(1, 'days').format('YYYY-MM-DD 00:00:00')
+      const EX = Math.round((new Date(time).getTime() - new Date().getTime()) / 1000)
+      redis.set(`QQBotDAU:send_count:${this.id}`, lain.DAU[this.id].send_count * 1, { EX })
+    } catch (error) {
+      logger.error(error)
+    }
   }
 
   /** 上行消息量 */
-  msg_count (data) {
-    if (!Cfg.Other.QQBotdau) return
-    let needSetRedis = false
-    lain.DAU[this.id].msg_count++
-    if (data.group_id && !lain.DAU[this.id].group_cache[data.group_id]) {
-      lain.DAU[this.id].group_cache[data.group_id] = 1
-      lain.DAU[this.id].group_count++
-      needSetRedis = true
+  async msg_count (data) {
+    try {
+      if (!Cfg.Other.QQBotdau) return
+      let needSetRedis = false
+      if (!lain.DAU[this.id]) lain.DAU[this.id] = await this.getDAU()
+      lain.DAU[this.id].msg_count++
+      if (data.group_id && !lain.DAU[this.id].group_cache[data.group_id]) {
+        lain.DAU[this.id].group_cache[data.group_id] = 1
+        lain.DAU[this.id].group_count++
+        needSetRedis = true
+      }
+      if (data.user_id && !lain.DAU[this.id].user_cache[data.user_id]) {
+        lain.DAU[this.id].user_cache[data.user_id] = 1
+        lain.DAU[this.id].user_count++
+        needSetRedis = true
+      }
+      const time = moment(Date.now()).add(1, 'days').format('YYYY-MM-DD 00:00:00')
+      const EX = Math.round((new Date(time).getTime() - new Date().getTime()) / 1000)
+      if (needSetRedis) redis.set(`QQBotDAU:${this.id}`, JSON.stringify(lain.DAU[this.id]), { EX })
+      redis.set(`QQBotDAU:msg_count:${this.id}`, lain.DAU[this.id].msg_count * 1, { EX })
+    } catch (error) {
+      logger.error(error)
     }
-    if (data.user_id && !lain.DAU[this.id].user_cache[data.user_id]) {
-      lain.DAU[this.id].user_cache[data.user_id] = 1
-      lain.DAU[this.id].user_count++
-      needSetRedis = true
-    }
-    const time = moment(Date.now()).add(1, 'days').format('YYYY-MM-DD 00:00:00')
-    const EX = Math.round((new Date(time).getTime() - new Date().getTime()) / 1000)
-    if (needSetRedis) redis.set(`QQBotDAU:${this.id}`, JSON.stringify(lain.DAU[this.id]), { EX })
-    redis.set(`QQBotDAU:msg_count:${this.id}`, lain.DAU[this.id].msg_count * 1, { EX })
   }
 }
 
