@@ -147,9 +147,9 @@ class AdapterComWeChat {
       pickGroup: (group_id) => this.pickGroup(group_id),
       setEssenceMessage: async (msg_id) => await this.setEssenceMessage(msg_id),
       sendPrivateMsg: async (user_id, msg) => await this.sendFriendMsg(user_id, msg),
-      getGroupMemberInfo: async (group_id, user_id, no_cache) => await this.getGroupMemberInfo(group_id, user_id, no_cache),
+      getGroupMemberInfo: async (group_id, user_id) => await this.getGroupMemberInfo(group_id, user_id),
       removeEssenceMessage: async (msg_id) => await this.removeEssenceMessage(msg_id),
-      makeForwardMsg: async (message) => await common.makeForwardMsg(message,),
+      makeForwardMsg: async (message) => await common.makeForwardMsg(message),
       getMsg: (msg_id) => '',
       quit: (group_id) => this.quit(group_id),
       getFriendMap: () => Bot[this.id].fl,
@@ -284,7 +284,6 @@ class AdapterComWeChat {
         role: 'member'
       },
       getAvatarUrl: async () => (await this.sendApi('get_group_member_info', { group_id, user_id }))?.['wx.avatar'],
-      
       toString: () => ToString
     }
 
@@ -343,7 +342,7 @@ class AdapterComWeChat {
           ToString.push(i.data.text)
           break
         case 'mention':
-          message.push({ type: 'text', qq: i.data.user_id })
+          message.push({ type: 'at', qq: i.data.user_id })
           raw_message.push(`@${i.data.user_id}`)
           log_message.push(`<@:${i.data.user_id}>`)
           ToString.push(`{at:${i.data.user_id}}`)
@@ -552,6 +551,10 @@ class AdapterComWeChat {
   /** 群成员列表 */
   async getMemberMap (group_id) {
     return await this.sendApi('get_group_list', { group_id })
+  }
+
+  async getGroupMemberInfo (group_id, user_id) {
+    return await this.sendApi('get_group_member_info', { group_id, user_id })
   }
 }
 
