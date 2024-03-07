@@ -620,6 +620,7 @@ class LagrangeCore {
       /** 取缓存！！！别问为什么，因为傻鸟同步 */
       let member = Bot[this.id].gml.get(group_id)?.[user_id] || {}
       member.info = { ...member }
+      member.getAvatarUrl = (size = 0) => `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${user_id}`
       return member
     } else {
       api.get_group_member_info(this.id, group_id, user_id, true).then(res => {
