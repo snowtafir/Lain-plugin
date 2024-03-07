@@ -899,7 +899,7 @@ class LagrangeCore {
     /** 快速回复 */
     e.reply = async (msg, quote) => await this.sendReplyMsg(e, group_id || user_id, msg, quote)
     /** 获取对应用户头像 */
-    e.getAvatarUrl = (size = 0) => `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${this.id}`
+    e.getAvatarUrl = (size = 0) => `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${user_id}`
 
     /** 添加适配器标识 */
     e.adapter = 'LagrangeCore'
