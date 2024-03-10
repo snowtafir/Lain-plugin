@@ -9,14 +9,10 @@ export default class guild {
   constructor(Cfg) {
     /** 开发者id */
     this.id = `qg_${Cfg.appID}`
-    /** 机器人令牌(token) */
-    this.token = Cfg.token
-    /** 沙盒模式 */
-    this.sandbox = Cfg.sandbox
-    /** 是否接收全部消息 */
-    this.allMsg = Cfg.allMsg
     /** 当前机器人配置 */
     this.Cfg = Cfg
+    /** 注册Bot */
+    Bot[this.id] = this.Cfg
   }
 
   /** 创建连接 */
@@ -24,11 +20,9 @@ export default class guild {
     /** 基础监听事件 */
     const intents = ["GUILDS", "GUILD_MEMBERS", "GUILD_MESSAGE_REACTIONS", "DIRECT_MESSAGE"]
     /** 接收全部消息 */
-    this.allMsg ? intents.push("GUILD_MESSAGES") : intents.push("PUBLIC_GUILD_MESSAGES")
+    Bot[this.id].allMsg ? intents.push("GUILD_MESSAGES") : intents.push("PUBLIC_GUILD_MESSAGES")
     /** 添加监听事件 */
-    this.Cfg.intents = intents
-    /** 注册Bot */
-    Bot[this.id] = this.Cfg
+    Bot[this.id].intents = intents
     /** 创建 client */
     Bot[this.id].client = createOpenAPI(Bot[this.id])
     /** 创建 websocket 连接 */
@@ -49,7 +43,7 @@ export default class guild {
     /** 在this保存一下 */
     this.client = Bot[this.id].client
     /** 保存bot的信息 */
-    await this.me(this.id)
+    await this.me()
     /** 告知用户已连接成功 */
     common.info(this.id, "连接成功，正在加载资源中...")
     /** 延迟下 */

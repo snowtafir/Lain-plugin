@@ -245,6 +245,8 @@ export default class StartQQBot {
 
   /** 转换格式给云崽处理 */
   async msg(data, isGroup) {
+    /** 调试日志 */
+    common.debug(this.id, JSON.stringify(data))
     let { self_id: tinyId, ...e } = data
     e.tiny_id = tinyId
     e.self_id = e.bot.config.appid
@@ -679,10 +681,10 @@ export default class StartQQBot {
     }
 
     res = {
-      ...res,
       rand: 1,
-      time: Date.now(),
-      message_id: res?.msg_id
+      time: parseInt(Date.now() / 1000),
+      message_id: res?.id,
+      ...res
     }
     common.debug('Lain-plugin', res)
 

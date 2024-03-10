@@ -87,7 +87,7 @@ export default class SendMsg {
     let res
     /** 发送消息 */
     if (content.length > 0) {
-      await api.send_message(this.detail_type, this.group_id || this.user_id, content)
+      res = await api.send_message(this.detail_type, this.group_id || this.user_id, content)
       try { await common.MsgTotal(this.id, 'ComWeChat') } catch { }
     }
 

@@ -7,6 +7,8 @@ import path from 'path'
 export default new class zaiMsg {
   /** 转换格式给云崽 */
   async msg(data) {
+    /** 调试日志 */
+    common.debug(this.id, JSON.stringify(data))
     const { self_id, user_id, group_id, message_type, message_id, sender } = data
 
     let raw_message = data.raw_message

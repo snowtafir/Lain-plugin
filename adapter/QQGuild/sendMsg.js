@@ -314,7 +314,8 @@ export default class SendMsg {
       seq: res.data.seq_in_channel,
       rand: 1,
       time: parseInt(Date.parse(res.data.timestamp) / 1000),
-      message_id: res.data.id
+      message_id: res.data.id,
+      ...res.data
     }
   }
 

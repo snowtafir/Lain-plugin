@@ -93,7 +93,7 @@ export default class StartWeChat4u {
         const _path = `${this.path}${this.id}.jpg`
         if (!fs.existsSync(_path)) fs.writeFileSync(_path, avatar)
       } catch (error) {
-        console.log(error)
+        logger.warn(error)
       }
     })
 
@@ -126,6 +126,8 @@ export default class StartWeChat4u {
 
   /** 处理接收的消息 */
   async msg(msg) {
+    /** 调试日志 */
+    common.debug(this.id, JSON.stringify(data))
     /** 屏蔽bot自身消息 */
     if (msg.isSendBySelf) return
     /** 屏蔽历史消息 */
@@ -308,7 +310,8 @@ export default class StartWeChat4u {
           seq: res.MsgID,
           rand: 1,
           time: parseInt(Date.now() / 1000),
-          message_id: res.MsgID
+          message_id: res.MsgID,
+          ...res
         }
       } catch (err) {
         common.info(this.id, `发送消息：发送消息失败：${err?.tips || err}`)
@@ -319,7 +322,8 @@ export default class StartWeChat4u {
           seq: res.MsgID,
           rand: 1,
           time: parseInt(Date.now() / 1000),
-          message_id: res.MsgID
+          message_id: res.MsgID,
+          ...res
         }
       }
     })

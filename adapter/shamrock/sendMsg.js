@@ -213,7 +213,8 @@ export default class SendMsg {
             time,
             message_id,
             seq: message_id,
-            rand: 1
+            rand: 1,
+            ...data.data
           }
         } else {
           common.error('Lain-plugin', data)

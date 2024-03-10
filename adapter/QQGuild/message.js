@@ -14,6 +14,8 @@ export default class message {
 
   /** 消息转换为Yunzai格式 */
   async msg(type = "") {
+    /** 调试日志 */
+    common.debug(this.id, JSON.stringify(this.data))
     /** 初始化e */
     let e = {}
     /** 获取消息体、appID */
@@ -199,7 +201,7 @@ export default class message {
       }
       if (reply?.content) {
         /** 暂不处理...懒 */
-        message.push({ type: "text", text: reply.content })
+        message.push({ type: "text", text: reply.content.replace(/&gt;/g, ">").replace(/&lt;/g, "<").replace(/&amp;/g, "&") })
       }
       message.push({ type: "at", text: `@${reply.author.username}`, qq: reply.author.id, id: reply.author.id })
       e.source = {
@@ -281,8 +283,9 @@ export default class message {
           message.push({ type: "face", text: faceValue })
         } else {
           /** 前缀处理 */
+          i = i.trim().replace(/&gt;/g, ">").replace(/&lt;/g, "<").replace(/&amp;/g, "&")
           if (i && Bot.lain.cfg.prefix && !Bot.lain.cfg.prefixBlack.includes(this.id)) {
-            i = i.trim().replace(/^\//, "#")
+            i = i.replace(/^\//, "#")
           }
           raw_message.push(i)
           message.push({ type: "text", text: i })
@@ -335,7 +338,7 @@ export default class message {
       message: [
         {
           type: "text",
-          text: content,
+          text: content.replace(/&gt;/g, ">").replace(/&lt;/g, "<").replace(/&amp;/g, "&"),
         },
       ],
       raw_message: content,

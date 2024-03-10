@@ -125,6 +125,8 @@ async function fileType(data) {
 }
 
 function msg(msg) {
+  /** 调试日志 */
+  common.debug(uin, JSON.stringify(msg))
   const time = parseInt(Date.now() / 1000)
 
   let e = {
