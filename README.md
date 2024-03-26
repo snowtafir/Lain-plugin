@@ -1,4 +1,4 @@
-## 此插件已被修改为适配本仓库云崽，如有需要请用原插件[Lain-plugin](https://gitee.com/Zyy955/Lain-plugin)
+## 此插件已被修改为适配本仓库云崽，原仓库已跑路删库了
 
 ## 简介
 - (╥╯^╰╥) 在线征集美工大佬，仓库主页缺一个标题图！！！
@@ -40,11 +40,12 @@ pnpm config set sharp_binary_host "https://npmmirror.com/mirrors/sharp" && pnpm 
 请点击查看对应教程~
 
 - [标准输入](./docs/stdin.md)
-- [QQ频道](./docs/QQGuild.md)
+- [QQ频道(旧版)](./docs/QQGuild.md)
 - [PC微信](./docs/WeChat.md)
 - [Shamrock](./docs/Shamrock.md)
-- [QQBot](./docs/QQBot.md)
+- [QQBot(群和频道)](./docs/QQBot.md)
 - [网页版微信](./docs/WeXin.md)
+- [Lagrange.Core](./docs/Lagrange.Core.md)
 
 ## 4.设置主人
 
@@ -68,6 +69,7 @@ pnpm config set sharp_binary_host "https://npmmirror.com/mirrors/sharp" && pnpm 
 - PC微信：`ComWeChat`
 - QQBot：`QQBot`
 - 网页版微信：`WeXin`
+- LagrangeCore: `LagrangeCore`
 
 ## 适配进度
 - [√] 标准输入
@@ -75,10 +77,14 @@ pnpm config set sharp_binary_host "https://npmmirror.com/mirrors/sharp" && pnpm 
 - [√] QQ频道适配器
 - [√] PC微信适配器
 - [√] 网页版微信适配器
-- [√] `shamrock适配器`
+- [√] Shamrock适配器
 - [√] QQBot适配器
+- [√] LagrangeCore
 
 <details><summary>最后求个爱发电~您的支持是我更新的动力</summary>
+
+[新爱发电](https://afdian.net/a/lain52)
+
 
 ![爱发电](https://cdn.jsdelivr.net/gh/Zyy955/imgs/img/202308271209508.jpeg)
 
@@ -94,3 +100,6 @@ pnpm config set sharp_binary_host "https://npmmirror.com/mirrors/sharp" && pnpm 
 - [ComWeChat](https://github.com/JustUndertaker/ComWeChatBotClient)
 - [wechat4u](https://github.com/nodeWechat/wechat4u/blob/master/run-core.js)
 - [qq-group-bot](https://github.com/lc-cn/qq-group-bot)
+- [QQBot按钮库](https://gitee.com/lava081/button)
+- [xiaoye12123](https://gitee.com/xiaoye12123)
+- [Lagrange.Core](https://github.com/LagrangeDev/Lagrange.Core)

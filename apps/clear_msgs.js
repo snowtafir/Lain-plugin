@@ -21,7 +21,7 @@ export class clear_msgs extends plugin {
     const gl = this.e.bot.gl
     gl.forEach(async (value, key) => {
       try {
-        await api.clear_msgs(this.e.self_id, 'group', Number(key))
+        await this.e.bot.api.clear_msgs(this.e.self_id, 'group', Number(key))
       } catch (error) {
         this.reply(`清理群${key}发生错误：${error?.message || error}`)
       }

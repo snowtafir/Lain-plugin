@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html;charset=utf-8" />
+    <link rel="shortcut icon" href="#" />
+    <link rel="stylesheet" type="text/css" href="{{pluResPath}}/index.css" />
+    <link rel="preload" href="{{_res_Path}}script/g2plot.min.js" as="script" />
+    <link rel="preload" href="{{_res_Path}}font/tttgbnumber.ttf" as="font">
+    <link rel="preload" href="{{pluResPath}}font/ruizizhenyan.ttf" as="font">
+    <link rel="preload" href="{{pluResPath}}html/DAU/img/bg.webp" as="image">
+  </head>
+
+  <body class="bg">
+    <div class="container" id="container">
+      <div class="title-box">
+        <div class="info">
+          <!-- <div class="uid"></div> -->
+          <div class="month">
+            <img class="avatar" src="{{avatar}}" />
+            {{nickname}} - QQBOTDAU
+          </div>
+        </div>
+      </div>
+      <div class="data-box">
+        <div class="average">
+          <div class="head">最近{{totalDAU.days}}日平均DAU</div>
+          <div class="primogems">
+            <div class="icon-user"></div>
+            <div class="text">上行消息人数：{{totalDAU.user_count}}</div>
+          </div>
+          <div class="primogems">
+            <div class="icon-group"></div>
+            <div class="text">上行消息群数：{{totalDAU.group_count}}</div>
+          </div>
+          <div class="primogems">
+            <div class="icon-msg"></div>
+            <div class="text">上行消息量：{{totalDAU.msg_count}}</div>
+          </div>
+          <div class="primogems">
+            <div class="icon-send"></div>
+            <div class="text">下行消息量：{{totalDAU.send_count}}</div>
+          </div>
+        </div>
+        <div class="today">
+          <div class="head">今日DAU</div>
+          <div class="primogems">
+            <div class="icon-user"></div>
+            <div class="text">上行消息人数：{{todayDAU.user_count}}</div>
+          </div>
+          <div class="primogems">
+            <div class="icon-group"></div>
+            <div class="text">上行消息群数：{{todayDAU.group_count}}</div>
+          </div>
+          <div class="primogems">
+            <div class="icon-msg"></div>
+            <div class="text">上行消息量：{{todayDAU.msg_count}}</div>
+          </div>
+          <div class="primogems">
+            <div class="icon-send"></div>
+            <div class="text">下行消息量：{{todayDAU.send_count}}</div>
+          </div>
+        </div>
+      </div>
+      {{ each monthly month}}
+      <div class="chart-box">
+        <div class="head">DAU - {{month}}</div>
+        <div class="chart-info">
+          <div class="chartContainer" id="chartContainer{{month}}"></div>
+        </div>
+      </div>
+      {{ /each }}
+    </div>
+  </body>
+
+  <script type="text/javascript" src="{{_res_Path}}script/g2plot.min.js"></script>
+  <script>
+    const { DualAxes } = G2Plot
+    const daus = JSON.parse(`{{@ daus}}`)
+    const fontstyle = {
+      fontFamily: 'ruizizhenyan',
+      fontSize: 14,
+      fontWeight: 300,
+    }
+    for (const month in daus) {
+      const dualPlot = new DualAxes(`chartContainer${month}`, {
+        animation: false,
+        data: daus[month],
+        xField: 'time',
+        yField: ['linecount', 'count'],
+        meta: {
+          time: {
+            alias: '日期',
+            formatter: (v) => v.slice(5)
+          }
+        },
+        xAxis: {
+          label: {
+            style: {
+              fill: 'black',
+              ...fontstyle
+            }
+          }
+        },
+        yAxis: {
+          linecount: {
+            label: {
+              style: fontstyle
+            }
+          },
+          count: {
+            label: {
+              style: fontstyle
+            }
+          }
+        },
+        geometryOptions: [
+          {
+            geometry: 'column',
+            isGroup: true,
+            seriesField: 'linename',
+            columnWidthRatio: 0.5,
+            color: ['#877c74', '#92928b']
+          }, {
+            geometry: 'line',
+            seriesField: 'name',
+            label: {
+              visible: true,
+              offsetY: -10,
+              style: {
+                fontFamily: 'ruizizhenyan',
+                fontSize: 18,
+                fontWeight: 400,
+                fill: 'white',
+                stroke: '#626681',
+                lineWidth: 4,
+              }
+            },
+            color: ['#D44000', '#FF7A00'],
+            lineStyle: {
+              lineWidth: 4
+            }
+          }
+        ],
+        legend: {
+          position: 'top',
+          itemName: {
+            style: {
+              ...fontstyle,
+              fontSize: 16
+            }
+          },
+          offsetY: -10,
+          itemHeight: 30
+        },
+        theme: {
+          styleSheet: {
+            fontFamily: 'ruizizhenyan',
+          }
+        }
+      })
+      dualPlot.render()
+    }
+  </script>
+</html>

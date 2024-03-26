@@ -1,7 +1,11 @@
 node_modules/
 config/*
-!config/defSet/config.yaml
+!config/defSet/
 resources/image
 resources/QQBotApi
+plugins/button
+/.idea
+/src
+adapter/Bot/icqqs.js
 *.ts
 *.bak

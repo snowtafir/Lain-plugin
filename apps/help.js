@@ -1,21 +1,22 @@
-import _ from "lodash"
-import Render from "../model/render.js"
-import Version from "../model/version.js"
+import _ from 'lodash'
+import Render from '../model/render.js'
+import Version from '../model/version.js'
 import { helpCfg, helpList, style } from '../model/help.js'
 
 export class help extends plugin {
   constructor() {
     super({
-      name: "铃音帮助",
+      name: '铃音帮助',
       priority: -50,
       rule: [
         {
           reg: /^#(Lain|铃音)版本$/,
-          fnc: "version",
+          fnc: 'version'
         },
         {
-          reg: /^#(Lain|铃音)帮助$/,
-          fnc: 'help'
+          reg: /^#(Lain|铃音)(.*)帮助$/,
+          fnc: 'help',
+          permission: 'master'
         }
       ]
     })
@@ -31,6 +32,9 @@ export class help extends plugin {
   }
 
   async help(e) {
+    if (!e.msg.match(/^#(Lain|铃音)帮助$/)) {
+      return await this.reply(e.msg.replace(/帮助/, '菜单'))
+    }
     let helpGroup = []
     _.forEach(helpList, (group) => {
       _.forEach(group.list, (help) => {
@@ -65,7 +69,7 @@ export class help extends plugin {
     let theme = {
       main: `${resPath}/main.png`,
       bg: `${resPath}/bg.jpg`,
-      style: style
+      style
     }
     let themeStyle = theme.style || {}
     let ret = [`
@@ -102,4 +106,3 @@ function getDef() {
     }
   }
 }
-

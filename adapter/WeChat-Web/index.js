@@ -2,7 +2,7 @@ import fs from 'fs'
 import path from 'path'
 import fetch from 'node-fetch'
 import { fileTypeFromBuffer } from 'file-type'
-import common from '../../model/common.js'
+import common from '../../lib/common/common.js'
 
 export default class StartWeChat4u {
   constructor(id, config) {
@@ -145,6 +145,7 @@ export default class StartWeChat4u {
     // }
 
     let e = {
+      uin: this.id,
       adapter: 'WeXin',
       self_id: this.id,
       atme: false,

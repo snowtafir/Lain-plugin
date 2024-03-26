@@ -1,0 +1,19 @@
+Stdin:               # 标准输入
+  state: true        # 标准输入开关
+  name: "标准输入"    # 标准输入名称 => 椰奶状态显示
+
+ComWeChat:           # PC微信
+  name:              # PC微信名称 => 椰奶状态显示
+  autoFriend: 1      # 自动同意加好友 1-同意 0-不处理
+
+WeXin:               # 网页版微信
+  autoFriend: 1      # 自动同意加好友 1-同意 0-不处理
+
+# 定时清理缓存临时文件夹 每天凌晨4点
+DelFileCron: 0 4 * * *
+
+# ICQQ魔法语音 需要一个群发送
+recordGroup_id: 
+
+# QQBotdau统计
+QQBotdau: true

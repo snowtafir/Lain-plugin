@@ -4,6 +4,12 @@ import Runtime from '../../../lib/plugins/runtime.js'
 
 export default new class loader {
   async deal(e) {
+    try {
+      /** 记录消息次数 */
+      await redis.incr(`lain:${e.self_id}:sendMsg:total`)
+      Bot[e.self_id].stat.recv_msg_cnt = await redis.get(`lain:${e.self_id}:sendMsg:total`)
+    } catch (error) { }
+
     if (!e?.bot) Object.defineProperty(e, 'bot', { value: Bot[e.self_id] })
 
     /** 检查频道消息 */

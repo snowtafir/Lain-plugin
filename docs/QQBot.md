@@ -1,5 +1,3 @@
-`请给予机器人基础的权限...什么权限都没有的发个鬼消息啊= =`
-
  ![Visitor Count](https://profile-counter.glitch.me/Zyy955-Lain-plugin/count.svg)
 
 # 请勿轻信任何人的出售官方Bot，吃相别太难看。
@@ -18,13 +16,13 @@
 
 添加机器人(删除机器人同理)：**是=1 否=0**
 ```
-#QQ群设置 沙盒:私域:移除at:机器人ID:机器人令牌:机器人密钥
+// 请认真查看例子中的说明
+#QQBot设置 沙盒:私域:机器人ID:机器人令牌:机器人密钥
 ```
 
 查看机器人：
 ```
-// 暂不可用
-#QQ频道账号
+#QQBot账号
 ```
 
 ## 使用例子
@@ -35,23 +33,26 @@
 
 是否私域：`是`
 
-移除at：`是`
-
 AppID(机器人ID)：`123456789`
 
-Token(机器人令牌)：`abcdefghijklmnopqrstuvwxyz123456`
+Token(机器人令牌)：`abcdefghijklmnopqrstuvwxyz123456`   // 目前该配置sdk已废除，但是目前本插件还会保留一段时间。
 
 AppSecret(机器人密钥)：`abcdefghijklmnopqrstuvwxyz`
 
 
-添加机器人：
+- 3个指令，3选1
+- `#QQBot设置`  => 同时接频道、群
+- `#QQ群设置`   => 只连接群
+- `#QQ频道设置`  => 只连接频道
+
+添加群机器人：
 ```
-#QQ群设置 0:1:1:123456789:abcdefghijklmnopqrstuvwxyz123456:abcdefghijklmnopqrstuvwxyz
+#QQ群设置 0:1:123456789:abcdefghijklmnopqrstuvwxyz123456:abcdefghijklmnopqrstuvwxyz
 ```
 
-删除机器人：
+删除群机器人：
 ```
-#QQ群设置 0:1:1:123456789:abcdefghijklmnopqrstuvwxyz123456:abcdefghijklmnopqrstuvwxyz
+#QQ群设置 0:1:123456789:abcdefghijklmnopqrstuvwxyz123456:abcdefghijklmnopqrstuvwxyz
 ```
 
 </details>
@@ -68,7 +69,11 @@ AppSecret(机器人密钥)：`abcdefghijklmnopqrstuvwxyz`
   - 视频：编写一个全局变量`Bot.videoToUrl`，接收一个参数，返回 `url`。
 - 方法2：前往 [./plugins/Lain-plugin/config/config.yaml](../config/config.yaml) 配置公网地址，端口为配置文件中的`HTTP`端口，如果有转发，请修改`实际端口`选项。
 - 方法3：登录一个QQ机器人，随后前往[./plugins/Lain-plugin/config/config.yaml](../config/config.yaml)配置`QQBotUin`为QQ号，此方法仅可发送图片。
-- 适配器自带指令前缀/转#，默认打开。
+- 适配器自带指令前缀/转#，默认打开。若需关闭请发送
+```
+#QQBot设置前缀关闭
+```
+或者编辑 [config/token.yaml](../config/token.yaml) 配置文件，关闭将 `/` 转换为 `#`
 
 
 <details><summary>方法1图床编写参考</summary>
@@ -133,33 +138,16 @@ Bot.imageToUrl = async (file) => {
 
 ## 高阶能力
 
-<details><summary>Markdown 消息</summary>
-
-支持自定义全局模板名称，打开配置文件自行配置，`./plugins/Lain-plugin/config/config.yaml`
-
-配置后无需申请通用模板，经测试，只需要一个图文模板即可使用全局md。
-
-随后执行`#QQ群设置MD 机器人ID:模板ID`。
-
-```
-# QQBot全局md模板，需要使用#QQ群设置MD...设置id启用
-QQBotMD:
-  # 图片模板宽高 key名称
-  ImageSize:
-  # 图片模板url key名称
-  image:
-  # 文字模板 key名称
-  text:
-```
-
-如配置以上，无需查看以下。
-
-`此项配置同步 TRSS-Yunzai，设置后视为全局启用Markdown模板发送文本、图片消息`
-
 高阶能力 → 消息模板 → 添加 Markdown 模板
 
-模板名称：图文消息  
-使用场景：发送图文混排消息  
+<details><summary>图文消息</summary>
+
+模板名称：图文消息
+
+使用场景：发送图文混排消息
+
+请复制后去除源码前后的 ` 标记
+
 Markdown 源码：
 
 ```
@@ -167,21 +155,81 @@ Markdown 源码：
 ```
 
 配置模板参数
-| 模板参数 | 参数示例 |
-| - | - |
-| text_start | 开头文字 |
-| img_dec | 图片 |
-| img_url | https://qqminiapp.cdn-go.cn/open-platform/11d80dc9/img/robot.b167c62c.png |
-| text_end | 结束文字 | 
+| 模板参数   | 参数示例                                                          号位文字 |
+| ---------- | -------------------------------------------------------------------------- |
+| text_start | 开头文字                                                          号位文字 |
+| img_dec    | 图片                                                              号位文字 |
+| img_url    | https://qqminiapp.cdn-go.cn/open-platform/11d80dc9/img/robot.b167c62c.png  |
+| text_end   | 结束文字                                                          号位文字 |
 
-保存 → 提交审核 → 审核完成后，输入 `#QQ群设置MD 机器人ID:模板ID`
+保存 → 提交审核 → 审核完成后，输入 `#QQBot设置MD 机器人ID:模板ID`
+
+
+温馨提示：
+支持自定义全局模板名称，打开配置文件自行配置，`./plugins/Lain-plugin/config/config/token.yaml`
+
+配置后无需申请通用模板，经测试，只需要一个图文模板即可使用全局md。
+
+随后执行
+```
+#QQ群设置MD 机器人ID:模板ID
+```
 
 </details>
 
-<details><summary>全局 Markdown 消息附带发送按钮编写</summary>
+<details><summary>纯文模板</summary>
+
+模板名称：合并转发
+
+使用场景：发送合并转发消息
+
+请复制后去除源码前后的 ` 标记
+
+### 我更推荐你用此模板，支持多图，Markdown语法。 
+
+Markdown 源码：
+
+```
+{{.text_0}}{{.text_1}}{{.text_2}}{{.text_3}}{{.text_4}}{{.text_5}}{{.text_6}}{{.text_7}}{{.text_8}}{{.text_9}}
+```
+
+配置模板参数
+| 模板参数 | 参数示例  |
+| -------- | --------- |
+| text_0   | 0号位文字 |
+| text_1   | 1号位文字 |
+| text_2   | 2号位文字 |
+| text_3   | 3号位文字 |
+| text_4   | 4号位文字 |
+| text_5   | 5号位文字 |
+| text_6   | 6号位文字 |
+| text_7   | 7号位文字 |
+| text_8   | 8号位文字 |
+| text_9   | 9号位文字 |
+
+
+保存 → 提交审核 → 审核完成
+
+将`./plugins/Lain-plugin/plugins/纯文模板.js`复制到`./plugins/example`
+
+对机器人输入 
+```
+#QQBot设置MD 机器人ID:模板ID
+```
+
+随后输入 
+```
+#QQBotMD 机器人ID:4
+```
+
+</details>
+
+<details><summary>Markdown 消息附带发送按钮编写</summary>
+
+按钮仓库：[lava081/button](https://gitee.com/lava081/button)
 
 - 插件开发者请在插件包目录创建 `lain.support.js`，和锅巴一样。
-- 个人用户可在 `plugins/Lain-plugin/plugins/button`文件夹创建 `js` 文件，可创建多个。
+- 个人用户可在 `plugins/Lain-plugin/plugins/button`文件夹创建 `js` 文件、文件夹，可创建多个。
 - 复制以下内容到 `lain.support.js` 中，自行编写正则和执行方法即可。
 
 ```javascript
@@ -189,100 +237,93 @@ export default class Button {
   constructor () {
     this.plugin = {
       // 插件名称
-      name: '状态按钮',
+      name: '按钮示例',
       // 描述
-      dsc: '状态按钮',
-      // 优先级
+      dsc: '按钮示例',
+      // 按钮优先级
       priority: 100,
       rule: [
         {
           /** 命令正则匹配 */
-          reg: '#状态',
+          reg: '^#?测试$',
           /** 执行方法 */
-          fnc: 'state'
+          fnc: 'test'
         },
-        {
-          /** 命令正则匹配 */
-          reg: '#帮助',
-          /** 执行方法 */
-          fnc: 'help'
-        }
       ]
     }
   }
 
   /** 执行方法 */
-  state (e) {
-    // e是接收消息，经喵崽处理过的，插件会原封不动传递过来，供开发者使用。
-    return [
-      {
-        type: 'button',
-        buttons: [
-          {
-            id: '1',
-            render_data: {
-              label: '角色1面板',
-              visited_label: '角色1面板'
-            },
-            action: {
-              type: 2,
-              permission: {
-                type: 2
-              },
-              data: '/角色1面板',
-              at_bot_show_channel_list: false
-            }
-          }
-        ]
-      },
-      {
-        type: 'button',
-        buttons: [
-          {
-            id: '2',
-            render_data: {
-              label: '角色1面板',
-              visited_label: '角色1面板'
-            },
-            action: {
-              type: 2,
-              permission: {
-                type: 2
-              },
-              data: '/角色1面板',
-              at_bot_show_channel_list: false
-            }
-          }
-        ]
-      }
+  test (e) {
+    const button = []
+  
+    const list1 = [  // 方法1: 传入二维数组，适用于不定列数按钮
+      [
+        { label: '0.0' },  // 外显和内容相同的按钮
+        { label: '0.1' , enter: true },  // 外显和内容相同的回车按钮
+        { label: '0.2' , data: 'test1' },  // 外显和内容不同的按钮
+        { label: '0.3' , callback: 'test2' },  // 外显和内容不同的回车按钮
+      ],
+      [  
+        { label: '1.0' , link: 'https://im.qq.com/index/' },  // 跳转到链接的按钮
+
+        /* style: 0 - 灰色线框, 1 - 蓝色线框 */
+        { label: '1.1' , style: '0' },  // 灰色线框按钮
+
+        /* type: 0 - http或小程序, 1 - 回调后台接口, 2 - 自动在输入框 @bot data */
+        { label: '1.2' , type: '1' },  // 回调后台接口的按钮
+
+        /* permission.type: 0 - 指定用户可操作(群, 需填写specify_user_ids), 1 - 仅管理者可操作, 2 - 所有人可操作, 3 - 指定身份组可操作(频道, 需填写specify_role_ids) */
+        { label: '1.3' , permission: { type: '0' , specify_user_ids: [ e.user_openid ] } },  // 附带权限的按钮
+
+        { label: '1.4' , data: 'test4' , style: '0' , type: '1' , permission: { type: '0' , specify_user_ids: [ e.user_openid ] } },
+      ],
     ]
-  }
+    button.push(...Bot.Button(list1))  // 调用Bot.Button制作按钮
 
-  /** 执行方法 */
-  help (e) {
-    // e是接收消息，经喵崽处理过的，插件会原封不动传递过来，供开发者使用。
-    return {
-      type: 'button',
-      buttons: [
-        {
-          id: '1',
-          render_data: {
-            label: '角色1面板',
-            visited_label: '角色1面板'
-          },
-          action: {
-            type: 2,
-            permission: {
-              type: 2
-            },
-            data: '/角色1面板',
-            at_bot_show_channel_list: false
-          }
-        }
-      ]
-    }
+    const list2 = [  // 方法2: 传入一维数组，适用于固定列数的按钮
+      { label: '0' },
+      { label: '1' },
+
+      { label: '2' },
+      { label: '3' },
+
+      { label: '4' },
+    ]
+    button.push(...Bot.Button( list2 , 2 ))  // 调用Bot.Button制作按钮，第二个参数为固定列数
+
+    return button  // 返回制作完成的按钮
   }
 }
+
+```
+
+#### 基本参数
+
+| 序号 | 键    | 注释                   |
+| ---- | ----- | ---------------------- |
+| 1    | text  | 文本内容               |
+| 2    | style  | 按钮颜色               |
+| 3    | data  | 自定义回复内容         |
+| 4    | send  | 直接发送内容           |
+| 5    | admin | 仅管理员可点           |
+| 6    | list  | 仅指定用户可点         |
+| 7    | role  | 仅指定用户可点 - 频道  |
+| 8    | reply | 点击后自动添加引用回复 |
+| 9    | link  | http跳转               |
+
+```javascript
+// text和link均可作为主键与其他任何键进行单个、多个组合
+const list = [
+  { text: '普通文本' },
+  { text: '灰色按钮', style: 0 },
+  { text: '显示的文字', data: '实际的文本' },
+  { text: '直接发送文本', send: true },
+  { text: '仅管理员可点', admin: true },
+  { text: '仅列表用户可点', list: ['用户1', '用户2'] },
+  { text: '引用回复', reply: true },
+  { link: 'http连接' }
+]
 
 ```
 
@@ -317,4 +358,3 @@ return await this.reply({
 参数按照[官方文档](https://bot.q.qq.com/wiki/develop/api-v2/server-inter/message/type/markdown.html#发送方式)发送即可，注意`type`，其他的自行参考文档。
 
 </details>
-

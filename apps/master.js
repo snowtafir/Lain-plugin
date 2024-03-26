@@ -1,5 +1,5 @@
 import crypto from 'crypto'
-import Yaml from '../model/yaml.js'
+import Yaml from '../model/YamlHandler.js'
 
 /** 设置主人 */
 let sign = {}
@@ -70,7 +70,7 @@ export class LainMaster extends plugin {
       /** 检测用户是否是主人 */
       if (!e.isMaster) return e.reply([segment.at(e.user_id), '只有主人才能命令我哦~\n(*/ω＼*)'])
       const cfg = new Yaml('./config/config/other.yaml')
-      cfg.addVal('masterQQ', '--' + String(user_id))
+      cfg.addVal('masterQQ', '--' + String(user_id), 'Array')
       cfg.delVal('masterQQ', user_id)
       return await e.reply([segment.at(user_id), '已临时禁用你的主人权限！\n如需恢复发送 #启用主人'])
     } else {
@@ -78,8 +78,8 @@ export class LainMaster extends plugin {
       if (e.isMaster) return e.reply([segment.at(e.user_id), "已经是主人了哦(〃'▽'〃)"])
       const cfg = new Yaml('./config/config/other.yaml')
       if (!cfg.value('masterQQ', '--' + String(user_id))) return e.reply([segment.at(user_id), '只有主人才能命令我哦~\n(*/ω＼*)'])
-      cfg.addVal('masterQQ', user_id)
-      cfg.delVal('masterQQ', '--' + String(user_id))
+      cfg.addVal('masterQQ', user_id, 'Array')
+      cfg.delVal('masterQQ', '--' + String(user_id), 'Array')
       return await e.reply([segment.at(user_id), '已恢复你的主人权限~(*/ω＼*)'])
     }
   }
@@ -98,7 +98,7 @@ export class LainMaster extends plugin {
   /** 设置主人 */
   addmaster(user_id) {
     const cfg = new Yaml('./config/config/other.yaml')
-    cfg.addVal('masterQQ', user_id)
+    cfg.addVal('masterQQ', user_id, 'Array')
     return [segment.at(user_id), '新主人好~(*/ω＼*)']
   }
 }

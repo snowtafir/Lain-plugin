@@ -4,7 +4,7 @@ import { exec } from "child_process"
 
 let state = false
 
-export class Restart extends plugin {
+export class AdapterRestart extends plugin {
   constructor(e = '') {
     super({
       name: '铃音-重启',
@@ -39,7 +39,7 @@ export class Restart extends plugin {
       uin: this.e?.bot?.uin || this.e?.self_id || Bot.uin,
       isGroup: !!this.e.isGroup,
       id: this.e.isGroup ? this.e.group_id : this.e.user_id,
-      time: new Date().getTime(),
+      time: Date.now(),
       msg_id: this.e.message_id
     })
 

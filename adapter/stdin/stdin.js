@@ -2,7 +2,8 @@ import { createInterface } from 'readline'
 import fs from 'node:fs'
 import { fileTypeFromBuffer } from 'file-type'
 import _ from "lodash"
-import common from '../../model/common.js'
+import Cfg from '../../lib/config/config.js'
+import common from '../../lib/common/common.js'
 
 const uin = 'stdin'
 const path = 'data/stdin/'
@@ -40,17 +41,18 @@ export default async function stdin() {
     guilds: new Map(),
     id: uin,
     uin,
-    name: Bot.lain.cfg.stdin_nickname,
-    nickname: Bot.lain.cfg.stdin_nickname,
+    name: Cfg.Stdin.name,
+    nickname: Cfg.Stdin.name,
     avatar,
     stat: { start_time: parseInt(Date.now() / 1000), recv_msg_cnt: 0 },
     version: Bot.lain.adapter.stdin.version,
+    apk: Bot.lain.adapter.stdin.apk,
     /** 转发 */
     makeForwardMsg: (msg) => { return { type: "node", data: msg } },
     pickUser: () => {
       return {
         user_id,
-        nickname: Bot.lain.cfg.stdin_nickname,
+        nickname: Cfg.Stdin.name,
         sendMsg: msg => sendMsg(msg),
         recallMsg: msg_id => common.info(uin, `撤回消息：${msg_id}`),
         makeForwardMsg: (msg) => { return { type: "node", data: msg } },
@@ -61,7 +63,7 @@ export default async function stdin() {
     pickFriend: () => {
       return {
         user_id,
-        nickname: Bot.lain.cfg.stdin_nickname,
+        nickname: Cfg.Stdin.name,
         sendMsg: msg => sendMsg(msg),
         recallMsg: msg_id => common.info(uin, `撤回消息：${msg_id}`),
         makeForwardMsg: (msg) => { return { type: "node", data: msg } },
@@ -72,7 +74,7 @@ export default async function stdin() {
     pickGroup: () => {
       return {
         user_id,
-        nickname: Bot.lain.cfg.stdin_nickname,
+        nickname: Cfg.Stdin.name,
         sendMsg: msg => sendMsg(msg),
         recallMsg: msg_id => common.info(uin, `撤回消息：${msg_id}`),
         makeForwardMsg: (msg) => { return { type: "node", data: msg } },
@@ -148,8 +150,8 @@ function msg(msg) {
   }
   /** 用户个人信息 */
   e.sender = {
-    card: Bot.lain.cfg.stdin_nickname,
-    nickname: Bot.lain.cfg.stdin_nickname,
+    card: Cfg.Stdin.name,
+    nickname: Cfg.Stdin.name,
     role: '',
     user_id
   }
@@ -158,7 +160,7 @@ function msg(msg) {
   const member = {
     info: {
       user_id,
-      nickname: Bot.lain.cfg.stdin_nickname,
+      nickname: Cfg.Stdin.name,
       last_sent_time: time,
     },
     /** 获取头像 */
@@ -171,7 +173,7 @@ function msg(msg) {
   /** 构建场景对应的方法 */
   e.friend = {
     user_id,
-    nickname: Bot.lain.cfg.stdin_nickname,
+    nickname: Cfg.Stdin.name,
     sendMsg: msg => sendMsg(msg),
     recallMsg: msg_id => common.info(uin, `撤回消息：${msg_id}`),
     makeForwardMsg: (msg) => { return { type: "node", data: msg } },

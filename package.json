@@ -1,9 +1,16 @@
 {
   "name": "lain-plugin",
-  "version": "1.4.4",
+  "version": "1.5.0",
   "author": "sky-summer Lain.",
   "gitee": "https://gitee.com/sky-summer/Lain-plugin",
   "type": "module",
+  "scripts": {
+    "commitmsg": "validate-commit-msg",
+    "log": "conventional-changelog -p angular -i CHANGELOG.md -s -r 1"
+  },
+  "imports": {
+    "#Lain": "./lib/init.js"
+  },
   "adapter": {
     "QQGuild": "0.5.2",
     "ComWeChat": "0.2.3",
@@ -13,16 +20,33 @@
     "WeXin": "0.0.3"
   },
   "dependencies": {
-    "qq-guild-bot": "^2.9.5",
-    "qrcode": "^1.5.3",
-    "axios": "^1.6.2",
-    "sharp": "^0.33.0",
-    "ws": "^8.15.0",
-    "file-type": "^18.7.0",
+    "axios": "^1.6.7",
+    "conventional-changelog-cli": "^4.1.0",
     "express": "^4.18.2",
-    "qq-group-bot": "^1.0.1",
-    "silk-wasm": "^3.1.0",
-    "get-urls": "^12.0.1",
-    "wechat4u": "^0.7.14"
+    "file-type": "^19.0.0",
+    "get-urls": "^12.1.0",
+    "qq-group-bot": "1.0.34",
+    "qrcode": "^1.5.3",
+    "sharp": "^0.33.1",
+    "silk-wasm": "^3.2.3",
+    "wechat4u": "^0.7.14",
+    "ws": "^8.16.0",
+    "icqq": "0.6.8"
+  },
+  "devDependencies": {
+    "cz-conventional-changelog": "^3.3.0",
+    "eslint": "^8.55.0",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-plugin-import": "^2.29.0",
+    "eslint-plugin-n": "^16.3.1",
+    "eslint-plugin-promise": "^6.1.1",
+    "express-art-template": "^1.0.1",
+    "husky": "^9.0.11",
+    "validate-commit-msg": "^2.14.0"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
   }
 }
