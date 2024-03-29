@@ -83,9 +83,9 @@ export default class adapterQQBot {
       getGuildList: () => Bot[this.id].tl,
       readMsg: async () => common.recvMsg(this.id, 'QQBot', true),
       MsgTotal: async (type) => common.MsgTotal(this.id, 'QQBot', type, true),
-      pickGroup: (groupID) => this.pickGroup(groupID),
-      pickUser: (userId) => this.pickFriend(userId),
-      pickFriend: (userId) => this.pickFriend(userId),
+      pickGroup: (group_id) => this.pickGroup(group_id),
+      pickUser: (user_id) => this.pickFriend(user_id),
+      pickFriend: (user_id) => this.pickFriend(user_id),
       makeForwardMsg: async (data) => await common.makeForwardMsg(data),
       getGroupMemberInfo: (group_id, user_id) => Bot.getGroupMemberInfo(group_id, user_id)
     }
@@ -123,19 +123,19 @@ export default class adapterQQBot {
   }
 
   /** 群对象 */
-  pickGroup(groupID) {
+  pickGroup(group_id) {
     return {
       is_admin: false,
       is_owner: false,
       recallMsg: async () => Promise.reject(new Error('QQBot未支持')),
-      sendMsg: async (msg) => await this.sendGroupMsg(groupID, msg),
+      sendMsg: async (msg) => await this.sendGroupMsg(group_id, msg),
       makeForwardMsg: async (data) => await common.makeForwardMsg(data),
       getChatHistory: async () => [],
-      pickMember: (userID) => this.pickMember(groupID, userID),
+      pickMember: (user_id) => this.pickMember(group_id, user_id),
       /** 戳一戳 */
       pokeMember: async (operatorId) => '',
       /** 禁言 */
-      muteMember: async (groupId, userId, time) => Promise.reject(new Error('QQBot未支持')),
+      muteMember: async (group_id, user_id, time) => Promise.reject(new Error('QQBot未支持')),
       /** 全体禁言 */
       muteAll: async (type) => Promise.reject(new Error('QQBot未支持')),
       getMemberMap: async () => Promise.reject(new Error('QQBot未支持')),
@@ -153,19 +153,19 @@ export default class adapterQQBot {
   }
 
   /** 好友对象 */
-  pickFriend(userId) {
+  pickFriend(user_id) {
     return {
-      sendMsg: async (msg) => await this.sendFriendMsg(userId, msg),
+      sendMsg: async (msg) => await this.sendFriendMsg(user_id, msg),
       makeForwardMsg: async (data) => await common.makeForwardMsg(data),
       getChatHistory: async () => [],
-      getAvatarUrl: (size = 0) => this.getAvatarUrl(size, userId)
+      getAvatarUrl: (size = 0) => this.getAvatarUrl(size, user_id)
     }
   }
 
-  pickMember(groupID, userID) {
+  pickMember(group_id, user_id) {
     return {
-      member: this.member(groupID, userID),
-      getAvatarUrl: (size = 0) => this.getAvatarUrl(size, userID)
+      member: this.member(group_id, user_id),
+      getAvatarUrl: (size = 0) => this.getAvatarUrl(size, user_id)
     }
   }
 
@@ -181,7 +181,7 @@ export default class adapterQQBot {
       is_admin: false,
       is_owner: false,
       /** 获取头像 */
-      getAvatarUrl: (size = 0) => this.getAvatarUrl(size, userId),
+      getAvatarUrl: (size = 0) => this.getAvatarUrl(size, user_id),
       mute: async (time) => ''
     }
     return member
@@ -358,9 +358,9 @@ export default class adapterQQBot {
   }
 
   /** 小兔崽子 */
-  async QQBotTips(data, groupId, tips) {
+  async QQBotTips(data, group_id, tips) {
     /** 首次进群后，推送防司马崽声明~ */
-    if (!await redis.get(`lain:QQBot:tips:${groupId}`)) {
+    if (!await redis.get(`lain:QQBot:tips:${group_id}`)) {
       const msg = []
       const name = `「${Bot[this.id].nickname}」`
       msg.push('\n温馨提示：')
@@ -370,7 +370,7 @@ export default class adapterQQBot {
       msg.push('来自：Lain-plugin防倒卖崽提示，本提示仅在首次入群后触发~')
       if (tips["Tips-GroupId"]) msg.push(`\n如有疑问，请添加${name}官方群: ${tips["Tips-GroupId"]}~`)
       await data.reply(msg.join('\n'))
-      await redis.set(`lain:QQBot:tips:${groupId}`, JSON.stringify({ group_id: groupId }))
+      await redis.set(`lain:QQBot:tips:${group_id}`, JSON.stringify({ group_id }))
     }
   }
 
@@ -821,12 +821,11 @@ export default class adapterQQBot {
   }
 
   /** 发送好友消息 */
-  async sendFriendMsg(userId, data) {
-    userId = userId.split('-')?.[1] || userId
+  async sendFriendMsg(user_id, data) {
     /** 构建一个普通e给按钮用 */
     let e = {
       bot: Bot[this.id],
-      user_id: userId,
+      user_id,
       message: common.array(data)
     }
 
@@ -834,20 +833,18 @@ export default class adapterQQBot {
     const { Pieces, reply } = await this.getQQBot(data, e)
     Pieces.forEach(i => {
       if (reply) i = Array.isArray(i) ? [...i, reply] : [i, reply]
-      this.sdk.sendPrivateMessage(userId, i, this.sdk)
+      this.sdk.sendPrivateMessage(user_id, i, this.sdk)
       logger.debug('发送主动好友消息：', JSON.stringify(i))
       this.send_count()
     })
   }
 
   /** 发送群消息 */
-  async sendGroupMsg(groupID, data) {
-    /** 获取正确的id */
-    groupID = groupID.split('-')?.[1] || groupID
+  async sendGroupMsg(group_id, data) {
     /** 构建一个普通e给按钮用 */
     let e = {
       bot: Bot[this.id],
-      group_id: groupID,
+      group_id,
       user_id: 'QQBot',
       message: common.array(data)
     }
@@ -856,7 +853,7 @@ export default class adapterQQBot {
     const { Pieces, reply } = await this.getQQBot(data, e)
     Pieces.forEach(i => {
       if (reply) i = Array.isArray(i) ? [...i, reply] : [i, reply]
-      this.sdk.sendGroupMessage(groupID, i, this.sdk)
+      this.sdk.sendGroupMessage(group_id, i, this.sdk)
       this.send_count()
       logger.debug('发送主动群消息：', JSON.stringify(i))
     })

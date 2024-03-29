@@ -1,4 +1,5 @@
 import lodash from 'lodash'
+import fs from 'node:fs'
 import MiaoCfg from '../../../../lib/config/config.js'
 import loader from '../../../../lib/plugins/loader.js'
 import common from '../../lib/common/common.js'

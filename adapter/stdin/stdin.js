@@ -263,3 +263,5 @@ function sendForwardMsg(msg) {
     messages.push(sendMsg(message))
   return { data: messages }
 }
+
+common.info('Lain-plugin', '标准输入适配器加载完成')

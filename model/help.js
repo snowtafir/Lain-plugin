@@ -44,6 +44,11 @@ export const helpList = [
         icon: 8,
         title: '#QQBotMD 2',
         desc: '0=关闭 1=全局 2=仅正则 3=与内容分离'
+      },
+      {
+        icon: 10,
+        title: '#QQBotDau',
+        desc: '查看消息统计'
       }
     ]
   },
