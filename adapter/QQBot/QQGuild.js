@@ -312,6 +312,11 @@ export default class adapterQQGuild {
           log_message.push(`<markdown:${JSON.stringify(i)}>`)
           ToString.push(`{markdown:${JSON.stringify(i)}}`)
           break
+        case 'embed':
+          raw_message.push(JSON.stringify(i))
+          log_message.push(`<embed:${JSON.stringify(i)}>`)
+          ToString.push(JSON.stringify(i))
+          break
         case 'button':
           raw_message.push('[按钮]')
           log_message.push(`<按钮:${JSON.stringify(i?.buttons || i)}>`)
@@ -390,8 +395,10 @@ export default class adapterQQGuild {
           break
         case 'ark':
         case 'button':
+        case 'embed':
         case 'markdown':
           message.push(i)
+          messageLog.push(`<${i.type}>`)
           break
         default:
           message.push(i)

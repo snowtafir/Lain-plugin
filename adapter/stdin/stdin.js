@@ -93,12 +93,12 @@ export default async function stdin() {
   })
 
   rl.on('SIGINT', () => { rl.close(); process.exit() })
+  rl.on('close', () => process.exit())
 
   rl.on('line', async (input) => {
     Bot[uin].stat.recv_msg_cnt++
     Bot.em('message.private', msg(input.trim()))
-  }
-  )
+  })
   await common.init('Lain:restart:stdin')
 }
 

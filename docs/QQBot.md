@@ -109,9 +109,11 @@ Bot.imageToUrl = async (file) => {
     } else {
       base64 = Buffer.from(await res.arrayBuffer()).toString('base64')
     }
-  } else {
-    throw new Error('上传失败，未知格式的文件')
-  }
+  } else if (fs.existsSync(file)) { // 检查文件是否存在于本地文件系统
+        base64 = fs.readFileSync(file).toString('base64')
+    } else {
+        throw new Error('上传失败，未知格式的文件')
+    }
 
   const url = 'https://api.imgbb.com/1/upload'
   const params = new URLSearchParams()

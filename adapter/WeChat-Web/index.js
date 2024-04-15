@@ -1,7 +1,6 @@
 import fs from 'fs'
 import path from 'path'
 import fetch from 'node-fetch'
-import { fileTypeFromBuffer } from 'file-type'
 import common from '../../lib/common/common.js'
 
 export default class StartWeChat4u {
@@ -93,13 +92,13 @@ export default class StartWeChat4u {
         const _path = `${this.path}${this.id}.jpg`
         if (!fs.existsSync(_path)) fs.writeFileSync(_path, avatar)
       } catch (error) {
-        logger.warn(error)
+        common.warn(this.id, error)
       }
     })
 
     /** 接收消息 */
     this.bot.on('message', async msg => {
-      logger.warn("[微信收到消息]", msg)
+      commen.debug(this.id, "[微信网页版收到消息]", msg)
       Bot[this.id].stat.recv_msg_cnt++
       msg = await this.msg(msg)
       if (!msg) return
@@ -108,7 +107,7 @@ export default class StartWeChat4u {
 
     /** 登出 */
     this.bot.on('logout', () => {
-      common.info(this.id, `Bot ${this.name || this.id} 已登出`)
+      common.info(this.id, `Bot ${this.name || this.id}已登出`)
       try { fs.unlinkSync(`${Bot.lain._path}/${this.id}.json`) } catch { }
     })
 
@@ -170,7 +169,19 @@ export default class StartWeChat4u {
     switch (msg.MsgType) {
       /** 文本 */
       case this.bot.CONF.MSGTYPE_TEXT:
-        text = msg.Content?.match(/\n(.+)/)?.[1] || msg.Content
+        // common.info(this.id, this.bot.user)
+        // common.info(this.id, this.bot.contacts)
+        // common.info(this.id, msg.Content)
+        // common.info(this.id, msg.FromUserName)
+        // common.info(this.id, msg.ToUserName)
+
+        // 防空
+        let content = msg.Content || ''
+        // 记录消息是否来自群聊
+        const isGroupMessage = msg.FromUserName.startsWith('@@')
+        // 如果是群消息匹配第一个换行符后的所有内容，匹配到了就取第一个捕获组的内容
+        // 否则保留Content
+        text = isGroupMessage ? (content.match(/\n(.+)/s) || [null, ''])[1] : content
         message.push({ type: 'text', text })
         toString += text
         common.info(this.id, `收到消息：${text}`)
@@ -228,7 +239,7 @@ export default class StartWeChat4u {
       case this.bot.CONF.MSGTYPE_SYS:
         e.post_type = "notice"
         e.sub_type = "poke"
-        e.target_id = msg.Content?.includes("拍了拍我") ? Bot.uin : msg.CreateTime
+        e.target_id = msg.Content?.includes("拍了拍我") ? e.bot.uin || Bot.uin : msg.CreateTime
         toString += msg.Content?.replace(/"/g, "")
         break
       default:
@@ -304,9 +315,9 @@ export default class StartWeChat4u {
       /** 延迟下防止过快发送失败 */
       await common.sleep(300)
       try {
+        common.info(this.id, `发送消息：${i}`)
         const res = await this.bot.sendMsg(i, peer_id)
-        common.mark(this.id, `发送消息返回：${JSON.stringify(res)}`)
-
+        common.mark(this.id, '发送消息返回：', JSON.stringify(res))
         return {
           seq: res.MsgID,
           rand: 1,
@@ -315,10 +326,9 @@ export default class StartWeChat4u {
           ...res
         }
       } catch (err) {
-        common.info(this.id, `发送消息：发送消息失败：${err?.tips || err}`)
+        common.info(this.id, '发送消息：', '发送消息失败：', err?.tips || err)
         const res = await this.bot.sendMsg(`发送消息失败：${err?.tips || err}`, peer_id)
-        common.mark(this.id, `发送消息返回：${JSON.stringify(res)}`)
-
+        common.mark(this.id, '发送消息返回：', JSON.stringify(res))
         return {
           seq: res.MsgID,
           rand: 1,
@@ -378,9 +388,12 @@ export default class StartWeChat4u {
 
   /** 统一文件格式 */
   async getFile(i, type = 'image') {
-    const res = common.getFile(i)
+    const res = Bot.toType(i)
     let { file } = res
-    let filename, ret
+    let filename
+
+    // 存储MIME类型和对应的文件扩展名
+    const mimeTypes = { "image/jpeg": ".jpg", "image/png": ".png", "image/gif": ".gif", "image/bmp": ".bmp", "image/svg+xml": ".svg", "text/plain": ".txt", "text/html": ".html", "text/css": ".css", "text/javascript": ".js", "application/javascript": ".js", "application/json": ".json", "application/xml": ".xml", "application/pdf": ".pdf", "application/zip": ".zip", "application/gzip": ".gz", "application/octet-stream": ".bin", "audio/mpeg": ".mp3", "audio/x-wav": ".wav", "video/mp4": ".mp4", "video/x-msvideo": ".avi", "video/quicktime": ".mov", "application/msword": ".doc", "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx", "application/vnd.ms-excel": ".xls", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": ".xlsx", "application/vnd.ms-powerpoint": ".ppt", "application/vnd.openxmlformats-officedocument.presentationml.presentation": ".pptx", "application/x-rar-compressed": ".rar", "application/x-tar": ".tar", "application/vnd.oasis.opendocument.text": ".odt", "application/vnd.oasis.opendocument.spreadsheet": ".ods", "application/vnd.oasis.opendocument.presentation": ".odp", "text/csv": ".csv", "text/markdown": ".md", "application/x-httpd-php": ".php", "application/java-archive": ".jar", "application/x-shockwave-flash": ".swf", "application/x-font-ttf": ".ttf", "application/font-woff": ".woff", "application/font-woff2": ".woff2", "application/vnd.ms-fontobject": ".eot", "image/webp": ".webp", "image/tiff": ".tiff", "image/vnd.adobe.photoshop": ".psd", "application/x-sql": ".sql", "application/x-httpd-php": ".php", "application/vnd.apple.installer+xml": ".mpkg", "application/vnd.mozilla.xul+xml": ".xul", "application/vnd.google-earth.kml+xml": ".kml", "application/vnd.google-earth.kmz": ".kmz", "application/x-7z-compressed": ".7z", "application/x-deb": ".deb", "application/x-sh": ".sh", "application/x-csh": ".csh", "text/x-python": ".py", "application/vnd.visio": ".vsd", "application/x-msdownload": ".exe", "application/x-iso9660-image": ".iso", "application/x-bzip2": ".bz2", "application/x-httpd-php-source": ".phps", "application/x-httpd-php3": ".php3", "application/x-httpd-php3-preprocessed": ".php3p", "application/x-httpd-php4": ".php4", "application/x-httpd-php5": ".php5" };
 
     if (type == 'image') {
       type = '[图片:'
@@ -400,18 +413,30 @@ export default class StartWeChat4u {
         file = fs.readFileSync(file.replace(/^file:\/\//, ''))
         return { file, filename }
       case 'buffer':
-        ret = await this.fileType(file)
-        common.info(this.id, `发送消息：${type}${ret.filename}]`)
-        return ret
-      // return { file: Buffer.from(file), filename }
+        common.info(this.id, `发送消息：${type}base64://...]`)
+        return { file: Buffer.from(file), filename }
       case 'base64':
-        ret = await this.fileType(file)
-        common.info(this.id, `发送消息：${type}${ret.filename}]`)
-        return ret
-      // return { file: Buffer.from(file), filename }
+        common.info(this.id, `发送消息：${type}base64://...]`)
+        return { file: Buffer.from(file), filename }
       case 'http':
         common.info(this.id, `发送消息：${type}${file}]`)
-        filename = path.extname(file) ? Date.now() + path.extname(file) : filename
+        const url = file
+        let extension = path.extname(url)
+        filename = Date.now() + (extension || '')
+
+        // 如果URL没有扩展名，使用fetch来获取MIME类型
+        if (!extension) {
+          try {
+            const response = await fetch(url)
+            const contentType = response.headers.get('Content-Type')
+            if (contentType in mimeTypes) {
+              extension = mimeTypes[contentType]
+              filename = Date.now() + extension
+            }
+          } catch (error) {
+            console.error('取扩展名时出错了:', error)
+          }
+        }
         file = Buffer.from(await (await fetch(file)).arrayBuffer())
         return { file, filename }
       default:
@@ -419,29 +444,6 @@ export default class StartWeChat4u {
         return { file, filename }
     }
   }
-
-  async fileType(data) {
-    const file = {}
-    try {
-      file.url = data
-      file.buffer = await this.makeBuffer(data)
-      file.type = await fileTypeFromBuffer(file.buffer)
-      file.file = `${this.path}${Date.now()}.${file.type.ext}`
-      file.filename = `${Date.now()}.${file.type.ext}`
-    } catch (err) {
-      common.error(this.id, `文件类型检测错误：${logger.red(err)}`)
-      common.error(this.id, err)
-    }
-    return file
-  }
-
-  async makeBuffer(file) {
-    if (file.match(/^base64:\/\//))
-      return Buffer.from(file.replace(/^base64:\/\//, ''), 'base64')
-    else if (file.match(/^https?:\/\//))
-      return Buffer.from(await (await fetch(file)).arrayBuffer())
-    else if (fs.existsSync(file))
-      return Buffer.from(fs.readFileSync(file))
-    return file
-  }
 }
+
+common.info('Lain-plugin', 'WeXin适配器加载完成')

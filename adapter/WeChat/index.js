@@ -68,11 +68,11 @@ class AdapterComWeChat {
       /** 私聊消息事件 */
       case 'private':
         /** 转置消息后给喵崽 */
-        return await Bot.emit('message', await this.ICQQMessage(data))
+        return await Bot.em('message.private', await this.ICQQMessage(data))
       /** 群聊消息事件 */
       case 'group':
         /** 转置消息后给喵崽 */
-        return await Bot.emit('message', await this.ICQQMessage(data))
+        return await Bot.em('message.group', await this.ICQQMessage(data))
       /** 未知事件 */
       default:
         lain.error('Lain-plugin', `<Bot:${this.OneBot}><host:${this.host}> 未知事件：${JSON.stringify(data)}`)
@@ -109,11 +109,11 @@ class AdapterComWeChat {
       /** 私聊拍一拍 */
       case 'wx.get_private_poke':
         /** 转置消息后给喵崽 */
-        return await Bot.emit('notice', await this.ICQQMessage(data))
+        return await Bot.em('notice.private.poke', await this.ICQQMessage(data))
       /** 群聊拍一拍 */
       case 'wx.get_group_poke':
         /** 转置消息后给喵崽 */
-        return await Bot.emit('notice', await this.ICQQMessage(data))
+        return await Bot.em('notice.group.poke', await this.ICQQMessage(data))
       /** 未知事件 */
       default:
         lain.mark('Lain-plugin', `<Bot:${this.OneBot}><host:${this.host}> 未知事件：${JSON.stringify(data)}`)
@@ -195,7 +195,7 @@ class AdapterComWeChat {
   /** 发送请求 */
   async sendApi(action, params) {
     const echo = randomUUID()
-    lain.debug(this.id, '[ws] send -> ' + JSON.stringify({ echo, action, params }))
+    lain.debug(this.id, '[ws] send -> ', JSON.stringify({ echo, action, params }))
     this.bot.send(JSON.stringify({ echo, action, params }))
 
     for (let i = 0; i < 1200; i++) {
@@ -259,6 +259,7 @@ class AdapterComWeChat {
 
     data = {
       uin: this.id, // ???鬼知道哪来的这玩意，icqq都没有...
+      bot: Bot[this.id],
       ...data,
       self_id: this.id,
       message,
@@ -302,7 +303,8 @@ class AdapterComWeChat {
         recallMsg: () => '暂未支持',
         sendMsg: async (msg) => await this.sendGroupMsg(msg),
         makeForwardMsg: async (forwardMsg) => await common.makeForwardMsg(forwardMsg),
-        pickMember: async (id) => await this.pickMember(group_id, id)
+        pickMember: async (id) => await this.pickMember(group_id, id),
+        muteMember: () => '暂未支持'
       }
       lain.info(this.id, `<群:${group_id}><用户:${user_id}> -> ${log_message}`)
     }
@@ -534,7 +536,8 @@ class AdapterComWeChat {
       recallMsg: async () => '',
       /** 制作转发 */
       makeForwardMsg: async (message) => await this.makeForwardMsg(message),
-      sendFile: async (filePath) => await this.get_file_id('file', filePath)
+      sendFile: async (filePath) => await this.get_file_id('file', filePath),
+      muteMember: async () => ''
     }
   }
 

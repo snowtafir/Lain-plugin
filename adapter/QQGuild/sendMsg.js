@@ -129,7 +129,7 @@ export default class SendMsg {
             if (err) reject(err)
             const base64 = "base64://" + buffer.toString("base64")
             const Uint8Array = await common.rendering(base64, i)
-            const img = await this.Base64(segment.image(Uint8Array))
+            const img = await this.Base64(Uint8Array)
             /** 转换的二维码连接是否撤回 */
             const qr = Number(Bot.lain.cfg.recallQR) || 0
             /** 构建请求参数、打印日志 */
@@ -296,7 +296,7 @@ export default class SendMsg {
       /** 转换为图片发送 */
       const content = typeof msg === "string" ? msg : "啊咧，图片发不出来"
       const Uint8Array = await common.rendering(content, error)
-      const img = await this.Base64(segment.image(Uint8Array))
+      const img = await this.Base64(Uint8Array)
       /** 构建请求参数、打印日志 */
       const SendMsg = await this.Construct_data({ content, ...img })
 

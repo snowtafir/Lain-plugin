@@ -735,28 +735,21 @@ class Shamrock {
       }
     }
 
-    if (msg.length) {
-      for (let i of msg) {
-        let { message } = await this.getShamrock(i)
-
-        try {
-          const res = await api.upload_multi_message(this.id, [
-            {
-              type: 'node',
-              data: {
-                content: message
-              }
-            }
-          ])
-          res.id = res.res_id
-          delete res.res_id
-          makeForwardMsg.message.push({ type: 'forward', data: res })
-        } catch (err) {
-          common.error(this.id, err)
+    const content = (await Promise.all(msg.map(async i => {
+      try {
+        let shamrock = (await this.getShamrock(i)).message[0]
+        return {
+          type: 'node',
+          data: {
+            content: shamrock
+          }
         }
+      } catch (err) {
+        logger.warn('制作转发消息节点失败：', err)
+        return null
       }
-    }
-    return makeForwardMsg
+    }))).filter(i => i)
+    return content
   }
 
   /** 撤回消息 */
@@ -1375,7 +1368,7 @@ class Shamrock {
     raw_message = raw_message.join('')
 
     /** 合并转发 */
-    if (node) raw_message = `[转发消息:${JSON.stringify(message)}]`
+    if (node) raw_message = `[转发消息:${common.limitString(JSON.stringify(message), 100)}]`
 
     return { message, raw_message, node }
   }

@@ -5,5 +5,5 @@ Server:
   InvalidTime: 30     # 临时文件服务器失效时间,QQBot使用
 
 Other:
-  WhiteLink:      # url白名单，在白名单中的链接不会转为二维码
+  WhiteLink:          # url白名单，在白名单中的链接不会转为二维码
     - https://www.lain.com

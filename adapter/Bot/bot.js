@@ -405,6 +405,13 @@ Bot.Button = function (list, line = 3) {
   let button = []
 
   for (let i of list) {
+
+    /** 兼容单用户字符串表示permission */
+    if (typeof i.permission === 'string') {
+      i.list = [i.permission]
+      i.permission = false
+    }
+
     /** 处理用户id */
     if (i.list && i.list.length) {
       const list = []
@@ -416,18 +423,12 @@ Bot.Button = function (list, line = 3) {
       i.list = list
     }
 
+    /** 支持一维和二维数组表示按钮 */
     if (Array.isArray(i)) {
       button.push(...Bot.Button(i, 10))
     } else {
-      if (typeof i.permission === 'string') {
-        if (i.permission === 'xxx') {
-          i.list = []
-        } else {
-          const openid = i.permission.split('-')
-          i.list = [openid[1] || openid[0]]
-        }
-        i.permission = false
-      }
+
+      /** 构造单个按钮 */
       let Button = {
         id: String(id),
         render_data: {
@@ -448,11 +449,16 @@ Bot.Button = function (list, line = 3) {
           unsupport_tips: i.tips || 'err'
         }
       }
+
+      /** 兼容trss的QQBot字段 */
       if (i.QQBot) {
         if (i.QQBot.render_data) Object.assign(Button.render_data, i.QQBot.render_data)
         if (i.QQBot.action) Object.assign(Button.action, i.QQBot.action)
       }
+
       arr.push(Button)
+
+      /** 构造一行按钮 */
       if (index % line == 0 || index == list.length) {
         button.push({
           type: 'button',
@@ -460,6 +466,7 @@ Bot.Button = function (list, line = 3) {
         })
         arr = []
       }
+
     }
     id++
     index++
@@ -486,7 +493,7 @@ Bot.HandleURL = async function (msg) {
         if (err) reject(err)
         const base64 = 'base64://' + buffer.toString('base64')
         const file = await common.Rending({ base64, link }, 'QRCode/QRCode')
-        message.push({ type: 'image', file })
+        message.push(file)
         msg = msg.replace(link, '[链接(请扫码查看)]')
         msg = msg.replace(link.replace(/^http:\/\//g, ''), '[链接(请扫码查看)]')
         msg = msg.replace(link.replace(/^https:\/\//g, ''), '[链接(请扫码查看)]')

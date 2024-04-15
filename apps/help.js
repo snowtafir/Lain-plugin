@@ -15,8 +15,7 @@ export class help extends plugin {
         },
         {
           reg: /^#(Lain|铃音)(.*)帮助$/,
-          fnc: 'help',
-          permission: 'master'
+          fnc: 'help'
         }
       ]
     })

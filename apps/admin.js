@@ -129,7 +129,7 @@ export class admin extends plugin {
       copyright: this.copyright()
     }
 
-    return await this.reply(segment.image(await common.Rending(data, 'admin/index')))
+    return await this.reply(await common.Rending(data, 'admin/index'))
   }
 
   adminUl() {
@@ -286,6 +286,6 @@ export class admin extends plugin {
   }
 
   copyright() {
-    return `<div class="copyright">Created By Miao-Yunzai<span class="version">${Cfg.YZPackage.version}</span> & Lain-Plugin<span class="version">${Cfg.package.version}</span></div>`
+    return `<div class="copyright">Created By ${Bot.lain.adapter.lain.apk.display}<span class="version">${Bot.lain.adapter.lain.apk.version}</span> & Lain-Plugin<span class="version">${Bot.lain.adapter.lain.version.version}</span></div>`
   }
 }

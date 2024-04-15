@@ -90,9 +90,9 @@ export default class adapterQQBot {
       getGroupMemberInfo: (group_id, user_id) => Bot.getGroupMemberInfo(group_id, user_id)
     }
     /** 加载缓存中的群列表 */
-    await this.gmlList('gl')
+    this.gmlList('gl')
     /** 加载缓存中的好友列表 */
-    await this.gmlList('fl')
+    this.gmlList('fl')
     /** 保存id到adapter */
     if (!Bot.adapter.includes(String(this.id))) Bot.adapter.push(String(this.id))
     /** 初始化dau统计 */
@@ -127,7 +127,7 @@ export default class adapterQQBot {
     return {
       is_admin: false,
       is_owner: false,
-      recallMsg: async () => Promise.reject(new Error('QQBot未支持')),
+      recallMsg: async (msg_id) => await this.recallGroupMsg(group_id, msg_id),
       sendMsg: async (msg) => await this.sendGroupMsg(group_id, msg),
       makeForwardMsg: async (data) => await common.makeForwardMsg(data),
       getChatHistory: async () => [],
@@ -174,8 +174,8 @@ export default class adapterQQBot {
       info: {
         group_id,
         user_id,
-        nickname: "",
-        last_sent_time: ""
+        nickname: '',
+        last_sent_time: ''
       },
       group_id,
       is_admin: false,
@@ -189,6 +189,10 @@ export default class adapterQQBot {
 
   getAvatarUrl(size = 0, id) {
     return Number(id) ? `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${id}` : `https://q.qlogo.cn/qqapp/${this.id}/${id}/${size}`
+  }
+
+  async recallGroupMsg(group_id, message_id) {
+    return await this.sdk.recallGroupMessage(group_id, message_id)
   }
 
   /** 转换格式给云崽处理 */
@@ -238,7 +242,7 @@ export default class adapterQQBot {
     /** 构建快速回复消息 */
     e.reply = async (msg, quote) => await this.sendReplyMsg(e, msg, quote)
     /** 快速撤回 */
-    e.recall = async () => { }
+    e.recall = async () => await this.recallGroupMsg(data.group_id, data.message_id)
     /** 将收到的消息转为字符串 */
     e.toString = () => e.raw_message
     /** 获取对应用户头像 */
@@ -409,7 +413,7 @@ export default class adapterQQBot {
     let button = []
     const text = []
     const image = []
-    let message = []
+    const message = []
     const Pieces = []
     let normalMsg = []
 
@@ -428,7 +432,7 @@ export default class adapterQQBot {
               }
             } else {
               for (let p of (await Bot.HandleURL(i.text.trim()))) {
-                p.type === 'image' ? image.push(await this.getImage(p.file)) : text.push(p.text)
+                p.type === 'image' ? image.push(await this.getImage(p.file, e)) : text.push(p.text)
               }
             }
           }
@@ -455,7 +459,7 @@ export default class adapterQQBot {
           }
           break
         case 'image':
-          image.push(await this.getImage(i?.url || i.file))
+          image.push(await this.getImage(i?.url || i.file, e))
           break
         case 'video':
           message.push(await this.getVideo(i?.url || i.file))
@@ -595,9 +599,12 @@ export default class adapterQQBot {
   }
 
   /** 处理图片 */
-  async getImage(file) {
+  async getImage(file, e) {
     file = await Bot.FormatFile(file)
     const type = 'image'
+    if (e.bot.config?.markdown.type == 0 || e.bot.config?.markdown.type == 3 || (e.bot.config?.markdown.type == 2 && !await this.button(e))) {
+      return { type, file }
+    }
     try {
       /** 自定义图床 */
       if (Bot?.imageToUrl) {
@@ -644,43 +651,7 @@ export default class adapterQQBot {
 
   /** 处理视频 */
   async getVideo(file) {
-    const type = 'video'
-    try {
-      if (Bot?.uploadFile) {
-        /** 老接口，后续废除 */
-        const url = await Bot.uploadFile(file, type)
-        common.mark('Lain-plugin', `使用自定义服务器发送视频：${url}`)
-        logger.warn('[Bot.uploadFile]接口即将废除，请查看文档更换新接口！')
-        return { type, file: url }
-      }
-      /** 自定义接口 */
-      if (Bot?.videoToUrl) {
-        /** 视频接口 */
-        const url = await Bot.videoToUrl(file)
-        common.mark('Lain-plugin', `使用自定义服务器发送视频：${url}`)
-        return { type, file: url }
-      }
-      /** ICQQ */
-      if (Cfg.ICQQ && lain?.file?.uploadVideo) {
-        const url = await lain.file.uploadVideo(file)
-        common.mark('Lain-plugin', `使用ICQQ发送视频：${url}`)
-        return { type, file: url }
-      }
-    } catch (error) {
-      common.error(this.id, '[调用错误][自定义服务器] 将继续公网发送视频')
-      common.error(this.id, error)
-    }
-
-    /** 现成url直接发 */
-    if (/^http(s)?:\/\//.test(file)) {
-      common.mark('Lain-plugin', `在线视频：${file}`)
-      return { type, file }
-    }
-
-    /** 公网 */
-    const { url } = await Bot.FileToUrl(file, type)
-    common.mark('Lain-plugin', `使用公网临时服务器：${url}`)
-    return { type, file: url }
+    return { type: 'video', file: await Bot.FormatFile(file) }
   }
 
   /** 处理语音 */
@@ -711,7 +682,8 @@ export default class adapterQQBot {
     }
 
     const type = 'audio'
-    const _path = process.cwd() + '/resources'
+    const _path = process.cwd() + '/resources/temp'
+    try { await fs.promises.mkdir(_path) } catch (error) { }  // 尝试创建文件夹
     const mp3 = path.join(_path, `${Date.now()}.mp3`)
     const pcm = path.join(_path, `${Date.now()}.pcm`)
     const silk = path.join(_path, `${Date.now()}.silk`)
@@ -735,37 +707,15 @@ export default class adapterQQBot {
         common.mark('Lain-plugin', 'pcm => silk 完成!')
       })
       .catch((err) => {
-        common.error('Lain-plugin', `转码失败：`, err)
-        return { type: 'text', text: `转码失败${err.message || err}` }
+        /** 删除初始mp3文件 */
+        fs.promises.unlink(mp3, () => { })
+        /** 删除pcm文件 */
+        fs.promises.unlink(pcm, () => { })
+        common.error('Lain-plugin', `转码失败${err}`)
+        return { type: 'text', text: `转码失败${err}` }
       })
 
-    try {
-      if (Bot?.uploadFile) {
-        /** 老接口，后续废除 */
-        const url = await Bot.uploadFile(file, type)
-        common.mark('Lain-plugin', `使用自定义服务器发送语音：${url}`)
-        logger.warn('[Bot.uploadFile]接口即将废除，请查看文档更换新接口！')
-        return { type, file: url }
-      }
-      /** 自定义语音接口 */
-      if (Bot?.audioToUrl) {
-        const url = await Bot.audioToUrl(`file://${silk}`)
-        common.mark('Lain-plugin', `使用自定义服务器发送语音：${url}`)
-        setTimeout(() => {
-          fs.promises.unlink(silk, logger.error)
-        }, (Cfg.Server.InvalidTime || 30) * 1000)
-        return { type, file: url }
-      }
-    } catch (error) {
-      common.error(this.id, '[调用错误][自定义服务器] 将继续公网发送语音')
-    }
-
-    /** 公网 */
-    const { url } = await Bot.FileToUrl(`file://${silk}`, type)
-    common.mark('Lain-plugin', `使用公网临时服务器：${url}`)
-    setTimeout(() => {
-      fs.promises.unlink(silk, logger.error)
-    }, (Cfg.Server.InvalidTime || 30) * 1000)
+    const url = `file://${silk}`
     return { type, file: url }
   }
 
@@ -868,15 +818,21 @@ export default class adapterQQBot {
 
     for (let msg of Pieces) {
       msg = await msg
-      common.debug(this.id, 1, msg)
-      if (!msg || (Array.isArray(msg) && !msg?.length)) continue
       common.debug(this.id, 2, msg)
+      if (!msg || (Array.isArray(msg) && !msg?.length)) continue
+      common.debug(this.id, 3, msg)
       let { ok, data } = await this.sendMsg(e, msg)
-      common.debug(this.id, 3, ok, data)
-      if (ok) { res = data; continue }
+      common.debug(this.id, 4, ok, data)
+      if (ok) { res = data; continue; }
 
       /** 错误文本处理 */
       data = data.match(/code\(\d+\): .*/)?.[0] || data
+      data = (await this.getQQBot(data, e)).Pieces
+      /** 发送错误消息告知用户 */
+      res = await this.sendMsg(e, data[0])
+      ok = res.ok
+      data = res.data
+      if (ok) { res = data; continue; }
 
       /** 模板转普通消息并终止发送剩余消息 */
       if (Bot[this.id].config.markdown.type) {
@@ -886,8 +842,9 @@ export default class adapterQQBot {
           return this.returnResult(val.data)
         } else {
           /** 发送错误消息告知用户 */
-          const val = await this.sendMsg(e, data)
-          return this.returnResult(val.data)
+          let data = (await this.getQQBot(val.data, e)).Pieces
+          val = await this.sendMsg(e, data[0])
+          return this.returnResult(val)
         }
       }
     }
@@ -901,20 +858,23 @@ export default class adapterQQBot {
       this.send_count()
       logger.debug('发送回复消息：', JSON.stringify(msg))
       msg = Array.isArray(msg) ? [{ type: 'reply', id: e.message_id }, { type: 'text', text: '\n' }, ...msg] : [{ type: 'reply', id: e.message_id }, { type: 'text', text: '\n' }, msg]
+      let res
       if (e.group_id) {
-        return { ok: true, data: await this.sdk.sendGroupMessage(e.data.group_id, msg, this.sdk) }
+        res = { ok: true, data: await this.sdk.sendGroupMessage(e.data.group_id, msg, this.sdk) }
       } else {
-        return { ok: true, data: await this.sdk.sendPrivateMessage(e.data.user_id, msg, this.sdk) }
+        res = { ok: true, data: await this.sdk.sendPrivateMessage(e.data.user_id, msg, this.sdk) }
       }
+      return res
     } catch (err) {
       const error = err.message || err
-      common.error(this.id, error)
+      common.error(this.id, err)
       return { ok: false, data: error }
     }
   }
 
   /** 返回结果 */
   returnResult(res) {
+    if (!res?.timestamp) return false
     const { timestamp } = res
     const time = (new Date(timestamp)).getTime()
     res = {

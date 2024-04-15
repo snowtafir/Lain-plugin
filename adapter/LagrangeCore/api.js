@@ -54,8 +54,8 @@ let api = {
   * @param {string} id - 机器人QQ 通过e.bot、Bot调用无需传入
   * @param {string} user_id - 陌生人QQ
   */
-  async get_stranger_info(id, user_id) {
-    const params = { user_id }
+  async get_stranger_info(id, user_id, no_cache = false) {
+    const params = { user_id, no_cache }
     return await this.SendApi(id, 'get_stranger_info', params)
   },
 
@@ -467,10 +467,10 @@ let api = {
   * @param {number} user_id - 私聊QQ
   * @param {number} group_id - 群号
   * @param {number} count - 获取的消息数量（默认为20）
-  * @param {number} message_seq - 起始消息的message_id（默认为0，表示从最后一条发言往前）
+  * @param {number} message_id - 起始消息的message_id（默认为0，表示从最后一条发言往前）
   */
-  async get_history_msg(id, message_type, user_id, group_id, count, message_seq) {
-    const params = { message_type, user_id, group_id, count, message_seq }
+  async get_history_msg(id, message_type, user_id, group_id, count, message_id) {
+    const params = { message_type, user_id, group_id, count, message_id }
     return await this.SendApi(id, 'get_history_msg', params)
   },
 
@@ -479,11 +479,24 @@ let api = {
   * @param {string} id - 机器人QQ 通过e.bot、Bot调用无需传入
   * @param {number} group_id - 群号
   * @param {number} count - 获取的消息数量（默认为20）
-  * @param {number} message_seq - 起始消息的message_id（默认为0，表示从最后一条发言往前）
+  * @param {number} message_id - 起始消息的message_id（默认为0，表示从最后一条发言往前）
   */
-  async get_group_msg_history(id, group_id, count, message_seq) {
-    const params = { group_id, count, message_seq }
+  async get_group_msg_history(id, group_id, count, message_id) {
+    const params = { group_id, message_id, count }
     return await this.SendApi(id, 'get_group_msg_history', params)
+  },
+
+
+  /**
+  * 获取好友历史消息
+  * @param {string} id - 机器人QQ 通过e.bot、Bot调用无需传入
+  * @param {number} user_id - 好友qq号
+  * @param {number} count - 获取的消息数量（默认为20）
+  * @param {number} message_id - 起始消息的message_id（默认为0，表示从最后一条发言往前）
+  */
+  async get_friend_msg_history(id, user_id, count, message_id) {
+    const params = { user_id, message_id, count }
+    return await this.SendApi(id, 'get_friend_msg_history', params)
   },
 
   /**
@@ -691,7 +704,7 @@ let api = {
 
     let res
     if (node) {
-      const id = await this.SendApi(uin, 'send_forward_msg', { messages: message.map(i => i.data) })
+      const id = await this.SendApi(uin, 'send_private_forward_msg', { user_id, messages: message.map(i => i.data) })
       res = await this.SendApi(uin, 'send_private_msg', { user_id, message: { type: 'forward', data: { id } } })
     } else {
       const params = { user_id, message }
@@ -725,7 +738,7 @@ let api = {
 
     let res
     if (node) {
-      const id = await this.SendApi(uin, 'send_forward_msg', { messages: message.map(i => i.data) })
+      const id = await this.SendApi(uin, 'send_group_forward_msg', { group_id, messages: message.map(i => i.data) })
       res = await this.SendApi(uin, 'send_group_msg', { group_id, message: { type: 'forward', data: { id } } })
     } else {
       const params = { group_id, message }
@@ -734,6 +747,7 @@ let api = {
 
     return {
       ...res,
+      time: res.message_id,
       seq: res.message_id,
       rand: 1
     }
