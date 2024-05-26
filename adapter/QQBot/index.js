@@ -1,11 +1,13 @@
 import { exec } from 'child_process'
 import fs from 'fs'
+import fetch from 'node-fetch'
 import sizeOf from 'image-size'
 import lodash from 'lodash'
 import path from 'path'
 import moment from 'moment'
 import { encode as encodeSilk } from 'silk-wasm'
 import Yaml from 'yaml'
+import { fileTypeFromBuffer } from 'file-type'
 import MiaoCfg from '../../../../lib/config/config.js'
 import loader from '../../../../lib/plugins/loader.js'
 import common from '../../lib/common/common.js'
@@ -37,6 +39,14 @@ export default class adapterQQBot {
     this.sdk.on('message.private.friend', async (data) => {
       data = await this.message(data)
       if (data) Bot.em('message.private.friend', data)
+    })
+    /** 群通知消息 */
+    this.sdk.on('notice.group', async (data) => {
+      await this.notice(data, true)
+    })
+    /** 私聊通知消息 */
+    this.sdk.on('notice.friend', async (data) => {
+      await this.notice(data)
     })
 
     // 有点怪 先简单处理下
@@ -84,11 +94,13 @@ export default class adapterQQBot {
       readMsg: async () => common.recvMsg(this.id, 'QQBot', true),
       MsgTotal: async (type) => common.MsgTotal(this.id, 'QQBot', type, true),
       pickGroup: (group_id) => this.pickGroup(group_id),
+      pickMember: (group_id, user_id) => this.pickMember(group_id, user_id),
       pickUser: (user_id) => this.pickFriend(user_id),
       pickFriend: (user_id) => this.pickFriend(user_id),
       makeForwardMsg: async (data) => await common.makeForwardMsg(data),
       getGroupMemberInfo: (group_id, user_id) => Bot.getGroupMemberInfo(group_id, user_id)
     }
+
     /** 加载缓存中的群列表 */
     this.gmlList('gl')
     /** 加载缓存中的好友列表 */
@@ -107,14 +119,13 @@ export default class adapterQQBot {
     try {
       const List = await redis.keys(`lain:${type}:${this.id}:*`)
       List.forEach(async i => {
-        const id = await redis.get(i)
-        const info = JSON.parse(id)
+        const info = JSON.parse(await redis.get(i))
         info.uin = this.id
         common.debug(this.id, "[读取缓存群，好友列表]", type, info)
         if (type === 'gl') {
-          Bot[this.id].gl.set(id, info)
+          Bot[this.id].gl.set(info.group_id, info)
         } else {
-          Bot[this.id].fl.set(id, info)
+          Bot[this.id].fl.set(info.user_id, info)
         }
       })
     } catch (err) {
@@ -162,27 +173,47 @@ export default class adapterQQBot {
     }
   }
 
-  pickMember(group_id, user_id) {
+  async pickMember(group_id, user_id) {
+    let member = await this.member(group_id, user_id)
     return {
-      member: this.member(group_id, user_id),
-      getAvatarUrl: (size = 0) => this.getAvatarUrl(size, user_id)
+      member,
+      info: member.info,
+      renew: () => member,
+      getAvatarUrl: (size = 0) => this.getAvatarUrl(size, user_id),
+      ...member,
+      ...member.info
     }
   }
 
-  member(group_id, user_id) {
+  async member(group_id, user_id) {
+    let info = {}
+    // 尝试从API获取昵称
+    try {
+      let res = (await (await fetch(`https://api.lolimi.cn/API/qqdj/api.php?uin=${user_id}`)).json()).data
+      info.nickname = res?.Name
+      info.card = res?.Name
+    } catch (err) { common.debug(this.id, "获取昵称异常：", err) }
+
     const member = {
       info: {
         group_id,
         user_id,
         nickname: '',
-        last_sent_time: ''
+        card: '',
+        last_sent_time: parseInt(Date.now() / 1000),
+        ...info
       },
       group_id,
+      user_id,
+      nickname: '',
+      card: '',
+      last_sent_time: parseInt(Date.now() / 1000),
       is_admin: false,
       is_owner: false,
       /** 获取头像 */
       getAvatarUrl: (size = 0) => this.getAvatarUrl(size, user_id),
-      mute: async (time) => ''
+      mute: async (time) => '',
+      ...info
     }
     return member
   }
@@ -195,10 +226,17 @@ export default class adapterQQBot {
     return await this.sdk.recallGroupMessage(group_id, message_id)
   }
 
+  /** 转换通知消息格式 */
+  async notice(data, isGroup) {
+    /** 调试日志 */
+    common.warn(this.id, "[收到通知]", data)
+    let { self_id: tinyId, ...e } = data
+  }
+
   /** 转换格式给云崽处理 */
   async message(data, isGroup) {
     /** 调试日志 */
-    common.debug(this.id, JSON.stringify(data))
+    common.debug(this.id, "[收到消息]", JSON.stringify(data))
     let { self_id: tinyId, ...e } = data
     e.data = data
     e.bot = Bot[this.id]
@@ -260,7 +298,7 @@ export default class adapterQQBot {
         if (tips.Tips) await this.QQBotTips(data, e.group_id, tips)
       } catch { }
 
-      e.member = this.member(e.group_id, e.user_id)
+      e.member = await this.member(e.group_id, e.user_id)
       e.group_name = `${this.id}-${e.group_id}`
       e.group = this.pickGroup(e.group_id)
     } else {
@@ -422,9 +460,30 @@ export default class adapterQQBot {
         case 'text':
         case 'forward':
           if (String(i.text).trim()) {
-            if (i.type === 'forward') i.text = String(i.text).trim()
+            if (i.type === 'forward') {
+              common.debug(this.id, "解析转发消息", i)
+              // i.text = String(i.text).trim()
+              for (let i2 of i.text) {
+                if (i2?.type == "image") image.push(await this.getImage(i2.file, e))
+                else if (String(i2).trim()) {
+                  /** 禁止用户从文本键入@全体成员 */
+                  i.text = String(i.text).replace('@everyone', 'everyone')
+                  /** 模板1、4使用按钮替换连接 */
+                  if (e.bot.config.markdown.type == 1 || e.bot.config.markdown.type == 4) {
+                    for (let p of (this.HandleURL(i.text.trim()))) {
+                      p.type === 'button' ? button.push(p) : text.push(p.text)
+                    }
+                  } else {
+                    for (let p of (await Bot.HandleURL(i.text.trim()))) {
+                      p.type === 'image' ? image.push(await this.getImage(p.file, e)) : text.push(p.text)
+                    }
+                  }
+                }
+              }
+              break
+            }
             /** 禁止用户从文本键入@全体成员 */
-            i.text = i.text.replace('@everyone', 'everyone')
+            i.text = String(i.text).replace('@everyone', 'everyone')
             /** 模板1、4使用按钮替换连接 */
             if (e.bot.config.markdown.type == 1 || e.bot.config.markdown.type == 4) {
               for (let p of (this.HandleURL(i.text.trim()))) {
@@ -471,7 +530,7 @@ export default class adapterQQBot {
           reply = i
           break
         case 'button':
-          button.push(i)
+          button.push(Bot.Button(i.data))
           break
         case 'ark':
         case 'markdown':
@@ -601,6 +660,21 @@ export default class adapterQQBot {
   /** 处理图片 */
   async getImage(file, e) {
     file = await Bot.FormatFile(file)
+
+    /** 转换图片类型为jpg */
+    // 动态导入
+    const sharp = (await import("sharp")).default
+    if (sharp) {
+      let file2 = await Bot.Buffer(file)
+      let filetype = await fileTypeFromBuffer(file2)
+      common.mark(this.id, "[原类型]", filetype)
+      if (!["jpg", "png", "gif"].includes(filetype?.ext)) {
+        file = await sharp(file2).jpeg({ quality: 100 }).toBuffer()
+        common.mark(this.id, "[转换后类型]", await fileTypeFromBuffer(file))
+      }
+    }
+    file = await Bot.FormatFile(file)
+
     const type = 'image'
     if (e.bot.config?.markdown.type == 0 || e.bot.config?.markdown.type == 3 || (e.bot.config?.markdown.type == 2 && !await this.button(e))) {
       return { type, file }
@@ -781,12 +855,12 @@ export default class adapterQQBot {
 
     e.message.forEach(i => { if (i.type === 'text') e.msg = (e.msg || '') + (i.text || '').trim() })
     const { Pieces, reply } = await this.getQQBot(data, e)
-    Pieces.forEach(i => {
+    for (let i of Pieces) {
       if (reply) i = Array.isArray(i) ? [...i, reply] : [i, reply]
-      this.sdk.sendPrivateMessage(user_id, i, this.sdk)
-      logger.debug('发送主动好友消息：', JSON.stringify(i))
+      let res = await this.sdk.sendPrivateMessage(user_id, i, this.sdk)
+      logger.debug('发送主动好友消息：', JSON.stringify(i), res)
       this.send_count()
-    })
+    }
   }
 
   /** 发送群消息 */
@@ -801,12 +875,12 @@ export default class adapterQQBot {
 
     e.message.forEach(i => { if (i.type === 'text') e.msg = (e.msg || '') + (i.text || '').trim() })
     const { Pieces, reply } = await this.getQQBot(data, e)
-    Pieces.forEach(i => {
+    for (let i of Pieces) {
       if (reply) i = Array.isArray(i) ? [...i, reply] : [i, reply]
-      this.sdk.sendGroupMessage(group_id, i, this.sdk)
+      let res = await this.sdk.sendGroupMessage(group_id, i, this.sdk)
       this.send_count()
-      logger.debug('发送主动群消息：', JSON.stringify(i))
-    })
+      logger.debug('发送主动群消息：', JSON.stringify(i), res)
+    }
   }
 
   /** 快速回复 */

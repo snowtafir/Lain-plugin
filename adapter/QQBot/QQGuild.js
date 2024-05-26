@@ -396,13 +396,16 @@ export default class adapterQQGuild {
         case 'ark':
         case 'button':
         case 'embed':
-        case 'markdown':
           message.push(i)
           messageLog.push(`<${i.type}>`)
           break
+        case 'markdown':
+          message.push(i)
+          messageLog.push(`<markdown:${i.content ? `content=${i.content}` : `template_id=${i.custom_template_id}`}>`)
+          break
         default:
           message.push(i)
-          messageLog.push(`<未知:${JSON.stringify(i)}>`)
+          messageLog.push(`<未知(${i.type}):${JSON.stringify(i)}>`)
           break
       }
     }

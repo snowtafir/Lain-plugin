@@ -22,7 +22,7 @@ export default class QQSDK {
     /** 频道模式 */
     this.sandbox = this.config.allMsg || false
     /** 监听事件 */
-    this.config.intents = []
+    this.config.intents = ['MESSAGE_AUDIT']
 
     /** 是否启用群 */
     if (this.config.model == 0 || this.config.model == 2) {

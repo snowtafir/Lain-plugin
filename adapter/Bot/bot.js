@@ -417,7 +417,7 @@ Bot.Button = function (list, line = 3) {
       const list = []
       i.list.forEach(p => {
         p = p.split('-')
-        p = p[1] || p[0]
+        p = p?.[1] || p[0]
         list.push(p)
       })
       i.list = list
