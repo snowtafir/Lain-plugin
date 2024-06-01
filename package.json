@@ -31,7 +31,7 @@
     "silk-wasm": "^3.2.4",
     "wechat4u": "^0.7.14",
     "ws": "^8.16.0",
-    "icqq": "0.6.8"
+    "icqq": "0.6.10"
   },
   "devDependencies": {
     "cz-conventional-changelog": "^3.3.0",

@@ -2,12 +2,14 @@
 ## 原仓库已删库跑路，我也只维护QQbot适配器
 
 ## 简介
-- (╥╯^╰╥) 在线征集美工大佬，仓库主页缺一个标题图！！！
-- [Gitee](https://gitee.com/sky-summer/Lain-plugin)
 - 插件更新日志：[点击查看](./CHANGELOG.md)
 - 本项目使用 [GPL-3.0](./LICENSE) 开源协议，欢迎任何形式的贡献！
 
 `Lain-plugin`是一个围绕云崽`Yunzai-Bot`开发的多适配器插件，让喵崽接入`QQ频道`、`微信`、`shamrock`等三方平台~，不再局限于ICQQ。
+
+我正在为 [kritor](https://github.com/KarinJS/kritor) 开发新的机器人框架，如果您有时间且热爱开源并且想参与其中，您可以联系我~
+
+新框架：[Karin](https://github.com/KarinJS/carrying)
 
 ### 这里特别声明：
 
@@ -81,15 +83,6 @@ pnpm config set sharp_binary_host "https://npmmirror.com/mirrors/sharp" && pnpm 
 - [√] Shamrock适配器
 - [√] QQBot适配器
 - [√] LagrangeCore
-
-<details><summary>最后求个爱发电~您的支持是我更新的动力</summary>
-
-[新爱发电](https://afdian.net/a/lain52)
-
-
-![爱发电](https://cdn.jsdelivr.net/gh/Zyy955/imgs/img/202308271209508.jpeg)
-
-</details>
 
 ## 特别鸣谢
 

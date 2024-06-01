@@ -465,16 +465,16 @@ export default class adapterQQBot {
               // i.text = String(i.text).trim()
               for (let i2 of i.text) {
                 if (i2?.type == "image") image.push(await this.getImage(i2.file, e))
+                else if (i2?.type == "button") button.push(Bot.Button(i2.data))
                 else if (String(i2).trim()) {
-                  /** 禁止用户从文本键入@全体成员 */
-                  i.text = String(i.text).replace('@everyone', 'everyone')
+                  let i3 = i2?.type == "text" ? i2.text.trim() : String(i2).trim()
                   /** 模板1、4使用按钮替换连接 */
                   if (e.bot.config.markdown.type == 1 || e.bot.config.markdown.type == 4) {
-                    for (let p of (this.HandleURL(i.text.trim()))) {
+                    for (let p of (this.HandleURL(i2))) {
                       p.type === 'button' ? button.push(p) : text.push(p.text)
                     }
                   } else {
-                    for (let p of (await Bot.HandleURL(i.text.trim()))) {
+                    for (let p of (await Bot.HandleURL(i2))) {
                       p.type === 'image' ? image.push(await this.getImage(p.file, e)) : text.push(p.text)
                     }
                   }
