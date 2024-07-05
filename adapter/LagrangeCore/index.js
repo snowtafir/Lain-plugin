@@ -62,8 +62,7 @@ class LagrangeCore {
   /** 消息事件 */
   async message(data) {
     /** 转置消息后给喵崽 */
-    const msg = await this.ICQQEvent(data)
-    await Bot.em(`message.${msg.message_type}`, msg)
+    await Bot.emit('message', await this.ICQQEvent(data))
   }
 
   /** 自身消息事件 */
@@ -73,8 +72,7 @@ class LagrangeCore {
     await common.sleep(1500)
     if (await redis.get(`LagrangeCore:${this.id}:${data.message_id}`)) return
     /** 转置消息后给喵崽 */
-    const msg = await this.ICQQEvent(data)
-    await Bot.em(`message.${msg.message_type}`, msg)
+    await Bot.emit('message', await this.ICQQEvent(data))
   }
 
   /** 通知事件 */
@@ -106,7 +104,7 @@ class LagrangeCore {
         } else {
           common.info(this.id, `群消息撤回：[${data.group_id}]${data.operator_id} 撤回 ${data.user_id}的消息 ${data.message_id} `)
         }
-        return await Bot.em('notice.group', await this.ICQQEvent(data))
+        return await Bot.emit('notice', await this.ICQQEvent(data))
       case 'group_increase': {
         data.notice_type = 'group'
         let subType = data.sub_type
@@ -125,7 +123,7 @@ class LagrangeCore {
             }
           }
         }
-        return await Bot.em('notice.group', await this.ICQQEvent(data))
+        return await Bot.emit('notice', await this.ICQQEvent(data))
       }
       case 'group_decrease': {
         data.notice_type = 'group'
@@ -144,7 +142,7 @@ class LagrangeCore {
             ? `成员[${data.user_id}]被[${data.operator_id}]踢出群聊：[${data.group_id}}]`
             : `成员[${data.user_id}]退出群聊[${data.group_id}}]`)
         }
-        return await Bot.em('notice.group', await this.ICQQEvent(data))
+        return await Bot.emit('notice', await this.ICQQEvent(data))
       }
       case 'group_admin': {
         data.notice_type = 'group'
@@ -174,7 +172,7 @@ class LagrangeCore {
           }
           Bot[this.id].gml.set(data.group_id, { ...gml })
         }
-        return await Bot.em('notice.group', await this.ICQQEvent(data))
+        return await Bot.emit('notice', await this.ICQQEvent(data))
       }
       case 'group_ban': {
         data.notice_type = 'group'
@@ -195,20 +193,20 @@ class LagrangeCore {
         }
         // 异步加载或刷新该群的群成员列表以更新禁言时长
         this.loadGroupMemberList(data.group_id)
-        return await Bot.em('notice.group', await this.ICQQEvent(data))
+        return await Bot.emit('notice', await this.ICQQEvent(data))
       }
       case 'poke':
         if (!data.group_id) {
           common.info(this.id, `好友[${data.user_id}]戳了戳[${data.target_id}]`)
           data.notice_type = 'friend'
           data.operator_id = data.user_id
-          return await Bot.em('notice.friend', await this.ICQQEvent(data))
+          return await Bot.emit('notice', await this.ICQQEvent(data))
         } else {
           common.info(this.id, `群[${data.group_id}]成员[${data.user_id}]戳了戳[${data.target_id}]`)
           data.notice_type = 'group'
           data.operator_id = data.user_id
           data.user_id = data.target_id
-          return await Bot.em('notice.group', await this.ICQQEvent(data))
+          return await Bot.emit('notice', await this.ICQQEvent(data))
         }
       case 'notify':
         switch (data.sub_type) {
@@ -249,7 +247,7 @@ class LagrangeCore {
         user.card = data.card_new
         gml[data.user_id] = user
         Bot[this.id].gml.set(data.group_id, gml)
-        return await Bot.em('notice.group', await this.ICQQEvent(data))
+        return await Bot.emit('notice', await this.ICQQEvent(data))
       }
       case 'friend_recall':
         data.sub_type = 'recall'
@@ -259,7 +257,7 @@ class LagrangeCore {
           data = { ...data, ...fl }
         } catch { }
         common.info(this.id, `好友消息撤回：[${data.user_name}(${data.user_id})] ${data.message_id}`)
-        return await Bot.em('notice.friend', await this.ICQQEvent(data))
+        return await Bot.emit('notice', await this.ICQQEvent(data))
       default:
     }
     return await Bot.emit('notice', await this.ICQQEvent(data))
@@ -807,7 +805,7 @@ class LagrangeCore {
         } catch {
           group_name = group_id
         }
-        e.log_message && common.info(this.id, `<群:${group_name || group_id}><用户:${sender?.nickname || sender?.card}(${user_id})> -> ${e.log_message}`)
+        e.log_message && lain.info(this.id, `<群:${group_name || group_id}><用户:${sender?.card || sender?.nickname}(${user_id})> -> ${e.log_message}`)
         /** 手动构建member */
         e.member = {
           info: {
@@ -829,7 +827,7 @@ class LagrangeCore {
         e.group = { ...this.pickGroup(group_id) }
       } else {
         /** 私聊消息 */
-        e.log_message && common.info(this.id, `<好友:${sender?.nickname || sender?.card}(${user_id})> -> ${e.log_message}`)
+        e.log_message && lain.info(this.id, `<好友:${sender?.card || sender?.nickname}(${user_id})> -> ${e.log_message}`)
         e.friend = { ...this.pickFriend(user_id) }
       }
     }

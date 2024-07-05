@@ -33,12 +33,12 @@ export default class adapterQQBot {
     /** 群消息 */
     this.sdk.on('message.group', async (data) => {
       data = await this.message(data, true)
-      if (data) Bot.em('message.group', data)
+      if (data) Bot.emit('message', data)
     })
     /** 私聊消息 */
     this.sdk.on('message.private.friend', async (data) => {
       data = await this.message(data)
-      if (data) Bot.em('message.private.friend', data)
+      if (data) Bot.emit('message', data)
     })
     /** 群通知消息 */
     this.sdk.on('notice.group', async (data) => {
@@ -242,6 +242,7 @@ export default class adapterQQBot {
     e.bot = Bot[this.id]
     e.uin = this.id // ???鬼知道哪来的这玩意，icqq都没有...
     e.tiny_id = tinyId
+    e.time = data.timestamp
     e.self_id = this.id
     e.sendMsg = data.reply
     e.raw_message = e.raw_message.trim()
@@ -315,7 +316,7 @@ export default class adapterQQBot {
 
     /** 保存消息次数 */
     try { common.recvMsg(this.id, e.adapter) } catch { }
-    common.info(this.id, `<群:${e.group_id}><用户:${e.user_id}> -> ${this.messageLog(e.message)}`)
+    lain.info(this.id, `<群:${e.group_id}><用户:${e.user_id}> -> ${this.messageLog(e.message)}`)
     /** dau统计 */
     this.msg_count(data)
     return e
@@ -358,7 +359,7 @@ export default class adapterQQBot {
   hasAlias(text, e, hasAlias = true) {
     text = text.trim()
     if (Bot[this.id].config.other.Prefix && text.startsWith('/')) {
-      return text.replace(/^\//, '#')
+      return text.replace(/^\s*\/\s*/, "#")
     }
     /** 兼容前缀 */
     let groupCfg = MiaoCfg.getGroup(e.group_id)
@@ -370,7 +371,7 @@ export default class adapterQQBot {
       if (text.startsWith(name)) {
         /** 先去掉前缀 再 / => # */
         text = lodash.trimStart(text, name)
-        if (Bot[this.id].config.other.Prefix) text = text.replace(/^\//, '#')
+        if (Bot[this.id].config.other.Prefix) text = text.replace(/^\s*\/\s*/, "#")
         if (hasAlias) return name + text
         return text
       }
@@ -706,9 +707,9 @@ export default class adapterQQBot {
 
     try {
       /** QQ图床 预留 */
-      const QQ = Bot[this.id].config.other.QQ
-      if (QQ) {
-        const { width, height, url } = await Bot.uploadQQ(file, QQ)
+      const QQCloud = Bot[this.id].config.other.QQCloud
+      if (QQCloud) {
+        const { width, height, url } = await Bot.uploadQQ(file, QQCloud)
         common.mark('Lain-plugin', `QQ图床上传成功：${url}`)
         return { type, file: url, width, height }
       }
@@ -740,7 +741,7 @@ export default class adapterQQBot {
       if (Bot?.silkToUrl) {
         const url = await Bot.silkToUrl(file)
         if (url) {
-          common.mark('Lain-plugin', `<云转码:${url}>`)
+          lain.mark('Lain-plugin', `<云转码:${url}>`)
           return { type: 'audio', file: url }
         }
       }
@@ -852,15 +853,24 @@ export default class adapterQQBot {
       user_id,
       message: common.array(data)
     }
+    /** 发送返回 */
+    let ret = { res: [], error: [] }
 
     e.message.forEach(i => { if (i.type === 'text') e.msg = (e.msg || '') + (i.text || '').trim() })
     const { Pieces, reply } = await this.getQQBot(data, e)
     for (let i of Pieces) {
       if (reply) i = Array.isArray(i) ? [...i, reply] : [i, reply]
-      let res = await this.sdk.sendPrivateMessage(user_id, i, this.sdk)
-      logger.debug('发送主动好友消息：', JSON.stringify(i), res)
+      try {
+        let res = await this.sdk.sendPrivateMessage(user_id, i, this.sdk)
+        ret.res.push(res)
+        logger.debug('发送主动好友消息：', JSON.stringify(i), res)
+      } catch(err) {
+        logger.error('发送主动好友消息：', err)
+        ret.error.push(err)
+      }
       this.send_count()
     }
+    return ret
   }
 
   /** 发送群消息 */
@@ -872,15 +882,24 @@ export default class adapterQQBot {
       user_id: 'QQBot',
       message: common.array(data)
     }
+    /** 发送返回 */
+    let ret = { res: [], error: [] }
 
     e.message.forEach(i => { if (i.type === 'text') e.msg = (e.msg || '') + (i.text || '').trim() })
     const { Pieces, reply } = await this.getQQBot(data, e)
     for (let i of Pieces) {
       if (reply) i = Array.isArray(i) ? [...i, reply] : [i, reply]
-      let res = await this.sdk.sendGroupMessage(group_id, i, this.sdk)
+      try {
+        let res = await this.sdk.sendGroupMessage(group_id, i, this.sdk)
+        ret.res.push(res)
+        logger.debug('发送主动群消息：', JSON.stringify(i), res)
+      } catch(err) {
+        logger.error("发送主动群消息：", err)
+        ret.error.push(err)
+      }
       this.send_count()
-      logger.debug('发送主动群消息：', JSON.stringify(i), res)
     }
+    return ret
   }
 
   /** 快速回复 */

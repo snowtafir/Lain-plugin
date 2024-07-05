@@ -58,7 +58,7 @@ export class adapter extends plugin {
       },
       other: {
         Prefix: true,
-        QQ: '',
+        QQCloud: '',
         Tips: false,
         'Tips-GroupId': ''
       }
@@ -174,7 +174,7 @@ export class adapter extends plugin {
     //     img_url: ${i.markdown.img_url}
     //   other:
     //     Prefix: ${i.other.Prefix}
-    //     QQ: ${i.other.QQ}
+    //     QQCloud: ${i.other.QQCloud}
     //     Tips: ${i.other.Tips}
     //     Tips-GroupId: ${i.other['Tips-GroupId']}`)
     //     })
@@ -263,7 +263,7 @@ export class adapter extends plugin {
     if (cfg.value('token', self_id)) {
       let val = cfg.get('token')
       if (this.e.msg.includes('图床')) {
-        val[self_id].other.QQ = Number(msg[1] || msg[0])
+        val[self_id].other.QQCloud = Number(msg[1] || msg[0])
       } else if (this.e.msg.includes('前缀')) {
         val[self_id].other.Prefix = (msg[1] || msg[0]) === '开启'
       } else if (this.e.msg.includes('防倒卖群号')) {

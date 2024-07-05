@@ -22,11 +22,11 @@ export default class adapterQQGuild {
   async StartBot() {
     this.sdk.on('message.guild', async (data) => {
       data = await this.GroupMessage(data)
-      data && Bot.em(`message.${data.message_type}`, data)
+      data && Bot.emit('message', data)
     })
     this.sdk.on('message.private.direct', async (data) => {
       data = await this.GroupMessage(data, 'friend')
-      data && Bot.em(`message.${data.message_type}`, data)
+      data && Bot.emit('message', data)
     })
 
     // 有点怪 先简单处理下

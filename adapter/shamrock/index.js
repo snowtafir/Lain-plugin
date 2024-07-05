@@ -123,7 +123,7 @@ class Shamrock {
             }
           }
         }
-        return await Bot.emit('notice.group', await this.ICQQEvent(data))
+        return await Bot.emit('notice', await this.ICQQEvent(data))
       }
       case 'group_decrease': {
         data.notice_type = 'group'
@@ -142,7 +142,7 @@ class Shamrock {
             ? `成员[${data.user_id}]被[${data.operator_id}]踢出群聊：[${data.group_id}}]`
             : `成员[${data.user_id}]退出群聊[${data.group_id}}]`)
         }
-        return await Bot.emit('notice.group', await this.ICQQEvent(data))
+        return await Bot.emit('notice', await this.ICQQEvent(data))
       }
       case 'group_admin': {
         data.notice_type = 'group'
@@ -172,7 +172,7 @@ class Shamrock {
           }
           Bot[this.id].gml.set(data.group_id, { ...gml })
         }
-        return await Bot.emit('notice.group', await this.ICQQEvent(data))
+        return await Bot.emit('notice', await this.ICQQEvent(data))
       }
       case 'group_ban': {
         data.notice_type = 'group'
@@ -193,7 +193,7 @@ class Shamrock {
         }
         // 异步加载或刷新该群的群成员列表以更新禁言时长
         this.loadGroupMemberList(data.group_id)
-        return await Bot.emit('notice.group', await this.ICQQEvent(data))
+        return await Bot.emit('notice', await this.ICQQEvent(data))
       }
       case 'notify':
         switch (data.sub_type) {
@@ -233,7 +233,7 @@ class Shamrock {
         user.card = data.card_new
         gml[data.user_id] = user
         Bot[this.id].gml.set(data.group_id, gml)
-        return await Bot.emit('notice.group', await this.ICQQEvent(data))
+        return await Bot.emit('notice', await this.ICQQEvent(data))
       }
       case 'friend_recall':
         data.sub_type = 'recall'
@@ -243,7 +243,7 @@ class Shamrock {
           data = { ...data, ...fl }
         } catch { }
         common.info(this.id, `好友消息撤回：[${data.user_name}(${data.user_id})] ${data.message_id}`)
-        return await Bot.emit('notice.friend', await this.ICQQEvent(data))
+        return await Bot.emit('notice', await this.ICQQEvent(data))
       default:
     }
     return await Bot.emit('notice', await this.ICQQEvent(data))
@@ -791,7 +791,7 @@ class Shamrock {
         } catch {
           group_name = group_id
         }
-        e.log_message && common.info(this.id, `<群:${group_name || group_id}><用户:${sender?.nickname || sender?.card}(${user_id})> -> ${e.log_message}`)
+        e.log_message && common.info(this.id, `<群:${group_name || group_id}><用户:${sender?.card || sender?.nickname}(${user_id})> -> ${e.log_message}`)
         /** 手动构建member */
         e.member = {
           info: {
@@ -813,7 +813,7 @@ class Shamrock {
         e.group = { ...this.pickGroup(group_id) }
       } else {
         /** 私聊消息 */
-        e.log_message && common.info(this.id, `<好友:${sender?.nickname || sender?.card}(${user_id})> -> ${e.log_message}`)
+        e.log_message && common.info(this.id, `<好友:${sender?.card || sender?.nickname}(${user_id})> -> ${e.log_message}`)
         e.friend = { ...this.pickFriend(user_id) }
       }
     }

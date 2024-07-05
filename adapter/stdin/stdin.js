@@ -96,8 +96,12 @@ export default async function stdin() {
   rl.on('close', () => process.exit())
 
   rl.on('line', async (input) => {
+    input = input.trim()
+    if (!input) return false
     Bot[uin].stat.recv_msg_cnt++
-    Bot.em('message.private', msg(input.trim()))
+    const data = msg(input)
+    lain.info(uin, `<好友:${data.sender?.card || data.sender?.nickname}(${user_id})> -> ${data.raw_message}`)
+    Bot.emit('message', data)
   })
   await common.init('Lain:restart:stdin')
 }

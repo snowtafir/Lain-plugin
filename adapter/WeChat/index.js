@@ -68,11 +68,11 @@ class AdapterComWeChat {
       /** 私聊消息事件 */
       case 'private':
         /** 转置消息后给喵崽 */
-        return await Bot.em('message.private', await this.ICQQMessage(data))
+        return await Bot.emit('message', await this.ICQQMessage(data))
       /** 群聊消息事件 */
       case 'group':
         /** 转置消息后给喵崽 */
-        return await Bot.em('message.group', await this.ICQQMessage(data))
+        return await Bot.emit('message', await this.ICQQMessage(data))
       /** 未知事件 */
       default:
         lain.error('Lain-plugin', `<Bot:${this.OneBot}><host:${this.host}> 未知事件：${JSON.stringify(data)}`)
@@ -109,11 +109,11 @@ class AdapterComWeChat {
       /** 私聊拍一拍 */
       case 'wx.get_private_poke':
         /** 转置消息后给喵崽 */
-        return await Bot.em('notice.private.poke', await this.ICQQMessage(data))
+        return await Bot.emit('notice', await this.ICQQMessage(data))
       /** 群聊拍一拍 */
       case 'wx.get_group_poke':
         /** 转置消息后给喵崽 */
-        return await Bot.em('notice.group.poke', await this.ICQQMessage(data))
+        return await Bot.emit('notice', await this.ICQQMessage(data))
       /** 未知事件 */
       default:
         lain.mark('Lain-plugin', `<Bot:${this.OneBot}><host:${this.host}> 未知事件：${JSON.stringify(data)}`)
