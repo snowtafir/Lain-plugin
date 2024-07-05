@@ -470,7 +470,7 @@ export default class adapterQQBot {
                 else if (String(i2).trim()) {
                   let i3 = i2?.type == "text" ? i2.text.trim() : String(i2).trim()
                   /** 模板1、4使用按钮替换连接 */
-                  if (e.bot.config.markdown.type == 1 || e.bot.config.markdown.type == 4) {
+                  if (this.config.markdown.type == 1 || this.config.markdown.type == 4) {
                     for (let p of (this.HandleURL(i2))) {
                       p.type === 'button' ? button.push(p) : text.push(p.text)
                     }
@@ -486,7 +486,7 @@ export default class adapterQQBot {
             /** 禁止用户从文本键入@全体成员 */
             i.text = String(i.text).replace('@everyone', 'everyone')
             /** 模板1、4使用按钮替换连接 */
-            if (e.bot.config.markdown.type == 1 || e.bot.config.markdown.type == 4) {
+            if (this.config.markdown.type == 1 || this.config.markdown.type == 4) {
               for (let p of (this.HandleURL(i.text.trim()))) {
                 p.type === 'button' ? button.push(p) : text.push(p.text)
               }
@@ -498,7 +498,7 @@ export default class adapterQQBot {
           }
           break
         case 'at':
-          if (e.bot.config.markdown.type) {
+          if (this.config.markdown.type) {
             if ((i.qq || i.id) === 'all') {
               text.push('@everyone')
             } else {
@@ -548,7 +548,7 @@ export default class adapterQQBot {
     if (image.length) try { common.MsgTotal(this.id, 'QQBot', 'image') } catch { }
 
     /** 浅拷贝一次消息为普通消息，用于模板发送失败重发 */
-    if (e.bot.config.markdown.type) {
+    if (this.config.markdown.type) {
       /** 拷贝源消息 */
       const copyMessage = JSON.parse(JSON.stringify(message))
       const copyImage = JSON.parse(JSON.stringify(image))
@@ -560,7 +560,7 @@ export default class adapterQQBot {
       normalMsg = copyMessage.length ? [copyMessage, ...normalMsg] : normalMsg
     }
 
-    switch (e.bot.config.markdown.type) {
+    switch (this.config.markdown.type) {
       /** 关闭 */
       case 0:
       case '0':
@@ -618,8 +618,8 @@ export default class adapterQQBot {
             const markdown = [
               {
                 type: 'markdown',
-                custom_template_id: e.bot.config.markdown.id,
-                params: [{ key: e.bot.config.markdown.text || 'text_start', values: ['\u200B'] }]
+                custom_template_id: this.config.markdown.id,
+                params: [{ key: this.config.markdown.text || 'text_start', values: ['\u200B'] }]
               },
               ...button
             ]
@@ -677,7 +677,7 @@ export default class adapterQQBot {
     file = await Bot.FormatFile(file)
 
     const type = 'image'
-    if (e.bot.config?.markdown.type == 0 || e.bot.config?.markdown.type == 3 || (e.bot.config?.markdown.type == 2 && !await this.button(e))) {
+    if (this.config?.markdown.type == 0 || this.config?.markdown.type == 3 || (this.config?.markdown.type == 2 && !await this.button(e))) {
       return { type, file }
     }
     try {
@@ -798,18 +798,18 @@ export default class adapterQQBot {
   async markdown(e, data, Button = true) {
     let markdown = {
       type: 'markdown',
-      custom_template_id: e.bot.config.markdown.id,
+      custom_template_id: this.config.markdown.id,
       params: []
     }
 
     for (let i of data) {
       switch (i.type) {
         case 'text':
-          markdown.params.push({ key: e.bot.config.markdown.text || 'text_start', values: [i.text.replace(/\n/g, '\r')] })
+          markdown.params.push({ key: this.config.markdown.text || 'text_start', values: [i.text.replace(/\n/g, '\r')] })
           break
         case 'image':
-          markdown.params.push({ key: e.bot.config.markdown.img_url || 'img_url', values: [i.file] })
-          markdown.params.push({ key: e.bot.config.markdown.img_dec || 'img_dec', values: [`text #${i.width}px #${i.height}px`] })
+          markdown.params.push({ key: this.config.markdown.img_url || 'img_url', values: [i.file] })
+          markdown.params.push({ key: this.config.markdown.img_dec || 'img_dec', values: [`text #${i.width}px #${i.height}px`] })
           break
         default:
           break
