@@ -952,7 +952,7 @@ export default class adapterQQBot {
       logger.debug('发送回复消息：', JSON.stringify(msg))
       msg = Array.isArray(msg) ? [{ type: 'reply', id: e.message_id }, { type: 'text', text: '\n' }, ...msg] : [{ type: 'reply', id: e.message_id }, { type: 'text', text: '\n' }, msg]
       let res
-      if (e.group_id) {
+      if (!e.friend) {
         res = { ok: true, data: await this.sdk.sendGroupMessage(e.data.group_id, msg, this.sdk) }
       } else {
         res = { ok: true, data: await this.sdk.sendPrivateMessage(e.data.user_id, msg, this.sdk) }

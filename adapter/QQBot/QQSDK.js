@@ -52,28 +52,29 @@ export default class QQSDK {
     await this.sdk.start()
     /** 修改sdk日志为喵崽日志 */
     this.sdk.logger = {
-      info: log => this.logger(log),
-      trace: log => lain.trace(this.id, log),
-      debug: log => lain.debug(this.id, log),
-      mark: log => lain.mark(this.id, log),
-      warn: log => lain.warn(this.id, log),
-      error: log => lain.error(this.id, log),
-      fatal: log => lain.fatal(this.id, log)
+      info: (...log) => this.logger(...log),
+      trace: (...log) => lain.trace(this.id, ...log),
+      debug: (...log) => lain.debug(this.id, ...log),
+      mark: (...log) => lain.mark(this.id, ...log),
+      warn: (...log) => lain.warn(this.id, ...log),
+      error: (...log) => lain.error(this.id, ...log),
+      fatal: (...log) => lain.fatal(this.id, ...log)
     }
   }
 
   /** 修改一下日志 */
-  logger(data) {
-    if (typeof data !== 'string') return lain.info(this.id, data)
-    data = data.trim()
+  logger(...data) {
+    let msg = data[0]
+    if (typeof msg !== 'string' || data.length > 1) return lain.info(this.id, ...data)
+    msg = msg.trim()
     try {
-      if (/^(recv from Group|recv from Guild|send to Channel)/.test(data)) {
+      if (/^(recv from Group|recv from Guild|send to Channel)/.test(msg)) {
         return ''
-      } else if (/^send to Group/.test(data)) {
-        data = data.replace(/^send to Group\([^)]+\): /, `<发送群聊:${this.id}-${data.match(/\(([^)]+)\)/)[1]}> => `)
-        return lain.info(this.QQBot, data)
+      } else if (/^send to Group/.test(msg)) {
+        msg = msg.replace(/^send to Group\([^)]+\): /, `<发送群聊:${this.id}-${msg.match(/\(([^)]+)\)/)[1]}> => `)
+        return lain.info(this.QQBot, msg)
       }
     } catch { }
-    return logger.info(data)
+    return logger.info(msg)
   }
 }

@@ -25,7 +25,7 @@ if (Object.values(Cfg.getToken()).length) {
         await new QQGuild(SDK.sdk)
       } catch (err) {
         logger.warn(err)
-        return lain.error('Lain-plugin', `QQBot [${bot.appid}] 启动失败`, err?.data || err?.message || err)
+        lain.error('Lain-plugin', `QQBot [${bot.appid}] 启动失败`, err?.data || err?.message || err)
       }
     }
     if (bot.model == 1) {
@@ -35,7 +35,7 @@ if (Object.values(Cfg.getToken()).length) {
         await new QQGuild(SDK.sdk)
       } catch (err) {
         logger.warn(err)
-        return lain.error('Lain-plugin', `QQGuild [${bot.appid}] 启动失败`, err?.data || err?.message || err)
+        lain.error('Lain-plugin', `QQGuild [${bot.appid}] 启动失败`, err?.data || err?.message || err)
       }
     }
   })
