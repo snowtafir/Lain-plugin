@@ -24,82 +24,82 @@ export class admin extends plugin {
       {
         regex: /#(Lain|铃音)设置端口/i,
         action: (msg) => {
-          this.yamlData('Config-bot', 'Server.port', Number(msg))
+          this.yamlData('Config-Server', 'port', Number(msg))
         }
       },
       {
         regex: /#(Lain|铃音)设置IP/i,
         action: (msg) => {
-          this.yamlData('Config-bot', 'Server.baseIP', msg)
+          this.yamlData('Config-Server', 'baseIP', msg)
         }
       },
       {
         regex: /#(Lain|铃音)设置url/i,
         action: (msg) => {
-          this.yamlData('Config-bot', 'Server.baseUrl', msg)
+          this.yamlData('Config-Server', 'baseUrl', msg)
         }
       },
       {
         regex: /#(Lain|铃音)设置文件过期时间/i,
         action: (msg) => {
-          this.yamlData('Config-bot', 'Server.InvalidTime', Number(msg))
+          this.yamlData('Config-Sserver', 'InvalidTime', Number(msg))
         }
       },
       {
         regex: /#(Lain|铃音)设置标准输入名称/i,
         action: (msg) => {
-          this.yamlData('Config-other', 'Stdin.name', msg)
+          this.yamlData('Config-Adapter', 'Stdin.name', msg)
         }
       },
       {
         regex: /#(Lain|铃音)设置标准输入/i,
         action: (msg) => {
           msg = msg === '开启'
-          this.yamlData('Config-other', 'Stdin.state', msg)
+          this.yamlData('Config-Adapter', 'Stdin.state', msg)
         }
       },
       {
         regex: /#(Lain|铃音)设置三叶草url/i,
         action: (msg) => {
-          this.yamlData('Config-Shamrock', 'baseUrl', msg)
+          this.yamlData('Config-Adapter', 'Shamrock.baseUrl', msg)
         }
       },
       {
         regex: /#(Lain|铃音)设置三叶草token/i,
         action: (msg) => {
-          this.yamlData('Config-Shamrock', 'token', msg)
+          this.yamlData('Config-Adapter', 'Shamrock.token', msg)
         }
       },
       {
         regex: /#(Lain|铃音)设置三叶草git/i,
         action: (msg) => {
-          this.yamlData('Config-Shamrock', 'githubKey', msg)
+          this.yamlData('Config-Adapter', 'Shamrock.githubKey', msg)
         }
       },
       {
         regex: /#(Lain|铃音)设置PC微信名称/i,
         action: (msg) => {
-          this.yamlData('Config-other', 'ComWeChat.name', msg)
+          this.yamlData('Config-Adapter', 'ComWeChat.name', msg)
         }
       },
       {
         regex: /#(Lain|铃音)设置PC微信好友/i,
         action: (msg) => {
           msg = msg === '开启' ? 1 : 0
-          this.yamlData('Config-other', 'ComWeChat.autoFriend', msg)
+          this.yamlData('Config-Adapter', 'ComWeChat.autoFriend', msg)
         }
       },
       {
         regex: /#(Lain|铃音)设置微信名称/i,
         action: (msg) => {
-          this.yamlData('Config-other', 'WeXin.name', msg)
+          this.yamlData('Config-Adapter', 'WeXin.name', msg)
         }
       },
       {
         regex: /#(Lain|铃音)设置微信好友/i,
         action: (msg) => {
           msg = msg === '开启' ? 1 : 0
-          this.yamlData('Config-other', 'WeXin.autoFriend', msg)
+          this.yamlData('Config-Adapter', 'WeXin.autoFriend', msg)
         }
       }
     ]
@@ -114,7 +114,7 @@ export class admin extends plugin {
   }
 
   async yamlData(app, name, msg) {
-    const config = new YamlHandler(lain._path + `/config/config/${app}.yaml`)
+    const config = new YamlHandler(lain._pathCfg + `/${app}.yaml`)
     config.set(name, msg)
     /** 热更需要延迟 */
     await common.sleep(1000)

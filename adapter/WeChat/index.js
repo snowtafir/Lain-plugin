@@ -573,4 +573,4 @@ ComWeChat.on('error', async error => logger.error(error))
 
 export default ComWeChat
 
-common.info('Lain-plugin', 'ComWeChat适配器加载完成')
+lain.info('Lain-plugin', 'ComWeChat适配器加载完成')

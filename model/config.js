@@ -35,7 +35,7 @@ Bot.lain = {
     QQGuild: {
       /** 插件 */
       version: {
-        id: '私域',
+        id: '公域',
         name: 'QQ频道',
         version: adapter.QQGuild
       },

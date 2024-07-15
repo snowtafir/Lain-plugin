@@ -10,12 +10,15 @@ export class LainTask extends plugin {
     })
 
     /** 定时任务 */
-    this.task = {
-      /** 任务cron表达式 */
-      cron: Cfg.Other.DelFileCron,
-      name: '清除临时文件',
-      /** 任务方法名 */
-      fnc: () => this.TaskFile()
+    this.task = [] 
+    for (let i of Array.isArray(Cfg.Other.DelFileCron) ? Cfg.Other.DelFileCron : [Cfg.Other.DelFileCron]) {
+      this.task.push({
+        /** 任务cron表达式 */
+        cron: i,
+        name: '清除临时文件',
+        /** 任务方法名 */
+        fnc: () => this.TaskFile()
+      })
     }
   }
 

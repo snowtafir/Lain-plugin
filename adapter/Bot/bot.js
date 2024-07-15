@@ -295,13 +295,13 @@ Bot.toType = function (i) {
       type = 'http'
       file = i
     } else {
-      common.log('Lain-plugin', '未知格式，无法处理：' + i)
+      lain.info('Lain-plugin', '未知格式，无法处理：', i)
       type = 'error'
       file = i
     }
   } else {
     // 留个容错
-    common.log('Lain-plugin', '未知格式，无法处理：' + i)
+    lain.info('Lain-plugin', '未知格式，无法处理：', i)
     type = 'error'
     file = i
   }
@@ -483,7 +483,7 @@ Bot.HandleURL = async function (msg) {
 
   let promises = urls.map(link => {
     return new Promise((resolve, reject) => {
-      common.mark('Lain-plugin', `url替换：${link}`)
+      lain.mark('Lain-plugin', `url替换：${link}`)
       QrCode.toBuffer(link, {
         errorCorrectionLevel: 'H',
         type: 'png',

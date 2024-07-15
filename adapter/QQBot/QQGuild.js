@@ -36,7 +36,8 @@ export default class adapterQQGuild {
       id = info.id
       avatar = info.avatar
       username = info.username
-    } catch {
+    } catch (err) {
+      lain.warn(this.id, err)
       id = this.id
       avatar = 'https://cdn.jsdelivr.net/gh/Zyy955/imgs/img/202402020757587.gif'
       let txurl = `${process.cwd()}/resources/Avatar/`
@@ -80,7 +81,7 @@ export default class adapterQQGuild {
       getGroupMemberInfo: (group_id, user_id) => Bot.getGroupMemberInfo(group_id, user_id)
     }
 
-    if (!this.config.allMsg) Bot[this.id].version.id = '公域'
+    if (!this.config.allMsg) Bot[this.id].version.id = '私域'
     if (!Bot.adapter.includes(String(this.id))) Bot.adapter.push(String(this.id))
 
     /** 重启 */
@@ -159,6 +160,8 @@ export default class adapterQQGuild {
     let { message, raw_message, log_message, ToString } = await this.getMessage(data.message)
     data.message = message
 
+    lain.info(this.id, `<${friend ? '私信' : '频道'}:${group_name}(${group_id})><用户:${nickname}(${user_id})> -> ${log_message}`)
+
     /** 过滤事件 */
     let priority = true
     if (e.group_id && raw_message) {
@@ -192,7 +195,6 @@ export default class adapterQQGuild {
     data.raw_message = raw_message
     data.toString = () => ToString
 
-    lain.info(this.id, `<${friend ? '私信' : '频道'}:${group_name}(${group_id})><用户:${nickname}(${user_id})> -> ${log_message}`)
     return data
   }
 
@@ -589,7 +591,7 @@ export default class adapterQQGuild {
             if (image.length) Pieces.push(...image)
           }
         } catch (error) {
-          logger.error(error)
+          lain.error(this.id, error)
         }
         break
       /** 原样发送并遍历插件，自动补发一条按钮模板消息 */
@@ -613,7 +615,7 @@ export default class adapterQQGuild {
             Pieces.push(markdown)
           }
         } catch (error) {
-          logger.error(error)
+          lain.error(this.id, error)
         }
         break
       case 4:
@@ -660,7 +662,7 @@ export default class adapterQQGuild {
         res.message_id = res.id
         return res
       } catch (error) {
-        logger.error('发送主动私信消息息失败：', error)
+        lain.error(this.id, '发送主动私信消息息失败：', error)
       }
     }
   }
@@ -677,10 +679,10 @@ export default class adapterQQGuild {
         res.message_id = res.id
         return res
       } catch (error) {
-        logger.error('发送频道主动消息失败：', error)
+        lain.error(this.id, '发送频道主动消息失败：', error)
       }
     }
   }
 }
 
-common.info('Lain-plugin', 'QQ频道适配器加载完成')
+lain.info('Lain-plugin', 'QQ频道适配器加载完成')

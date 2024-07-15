@@ -8,7 +8,7 @@ export default new class zaiMsg {
   /** 转换格式给云崽 */
   async msg(data) {
     /** 调试日志 */
-    common.debug(this.id, JSON.stringify(data))
+    lain.debug(this.id, JSON.stringify(data))
     const { self_id, user_id, group_id, message_type, message_id, sender } = data
 
     let raw_message = data.raw_message
@@ -29,7 +29,7 @@ export default new class zaiMsg {
       if (source) {
         e.source = source
         if (typeof e.source === 'string') {
-          common.error(user_id, e.source)
+          lain.error(user_id, e.source)
         } else {
           e.source.message = source.raw_message
         }
@@ -51,7 +51,7 @@ export default new class zaiMsg {
             if (e.flag) {
               return await api.set_friend_add_request(self_id, e.flag, approve)
             } else {
-              common.error(self_id, '处理好友申请失败：缺少flag参数')
+              lain.error(self_id, '处理好友申请失败：缺少flag参数')
               return false
             }
           }
@@ -63,10 +63,10 @@ export default new class zaiMsg {
               return await api.set_group_add_request(self_id, e.flag, e.sub_type, approve)
             } else {
               if (e.sub_type === 'add') {
-                common.error(self_id, '处理入群申请失败：缺少flag参数')
+                lain.error(self_id, '处理入群申请失败：缺少flag参数')
               } else {
                 // invite
-                common.error(self_id, '处理邀请机器人入群失败：缺少flag参数')
+                lain.error(self_id, '处理邀请机器人入群失败：缺少flag参数')
               }
               return false
             }
@@ -80,14 +80,14 @@ export default new class zaiMsg {
     /** 先打印日志 */
     if (message_type === 'private') {
       isGroup = false
-      common.info(self_id, `好友消息：[${sender?.nickname || sender?.card}(${user_id})] ${raw_message}`)
+      lain.info(self_id, `好友消息：<${sender?.nickname || sender?.card}(${user_id})> ${raw_message}`)
     } else {
       try {
         group_name = Bot[self_id].gl.get(group_id)?.group_name
       } catch {
         group_name = group_id
       }
-      raw_message && common.info(self_id, `群消息：[${group_name}，${sender?.nickname || sender?.card}(${user_id})] ${raw_message}`)
+      raw_message && lain.info(self_id, `群消息：<${group_name}，${sender?.nickname || sender?.card}(${user_id})> ${raw_message}`)
     }
 
     /** 快速撤回 */
@@ -394,17 +394,17 @@ export async function message(id, msg, group_id, reply = true) {
           source = await api.get_msg(id, msg_id)
 
           if (typeof source === 'string') {
-            common.info(id, `获取引用消息内容失败，正在重试：第 ${retryCount} 次`)
+            lain.info(id, `获取引用消息内容失败，正在重试：第 ${retryCount} 次`)
             retryCount++
           } else {
             break
           }
         }
         if (typeof source === 'string') {
-          common.error(id, '获取引用消息内容失败，重试次数上限，已终止')
+          lain.error(id, '获取引用消息内容失败，重试次数上限，已终止')
           continue
         }
-        common.debug('', source)
+        lain.debug('', source)
         // todo 判断引用是否追溯得到
         let source_reply = source.message.map(u => (u.type === 'at' ? { type: u.type, qq: Number(u.data.qq) } : { type: u.type, ...u.data }))
 

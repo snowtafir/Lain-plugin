@@ -1,6 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import fetch from 'node-fetch'
+import Cfg from '../../lib/config/config.js'
 import common from '../../lib/common/common.js'
 
 export default class StartWeChat4u {
@@ -32,13 +33,13 @@ export default class StartWeChat4u {
     this.bot.on('uuid', async uuid => {
       const url = `https://login.weixin.qq.com/qrcode/${uuid}`
       Bot.lain.loginMap.set(this.id, { url, uuid, login: false })
-      common.info(this.id, `请扫码登录：${url}`)
+      lain.info(this.id, `请扫码登录：${url}`)
     })
 
     /** 登录事件 */
     this.bot.on('login', () => {
       this.name = this.bot.user.NickName
-      common.info(this.id, '登录成功，正在加载资源...')
+      lain.info(this.id, '登录成功，正在加载资源...')
       /** 登录成功~ */
       if (Bot.lain.loginMap.get(this.id)) {
         Bot.lain.loginMap.set(this.id, { ...Bot.lain.loginMap.get(this.id), login: true })
@@ -47,7 +48,7 @@ export default class StartWeChat4u {
       try {
         fs.writeFileSync(`${Bot.lain._path}/${this.id}.json`, JSON.stringify(this.bot.botData))
       } catch (error) {
-        common.error(this.id, error)
+        lain.error(this.id, error)
       }
 
       Bot[this.id] = {
@@ -92,7 +93,7 @@ export default class StartWeChat4u {
         const _path = `${this.path}${this.id}.jpg`
         if (!fs.existsSync(_path)) fs.writeFileSync(_path, avatar)
       } catch (error) {
-        common.warn(this.id, error)
+        lain.warn(this.id, error)
       }
     })
 
@@ -107,14 +108,14 @@ export default class StartWeChat4u {
 
     /** 登出 */
     this.bot.on('logout', () => {
-      common.info(this.id, `Bot ${this.name || this.id}已登出`)
+      lain.info(this.id, `Bot ${this.name || this.id}已登出`)
       try { fs.unlinkSync(`${Bot.lain._path}/${this.id}.json`) } catch { }
     })
 
     /** 捕获错误 */
     this.bot.on('error', err => {
-      common.error(this.id, err?.tips || err)
-      common.debug(this.io, err)
+      lain.error(this.id, err?.tips || err)
+      lain.debug(this.id, err)
     })
   }
 
@@ -126,7 +127,7 @@ export default class StartWeChat4u {
   /** 处理接收的消息 */
   async msg(msg) {
     /** 调试日志 */
-    common.debug(this.id, JSON.stringify(data))
+    lain.debug(this.id, JSON.stringify(data))
     /** 屏蔽bot自身消息 */
     if (msg.isSendBySelf) return
     /** 屏蔽历史消息 */
@@ -169,11 +170,11 @@ export default class StartWeChat4u {
     switch (msg.MsgType) {
       /** 文本 */
       case this.bot.CONF.MSGTYPE_TEXT:
-        // common.info(this.id, this.bot.user)
-        // common.info(this.id, this.bot.contacts)
-        // common.info(this.id, msg.Content)
-        // common.info(this.id, msg.FromUserName)
-        // common.info(this.id, msg.ToUserName)
+        // lain.info(this.id, this.bot.user)
+        // lain.info(this.id, this.bot.contacts)
+        // lain.info(this.id, msg.Content)
+        // lain.info(this.id, msg.FromUserName)
+        // lain.info(this.id, msg.ToUserName)
 
         // 防空
         let content = msg.Content || ''
@@ -184,7 +185,7 @@ export default class StartWeChat4u {
         text = isGroupMessage ? (content.match(/\n(.+)/s) || [null, ''])[1] : content
         message.push({ type: 'text', text })
         toString += text
-        common.info(this.id, `收到消息：${text}`)
+        lain.info(this.id, `收到消息：${text}`)
         break
       /** 图片 */
       case this.bot.CONF.MSGTYPE_IMAGE:
@@ -194,9 +195,9 @@ export default class StartWeChat4u {
             if (!fs.existsSync(_path)) fs.writeFileSync(_path, res.data)
             message.push({ type: 'image', file: _path })
             toString += `{image:${_path}}`
-            common.info(this.id, `收到消息：[图片:${_path}]`)
+            lain.info(this.id, `收到消息：[图片:${_path}]`)
           })
-          .catch(err => { this.bot.emit('error', err?.tips || err) })
+          .catch(err => { this.bot.emit('error', err) })
         break
 
       /** 表情消息 */
@@ -209,18 +210,24 @@ export default class StartWeChat4u {
             if (!fs.existsSync(_path)) fs.writeFileSync(_path, res)
             message.push({ type: 'image', file: _path })
             toString += `{image:${_path}}`
-            common.info(this.id, `收到消息：[表情:${_path}]`)
+            lain.info(this.id, `收到消息：[表情:${_path}]`)
           })
-          .catch(err => { this.bot.emit('error', err?.tips) })
+          .catch(err => { this.bot.emit('error', err) })
         break
 
       /** 好友请求消息 */
       case this.bot.CONF.MSGTYPE_VERIFYMSG:
+        if (Cfg.WeXin.autoFriend) {
         this.bot.verifyUser(msg.RecommendInfo.UserName, msg.RecommendInfo.Ticket)
           .then(res => {
-            logger.info(`通过了 ${this.bot.Contact.getDisplayName(msg.RecommendInfo)} 好友请求`)
+            lain.info(this.id, `通过了 ${this.bot.Contact.getDisplayName(msg.RecommendInfo)} 好友请求`)
+            lain.debug(this.id, res)
           })
           .catch(err => { this.bot.emit('error', err) })
+        } else {
+          lain.info(this.id, `<好友申请:${msg.RecommendInfo.UserName}><Ticket:${msg.RecommendInfo.Ticket}>`)
+          lain.debug(this.id, msg.RecommendInfo)
+        }
         break
 
       /** 语音消息 */
@@ -315,7 +322,7 @@ export default class StartWeChat4u {
       /** 延迟下防止过快发送失败 */
       await common.sleep(300)
       try {
-        common.info(this.id, `发送消息：${i}`)
+        lain.info(this.id, `发送消息：${i}`)
         const res = await this.bot.sendMsg(i, peer_id)
         common.mark(this.id, '发送消息返回：', JSON.stringify(res))
         return {
@@ -326,7 +333,7 @@ export default class StartWeChat4u {
           ...res
         }
       } catch (err) {
-        common.info(this.id, '发送消息：', '发送消息失败：', err?.tips || err)
+        lain.info(this.id, '发送消息：', '发送消息失败：', err?.tips || err)
         const res = await this.bot.sendMsg(`发送消息失败：${err?.tips || err}`, peer_id)
         common.mark(this.id, '发送消息返回：', JSON.stringify(res))
         return {
@@ -374,11 +381,11 @@ export default class StartWeChat4u {
         case 'text':
         case 'forward':
           message.push(i.text)
-          common.info(this.id, `发送消息：${i.text}`)
+          lain.info(this.id, `发送消息：${i.text}`)
           try { await common.MsgTotal(this.id, 'WeXin') } catch { }
           break
         default:
-          common.info(this.id, `发送消息：${JSON.stringify(i)}`)
+          lain.info(this.id, `发送消息：${JSON.stringify(i)}`)
           message.push(JSON.stringify(i))
           break
       }
@@ -409,17 +416,17 @@ export default class StartWeChat4u {
     switch (res.type) {
       case 'file':
         filename = Date.now() + path.extname(file)
-        common.info(this.id, `发送消息：${type}${file}]`)
+        lain.info(this.id, `发送消息：${type}${file}]`)
         file = fs.readFileSync(file.replace(/^file:\/\//, ''))
         return { file, filename }
       case 'buffer':
-        common.info(this.id, `发送消息：${type}base64://...]`)
+        lain.info(this.id, `发送消息：${type}base64://...]`)
         return { file: Buffer.from(file), filename }
       case 'base64':
-        common.info(this.id, `发送消息：${type}base64://...]`)
+        lain.info(this.id, `发送消息：${type}base64://...]`)
         return { file: Buffer.from(file), filename }
       case 'http':
-        common.info(this.id, `发送消息：${type}${file}]`)
+        lain.info(this.id, `发送消息：${type}${file}]`)
         const url = file
         let extension = path.extname(url)
         filename = Date.now() + (extension || '')
@@ -440,10 +447,10 @@ export default class StartWeChat4u {
         file = Buffer.from(await (await fetch(file)).arrayBuffer())
         return { file, filename }
       default:
-        common.info(this.id, `发送消息：${type}${file}]`)
+        lain.info(this.id, `发送消息：${type}${file}]`)
         return { file, filename }
     }
   }
 }
 
-common.info('Lain-plugin', 'WeXin适配器加载完成')
+lain.info('Lain-plugin', 'WeXin适配器加载完成')

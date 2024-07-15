@@ -1,6 +1,5 @@
 import fs from 'fs'
 import Cfg from '../lib/config/config.js'
-import common from '../lib/common/common.js'
 import WebSocket from './WebSocket.js'
 import stdin from './stdin/stdin.js'
 import QQSDK from './QQBot/QQSDK.js'
@@ -50,11 +49,11 @@ if (JSONFile.length > 0) {
     try {
       await new WeChat4u(id, i)
     } catch (error) {
-      common.error('Lain-plugin', `微信 ${id} 登录失败，已跳过。`)
-      common.error('Lain-plugin', error)
+      lain.error('Lain-plugin', `微信 ${id} 登录失败，已跳过。`)
+      lain.error('Lain-plugin', error)
     }
   })
 }
 
-common.info('Lain-plugin', `Lain-plugin插件${Bot.lain.version}全部初始化完成~`)
-common.info('Lain-plugin', 'https://gitee.com/Zyy955/Lain-plugin')
+lain.info('Lain-plugin', `Lain-plugin插件${Bot.lain.version}全部初始化完成~`)
+lain.info('Lain-plugin', 'https://gitee.com/Zyy955/Lain-plugin')

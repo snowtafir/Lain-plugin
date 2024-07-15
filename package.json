@@ -1,6 +1,6 @@
 {
   "name": "lain-plugin",
-  "version": "1.4.5",
+  "version": "1.4.6",
   "author": "sky-summer Lain.",
   "gitee": "https://gitee.com/sky-summer/Lain-plugin",
   "type": "module",
@@ -25,7 +25,7 @@
     "express": "^4.19.1",
     "file-type": "^19.0.0",
     "get-urls": "^12.1.0",
-    "qq-group-bot": "1.0.42",
+    "qq-group-bot": "1.1.0",
     "qrcode": "^1.5.3",
     "sharp": "^0.33.1",
     "silk-wasm": "^3.2.4",

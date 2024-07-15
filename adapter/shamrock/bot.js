@@ -68,14 +68,14 @@ export default class bot {
     for (let retries = 0; retries < 5; retries++) {
       groupList = await api.get_group_list(id)
       if (!(groupList && Array.isArray(groupList))) {
-        common.error(this.id, `Shamrock群列表获取失败，正在重试：${retries + 1}`)
+        lain.error(this.id, `Shamrock群列表获取失败，正在重试：${retries + 1}`)
       }
       await common.sleep(50)
     }
 
     /** 群列表获取失败 */
     if (!groupList || !(typeof groupList === 'object')) {
-      common.error(this.id, 'Shamrock群列表获取失败次数过多，已停止重试')
+      lain.error(this.id, 'Shamrock群列表获取失败次数过多，已停止重试')
     }
 
     if (groupList && typeof groupList === 'object') {
@@ -88,7 +88,7 @@ export default class bot {
         Bot[id].gl.set(i.group_id, i)
       }
     }
-    common.debug(id, '加载群列表完成')
+    lain.debug(id, '加载群列表完成')
     return groupList
   }
 
@@ -104,7 +104,7 @@ export default class bot {
         gml[user.user_id] = user
       }
       Bot[id].gml.set(groupId, gml)
-      common.debug(id, `加载[${groupId}]群成员完成`)
+      lain.debug(id, `加载<${groupId}>群成员完成`)
     } catch (error) { }
   }
 
@@ -114,14 +114,14 @@ export default class bot {
     for (let retries = 0; retries < 5; retries++) {
       friendList = await api.get_friend_list(id)
       if (!(friendList && Array.isArray(friendList))) {
-        common.error(this.id, `Shamrock好友列表获取失败，正在重试：${retries + 1}`)
+        lain.error(this.id, `Shamrock好友列表获取失败，正在重试：${retries + 1}`)
       }
       await common.sleep(50)
     }
 
     /** 好友列表获取失败 */
     if (!friendList || !(typeof friendList === 'object')) {
-      common.error(this.id, 'Shamrock好友列表获取失败次数过多，已停止重试')
+      lain.error(this.id, 'Shamrock好友列表获取失败次数过多，已停止重试')
     }
 
     if (friendList && typeof friendList === 'object') {
@@ -134,7 +134,7 @@ export default class bot {
         Bot[id].fl.set(i.user_id, i)
       }
     }
-    common.debug(id, '加载好友列表完成')
+    lain.debug(id, '加载好友列表完成')
   }
 
   async LoadList() {
@@ -177,7 +177,7 @@ export default class bot {
           }
         }
       } catch (err) {
-        common.warn(this.id, 'Shamrock获取bkn失败。')
+        lain.warn(this.id, 'Shamrock获取bkn失败。')
       }
 
       Bot[this.id].cookies = {}
@@ -193,12 +193,12 @@ export default class bot {
           }
           Bot[this.id].cookies[domain] = ck
         }).catch(error => {
-          common.debug(this.id, `${domain} 获取cookie失败：${error}`)
+          lain.debug(this.id, `${domain} 获取cookie失败：${error}`)
         })
       }
 
       const log = `Shamrock加载资源成功：加载了${Bot[this.id].fl.size}个好友，${Bot[this.id].gl.size}个群。`
-      common.info(this.id, log)
+      lain.info(this.id, log)
       return log
     } finally {
       resList = false

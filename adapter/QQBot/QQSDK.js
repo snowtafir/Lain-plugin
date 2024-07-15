@@ -68,11 +68,13 @@ export default class QQSDK {
     if (typeof msg !== 'string' || data.length > 1) return lain.info(this.id, ...data)
     msg = msg.trim()
     try {
-      if (/^(recv from Group|recv from Guild|send to Channel)/.test(msg)) {
+      if (/^(recv from Group|recv from Guild|send to Channel|recv from User)/.test(msg)) {
         return ''
       } else if (/^send to Group/.test(msg)) {
-        msg = msg.replace(/^send to Group\([^)]+\): /, `<发送群聊:${this.id}-${msg.match(/\(([^)]+)\)/)[1]}> => `)
+        msg = msg.replace(/^send to Group\([^)]+\): /, `<发送群聊: ${this.id}-${msg.match(/\(([^)]+)\)/)[1]}> => `)
         return lain.info(this.QQBot, msg)
+      } else if (/^send to User/.test(msg)) {
+        msg = msg.replace(/^send to User\([^)]+\): /, `<发送私聊: ${this.id}-${msg.match(/\(([^)]+)\)/)[1]}> => `)
       }
     } catch { }
     return logger.info(msg)

@@ -33,25 +33,24 @@ export class QQBotDAU extends plugin {
       cron: "1 0 0 * * ?",
       /** 任务方法名 */
       fnc: async () => {
-        if (Cfg.Other.QQBotdau) {
-          await this.Task()
-          await lain.sleep(100)
-          for (let id of Bot.adapter) {
-            if (Bot?.[id]?.adapter == "QQBot" && !lain.DAU?.[id]) {
-              lain.DAU[id] = {
-                user_count: 0,
-                group_count: 0,
-                msg_count: 0,
-                send_count: 0,
-                user_cache: {},
-                group_cache: {},
-                time: moment().format('YYYY-MM-DD')
-              }
+        if (!Cfg.Other.QQBotdau) return
+        await this.Task()
+        await lain.sleep(100)
+        for (let id of Bot.adapter) {
+          if (Bot?.[id]?.adapter == "QQBot" && !lain.DAU?.[id]) {
+            lain.DAU[id] = {
+              user_count: 0,
+              group_count: 0,
+              msg_count: 0,
+              send_count: 0,
+              user_cache: {},
+              group_cache: {},
+              time: moment().format('YYYY-MM-DD')
             }
           }
-          await lain.sleep(100)
-          await this.Task()
         }
+        await lain.sleep(100)
+        await this.Task()
       }
     }
   }
@@ -250,7 +249,7 @@ export class QQBotDAU extends plugin {
           }
         }
 
-        logger.warn("[lain-plugin] 刷新DAU缓存")
+        logger.warn(`[lain-plugin][${key}] 刷新DAU缓存`)
       } catch (error) {
         logger.error('保存DAU数据出错,key: ' + key, error)
       }

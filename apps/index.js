@@ -61,15 +61,6 @@ export class Lain extends plugin {
     return await e.reply(`\n${msg.join('\n')}`, true, { at: true })
   }
 
-  /** 微信椰奶状态自定义名称 */
-  async ComName(e) {
-    const msg = e.msg.replace('#微信修改名称', '').trim()
-    const cfg = new YamlParse(Bot.lain._path + '/config.yaml')
-    cfg.set('name', msg)
-    Bot[Bot.lain.wc.uin].nickname = msg
-    return await e.reply(`修改成功，新名称为：${msg}`, false, { at: true })
-  }
-
   /** shamrock重载资源 */
   // async loadRes (e) {
   //   await e.reply('开始重载，请稍等...', true)

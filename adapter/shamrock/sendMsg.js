@@ -65,7 +65,7 @@ export default class SendMsg {
             const { file } = await api.download_file(this.id, base64.data.file)
             msg.push({ type: 'record', data: { file: `file://${file}` } })
           } catch (err) {
-            common.error(this.id, err)
+            lain.error(this.id, err)
             msg.push(await this.getFile(i, 'record'))
           }
           break
@@ -77,7 +77,7 @@ export default class SendMsg {
             const { file } = await api.download_file(this.id, base64.data.file)
             msg.push({ type: 'video', data: { file: `file://${file}` } })
           } catch (err) {
-            common.error(this.id, err)
+            lain.error(this.id, err)
             msg.push(await this.getFile(i, 'video'))
           }
           break
@@ -171,7 +171,7 @@ export default class SendMsg {
   /** 发送消息 */
   async sendMsg(id, msg, CQ, node) {
     /** 打印日志 */
-    common.info(this.id, `发送${this.isGroup ? '群' : '好友'}消息：[${id}]${CQ.join('')}`)
+    lain.info(this.id, `发送${this.isGroup ? '群' : '好友'}消息：<${id}>${CQ.join('')}`)
 
     if (CQ.includes('{image:base64://...}')) {
       try { await common.MsgTotal(this.id, 'shamrock', 'image') } catch { }
@@ -189,7 +189,7 @@ export default class SendMsg {
 
     /** 非合并转发 */
     const bot = Bot.shamrock.get(this.id)
-    if (!bot) return common.warn(this.id, '不存在此Bot')
+    if (!bot) return lain.warn(this.id, '不存在此Bot')
 
     const echo = randomUUID()
     /** 判断群聊、私聊 */
@@ -217,7 +217,7 @@ export default class SendMsg {
             ...data.data
           }
         } else {
-          common.error('Lain-plugin', data)
+          lain.error('Lain-plugin', data)
           return data
         }
       } else {

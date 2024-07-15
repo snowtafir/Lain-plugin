@@ -28,7 +28,7 @@ class Shamrock {
     /** 解析得到的JSON */
     data = JSON.parse(data)
     /** debug日志 */
-    common.debug(this.id, '[ws] received -> ', JSON.stringify(data))
+    lain.debug(this.id, '<ws> received -> ', JSON.stringify(data))
     /** 带echo事件为主动请求得到的响应，另外保存 */
     if (data?.echo) return lain.echo.set(data.echo, data)
     try {
@@ -47,11 +47,11 @@ class Shamrock {
       /** 生命周期 */
       case 'lifecycle':
         this.LoadBot()
-        common.info('Lain-plugin', `[${this.version}，${this.QQVersion}] QQ ${this.id} 建立连接成功，正在加载资源中`)
+        lain.info('Lain-plugin', `<${this.version}，${this.QQVersion}> QQ ${this.id} 建立连接成功，正在加载资源中`)
         break
       /** 心跳 */
       case 'heartbeat':
-        common.debug('Lain-plugin', `[${this.version}，${this.QQVersion}] QQ ${this.id} 收到心跳：${JSON.stringify(data.status, null, 2)}`)
+        lain.debug('Lain-plugin', `<${this.version}，${this.QQVersion}> QQ ${this.id} 收到心跳：${JSON.stringify(data.status, null, 2)}`)
         break
       default:
         logger.error(`[Shamrock][未知事件] ${JSON.stringify(data)}`)
@@ -90,7 +90,7 @@ class Shamrock {
           this.loadGroupMemberList(data.group_id)
         }
       }
-    })().catch(common.error)
+    })().catch(err => lain.error(this.id, err))
     switch (data.notice_type) {
       case 'group_recall':
         data.notice_type = 'group'
@@ -100,9 +100,9 @@ class Shamrock {
           data = { ...data, ...gl }
         } catch { }
         if (data.operator_id === data.user_id) {
-          common.info(this.id, `群消息撤回：[${data.group_id}，${data.user_id}] ${data.message_id}`)
+          lain.info(this.id, `群消息撤回：<${data.group_id}，${data.user_id}> ${data.message_id}`)
         } else {
-          common.info(this.id, `群消息撤回：[${data.group_id}]${data.operator_id} 撤回 ${data.user_id}的消息 ${data.message_id} `)
+          lain.info(this.id, `群消息撤回：<${data.group_id}>${data.operator_id} 撤回 ${data.user_id}的消息 ${data.message_id} `)
         }
         break
       case 'group_increase': {
@@ -111,15 +111,15 @@ class Shamrock {
         data.sub_type = 'increase'
         data.user_id = data.target_id
         if (this.id === data.user_id) {
-          common.info(this.id, `机器人加入群聊：[${data.group_id}}]`)
+          lain.info(this.id, `机器人加入群聊：<${data.group_id}>`)
         } else {
           switch (subType) {
             case 'invite': {
-              common.info(this.id, `[${data.operator_id}]邀请[${data.user_id}]加入了群聊[${data.group_id}] `)
+              lain.info(this.id, `<${data.operator_id}>邀请<${data.user_id}>加入了群聊<${data.group_id}>`)
               break
             }
             default: {
-              common.info(this.id, `新人${data.user_id}加入群聊[${data.group_id}] `)
+              lain.info(this.id, `新人${data.user_id}加入群聊<${data.group_id}>`)
             }
           }
         }
@@ -130,17 +130,17 @@ class Shamrock {
         data.sub_type = 'decrease'
         data.user_id = data.target_id
         if (this.id === data.user_id) {
-          common.info(this.id, data.operator_id
-            ? `机器人被[${data.operator_id}]踢出群聊：[${data.group_id}}]`
-            : `机器人退出群聊：[${data.group_id}}]`)
+          lain.info(this.id, data.operator_id
+            ? `机器人被<${data.operator_id}>踢出群聊：<${data.group_id}>`
+            : `机器人退出群聊：<${data.group_id}>`)
           // 移除该群的信息
           Bot.gl.delete(data.group_id)
           Bot[this.id].gl.delete(data.group_id)
           Bot[this.id].gml.delete(data.group_id)
         } else {
-          common.info(this.id, data.operator_id
-            ? `成员[${data.user_id}]被[${data.operator_id}]踢出群聊：[${data.group_id}}]`
-            : `成员[${data.user_id}]退出群聊[${data.group_id}}]`)
+          lain.info(this.id, data.operator_id
+            ? `成员<${data.user_id}>被<${data.operator_id}>踢出群聊：<${data.group_id}>`
+            : `成员<${data.user_id}>退出群聊<${data.group_id}>`)
         }
         return await Bot.emit('notice', await this.ICQQEvent(data))
       }
@@ -154,10 +154,10 @@ class Shamrock {
           gml[this.id] = { ...gml[this.id] }
           if (data.set) {
             gml[this.id].role = 'admin'
-            common.info(this.id, `机器人[${this.id}]在群[${data.group_id}]被设置为管理员`)
+            lain.info(this.id, `机器人<${this.id}>在群<${data.group_id}>被设置为管理员`)
           } else {
             gml[this.id].role = 'member'
-            common.info(this.id, `机器人[${this.id}]在群[${data.group_id}]被取消管理员`)
+            lain.info(this.id, `机器人<${this.id}>在群<${data.group_id}>被取消管理员`)
           }
           Bot[this.id].gml.set(data.group_id, { ...gml })
         } else {
@@ -165,10 +165,10 @@ class Shamrock {
           gml[data.target_id] = { ...gml[data.target_id] }
           if (data.set) {
             gml[data.target_id].role = 'admin'
-            common.info(this.id, `成员[${data.target_id}]在群[${data.group_id}]被设置为管理员`)
+            lain.info(this.id, `成员<${data.target_id}>在群<${data.group_id}>被设置为管理员`)
           } else {
             gml[data.target_id].role = 'member'
-            common.info(this.id, `成员[${data.target_id}]在群[${data.group_id}]被取消管理员`)
+            lain.info(this.id, `成员<${data.target_id}>在群<${data.group_id}>被取消管理员`)
           }
           Bot[this.id].gml.set(data.group_id, { ...gml })
         }
@@ -183,13 +183,13 @@ class Shamrock {
           data.sub_type = 'ban'
         }
         if (this.id === data.target_id) {
-          common.info(this.id, data.duration === 0
-            ? `机器人[${this.id}]在群[${data.group_id}]被解除禁言`
-            : `机器人[${this.id}]在群[${data.group_id}]被禁言${data.duration}秒`)
+          lain.info(this.id, data.duration === 0
+            ? `机器人<${this.id}>在群<${data.group_id}>被解除禁言`
+            : `机器人<${this.id}>在群<${data.group_id}>被禁言${data.duration}秒`)
         } else {
-          common.info(this.id, data.duration === 0
-            ? `成员[${data.target_id}]在群[${data.group_id}]被解除禁言`
-            : `成员[${data.target_id}]在群[${data.group_id}]被禁言${data.duration}秒`)
+          lain.info(this.id, data.duration === 0
+            ? `成员<${data.target_id}>在群<${data.group_id}>被解除禁言`
+            : `成员<${data.target_id}>在群<${data.group_id}>被禁言${data.duration}秒`)
         }
         // 异步加载或刷新该群的群成员列表以更新禁言时长
         this.loadGroupMemberList(data.group_id)
@@ -200,11 +200,11 @@ class Shamrock {
           case 'poke': {
             let action = data.poke_detail?.action || '戳了戳'
             let suffix = data.poke_detail?.suffix || ''
-            common.info(this.id, `[${data.operator_id}]${action}[${data.target_id}]${suffix}`)
+            lain.info(this.id, `<${data.operator_id}>${action}<${data.target_id}>${suffix}`)
             break
           }
           case 'title': {
-            common.info(this.id, `群[${data.group_id}]成员[${data.user_id}]获得头衔[${data.title}]`)
+            lain.info(this.id, `群<${data.group_id}>成员<${data.user_id}>获得头衔<${data.title}>`)
             let gml = Bot[this.id].gml.get(data.group_id)
             let user = gml[data.user_id]
             user.title = data.title
@@ -223,11 +223,11 @@ class Shamrock {
         break
       case 'essence': {
         // todo
-        common.info(this.id, `群[${data.group_id}]成员[${data.sender_id}]的消息[${data.message_id}]被[${data.operator_id}]${data.sub_type === 'add' ? '设为' : '移除'}精华`)
+        lain.info(this.id, `群<${data.group_id}>成员<${data.sender_id}>的消息<${data.message_id}>被<${data.operator_id}>${data.sub_type === 'add' ? '设为' : '移除'}精华`)
         break
       }
       case 'group_card': {
-        common.info(this.id, `群[${data.group_id}]成员[${data.user_id}]群名片变成为${data.card_new}`)
+        lain.info(this.id, `群<${data.group_id}>成员<${data.user_id}>群名片变成为${data.card_new}`)
         let gml = Bot[this.id].gml.get(data.group_id)
         let user = gml[data.user_id]
         user.card = data.card_new
@@ -242,7 +242,7 @@ class Shamrock {
           let fl = Bot[this.id].fl.get(data.user_id)
           data = { ...data, ...fl }
         } catch { }
-        common.info(this.id, `好友消息撤回：[${data.user_name}(${data.user_id})] ${data.message_id}`)
+        lain.info(this.id, `好友消息撤回：<${data.user_name}(${data.user_id})> ${data.message_id}`)
         return await Bot.emit('notice', await this.ICQQEvent(data))
       default:
     }
@@ -263,16 +263,16 @@ class Shamrock {
           data.user_id = Number(data.user_id)
         } catch { }
         if (data.sub_type === 'add') {
-          common.info(this.id, `[${data.user_id}]申请入群[${data.group_id}]: ${data.tips}`)
+          lain.info(this.id, `<${data.user_id}>申请入群<${data.group_id}>: ${data.tips}`)
         } else {
           // invite
-          common.info(this.id, `[${data.user_id}]邀请机器人入群[${data.group_id}]: ${data.tips}`)
+          lain.info(this.id, `<${data.user_id}>邀请机器人入群<${data.group_id}>: ${data.tips}`)
         }
         break
       }
       case 'friend': {
         data.sub_type = 'add'
-        common.info(this.id, `[${data.user_id}]申请加机器人[${this.id}]好友: ${data.comment}`)
+        lain.info(this.id, `<${data.user_id}>申请加机器人<${this.id}>好友: ${data.comment}`)
         break
       }
     }
@@ -288,10 +288,10 @@ class Shamrock {
           data.user_id = Number(data.user_id)
         } catch { }
         if (data.sub_type === 'add') {
-          common.info(this.id, `[${data.user_id}]申请入群[${data.group_id}]: ${data.tips}`)
+          lain.info(this.id, `<${data.user_id}>申请入群<${data.group_id}>: ${data.tips}`)
         } else {
           // invite
-          common.info(this.id, `[${data.user_id}]邀请机器人入群[${data.group_id}]: ${data.tips}`)
+          lain.info(this.id, `<${data.user_id}>邀请机器人入群<${data.group_id}>: ${data.tips}`)
         }
         break
       }
@@ -302,7 +302,7 @@ class Shamrock {
           data = { ...data, ...fl }
           data.user_id = Number(data.user_id)
         } catch { }
-        common.info(this.id, `[${data.user_id}]申请加机器人[${this.id}]好友: ${data.comment}`)
+        lain.info(this.id, `<${data.user_id}>申请加机器人<${this.id}>好友: ${data.comment}`)
         break
       }
     }
@@ -409,7 +409,7 @@ class Shamrock {
         }
       }
     } catch (err) {
-      common.warn(this.id, 'Shamrock获取bkn失败。')
+      lain.warn(this.id, 'Shamrock获取bkn失败。')
     }
 
     Bot[this.id].cookies = {}
@@ -425,12 +425,12 @@ class Shamrock {
         }
         Bot[this.id].cookies[domain] = ck
       }).catch(error => {
-        common.debug(this.id, `${domain} 获取cookie失败：${error}`)
+        lain.debug(this.id, `${domain} 获取cookie失败：${error}`)
       })
     }
 
     const log = `Shamrock加载资源成功：加载了${Bot[this.id].fl.size}个好友，${Bot[this.id].gl.size}个群。`
-    common.info(this.id, log)
+    lain.info(this.id, log)
     return log
   }
 
@@ -440,7 +440,7 @@ class Shamrock {
     for (let retries = 0; retries < 5; retries++) {
       groupList = await api.get_group_list(id)
       if (!(groupList && Array.isArray(groupList))) {
-        common.error(this.id, `Shamrock群列表获取失败，正在重试：${retries + 1}`)
+        lain.error(this.id, `Shamrock群列表获取失败，正在重试：${retries + 1}`)
       }
       await common.sleep(50)
     }
@@ -454,7 +454,7 @@ class Shamrock {
         Bot[id].gl.set(i.group_id, i)
       }
     }
-    common.debug(id, '加载群列表完成')
+    lain.debug(id, '加载群列表完成')
     return groupList
   }
 
@@ -470,7 +470,7 @@ class Shamrock {
       }
       Bot.gml.set(groupId, gml)
       Bot[id].gml.set(groupId, gml)
-      common.debug(id, `加载[${groupId}]群成员完成`)
+      lain.debug(id, `加载<${groupId}>群成员完成`)
     } catch (error) { }
   }
 
@@ -480,14 +480,14 @@ class Shamrock {
     for (let retries = 0; retries < 5; retries++) {
       friendList = await api.get_friend_list(id)
       if (!(friendList && Array.isArray(friendList))) {
-        common.error(this.id, `Shamrock好友列表获取失败，正在重试：${retries + 1}`)
+        lain.error(this.id, `Shamrock好友列表获取失败，正在重试：${retries + 1}`)
       }
       await common.sleep(50)
     }
 
     /** 好友列表获取失败 */
     if (!friendList || !(typeof friendList === 'object')) {
-      common.error(this.id, 'Shamrock好友列表获取失败次数过多，已停止重试')
+      lain.error(this.id, 'Shamrock好友列表获取失败次数过多，已停止重试')
     }
 
     if (friendList && typeof friendList === 'object') {
@@ -500,7 +500,7 @@ class Shamrock {
         Bot[id].fl.set(i.user_id, i)
       }
     }
-    common.debug(id, '加载好友列表完成')
+    lain.debug(id, '加载好友列表完成')
   }
 
   /** 群对象 */
@@ -791,7 +791,7 @@ class Shamrock {
         } catch {
           group_name = group_id
         }
-        e.log_message && common.info(this.id, `<群:${group_name || group_id}><用户:${sender?.card || sender?.nickname}(${user_id})> -> ${e.log_message}`)
+        e.log_message && lain.info(this.id, `<群:${group_name || group_id}><用户:${sender?.card || sender?.nickname}(${user_id})> -> ${e.log_message}`)
         /** 手动构建member */
         e.member = {
           info: {
@@ -813,7 +813,7 @@ class Shamrock {
         e.group = { ...this.pickGroup(group_id) }
       } else {
         /** 私聊消息 */
-        e.log_message && common.info(this.id, `<好友:${sender?.card || sender?.nickname}(${user_id})> -> ${e.log_message}`)
+        e.log_message && lain.info(this.id, `<好友:${sender?.card || sender?.nickname}(${user_id})> -> ${e.log_message}`)
         e.friend = { ...this.pickFriend(user_id) }
       }
     }
@@ -847,7 +847,7 @@ class Shamrock {
             if (e.flag) {
               return await api.set_friend_add_request(this.id, e.flag, approve)
             } else {
-              common.error(this.id, '处理好友申请失败：缺少flag参数')
+              lain.error(this.id, '处理好友申请失败：缺少flag参数')
               return false
             }
           }
@@ -864,10 +864,10 @@ class Shamrock {
           e.approve = async (approve = true) => {
             if (e.flag) return await api.set_group_add_request(this.id, e.flag, e.sub_type, approve)
             if (e.sub_type === 'add') {
-              common.error(this.id, '处理入群申请失败：缺少flag参数')
+              lain.error(this.id, '处理入群申请失败：缺少flag参数')
             } else {
               // invite
-              common.error(this.id, '处理邀请机器人入群失败：缺少flag参数')
+              lain.error(this.id, '处理邀请机器人入群失败：缺少flag参数')
             }
             return false
           }
@@ -1145,7 +1145,7 @@ class Shamrock {
       while (retryCount < 2) {
         source = await api.get_msg(this.id, msg_id)
         if (typeof source === 'string') {
-          common.error(this.id, `获取引用消息内容失败，正在重试：第 ${retryCount} 次`)
+          lain.error(this.id, `获取引用消息内容失败，正在重试：第 ${retryCount} 次`)
           retryCount++
         } else {
           break
@@ -1153,10 +1153,10 @@ class Shamrock {
       }
 
       if (typeof source === 'string') {
-        common.error(this.id, '获取引用消息内容失败，重试次数上限，已终止')
+        lain.error(this.id, '获取引用消息内容失败，重试次数上限，已终止')
         return false
       }
-      common.debug('', source)
+      lain.debug('', source)
 
       let { raw_message } = await this.getMessage(source.message, group_id, false)
 
@@ -1261,7 +1261,7 @@ class Shamrock {
             message.push({ type: 'record', data: { file } })
             raw_message.push(`<语音:${i.file}>`)
           } catch (err) {
-            common.error(this.id, '语音上传失败:', err)
+            lain.error(this.id, '语音上传失败:', err)
             /** 都报错了还发啥？...我以前写的什么牛马 */
             // msg.push(await this.getFile(i, 'record'))
             message.push({ type: 'text', data: { text: JSON.stringify(err) } })
@@ -1276,7 +1276,7 @@ class Shamrock {
             const { file } = await api.download_file(this.id, `base64://${await Bot.Base64(i.file)}`)
             message.push({ type: 'video', data: { file: `file://${file}` } })
           } catch (err) {
-            common.error(this.id, '视频上传失败:', err)
+            lain.error(this.id, '视频上传失败:', err)
             message.push({ type: 'text', data: { text: JSON.stringify(err) } })
             raw_message.push(JSON.stringify(err))
           }
@@ -1385,4 +1385,4 @@ shamrock.on('error', async error => logger.error(error))
 
 export default shamrock
 
-common.info('Lain-plugin', 'Shamrock适配器加载完成')
+lain.info('Lain-plugin', 'Shamrock适配器加载完成')

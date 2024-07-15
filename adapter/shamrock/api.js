@@ -577,7 +577,7 @@ let api = {
 
   async httpApi(id, action, headers, data, query = '') {
     if (!Cfg.Shamrock.baseUrl || !Cfg.Shamrock.baseUrl.startsWith('http')) {
-      return common.warn(id, '未配置Shamrock主动http端口')
+      return lain.warn(id, '未配置Shamrock主动http端口')
     }
     if (!headers) {
       headers = {}
@@ -589,7 +589,7 @@ let api = {
       headers.Authorization = `Bearer ${token}`
     }
     const bot = Bot[id]
-    if (!bot) return common.error(id, '不存在此Bot')
+    if (!bot) return lain.error(id, '不存在此Bot')
     let res = await fetch(baseUrl + '/' + action + query, {
       headers,
       body: data,
@@ -600,7 +600,7 @@ let api = {
       return result.data
     } else {
       let result = await res.json()
-      common.error(id, result)
+      lain.error(id, result)
       return {}
     }
   },
@@ -621,7 +621,7 @@ let api = {
       type = 'base64'
       file = file.replace('base64://', '')
     } else {
-      return common.error(id, `下载文件到缓存目录Api：未适配的格式，${file}`)
+      return lain.error(id, `下载文件到缓存目录Api：未适配的格式，${file}`)
     }
     let params = { [type]: file }
     headers ? params.headers = headers : ''
@@ -699,7 +699,7 @@ let api = {
       user_name = user_id
     }
     /** 打印日志 */
-    common.info(id, `<发好友:${user_name}> => ${raw_message}`)
+    lain.info(id, `<发好友:${user_name}> => ${raw_message}`)
 
     /** 保存发送记录 */
     if (raw_message.includes('[图片:')) {
@@ -737,7 +737,7 @@ let api = {
       group_name = group_id
     }
     /** 打印日志 */
-    common.info(id, `<发送群聊:${group_name}> => ${raw_message}`)
+    lain.info(id, `<发送群聊:${group_name}> => ${raw_message}`)
 
     /** 保存发送记录 */
     if (raw_message.includes('[图片:')) {
@@ -767,7 +767,7 @@ let api = {
   */
   async SendApi(id, action, params) {
     const echo = randomUUID()
-    common.debug(id, '[ws] send -> ' + JSON.stringify({ echo, action, params }))
+    lain.debug(id, '<ws> send -> ' + JSON.stringify({ echo, action, params }))
     Bot[id].ws.send(JSON.stringify({ echo, action, params }))
 
     for (let i = 0; i < 1200; i++) {
@@ -777,7 +777,7 @@ let api = {
         if (data.status === 'ok') {
           return data.data
         } else {
-          common.error('Lain-plugin', data)
+          lain.error('Lain-plugin', data)
           throw data
         }
       } else {

@@ -46,6 +46,7 @@ export class adapter extends plugin {
       appid: '',
       token: '',
       sandbox: false,
+      timeout: 10,
       allMsg: false,
       removeAt: false,
       secret: '',
@@ -163,6 +164,7 @@ export class adapter extends plugin {
     //   model: ${i.model}
     //   appid: ${i.appid}
     //   sandbox: ${i.sandbox}
+    //   timeout: ${i.timeout}
     //   allMsg: ${i.allMsg}
     //   token: ${i.token}
     //   secret: ${i.secret}

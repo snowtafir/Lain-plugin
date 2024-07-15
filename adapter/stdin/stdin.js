@@ -54,7 +54,7 @@ export default async function stdin() {
         user_id,
         nickname: Cfg.Stdin.name,
         sendMsg: msg => sendMsg(msg),
-        recallMsg: msg_id => common.info(uin, `撤回消息：${msg_id}`),
+        recallMsg: msg_id => lain.info(uin, `撤回消息：${msg_id}`),
         makeForwardMsg: (msg) => { return { type: "node", data: msg } },
         sendForwardMsg,
         sendFile: (file, name) => sendFile(file, name),
@@ -65,7 +65,7 @@ export default async function stdin() {
         user_id,
         nickname: Cfg.Stdin.name,
         sendMsg: msg => sendMsg(msg),
-        recallMsg: msg_id => common.info(uin, `撤回消息：${msg_id}`),
+        recallMsg: msg_id => lain.info(uin, `撤回消息：${msg_id}`),
         makeForwardMsg: (msg) => { return { type: "node", data: msg } },
         sendForwardMsg,
         sendFile: (file, name) => sendFile(file, name),
@@ -76,7 +76,7 @@ export default async function stdin() {
         user_id,
         nickname: Cfg.Stdin.name,
         sendMsg: msg => sendMsg(msg),
-        recallMsg: msg_id => common.info(uin, `撤回消息：${msg_id}`),
+        recallMsg: msg_id => lain.info(uin, `撤回消息：${msg_id}`),
         makeForwardMsg: (msg) => { return { type: "node", data: msg } },
         sendForwardMsg,
         sendFile: (file, name) => sendFile(file, name),
@@ -97,10 +97,10 @@ export default async function stdin() {
 
   rl.on('line', async (input) => {
     input = input.trim()
+    lain.info(uin, `<好友:${Cfg.Stdin.name}(${user_id})> -> ${input}`)
     if (!input) return false
-    Bot[uin].stat.recv_msg_cnt++
     const data = msg(input)
-    lain.info(uin, `<好友:${data.sender?.card || data.sender?.nickname}(${user_id})> -> ${data.raw_message}`)
+    Bot[uin].stat.recv_msg_cnt++
     Bot.emit('message', data)
   })
   await common.init('Lain:restart:stdin')
@@ -125,14 +125,14 @@ async function fileType(data) {
     file.type = await fileTypeFromBuffer(file.buffer)
     file.path = `${path}${Date.now()}.${file.type.ext}`
   } catch (err) {
-    common.error(uin, `文件类型检测错误：${logger.red(err)}`)
+    lain.error(uin, `文件类型检测错误：${logger.red(err)}`)
   }
   return file
 }
 
 function msg(msg) {
   /** 调试日志 */
-  common.debug(uin, JSON.stringify(msg))
+  lain.debug(uin, JSON.stringify(msg))
   const time = parseInt(Date.now() / 1000)
 
   let e = {
@@ -179,7 +179,7 @@ function msg(msg) {
     user_id,
     nickname: Cfg.Stdin.name,
     sendMsg: msg => sendMsg(msg),
-    recallMsg: msg_id => common.info(uin, `撤回消息：${msg_id}`),
+    recallMsg: msg_id => lain.info(uin, `撤回消息：${msg_id}`),
     makeForwardMsg: (msg) => { return { type: "node", data: msg } },
     sendForwardMsg,
     sendFile: (file, name) => sendFile(file, name),
@@ -187,7 +187,7 @@ function msg(msg) {
 
   /** 快速撤回 */
   e.recall = async (msg_id) => {
-    return common.info(uin, `撤回消息：${msg_id}`)
+    return lain.info(uin, `撤回消息：${msg_id}`)
   }
   /** 快速回复 */
   e.reply = async (reply) => {
@@ -217,18 +217,18 @@ async function sendMsg(msg) {
         if (!i.data.text) break
         if (i.data.text.match('\n'))
           i.data.text = `\n${i.data.text}`
-        common.info(uin, `发送文本：${i.data.text}`)
+        lain.info(uin, `发送文本：${i.data.text}`)
         break
       case 'image':
-        common.info(uin, `发送图片：${file.url}\n文件已保存到：${logger.cyan(file.path)}`)
+        lain.info(uin, `发送图片：${file.url}\n文件已保存到：${logger.cyan(file.path)}`)
         fs.writeFileSync(file.path, file.buffer)
         break
       case 'record':
-        common.info(uin, `发送音频：${file.url}\n文件已保存到：${logger.cyan(file.path)}`)
+        lain.info(uin, `发送音频：${file.url}\n文件已保存到：${logger.cyan(file.path)}`)
         fs.writeFileSync(file.path, file.buffer)
         break
       case 'video':
-        common.info(uin, `发送视频：${file.url}\n文件已保存到：${logger.cyan(file.path)}`)
+        lain.info(uin, `发送视频：${file.url}\n文件已保存到：${logger.cyan(file.path)}`)
         fs.writeFileSync(file.path, file.buffer)
         break
       case 'reply':
@@ -242,7 +242,7 @@ async function sendMsg(msg) {
         if (!Array.isArray(i?.data) || Object.keys(i.data).length === 0) break
         i = JSON.stringify(i)
         if (i.match('\n')) i = `\n${i}`
-        common.info(uin, `发送消息：${i}`)
+        lain.info(uin, `发送消息：${i}`)
     }
   }
   try { await common.MsgTotal(this.id, 'stdin') } catch { }
@@ -252,12 +252,12 @@ async function sendMsg(msg) {
 async function sendFile(file, name = path.basename(file)) {
   const buffer = await makeBuffer(file)
   if (!Buffer.isBuffer(buffer)) {
-    common.error(uin, `发送文件错误：找不到文件 ${logger.red(file)}`)
+    lain.error(uin, `发送文件错误：找不到文件 ${logger.red(file)}`)
     return false
   }
 
   const files = `${path}${Date.now()}-${name}`
-  common.info(uin, `发送文件：${file}\n文件已保存到：${logger.cyan(files)}`)
+  lain.info(uin, `发送文件：${file}\n文件已保存到：${logger.cyan(files)}`)
   return fs.writeFileSync(files, buffer)
 }
 
@@ -268,4 +268,4 @@ function sendForwardMsg(msg) {
   return { data: messages }
 }
 
-common.info('Lain-plugin', '标准输入适配器加载完成')
+lain.info('Lain-plugin', '标准输入适配器加载完成')

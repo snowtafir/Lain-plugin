@@ -2,6 +2,7 @@ const list = [
   { label: '铃音帮助', data: '#铃音帮助' },
   { label: '设置主人', data: '#设置主人' }
 ]
+
 export default class Button {
   constructor() {
     this.plugin = {
@@ -180,7 +181,7 @@ export default class Button {
       ],
       [
         { label: '前缀转换', data: '#QQBot设置前缀开启' },
-        { label: 'QQ图床', data: '#QQBot设置图床12345 (12345是连接在同一机器人的野生机器人的qq号)' },
+        { label: 'QQ图床', data: '#QQBot设置QQ图床12345 (12345是连接在同一机器人的野生机器人的qq号)' },
         { label: '查看连接', data: '#QQBot账号' }
       ],
       [

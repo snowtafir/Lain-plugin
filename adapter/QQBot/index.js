@@ -111,7 +111,7 @@ export default class adapterQQBot {
     if (Cfg.Other.QQBotdau) lain.DAU[this.id] = await this.getDAU()
     /** 重启 */
     await common.init('Lain:restart:QQBot')
-    return `QQBot：[${username}(${this.id})] 连接成功!`
+    return `QQBot：<${username}(${this.id})> 连接成功!`
   }
 
   /** 加载缓存中的群、好友列表 */
@@ -121,7 +121,7 @@ export default class adapterQQBot {
       List.forEach(async i => {
         const info = JSON.parse(await redis.get(i))
         info.uin = this.id
-        common.debug(this.id, "[读取缓存群，好友列表]", type, info)
+        lain.debug(this.id, "<读取缓存群，好友列表>", type, info)
         if (type === 'gl') {
           Bot[this.id].gl.set(info.group_id, info)
         } else {
@@ -129,7 +129,7 @@ export default class adapterQQBot {
         }
       })
     } catch (err) {
-      common.warn(this.id, err)
+      lain.warn(this.id, err)
     }
   }
 
@@ -192,7 +192,7 @@ export default class adapterQQBot {
       let res = (await (await fetch(`https://api.lolimi.cn/API/qqdj/api.php?uin=${user_id}`)).json()).data
       info.nickname = res?.Name
       info.card = res?.Name
-    } catch (err) { common.debug(this.id, "获取昵称异常：", err) }
+    } catch (err) { lain.debug(this.id, "获取昵称异常：\n", err) }
 
     const member = {
       info: {
@@ -229,14 +229,14 @@ export default class adapterQQBot {
   /** 转换通知消息格式 */
   async notice(data, isGroup) {
     /** 调试日志 */
-    common.warn(this.id, "[收到通知]", data)
+    lain.warn(this.id, "<收到通知>", data)
     let { self_id: tinyId, ...e } = data
   }
 
   /** 转换格式给云崽处理 */
   async message(data, isGroup) {
     /** 调试日志 */
-    common.debug(this.id, "[收到消息]", JSON.stringify(data))
+    lain.debug(this.id, "<收到消息>", JSON.stringify(data))
     let { self_id: tinyId, ...e } = data
     e.data = data
     e.bot = Bot[this.id]
@@ -246,6 +246,8 @@ export default class adapterQQBot {
     e.self_id = this.id
     e.sendMsg = data.reply
     e.raw_message = e.raw_message.trim()
+
+    lain.info(this.id, `${isGroup? `<群:${e.group_id}>` : ''}<用户:${e.user_id}> -> ${this.messageLog(e.message)}`)
 
     /** 过滤事件 */
     let priority = true
@@ -258,9 +260,8 @@ export default class adapterQQBot {
     for (let v of loader.priority) {
       // eslint-disable-next-line new-cap
       let p = new v.class(e)
-      p.e = e
       /** 判断是否启用功能 */
-      if (!this.checkDisable(e, p, raw_message)) {
+      if (!this.checkDisable(p, raw_message)) {
         priority = false
         return false
       }
@@ -295,7 +296,7 @@ export default class adapterQQBot {
         if (!await redis.get(`lain:gl:${this.id}:${e.group_id}`)) redis.set(`lain:gl:${this.id}:${e.group_id}`, JSON.stringify({ group_id: e.group_id, uin: this.id }))
         /** 防倒卖崽 */
         let tips = Cfg.getToken(this.id).other
-        common.debug(this.id, "获取配置", Cfg.getToken(this.id))
+        lain.debug(this.id, "<获取配置>", Cfg.getToken(this.id))
         if (tips.Tips) await this.QQBotTips(data, e.group_id, tips)
       } catch { }
 
@@ -316,41 +317,24 @@ export default class adapterQQBot {
 
     /** 保存消息次数 */
     try { common.recvMsg(this.id, e.adapter) } catch { }
-    lain.info(this.id, `<群:${e.group_id}><用户:${e.user_id}> -> ${this.messageLog(e.message)}`)
     /** dau统计 */
     this.msg_count(data)
     return e
   }
 
   /** 判断是否启用功能 */
-  checkDisable(e, p, raw_message) {
+  checkDisable(p, raw_message) {
     let groupCfg = Cfg.getGroup(this.id)
-    /** 白名单 */
-    if (!lodash.isEmpty(groupCfg.enable)) {
-      if (groupCfg.enable.includes(p.name)) {
-        /** 判断当前传入的值是否符合正则 */
-        for (let i of p.rule) {
-          i = new RegExp(i.reg)
-          if (i.test(raw_message.trim())) {
-            return true
-          }
-        }
-        logger.mark(`[Lain-plugin][${p.name}]功能已禁用`)
-        return false
-      }
-    }
 
-    if (!lodash.isEmpty(groupCfg.disable)) {
-      if (groupCfg.disable.includes(p.name)) {
-        /** 判断当前传入的值是否符合正则 */
-        for (let i of p.rule) {
-          i = new RegExp(i.reg)
-          if (i.test(raw_message.trim())) {
-            logger.mark(`[Lain-plugin][${p.name}]功能已禁用`)
-            return false
-          }
-        }
-      }
+    // 启用列表
+    if (groupCfg.enable?.length && !groupCfg.enable.includes(p.name)) {
+      lain.mark(this.id, `<${p.name}>功能不在白名单内`)
+      return false
+    }
+    // 禁用列表
+    if (groupCfg.disable?.length && groupCfg.disable.includes(p.name)) {
+      lain.mark(this.id, `<${p.name}>功能已禁用`)
+      return false
     }
     return true
   }
@@ -392,6 +376,12 @@ export default class adapterQQBot {
           break
         case 'text':
           logMessage.push(i.text)
+          break
+        case 'file':
+          logMessage.push(`<文件:${i.url}>`)
+          break
+        case 'video':
+          logMessage.push(`<视频:${i.url}>`)
           break
         default:
           logMessage.push(JSON.stringify(i))
@@ -435,7 +425,7 @@ export default class adapterQQBot {
 
       exec(`${cm} -i "${input}" -f s16le -ar 48000 -ac 1 "${output}"`, async (error, stdout, stderr) => {
         if (error) {
-          common.error('Lain-plugin', `执行错误: ${error}`)
+          lain.error('Lain-plugin', '执行错误: \n', error)
           reject(error)
           return
         }
@@ -462,11 +452,11 @@ export default class adapterQQBot {
         case 'forward':
           if (String(i.text).trim()) {
             if (i.type === 'forward') {
-              common.debug(this.id, "解析转发消息", i)
+              lain.debug(this.id, "<解析转发消息>", i)
               // i.text = String(i.text).trim()
               for (let i2 of i.text) {
                 if (i2?.type == "image") image.push(await this.getImage(i2.file, e))
-                else if (i2?.type == "button") button.push(Bot.Button(i2.data))
+                else if (i2?.type == "button") button.push(i2)
                 else if (String(i2).trim()) {
                   let i3 = i2?.type == "text" ? i2.text.trim() : String(i2).trim()
                   /** 模板1、4使用按钮替换连接 */
@@ -531,10 +521,20 @@ export default class adapterQQBot {
           reply = i
           break
         case 'button':
-          button.push(Bot.Button(i.data))
+          if (!i?.buttons || !i.buttons[0]?.action) {
+            lain.warn(this.id, "按钮格式错误")
+            lain.debug(this.id, JSON.stringify(i))
+            break
+          }
+          button.push(i)
           break
         case 'ark':
         case 'markdown':
+          if (i.type === "markdown" && !(i?.content || i?.template_id)) {
+            lain.warn(this.id, "Markdown格式错误")
+            lain.debug(this.id, JSON.stringify(i))
+            break
+          }
           message.push(i)
           break
         default:
@@ -602,7 +602,7 @@ export default class adapterQQBot {
             if (image.length) Pieces.push(...image)
           }
         } catch (error) {
-          common.error(this.id, error)
+          lain.error(this.id, error)
         }
         break
       /** 原样发送并遍历插件，自动补发一条按钮模板消息 */
@@ -626,7 +626,7 @@ export default class adapterQQBot {
             Pieces.push(markdown)
           }
         } catch (error) {
-          common.error(this.id, error)
+          lain.error(this.id, error)
         }
         break
       case 4:
@@ -644,7 +644,7 @@ export default class adapterQQBot {
             button.length = 0
           }
         } catch (_err) {
-          common.error(this.id, _err)
+          lain.error(this.id, _err)
           if (text.length) message.push({ type: 'text', text: text.join('\n') })
           if (image.length) message.push(image.shift())
           if (image.length) Pieces.push(...image)
@@ -668,10 +668,10 @@ export default class adapterQQBot {
     if (sharp) {
       let file2 = await Bot.Buffer(file)
       let filetype = await fileTypeFromBuffer(file2)
-      common.mark(this.id, "[原类型]", filetype)
+      lain.mark(this.id, "<原类型>", filetype)
       if (!["jpg", "png", "gif"].includes(filetype?.ext)) {
         file = await sharp(file2).jpeg({ quality: 100 }).toBuffer()
-        common.mark(this.id, "[转换后类型]", await fileTypeFromBuffer(file))
+        lain.mark(this.id, "<转换后类型>", await fileTypeFromBuffer(file))
       }
     }
     file = await Bot.FormatFile(file)
@@ -684,25 +684,25 @@ export default class adapterQQBot {
       /** 自定义图床 */
       if (Bot?.imageToUrl) {
         const { width, height, url } = await Bot.imageToUrl(file)
-        common.mark('Lain-plugin', `使用自定义图床发送图片：${url}`)
+        lain.mark('Lain-plugin', `使用自定义图床发送图片：${url}`)
         return { type, file: url, width, height }
       } else if (Bot?.uploadFile) {
         /** 老接口，后续废除 */
         const url = await Bot.uploadFile(file, type)
-        common.mark('Lain-plugin', `使用自定义图床发送图片：${url}`)
+        lain.mark('Lain-plugin', `使用自定义图床发送图片：${url}`)
         const { width, height } = sizeOf(await Bot.Buffer(file))
-        logger.warn('[Bot.uploadFile]接口即将废除，请查看文档更换新接口！')
+        logger.warn('<Bot.uploadFile>接口即将废除，请查看文档更换新接口！')
         return { type, file: url, width, height }
       }
       /** ICQQ */
       if (Cfg.ICQQ && lain?.file?.uploadImage) {
         const { url, width, height } = await lain.file.uploadImage(file)
-        common.mark('Lain-plugin', `使用ICQQ发送图片：${url}`)
+        lain.mark('Lain-plugin', `使用ICQQ发送图片：${url}`)
         return { type, file: url, width, height }
       }
     } catch (error) {
-      common.error(this.id, '[调用错误][自定义图床] 将继续公网发送图片')
-      common.error(this.id, error)
+      lain.error(this.id, '<调用错误><自定义图床> 将继续公网发送图片')
+      lain.error(this.id, error)
     }
 
     try {
@@ -710,17 +710,17 @@ export default class adapterQQBot {
       const QQCloud = Bot[this.id].config.other.QQCloud
       if (QQCloud) {
         const { width, height, url } = await Bot.uploadQQ(file, QQCloud)
-        common.mark('Lain-plugin', `QQ图床上传成功：${url}`)
+        lain.mark('Lain-plugin', `QQ图床上传成功：${url}`)
         return { type, file: url, width, height }
       }
     } catch (error) {
-      common.error(this.id, '[调用错误][QQ图床] 将继续公网发送图片')
-      common.error(this.id, error)
+      lain.error(this.id, '<调用错误><QQ图床> 将继续公网发送图片')
+      lain.error(this.id, error)
     }
 
     /** 公网 */
     const { width, height, url } = await Bot.FileToUrl(file)
-    common.mark('Lain-plugin', `使用公网临时服务器：${url}`)
+    lain.mark('Lain-plugin', `使用公网临时服务器：${url}`)
     return { type, file: url, width, height }
   }
 
@@ -748,12 +748,12 @@ export default class adapterQQBot {
       /** ICQQ */
       if (Cfg.ICQQ && lain?.file?.uploadPtt) {
         const url = await lain.file.uploadPtt(file)
-        common.mark('Lain-plugin', `使用ICQQ发送语音：${url}`)
+        lain.mark('Lain-plugin', `使用ICQQ发送语音：${url}`)
         return { type: 'audio', file: url }
       }
     } catch (error) {
-      common.error(this.id, '云转码失败')
-      common.error(this.id, error)
+      lain.error(this.id, '云转码失败')
+      lain.error(this.id, error)
     }
 
     const type = 'audio'
@@ -767,8 +767,8 @@ export default class adapterQQBot {
     fs.writeFileSync(mp3, await Bot.Buffer(file))
     /** mp3 转 pcm */
     await this.runFfmpeg(mp3, pcm)
-    common.mark('Lain-plugin', 'mp3 => pcm 完成!')
-    common.mark('Lain-plugin', 'pcm => silk 进行中!')
+    lain.mark('Lain-plugin', 'mp3 => pcm 完成!')
+    lain.mark('Lain-plugin', 'pcm => silk 进行中!')
 
     /** pcm 转 silk */
     await encodeSilk(fs.readFileSync(pcm), 48000)
@@ -779,15 +779,15 @@ export default class adapterQQBot {
         fs.promises.unlink(mp3, () => { })
         /** 删除pcm文件 */
         fs.promises.unlink(pcm, () => { })
-        common.mark('Lain-plugin', 'pcm => silk 完成!')
+        lain.mark('Lain-plugin', 'pcm => silk 完成!')
       })
       .catch((err) => {
         /** 删除初始mp3文件 */
         fs.promises.unlink(mp3, () => { })
         /** 删除pcm文件 */
         fs.promises.unlink(pcm, () => { })
-        common.error('Lain-plugin', `转码失败${err}`)
-        return { type: 'text', text: `转码失败${err}` }
+        lain.error('Lain-plugin', '转码失败：\n', err)
+        return { type: 'text', text: `转码失败${err.message}` }
       })
 
     const url = `file://${silk}`
@@ -840,7 +840,7 @@ export default class adapterQQBot {
         }
       }
     } catch (error) {
-      common.error('Lain-plugin', error)
+      lain.error('Lain-plugin', error)
       return false
     }
   }
@@ -863,9 +863,9 @@ export default class adapterQQBot {
       try {
         let res = await this.sdk.sendPrivateMessage(user_id, i, this.sdk)
         ret.res.push(res)
-        logger.debug('发送主动好友消息：', JSON.stringify(i), res)
+        lain.debug(this.id, '发送主动好友消息：', JSON.stringify(i).replace(/base64:\/\/.*?(,|]|")/g, "base64://...$1"), res)
       } catch(err) {
-        logger.error('发送主动好友消息：', err)
+        lain.error(this.id, '发送主动好友消息错误：', err)
         ret.error.push(err)
       }
       this.send_count()
@@ -892,9 +892,9 @@ export default class adapterQQBot {
       try {
         let res = await this.sdk.sendGroupMessage(group_id, i, this.sdk)
         ret.res.push(res)
-        logger.debug('发送主动群消息：', JSON.stringify(i), res)
+        lain.debug(this.id, '发送主动群消息：', JSON.stringify(i).replace(/base64:\/\/.*?(,|]|")/g, "base64://...$1"), res)
       } catch(err) {
-        logger.error("发送主动群消息：", err)
+        lain.error(this.id, "发送主动群消息错误：", err)
         ret.error.push(err)
       }
       this.send_count()
@@ -907,15 +907,15 @@ export default class adapterQQBot {
     if (typeof msg === 'string' && msg.includes('歌曲分享失败：')) return false
     let res
     const { Pieces, normalMsg } = await this.getQQBot(msg, e)
-    common.debug(this.id, 1, Pieces)
+    lain.debug(this.id, 1, JSON.stringify(Pieces).replace(/base64:\/\/.*?(,|]|")/g, "base64://...$1"))
 
     for (let msg of Pieces) {
       msg = await msg
-      common.debug(this.id, 2, msg)
+      lain.debug(this.id, 2, JSON.stringify(msg).replace(/base64:\/\/.*?(,|]|")/g, "base64://...$1"))
       if (!msg || (Array.isArray(msg) && !msg?.length)) continue
-      common.debug(this.id, 3, msg)
+      lain.debug(this.id, 3, JSON.stringify(msg).replace(/base64:\/\/.*?(,|]|")/g, "base64://...$1"))
       let { ok, data } = await this.sendMsg(e, msg)
-      common.debug(this.id, 4, ok, data)
+      lain.debug(this.id, 4, ok, data)
       if (ok) { res = data; continue; }
 
       /** 错误文本处理 */
@@ -949,18 +949,21 @@ export default class adapterQQBot {
   async sendMsg(e, msg) {
     try {
       this.send_count()
-      logger.debug('发送回复消息：', JSON.stringify(msg))
-      msg = Array.isArray(msg) ? [{ type: 'reply', id: e.message_id }, { type: 'text', text: '\n' }, ...msg] : [{ type: 'reply', id: e.message_id }, { type: 'text', text: '\n' }, msg]
+      lain.debug(this.id, '发送回复消息：', JSON.stringify(msg).replace(/base64:\/\/.*?(,|]|")/g, "base64://...$1"))
+      const newMsg = [{ type: 'reply', id: e.message_id }]
       let res
       if (!e.friend) {
-        res = { ok: true, data: await this.sdk.sendGroupMessage(e.data.group_id, msg, this.sdk) }
+        newMsg.push({ type: 'text', text: '\n' })
+        Array.isArray(msg) ? newMsg.push(...msg) : newMsg.push(msg)
+        res = { ok: true, data: await this.sdk.sendGroupMessage(e.data.group_id, newMsg, this.sdk) }
       } else {
-        res = { ok: true, data: await this.sdk.sendPrivateMessage(e.data.user_id, msg, this.sdk) }
+        Array.isArray(msg) ? newMsg.push(...msg) : newMsg.push(msg)
+        res = { ok: true, data: await this.sdk.sendPrivateMessage(e.data.user_id, newMsg, this.sdk) }
       }
       return res
     } catch (err) {
       const error = err.message || err
-      common.error(this.id, err)
+      lain.error(this.id, err)
       return { ok: false, data: error }
     }
   }
@@ -976,7 +979,7 @@ export default class adapterQQBot {
       time,
       message_id: res?.id
     }
-    common.debug('Lain-plugin', res)
+    lain.debug('Lain-plugin', res)
     return res
   }
 
@@ -1040,7 +1043,7 @@ export default class adapterQQBot {
       const EX = Math.round((new Date(time).getTime() - new Date().getTime()) / 1000)
       redis.set(`QQBotDAU:send_count:${this.id}`, lain.DAU[this.id].send_count * 1, { EX })
     } catch (error) {
-      common.error(this.id, error)
+      lain.error(this.id, error)
     }
   }
 
@@ -1054,7 +1057,7 @@ export default class adapterQQBot {
       const EX = Math.round((new Date(time).getTime() - new Date().getTime()) / 1000)
       redis.set(`QQBotDAU:send_count:${this.id}`, lain.DAU[this.id].send_count * 1, { EX })
     } catch (error) {
-      common.error(this.id, error)
+      lain.error(this.id, error)
     }
   }
 
@@ -1080,9 +1083,9 @@ export default class adapterQQBot {
       if (needSetRedis) redis.set(`QQBotDAU:${this.id}`, JSON.stringify(lain.DAU[this.id]), { EX })
       redis.set(`QQBotDAU:msg_count:${this.id}`, lain.DAU[this.id].msg_count * 1, { EX })
     } catch (error) {
-      common.error(this.id, error)
+      lain.error(this.id, error)
     }
   }
 }
 
-common.info('Lain-plugin', 'QQ群Bot适配器加载完成')
+lain.info('Lain-plugin', 'QQ群Bot适配器加载完成')
