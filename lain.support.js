@@ -4,7 +4,7 @@ const list = [
 ]
 
 export default class Button {
-  constructor() {
+  constructor () {
     this.plugin = {
       name: 'Lain-plugin',
       dsc: '铃音插件',
@@ -83,7 +83,7 @@ export default class Button {
     }
   }
 
-  Id(e) {
+  Id (e) {
     const button = [
       { label: '群聊ID', data: `${e.group_id}`, reply: true },
       { label: '用户ID', data: `${e.user_id}`, reply: true }
@@ -91,7 +91,7 @@ export default class Button {
     return Bot.Button(button)
   }
 
-  menu(e) {
+  menu (e) {
     const button = [
       list,
       [
@@ -111,7 +111,7 @@ export default class Button {
     return Bot.Button(button)
   }
 
-  bot() {
+  bot () {
     const button = [
       list,
       [
@@ -124,7 +124,7 @@ export default class Button {
     return Bot.Button(button)
   }
 
-  stdin() {
+  stdin () {
     const button = [
       list,
       [
@@ -137,7 +137,7 @@ export default class Button {
     return Bot.Button(button)
   }
 
-  shamrock() {
+  shamrock () {
     const button = [
       list,
       [
@@ -149,7 +149,7 @@ export default class Button {
     return Bot.Button(button)
   }
 
-  wechat() {
+  wechat () {
     const button = [
       list,
       [
@@ -171,7 +171,7 @@ export default class Button {
     return Bot.Button(button)
   }
 
-  qqbot() {
+  qqbot () {
     const button = [
       list,
       [

@@ -2,11 +2,11 @@ import { Bot as QQBot } from 'qq-group-bot'
 import Cfg from '../../../../lib/config/config.js'
 
 export default class QQSDK {
-  constructor(config) {
+  constructor (config) {
     this.config = config
   }
 
-  async start() {
+  async start () {
     /** appid */
     this.id = this.config.appid
     /** 移除at */
@@ -63,7 +63,7 @@ export default class QQSDK {
   }
 
   /** 修改一下日志 */
-  logger(...data) {
+  logger (...data) {
     let msg = data[0]
     if (typeof msg !== 'string' || data.length > 1) return lain.info(this.id, ...data)
     msg = msg.trim()

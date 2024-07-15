@@ -8,7 +8,7 @@ import { faceMap } from '../../model/shamrock/face.js'
 
 export default class adapterQQGuild {
   /** 传入基本配置 */
-  constructor(sdk) {
+  constructor (sdk) {
     /** sdk */
     this.sdk = sdk
     /** 基本配置 */
@@ -19,7 +19,7 @@ export default class adapterQQGuild {
     this.StartBot()
   }
 
-  async StartBot() {
+  async StartBot () {
     this.sdk.on('message.guild', async (data) => {
       data = await this.GroupMessage(data)
       data && Bot.emit('message', data)
@@ -43,11 +43,12 @@ export default class adapterQQGuild {
       let txurl = `${process.cwd()}/resources/Avatar/`
       if (fs.existsSync(txurl)) {
         let tx_img = []
-        for (let txlb of fs.readdirSync(txurl))
-          if (txlb.includes('.'))
-            tx_img.push(txurl + txlb)
-        if (tx_img.length > 0)
-          avatar = tx_img[Math.floor(Math.random() * tx_img.length)];
+        for (let txlb of fs.readdirSync(txurl)) {
+          if (txlb.includes('.')) { tx_img.push(txurl + txlb) }
+        }
+        if (tx_img.length > 0) {
+          avatar = tx_img[Math.floor(Math.random() * tx_img.length)]
+        }
       }
       username = 'QQGuild'
     }
@@ -89,11 +90,11 @@ export default class adapterQQGuild {
     return lain.info(this.id, `QQGuild：[${username}(${this.id})] 连接成功!`)
   }
 
-  async gmlList(type = 'gl') {
+  async gmlList (type = 'gl') {
 
   }
 
-  async GroupMessage(e, friend) {
+  async GroupMessage (e, friend) {
     let { self_id: _tiny_id, _bot, ...data } = e
     const { guild_id, channel_id, member, author, src_guild_id } = e
     const { id: userId, username: nickname, avatar } = author
@@ -199,7 +200,7 @@ export default class adapterQQGuild {
   }
 
   /** 获取群名称 */
-  async getGroupName(guildId, channelId, friend) {
+  async getGroupName (guildId, channelId, friend) {
     const group_id = `qg_${guildId}-${channelId}`
     let group_name = Bot.gl.get(group_id)
     if (group_name) return group_name.group_name
@@ -224,7 +225,7 @@ export default class adapterQQGuild {
   }
 
   /** 群对象 */
-  pickGroup(groupID) {
+  pickGroup (groupID) {
     return {
       is_admin: false,
       is_owner: false,
@@ -254,7 +255,7 @@ export default class adapterQQGuild {
   }
 
   /** 好友对象 */
-  pickFriend(userId) {
+  pickFriend (userId) {
     return {
       sendMsg: async (group_id, msg) => await this.sendFriendMsg(group_id, userId, msg),
       makeForwardMsg: async (data) => await common.makeForwardMsg(data),
@@ -263,7 +264,7 @@ export default class adapterQQGuild {
     }
   }
 
-  pickMember(groupID, userID) {
+  pickMember (groupID, userID) {
     return {
       member: this.member(groupID, userID),
       getAvatarUrl: (size = 0, userID) => `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${userID.split('-')[1] || this.id}`
@@ -271,7 +272,7 @@ export default class adapterQQGuild {
   }
 
   /** 处理消息事件 */
-  async getMessage(data) {
+  async getMessage (data) {
     const message = []
     const ToString = []
     const raw_message = []
@@ -341,7 +342,7 @@ export default class adapterQQGuild {
   }
 
   /** 处理回复消息 */
-  async sendReplyMsg(data, msg, quote) {
+  async sendReplyMsg (data, msg, quote) {
     let { Pieces, messageLog } = await this.getQQGuild(msg)
     const info = data.message_type === 'group' ? '频道' : '私信'
     lain.info(this.id, `<回复${info}:${data.group_name}(${data.group_id})> => ${messageLog}`)
@@ -358,7 +359,7 @@ export default class adapterQQGuild {
   }
 
   /** 转换message为sdk可接收的格式 */
-  async getQQGuild(data) {
+  async getQQGuild (data) {
     data = common.array(data)
     let reply
     const text = []
@@ -421,7 +422,7 @@ export default class adapterQQGuild {
   }
 
   /** 判断是否启用功能 */
-  checkDisable(e, p, raw_message) {
+  checkDisable (e, p, raw_message) {
     let groupCfg = Cfg.getGroup(e.self_id)
     /** 白名单 */
     if (!lodash.isEmpty(groupCfg.enable)) {
@@ -454,7 +455,7 @@ export default class adapterQQGuild {
   }
 
   /** 前缀处理 */
-  hasAlias(text, e, hasAlias = true) {
+  hasAlias (text, e, hasAlias = true) {
     text = text.trim()
     if (Bot[this.id].config.other.Prefix && text.startsWith('/')) {
       return text.replace(/^\//, '#')
@@ -478,7 +479,7 @@ export default class adapterQQGuild {
   }
 
   /** 日志 */
-  messageLog(message) {
+  messageLog (message) {
     const logMessage = []
     message.forEach(i => {
       switch (i.type) {
@@ -499,7 +500,7 @@ export default class adapterQQGuild {
   }
 
   /** 转换message */
-  async getQQBot(data, e) {
+  async getQQBot (data, e) {
     data = common.array(data)
     let reply
     const text = []
@@ -643,7 +644,7 @@ export default class adapterQQGuild {
   }
 
   /** 发送主动私信消息 */
-  async sendFriendMsg(group_id, user_id, data) {
+  async sendFriendMsg (group_id, user_id, data) {
     /** 暂时屏蔽下 */
     if (!(group_id || user_id || data)) {
       throw new Error('不存在此频道，正确请求格式：Bot.pickFriend(user_id).sendMsg(group_id, msg)')
@@ -668,7 +669,7 @@ export default class adapterQQGuild {
   }
 
   /** 发送主动群消息 */
-  async sendGroupMsg(groupID, data) {
+  async sendGroupMsg (groupID, data) {
     const channel_id = groupID.replace('qg_', '').split('-')[1]
     let { Pieces, messageLog, reply } = await this.getQQGuild(data)
     lain.info(this.id, `<发送主动频道消息:${groupID})> => ${messageLog}`)

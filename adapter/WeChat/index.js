@@ -6,7 +6,7 @@ import Cfg from '../../lib/config/config.js'
 
 class AdapterComWeChat {
   /** 传入基本配置 */
-  constructor(bot, request) {
+  constructor (bot, request) {
     /** 存一下 */
     bot.request = request
     /** 连接key */
@@ -25,7 +25,7 @@ class AdapterComWeChat {
   }
 
   /** 处理监听事件 */
-  async event(data) {
+  async event (data) {
     data = JSON.parse(data)
     lain.debug('Lain-plugin ws => ', JSON.stringify(data))
     /** 带echo的属于主动请求的响应，另外保存 */
@@ -35,7 +35,7 @@ class AdapterComWeChat {
   }
 
   /** 元事件 */
-  async meta(data) {
+  async meta (data) {
     /** 处理事件 */
     switch (data.detail_type) {
       /** 连接建立成功 */
@@ -62,7 +62,7 @@ class AdapterComWeChat {
   }
 
   /** 消息事件 */
-  async message(data) {
+  async message (data) {
     /** 处理事件 */
     switch (data.detail_type) {
       /** 私聊消息事件 */
@@ -81,7 +81,7 @@ class AdapterComWeChat {
   }
 
   /** 请求事件 */
-  async request(data) {
+  async request (data) {
     /** 处理事件 */
     switch (data.detail_type) {
       /** 添加好友请求 */
@@ -103,7 +103,7 @@ class AdapterComWeChat {
   }
 
   /** 通知事件 */
-  async notice(data) {
+  async notice (data) {
     /** 处理事件 */
     switch (data.detail_type) {
       /** 私聊拍一拍 */
@@ -122,7 +122,7 @@ class AdapterComWeChat {
   }
 
   /** 注册Bot */
-  async LoadBot() {
+  async LoadBot () {
     const data = await this.sendApi('get_self_info', {})
     /** 构建基本参数 */
     Bot[this.id] = {
@@ -168,7 +168,7 @@ class AdapterComWeChat {
   }
 
   /** 加载资源 */
-  async loadRes() {
+  async loadRes () {
     /** 获取群聊列表啦~ */
     const group_list = await this.sendApi('get_group_list', {})
 
@@ -193,7 +193,7 @@ class AdapterComWeChat {
   }
 
   /** 发送请求 */
-  async sendApi(action, params) {
+  async sendApi (action, params) {
     const echo = randomUUID()
     lain.debug(this.id, '[ws] send -> ', JSON.stringify({ echo, action, params }))
     this.bot.send(JSON.stringify({ echo, action, params }))
@@ -222,7 +222,7 @@ class AdapterComWeChat {
   }
 
   /** 消息转换为ICQQ格式 */
-  async ICQQMessage(data) {
+  async ICQQMessage (data) {
     if (!data.message) data.message = [{ type: 'poke', data: { id: '' } }]
     let { message, ToString, raw_message, log_message } = await this.getMessage(data.message)
 
@@ -329,7 +329,7 @@ class AdapterComWeChat {
   }
 
   /** 构建message */
-  async getMessage(msg) {
+  async getMessage (msg) {
     let message = []
     let ToString = []
     let log_message = []
@@ -403,7 +403,7 @@ class AdapterComWeChat {
     return { message, ToString, raw_message, log_message }
   }
 
-  async pickMember(group_id, user_id) {
+  async pickMember (group_id, user_id) {
     let info = {
       group_id,
       user_id
@@ -416,7 +416,7 @@ class AdapterComWeChat {
   }
 
   /** 发好友消息 */
-  async sendFriendMsg(user_id, data) {
+  async sendFriendMsg (user_id, data) {
     const { message, raw_message } = await this.ComWeChatMessage(data, true)
     const params = {
       user_id,
@@ -428,7 +428,7 @@ class AdapterComWeChat {
   }
 
   /** 发群聊消息 */
-  async sendGroupMsg(group_id, data) {
+  async sendGroupMsg (group_id, data) {
     const { message, raw_message } = await this.ComWeChatMessage(data)
     const params = {
       group_id,
@@ -440,7 +440,7 @@ class AdapterComWeChat {
   }
 
   /** 转换为ComWeChat能使用的格式 */
-  async ComWeChatMessage(data, friend) {
+  async ComWeChatMessage (data, friend) {
     /** 标准化消息内容 */
     data = common.array(data)
     /** 保存 Shamrock标准 message */
@@ -506,7 +506,7 @@ class AdapterComWeChat {
   }
 
   /** 上传文件、图片 */
-  async get_file_id(type, i) {
+  async get_file_id (type, i) {
     const file = await Bot.Base64(i)
     const buffer = await Bot.Buffer(`base64://${file}`)
     let name = `${Date.now()}.png`
@@ -527,7 +527,7 @@ class AdapterComWeChat {
   }
 
   /** 群对象 */
-  pickGroup(group_id) {
+  pickGroup (group_id) {
     return {
       is_admin: false,
       is_owner: false,
@@ -542,7 +542,7 @@ class AdapterComWeChat {
   }
 
   /** 好友对象 */
-  pickFriend(user_id) {
+  pickFriend (user_id) {
     return {
       sendMsg: async (msg) => await this.sendFriendMsg(user_id, msg),
       recallMsg: async () => '',
@@ -553,11 +553,11 @@ class AdapterComWeChat {
   }
 
   /** 群成员列表 */
-  async getMemberMap(group_id) {
+  async getMemberMap (group_id) {
     return await this.sendApi('get_group_list', { group_id })
   }
 
-  async getGroupMemberInfo(group_id, user_id) {
+  async getGroupMemberInfo (group_id, user_id) {
     return await this.sendApi('get_group_member_info', { group_id, user_id })
   }
 }

@@ -7,7 +7,7 @@ import { fileTypeFromBuffer } from 'file-type'
 
 export default class SendMsg {
   /** 传入基本配置 */
-  constructor(id, data) {
+  constructor (id, data) {
     /** 开发者id */
     this.id = id
     const { group_id, detail_type, user_id } = data
@@ -17,7 +17,7 @@ export default class SendMsg {
   }
 
   /** 发送消息 */
-  async message(msg) {
+  async message (msg) {
     /** 将云崽过来的消息统一为数组 */
     msg = await common.array(msg)
     /** 发送 */
@@ -25,7 +25,7 @@ export default class SendMsg {
   }
 
   /** 转换格式并发送消息 */
-  async wc_msg(msg) {
+  async wc_msg (msg) {
     const content = []
     /** 单独存储多图片，严格按照图片顺序进行发送 */
     const ArrImg = []
@@ -57,6 +57,7 @@ export default class SendMsg {
             type: 'wx.emoji',
             data: { file_id: i.text }
           })
+          break
         case 'file':
           break
         case 'record':
@@ -64,6 +65,7 @@ export default class SendMsg {
         case 'video':
           break
         case 'image':
+          // eslint-disable-next-line no-case-declarations
           const img = await this.get_file_id(i)
           if (img?.type === 'text') {
             content.push(img)
@@ -102,25 +104,22 @@ export default class SendMsg {
   }
 
   /** 上传图片获取图片id */
-  async get_file_id(i) {
+  async get_file_id (i) {
     let name
     let type = 'data'
     let file = i.file
 
-    /** 特殊格式？... */
     if (i.file?.type === 'Buffer') {
+      /** 特殊格式？... */
       file = `base64://${Buffer.from(i.file.data).toString('base64')}`
-    }
-    /** 将二进制的base64转字符串 防止报错 */
-    else if (i.file instanceof Uint8Array) {
+    } else if (i.file instanceof Uint8Array) {
+      /** 将二进制的base64转字符串 防止报错 */
       file = `base64://${Buffer.from(i.file).toString('base64')}`
-    }
-    /** 天知道从哪里蹦出来的... */
-    else if (i.file instanceof fs.ReadStream) {
+    } else if (i.file instanceof fs.ReadStream) {
+      /** 天知道从哪里蹦出来的... */
       file = `./${i.file.path}`
-    }
-    /** 去掉本地图片的前缀 */
-    else if (typeof i.file === 'string') {
+    } else if (typeof i.file === 'string') {
+      /** 去掉本地图片的前缀 */
       file = i.file.replace(/^file:\/\//, '') || i.url
       if (fs.existsSync(i.file.replace(/^file:\/\//, ''))) {
         file = i.file.replace(/^file:\/\//, '')
@@ -129,18 +128,16 @@ export default class SendMsg {
       }
     }
 
-    /** 本地文件 */
     if (fs.existsSync(file)) {
+      /** 本地文件 */
       name = path.basename(file)
       file = fs.readFileSync(file).toString('base64')
-    }
-    /** base64 */
-    else if (/^base64:\/\//.test(file)) {
+    } else if (/^base64:\/\//.test(file)) {
+      /** base64 */
       file = file.replace(/^base64:\/\//, '')
       name = `${Date.now()}.${(await fileTypeFromBuffer(Buffer.from(file, 'base64'))).ext}`
-    }
-    /** url图片 */
-    else if (/^http(s)?:\/\//.test(file)) {
+    } else if (/^http(s)?:\/\//.test(file)) {
+      /** url图片 */
       file = Buffer.from(await (await fetch(file)).arrayBuffer()).toString('base64')
       name = `${Date.now()}.${(await fileTypeFromBuffer(Buffer.from(file, 'base64'))).ext}`
     } else {

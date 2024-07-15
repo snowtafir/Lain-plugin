@@ -3,7 +3,7 @@ import common from '../lib/common/common.js'
 import YamlHandler from '../model/YamlHandler.js'
 
 export class admin extends plugin {
-  constructor() {
+  constructor () {
     super({
       name: 'Lain设置',
       dsc: '',
@@ -19,7 +19,7 @@ export class admin extends plugin {
     })
   }
 
-  async admin() {
+  async admin () {
     const actions = [
       {
         regex: /#(Lain|铃音)设置端口/i,
@@ -113,7 +113,7 @@ export class admin extends plugin {
     return await this.Rending()
   }
 
-  async yamlData(app, name, msg) {
+  async yamlData (app, name, msg) {
     const config = new YamlHandler(lain._pathCfg + `/${app}.yaml`)
     config.set(name, msg)
     /** 热更需要延迟 */
@@ -122,7 +122,7 @@ export class admin extends plugin {
   }
 
   /** 渲染 */
-  async Rending() {
+  async Rending () {
     let data = {
       head: this.head('Lain管理面板', '铃音设置'),
       box: this.box(this.adminUl()),
@@ -132,7 +132,7 @@ export class admin extends plugin {
     return await this.reply(await common.Rending(data, 'admin/index'))
   }
 
-  adminUl() {
+  adminUl () {
     const ul = []
     const Server = Cfg.Server
     const Shamrock = Cfg.Shamrock
@@ -250,7 +250,7 @@ export class admin extends plugin {
     return ul
   }
 
-  head(label, title) {
+  head (label, title) {
     return `    <div class="info_box">
       <div class="head-box type">
         <div class="label">${label}</div>
@@ -259,7 +259,7 @@ export class admin extends plugin {
     </div>`
   }
 
-  box(ul) {
+  box (ul) {
     const config = []
     ul.forEach(i => {
       const box = []
@@ -285,7 +285,7 @@ export class admin extends plugin {
     return config
   }
 
-  copyright() {
+  copyright () {
     return `<div class="copyright">Created By ${Bot.lain.adapter.lain.apk.display}<span class="version">${Bot.lain.adapter.lain.apk.version}</span> & Lain-Plugin<span class="version">${Bot.lain.adapter.lain.version.version}</span></div>`
   }
 }

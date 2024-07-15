@@ -3,14 +3,14 @@ import moment from 'moment'
 import chokidar from 'chokidar'
 
 class Button {
-  constructor() {
+  constructor () {
     this.plugin = './plugins'
     this.botModules = []
     this.initialize()
   }
 
   /** 加载按钮 */
-  async loadModule(filePath) {
+  async loadModule (filePath) {
     filePath = filePath.replace(/\\/g, '/')
     try {
       let Plugin = (await import(`../../../.${filePath}?${moment().format('x')}`)).default
@@ -26,7 +26,7 @@ class Button {
   }
 
   /** 卸载指定文件路径的模块 */
-  unloadModule(filePath) {
+  unloadModule (filePath) {
     const index = this.botModules.findIndex(module => module.plugin._path === filePath)
     if (index !== -1) this.botModules.splice(index, 1)
     /** 排序 */
@@ -38,7 +38,7 @@ class Button {
    * @param {string} filePath - 文件路径
    * @param {string} eventType - 事件类型 ('add', 'change', 'unlink')
    */
-  async handleFileChange(filePath, eventType, state) {
+  async handleFileChange (filePath, eventType, state) {
     filePath = './' + filePath.replace(/\\/g, '/')
     if (filePath.endsWith('.js')) {
       if (eventType === 'add') {
@@ -57,7 +57,7 @@ class Button {
   }
 
   /** 初始化 */
-  async initialize() {
+  async initialize () {
     try {
       const filesList = []
       /** 遍历插件目录 */
@@ -84,7 +84,7 @@ class Button {
       /** 热更新 */
       filesList.map(folder => {
         let state = true
-        const watcher = chokidar.watch(folder, { ignored: /[\/\\]\./, persistent: true })
+        const watcher = chokidar.watch(folder, { ignored: /[/\\]\./, persistent: true })
         watcher
           .on('add', async filePath => {
             await this.handleFileChange(filePath, 'add', state)

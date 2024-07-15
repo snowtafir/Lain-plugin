@@ -4,7 +4,7 @@ import Version from '../model/version.js'
 import { helpCfg, helpList, style } from '../model/help.js'
 
 export class help extends plugin {
-  constructor() {
+  constructor () {
     super({
       name: '铃音帮助',
       priority: -50,
@@ -21,7 +21,7 @@ export class help extends plugin {
     })
   }
 
-  async version(e) {
+  async version (e) {
     return await Render.render('help/version-info', {
       currentVersion: Version.version,
       changelogs: Version.changelogs,
@@ -30,7 +30,7 @@ export class help extends plugin {
     }, { e, scale: 1.2 })
   }
 
-  async help(e) {
+  async help (e) {
     if (!e.msg.match(/^#(Lain|铃音)帮助$/)) {
       return await this.reply(e.msg.replace(/帮助/, '菜单'))
     }
@@ -59,7 +59,7 @@ export class help extends plugin {
     }, { e, scale: 1.6 })
   }
 
-  async getThemeData(diyStyle, sysStyle) {
+  async getThemeData (diyStyle, sysStyle) {
     let helpConfig = _.extend({}, sysStyle, diyStyle)
     let colCount = Math.min(5, Math.max(parseInt(helpConfig?.colCount) || 3, 2))
     let colWidth = Math.min(500, Math.max(100, parseInt(helpConfig?.colWidth) || 265))
@@ -98,7 +98,7 @@ export class help extends plugin {
   }
 }
 
-function getDef() {
+function getDef () {
   for (let idx in arguments) {
     if (!_.isUndefined(arguments[idx])) {
       return arguments[idx]

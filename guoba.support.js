@@ -1,4 +1,3 @@
-import fs from 'fs'
 import Cfg from './lib/config/config.js'
 import Yaml from './model/YamlHandler.js'
 // import common from '../../lib/common/common.js'
@@ -11,9 +10,9 @@ import Yaml from './model/YamlHandler.js'
  */
 
 // function guildList() {
-const guilds = []
-const channels = []
-const prefixBlack = []
+// const guilds = []
+// const channels = []
+// const prefixBlack = []
 // /** 延迟10秒加载数据，防止某些数据没有加载 */
 // setTimeout(async () => {
 //  while (true) {
@@ -41,7 +40,7 @@ const prefixBlack = []
 //  }
 // }, 10000)
 
-export function supportGuoba() {
+export function supportGuoba () {
   /** 添加url链接白名单 */
   const addUrlPromptProps = {
     content: '请输入URL：',
@@ -232,8 +231,8 @@ export function supportGuoba() {
           component: 'EasyCron',
           componentProps: {
             multiple: true,
-            placeholder: '请输入或选择Cron表达式',
-          },
+            placeholder: '请输入或选择Cron表达式'
+          }
         },
         {
           field: 'Other.ICQQtoFile',
@@ -260,23 +259,23 @@ export function supportGuoba() {
             promptProps: addUrlPromptProps,
             valueFormatter: ((value) => String(value)).toString()
           }
-        },
+        }
       ],
       // 获取配置数据方法（用于前端填充显示数据）
-      getConfigData() {
+      getConfigData () {
         return {
           Server: Cfg.Server,
           Adapter: {
             ComWeChat: Cfg.ComWeChat,
             WeXin: Cfg.WeXin,
             Shamrock: Cfg.Shamrock,
-            Stdin: Cfg.Stdin,
+            Stdin: Cfg.Stdin
           },
           Other: Cfg.Other
         }
       },
       // 设置配置的方法（前端点确定后调用的方法）
-      setConfigData(data, { Result }) {
+      setConfigData (data, { Result }) {
         try {
           for (let i in data) {
             let value = data[i]
@@ -285,16 +284,15 @@ export function supportGuoba() {
             let config = new Yaml(lain._pathCfg + `/Config-${key}.yaml`)
             config.set(i.join('.'), value)
           }
-          return Result.ok({}, "保存成功~")
-        } catch(err) {
-          logger.error("[Lain-plugin][锅巴] 保存失败：\n", err)
+          return Result.ok({}, '保存成功~')
+        } catch (err) {
+          logger.error('[Lain-plugin][锅巴] 保存失败：\n', err)
           return Result.error(`保存失败：\n${err.message}`)
         }
       }
     }
   }
 }
-
 
 /** 后续添加(咕咕咕)
 

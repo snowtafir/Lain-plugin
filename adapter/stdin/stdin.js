@@ -1,7 +1,7 @@
 import { createInterface } from 'readline'
 import fs from 'node:fs'
 import { fileTypeFromBuffer } from 'file-type'
-import _ from "lodash"
+import _ from 'lodash'
 import Cfg from '../../lib/config/config.js'
 import common from '../../lib/common/common.js'
 
@@ -12,8 +12,7 @@ const user_id = 55555
 // 创建数据文件夹
 common.mkdirs(path)
 
-
-export default async function stdin() {
+export default async function stdin () {
   /** 自定义标准输入头像
   可随机设置随机头像(将头像文件放至resources/Avatar目录即可) */
   let avatar = process.cwd() + '/plugins/Lain-plugin/resources/default_avatar.jpg'
@@ -23,11 +22,14 @@ export default async function stdin() {
     let txurl = `${process.cwd()}/resources/Avatar/`
     if (fs.existsSync(txurl)) {
       let tx_img = []
-      for (let txlb of fs.readdirSync(txurl))
-        if (txlb.includes('.'))
-          tx_img.push(txurl + txlb);
-      if (tx_img.length > 0)
-        avatar = tx_img[Math.floor(Math.random() * tx_img.length)];
+      for (let txlb of fs.readdirSync(txurl)) {
+        if (txlb.includes('.')) {
+          tx_img.push(txurl + txlb)
+        }
+      }
+      if (tx_img.length > 0) {
+        avatar = tx_img[Math.floor(Math.random() * tx_img.length)]
+      }
     }
   }
 
@@ -48,16 +50,16 @@ export default async function stdin() {
     version: Bot.lain.adapter.stdin.version,
     apk: Bot.lain.adapter.stdin.apk,
     /** 转发 */
-    makeForwardMsg: (msg) => { return { type: "node", data: msg } },
+    makeForwardMsg: (msg) => { return { type: 'node', data: msg } },
     pickUser: () => {
       return {
         user_id,
         nickname: Cfg.Stdin.name,
         sendMsg: msg => sendMsg(msg),
         recallMsg: msg_id => lain.info(uin, `撤回消息：${msg_id}`),
-        makeForwardMsg: (msg) => { return { type: "node", data: msg } },
+        makeForwardMsg: (msg) => { return { type: 'node', data: msg } },
         sendForwardMsg,
-        sendFile: (file, name) => sendFile(file, name),
+        sendFile: (file, name) => sendFile(file, name)
       }
     },
     pickFriend: () => {
@@ -66,9 +68,9 @@ export default async function stdin() {
         nickname: Cfg.Stdin.name,
         sendMsg: msg => sendMsg(msg),
         recallMsg: msg_id => lain.info(uin, `撤回消息：${msg_id}`),
-        makeForwardMsg: (msg) => { return { type: "node", data: msg } },
+        makeForwardMsg: (msg) => { return { type: 'node', data: msg } },
         sendForwardMsg,
-        sendFile: (file, name) => sendFile(file, name),
+        sendFile: (file, name) => sendFile(file, name)
       }
     },
     pickGroup: () => {
@@ -77,11 +79,11 @@ export default async function stdin() {
         nickname: Cfg.Stdin.name,
         sendMsg: msg => sendMsg(msg),
         recallMsg: msg_id => lain.info(uin, `撤回消息：${msg_id}`),
-        makeForwardMsg: (msg) => { return { type: "node", data: msg } },
+        makeForwardMsg: (msg) => { return { type: 'node', data: msg } },
         sendForwardMsg,
-        sendFile: (file, name) => sendFile(file, name),
+        sendFile: (file, name) => sendFile(file, name)
       }
-    },
+    }
   }
 
   if (!Bot.adapter.includes(uin)) Bot.adapter.unshift(uin)
@@ -106,18 +108,19 @@ export default async function stdin() {
   await common.init('Lain:restart:stdin')
 }
 
-async function makeBuffer(file) {
+async function makeBuffer (file) {
   if (Buffer.isBuffer(file)) return file
-  if (file.match(/^base64:\/\//))
+  if (file.match(/^base64:\/\//)) {
     return Buffer.from(file.replace(/^base64:\/\//, ''), 'base64')
-  else if (file.match(/^https?:\/\//))
+  } else if (file.match(/^https?:\/\//)) {
     return Buffer.from(await (await fetch(file)).arrayBuffer())
-  else if (fs.existsSync(file))
+  } else if (fs.existsSync(file)) {
     return Buffer.from(fs.readFileSync(file))
+  }
   return file
 }
 
-async function fileType(data) {
+async function fileType (data) {
   const file = {}
   try {
     file.url = _.truncate(data, { length: 100 })
@@ -130,7 +133,7 @@ async function fileType(data) {
   return file
 }
 
-function msg(msg) {
+function msg (msg) {
   /** 调试日志 */
   lain.debug(uin, JSON.stringify(msg))
   const time = parseInt(Date.now() / 1000)
@@ -150,7 +153,7 @@ function msg(msg) {
     message: [{ type: 'text', text: msg }],
     raw_message: msg,
     isMaster: true,
-    toString: () => { return msg },
+    toString: () => msg
   }
   /** 用户个人信息 */
   e.sender = {
@@ -165,7 +168,7 @@ function msg(msg) {
     info: {
       user_id,
       nickname: Cfg.Stdin.name,
-      last_sent_time: time,
+      last_sent_time: time
     },
     /** 获取头像 */
     getAvatarUrl: () => Bot[uin].avatar
@@ -180,9 +183,9 @@ function msg(msg) {
     nickname: Cfg.Stdin.name,
     sendMsg: msg => sendMsg(msg),
     recallMsg: msg_id => lain.info(uin, `撤回消息：${msg_id}`),
-    makeForwardMsg: (msg) => { return { type: "node", data: msg } },
+    makeForwardMsg: (msg) => { return { type: 'node', data: msg } },
     sendForwardMsg,
-    sendFile: (file, name) => sendFile(file, name),
+    sendFile: (file, name) => sendFile(file, name)
   }
 
   /** 快速撤回 */
@@ -199,24 +202,27 @@ function msg(msg) {
 }
 
 /** 发送消息 */
-async function sendMsg(msg) {
+async function sendMsg (msg) {
   if (!Array.isArray(msg)) msg = [msg]
   for (let i of msg) {
-    if (typeof i != 'object')
+    if (typeof i != 'object') {
       i = { type: 'text', data: { text: i } }
-    else if (!i.data)
+    } else if (!i.data) {
       i = { type: i.type, data: { ...i, type: undefined } }
+    }
 
     let file
-    if (i.data.file)
+    if (i.data.file) {
       file = await fileType(i.data.file)
+    }
 
     switch (i.type) {
       case 'text':
         i.data.text = String(i.data.text).trim()
         if (!i.data.text) break
-        if (i.data.text.match('\n'))
+        if (i.data.text.match('\n')) {
           i.data.text = `\n${i.data.text}`
+        }
         lain.info(uin, `发送文本：${i.data.text}`)
         break
       case 'image':
@@ -249,7 +255,7 @@ async function sendMsg(msg) {
   return { message_id: common.message_id() }
 }
 
-async function sendFile(file, name = path.basename(file)) {
+async function sendFile (file, name = path.basename(file)) {
   const buffer = await makeBuffer(file)
   if (!Buffer.isBuffer(buffer)) {
     lain.error(uin, `发送文件错误：找不到文件 ${logger.red(file)}`)
@@ -261,10 +267,11 @@ async function sendFile(file, name = path.basename(file)) {
   return fs.writeFileSync(files, buffer)
 }
 
-function sendForwardMsg(msg) {
+function sendForwardMsg (msg) {
   const messages = []
-  for (const { message } of msg)
+  for (const { message } of msg) {
     messages.push(sendMsg(message))
+  }
   return { data: messages }
 }
 

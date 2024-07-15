@@ -7,7 +7,7 @@ const getLine = function (line) {
   line = line.replace(/(^\s*\*|\r)/g, '')
   line = line.replace(/\s*`([^`]+`)/g, '<span class="cmd">$1')
   line = line.replace(/`\s*/g, '</span>')
-  line = line.replace(/\s*\*\*([^\*]+\*\*)/g, '<span class="strong">$1')
+  line = line.replace(/\s*\*\*([^*]+\*\*)/g, '<span class="strong">$1')
   line = line.replace(/\*\*\s*/g, '</span>')
   line = line.replace(/ⁿᵉʷ/g, '<span class="new"></span>')
   return line
@@ -73,17 +73,17 @@ const readLogFile = function (root, versionCount = 5) {
 const { changelogs, currentVersion } = readLogFile(`${process.cwd()}/plugins/Lain-plugin/`)
 
 const yunzaiVersion = packageJson.version
-const isMiao = packageJson.dependencies.sequelize ? true : false
+const isMiao = !!packageJson.dependencies.sequelize
 
 let Version = {
   isMiao,
-  get version() {
+  get version () {
     return currentVersion
   },
-  get yunzai() {
+  get yunzai () {
     return yunzaiVersion
   },
-  get changelogs() {
+  get changelogs () {
     return changelogs
   },
   readLogFile

@@ -1,3 +1,4 @@
+/* eslint-disable no-case-declarations */
 import fs from 'fs'
 import path from 'path'
 import fetch from 'node-fetch'
@@ -5,14 +6,14 @@ import Cfg from '../../lib/config/config.js'
 import common from '../../lib/common/common.js'
 
 export default class StartWeChat4u {
-  constructor(id, config) {
+  constructor (id, config) {
     this.id = id
     this.config = config
-    this.path = process.cwd() + "/temp/WeXin/"
+    this.path = process.cwd() + '/temp/WeXin/'
     this.login()
   }
 
-  async login() {
+  async login () {
     let WeChat4u
 
     try {
@@ -99,7 +100,7 @@ export default class StartWeChat4u {
 
     /** 接收消息 */
     this.bot.on('message', async msg => {
-      commen.debug(this.id, "[微信网页版收到消息]", msg)
+      lain.debug(this.id, '<微信网页版收到消息>', msg)
       Bot[this.id].stat.recv_msg_cnt++
       msg = await this.msg(msg)
       if (!msg) return
@@ -120,14 +121,14 @@ export default class StartWeChat4u {
   }
 
   /** 关🐔 */
-  stop() {
+  stop () {
     this.bot.stop()
   }
 
   /** 处理接收的消息 */
-  async msg(msg) {
+  async msg (msg) {
     /** 调试日志 */
-    lain.debug(this.id, JSON.stringify(data))
+    lain.debug(this.id, JSON.stringify(msg))
     /** 屏蔽bot自身消息 */
     if (msg.isSendBySelf) return
     /** 屏蔽历史消息 */
@@ -218,12 +219,12 @@ export default class StartWeChat4u {
       /** 好友请求消息 */
       case this.bot.CONF.MSGTYPE_VERIFYMSG:
         if (Cfg.WeXin.autoFriend) {
-        this.bot.verifyUser(msg.RecommendInfo.UserName, msg.RecommendInfo.Ticket)
-          .then(res => {
-            lain.info(this.id, `通过了 ${this.bot.Contact.getDisplayName(msg.RecommendInfo)} 好友请求`)
-            lain.debug(this.id, res)
-          })
-          .catch(err => { this.bot.emit('error', err) })
+          this.bot.verifyUser(msg.RecommendInfo.UserName, msg.RecommendInfo.Ticket)
+            .then(res => {
+              lain.info(this.id, `通过了 ${this.bot.Contact.getDisplayName(msg.RecommendInfo)} 好友请求`)
+              lain.debug(this.id, res)
+            })
+            .catch(err => { this.bot.emit('error', err) })
         } else {
           lain.info(this.id, `<好友申请:${msg.RecommendInfo.UserName}><Ticket:${msg.RecommendInfo.Ticket}>`)
           lain.debug(this.id, msg.RecommendInfo)
@@ -244,10 +245,10 @@ export default class StartWeChat4u {
         break
       /** 系统消息 */
       case this.bot.CONF.MSGTYPE_SYS:
-        e.post_type = "notice"
-        e.sub_type = "poke"
-        e.target_id = msg.Content?.includes("拍了拍我") ? e.bot.uin || Bot.uin : msg.CreateTime
-        toString += msg.Content?.replace(/"/g, "")
+        e.post_type = 'notice'
+        e.sub_type = 'poke'
+        e.target_id = msg.Content?.includes('拍了拍我') ? e.bot.uin || Bot.uin : msg.CreateTime
+        toString += msg.Content?.replace(/"/g, '')
         break
       default:
         break
@@ -268,7 +269,7 @@ export default class StartWeChat4u {
       const user_id = `wx_${msg.OriginalContent.split(':')[0]}`
       if (!e?.sub_type) e.sub_type = 'normal'
       e.message_type = 'group'
-      e.notice_type = "group"
+      e.notice_type = 'group'
       e.group_id = group_id
       e.user_id = user_id
       e.operator_id = msg.NewMsgId
@@ -292,7 +293,7 @@ export default class StartWeChat4u {
       e.operator_id = user_id
       // e.sub_type = 'friend'
       e.message_type = 'private'
-      e.notice_type = "private"
+      e.notice_type = 'private'
       e.friend = {
         recallMsg: (MsgID) => this.bot.revokeMsg(MsgID, peer_id),
         makeForwardMsg: async (data) => await common.makeForwardMsg(data),
@@ -316,7 +317,7 @@ export default class StartWeChat4u {
   }
 
   /** 处理回复消息格式、回复日志 */
-  async reply(peer_id, msg) {
+  async reply (peer_id, msg) {
     const message = await this.message(msg)
     message.forEach(async i => {
       /** 延迟下防止过快发送失败 */
@@ -361,7 +362,7 @@ export default class StartWeChat4u {
   }
 
   /** 转换yunzai过来的消息 */
-  async message(msg) {
+  async message (msg) {
     const message = []
     msg = common.array(msg)
     for (let i of msg) {
@@ -394,13 +395,13 @@ export default class StartWeChat4u {
   }
 
   /** 统一文件格式 */
-  async getFile(i, type = 'image') {
+  async getFile (i, type = 'image') {
     const res = Bot.toType(i)
     let { file } = res
     let filename
 
     // 存储MIME类型和对应的文件扩展名
-    const mimeTypes = { "image/jpeg": ".jpg", "image/png": ".png", "image/gif": ".gif", "image/bmp": ".bmp", "image/svg+xml": ".svg", "text/plain": ".txt", "text/html": ".html", "text/css": ".css", "text/javascript": ".js", "application/javascript": ".js", "application/json": ".json", "application/xml": ".xml", "application/pdf": ".pdf", "application/zip": ".zip", "application/gzip": ".gz", "application/octet-stream": ".bin", "audio/mpeg": ".mp3", "audio/x-wav": ".wav", "video/mp4": ".mp4", "video/x-msvideo": ".avi", "video/quicktime": ".mov", "application/msword": ".doc", "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx", "application/vnd.ms-excel": ".xls", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": ".xlsx", "application/vnd.ms-powerpoint": ".ppt", "application/vnd.openxmlformats-officedocument.presentationml.presentation": ".pptx", "application/x-rar-compressed": ".rar", "application/x-tar": ".tar", "application/vnd.oasis.opendocument.text": ".odt", "application/vnd.oasis.opendocument.spreadsheet": ".ods", "application/vnd.oasis.opendocument.presentation": ".odp", "text/csv": ".csv", "text/markdown": ".md", "application/x-httpd-php": ".php", "application/java-archive": ".jar", "application/x-shockwave-flash": ".swf", "application/x-font-ttf": ".ttf", "application/font-woff": ".woff", "application/font-woff2": ".woff2", "application/vnd.ms-fontobject": ".eot", "image/webp": ".webp", "image/tiff": ".tiff", "image/vnd.adobe.photoshop": ".psd", "application/x-sql": ".sql", "application/x-httpd-php": ".php", "application/vnd.apple.installer+xml": ".mpkg", "application/vnd.mozilla.xul+xml": ".xul", "application/vnd.google-earth.kml+xml": ".kml", "application/vnd.google-earth.kmz": ".kmz", "application/x-7z-compressed": ".7z", "application/x-deb": ".deb", "application/x-sh": ".sh", "application/x-csh": ".csh", "text/x-python": ".py", "application/vnd.visio": ".vsd", "application/x-msdownload": ".exe", "application/x-iso9660-image": ".iso", "application/x-bzip2": ".bz2", "application/x-httpd-php-source": ".phps", "application/x-httpd-php3": ".php3", "application/x-httpd-php3-preprocessed": ".php3p", "application/x-httpd-php4": ".php4", "application/x-httpd-php5": ".php5" };
+    const mimeTypes = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/gif': '.gif', 'image/bmp': '.bmp', 'image/svg+xml': '.svg', 'text/plain': '.txt', 'text/html': '.html', 'text/css': '.css', 'text/javascript': '.js', 'application/javascript': '.js', 'application/json': '.json', 'application/xml': '.xml', 'application/pdf': '.pdf', 'application/zip': '.zip', 'application/gzip': '.gz', 'application/octet-stream': '.bin', 'audio/mpeg': '.mp3', 'audio/x-wav': '.wav', 'video/mp4': '.mp4', 'video/x-msvideo': '.avi', 'video/quicktime': '.mov', 'application/msword': '.doc', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx', 'application/vnd.ms-excel': '.xls', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': '.xlsx', 'application/vnd.ms-powerpoint': '.ppt', 'application/vnd.openxmlformats-officedocument.presentationml.presentation': '.pptx', 'application/x-rar-compressed': '.rar', 'application/x-tar': '.tar', 'application/vnd.oasis.opendocument.text': '.odt', 'application/vnd.oasis.opendocument.spreadsheet': '.ods', 'application/vnd.oasis.opendocument.presentation': '.odp', 'text/csv': '.csv', 'text/markdown': '.md', 'application/x-httpd-php': '.php', 'application/java-archive': '.jar', 'application/x-shockwave-flash': '.swf', 'application/x-font-ttf': '.ttf', 'application/font-woff': '.woff', 'application/font-woff2': '.woff2', 'application/vnd.ms-fontobject': '.eot', 'image/webp': '.webp', 'image/tiff': '.tiff', 'image/vnd.adobe.photoshop': '.psd', 'application/x-sql': '.sql', 'application/vnd.apple.installer+xml': '.mpkg', 'application/vnd.mozilla.xul+xml': '.xul', 'application/vnd.google-earth.kml+xml': '.kml', 'application/vnd.google-earth.kmz': '.kmz', 'application/x-7z-compressed': '.7z', 'application/x-deb': '.deb', 'application/x-sh': '.sh', 'application/x-csh': '.csh', 'text/x-python': '.py', 'application/vnd.visio': '.vsd', 'application/x-msdownload': '.exe', 'application/x-iso9660-image': '.iso', 'application/x-bzip2': '.bz2', 'application/x-httpd-php-source': '.phps', 'application/x-httpd-php3': '.php3', 'application/x-httpd-php3-preprocessed': '.php3p', 'application/x-httpd-php4': '.php4', 'application/x-httpd-php5': '.php5' }
 
     if (type == 'image') {
       type = '[图片:'

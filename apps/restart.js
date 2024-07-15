@@ -1,11 +1,11 @@
-import fs from "fs"
-import pm2 from "pm2"
-import { exec } from "child_process"
+import fs from 'fs'
+import pm2 from 'pm2'
+import { exec } from 'child_process'
 
 let state = false
 
 export class AdapterRestart extends plugin {
-  constructor(e = '') {
+  constructor (e = '') {
     super({
       name: '铃音-重启',
       dsc: '适用于适配器重启',
@@ -25,7 +25,7 @@ export class AdapterRestart extends plugin {
     this.key = 'Lain:restart'
   }
 
-  async restart() {
+  async restart () {
     if (state) return true
     state = true
     if (!this.e?.adapter) return false
@@ -85,14 +85,14 @@ export class AdapterRestart extends plugin {
     return true
   }
 
-  async checkPnpm() {
+  async checkPnpm () {
     let npm = 'npm'
     let ret = await this.execSync('pnpm -v')
     if (ret.stdout) npm = 'pnpm'
     return npm
   }
 
-  async execSync(cmd) {
+  async execSync (cmd) {
     return new Promise((resolve, reject) => {
       exec(cmd, { windowsHide: true }, (error, stdout, stderr) => {
         resolve({ error, stdout, stderr })

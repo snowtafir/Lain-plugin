@@ -3,7 +3,7 @@ import util from 'node:util'
 import Runtime from '../../../lib/plugins/runtime.js'
 
 export default new class loader {
-  async deal(e) {
+  async deal (e) {
     try {
       /** 记录消息次数 */
       await redis.incr(`lain:${e.self_id}:sendMsg:total`)
@@ -29,6 +29,7 @@ export default new class loader {
     await Runtime.init(e)
 
     this.priority.forEach(v => {
+      // eslint-disable-next-line new-cap
       let p = new v.class(e)
       p.e = e
       /** 判断是否启用功能 */

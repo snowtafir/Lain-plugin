@@ -10,7 +10,7 @@ export default class YamlHandler {
    * 构造函数，接受 YAML 文件路径作为参数。
    * @param {string} _path - YAML 文件路径
    */
-  constructor(_path) {
+  constructor (_path) {
     /**
      * YAML 文件路径。
      * @type {string}
@@ -24,7 +24,7 @@ export default class YamlHandler {
    * 解析 YAML 文件内容。
    * @private
    */
-  parse() {
+  parse () {
     /**
      * YAML 文件的解析文档。
      * @type {Yaml.Document}
@@ -36,7 +36,7 @@ export default class YamlHandler {
    * 获取 YAML 文件的 JSON 数据。
    * @returns {object} - YAML 文件的 JSON 数据
    */
-  data() {
+  data () {
     return this.document.toJSON()
   }
 
@@ -45,7 +45,7 @@ export default class YamlHandler {
    * @param {string} key - 指定的键
    * @returns {*} - 指定键的值
    */
-  get(key) {
+  get (key) {
     return lodash.get(this.data(), key)
   }
 
@@ -54,7 +54,7 @@ export default class YamlHandler {
    * @param {string} key - 指定的键
    * @returns {boolean} - 指定键是否存在
    */
-  hasIn(key) {
+  hasIn (key) {
     key = key.split('.')
     return this.document.hasIn(key)
   }
@@ -65,7 +65,7 @@ export default class YamlHandler {
    * @param {string} value - 需要检查的值
    * @returns {boolean} - 指定键是否存在指定值
    */
-  value(key, value) {
+  value (key, value) {
     const res = this.get(key)
     if (!res) return false
     if (Array.isArray(res)) {
@@ -79,7 +79,7 @@ export default class YamlHandler {
    * @param {string} key - 指定的键
    * @param {*} value - 要设置的值
    */
-  set(key, value) {
+  set (key, value) {
     key = key.split('.')
     this.document.setIn(key, value)
     this.save()
@@ -90,7 +90,7 @@ export default class YamlHandler {
    * @param {string} key - 指定的键
    * @param {*} value - 要添加的值
    */
-  addIn(key, value) {
+  addIn (key, value) {
     key = key.split('.')
     this.document.addIn(key, value)
     this.save()
@@ -102,7 +102,7 @@ export default class YamlHandler {
    * @param {*} val - 要添加的键值对
    * @param {Array|object|string} type - 用于初始值为空的时候初始化，默认数组
    */
-  addVal(key, val, type = 'Array') {
+  addVal (key, val, type = 'Array') {
     let value = this.get(key)
 
     /** 值为空，进行初始化 */
@@ -133,7 +133,7 @@ export default class YamlHandler {
    * 删除指定键及其对应的值。
    * @param {string} key - 指定的键
    */
-  del(key) {
+  del (key) {
     key = key.split('.')
     this.document.deleteIn(key)
     this.save()
@@ -144,7 +144,7 @@ export default class YamlHandler {
    * @param {string} key - 指定的键
    * @param {*} val - 要删除的值
    */
-  delVal(key, val) {
+  delVal (key, val) {
     const value = this.get(key)
     if (Array.isArray(value)) {
       const index = value.indexOf(val)
@@ -165,7 +165,7 @@ export default class YamlHandler {
   /**
    * 将修改后的 YAML 文件保存到磁盘。
    */
-  save() {
+  save () {
     try {
       fs.writeFileSync(this._path, this.document.toString(), 'utf8')
     } catch (err) {

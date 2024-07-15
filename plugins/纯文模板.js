@@ -38,7 +38,7 @@ Bot.Markdown = async function (e, data, button = []) {
 }
 
 /** 处理md标记 */
-function parseMD(str) {
+function parseMD (str) {
   /** 处理第一个标题 */
   str = str.replace(/^#/, '\r#')
   let msg = str.split(/(\*\*\*|\*\*|\*|__|_|~~|~|``)/).filter(Boolean)
@@ -64,14 +64,14 @@ function parseMD(str) {
 }
 
 /** 按9进行分类 */
-function sort(arr) {
+function sort (arr) {
   const Array = []
   for (let i = 0; i < arr.length; i += 9) Array.push(arr.slice(i, i + 9))
   return Array
 }
 
 /** 组合 */
-async function combination(e, data, but) {
+async function combination (e, data, but) {
   const all = []
   /** 按9分类 */
   data = sort(data)
@@ -107,7 +107,7 @@ async function combination(e, data, but) {
 }
 
 /** 按钮添加 */
-async function Button(e) {
+async function Button (e) {
   try {
     for (let p of plugin) {
       for (let v of p.plugin.rule) {

@@ -67,7 +67,7 @@ Bot.lain = {
       },
       /** 依赖包 */
       apk: {
-        display: "stdin",
+        display: 'stdin',
         version: adapter.stdin
       }
     },

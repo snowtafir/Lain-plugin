@@ -1,11 +1,10 @@
-import YamlParse from '../model/YamlHandler.js'
 import { execSync } from 'child_process'
 import { update as Update } from '../../other/update.js'
 import { xiaofei_music } from '../adapter/shamrock/xiaofei/music.js'
 import { xiaofei_weather } from '../adapter/shamrock/xiaofei/weather.js'
 
 export class Lain extends plugin {
-  constructor() {
+  constructor () {
     super({
       name: '铃音基本设置',
       priority: -50,
@@ -28,7 +27,7 @@ export class Lain extends plugin {
     })
   }
 
-  async update(e) {
+  async update (e) {
     let new_update = new Update()
     new_update.e = e
     new_update.reply = this.reply
@@ -47,13 +46,13 @@ export class Lain extends plugin {
     return true
   }
 
-  async user_id(e) {
+  async user_id (e) {
     const msg = []
     if (e.isMaster) msg.push(`Bot：${e.bot.uin || e.self_id}`)
     msg.push(`您的个人ID：${e.user_id}`)
-    e.guild_id ? msg.push(`当前频道ID：${e.guild_id}`) : ''
-    e.channel_id ? msg.push(`当前子频道ID：${e.channel_id}`) : ''
-    e.group_id ? msg.push(`当前群聊ID：${e.group_id}`) : ''
+    if (e.guild_id) msg.push(`当前频道ID：${e.guild_id}`)
+    if (e.channel_id) msg.push(`当前子频道ID：${e.channel_id}`)
+    if (e.group_id) msg.push(`当前群聊ID：${e.group_id}`)
     if (e.isMaster && e?.adapter === 'QQGuild') msg.push('\n温馨提示：\n使用本体黑白名单请使用「群聊ID」\n使用插件黑白名单请按照配置文件说明进行添加~')
 
     /** at用户 */

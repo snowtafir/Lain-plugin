@@ -1,7 +1,7 @@
 import api from '../adapter/shamrock/api.js'
 
 export class clear_msgs extends plugin {
-  constructor() {
+  constructor () {
     super({
       name: '三叶草-清理缓存',
       priority: -50,
@@ -15,7 +15,7 @@ export class clear_msgs extends plugin {
     })
   }
 
-  async clearFile() {
+  async clearFile () {
     await this.reply('开始清理~，请等待完成', true, { at: true })
     /** 获取群列表 */
     const gl = this.e.bot.gl

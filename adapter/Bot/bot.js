@@ -405,7 +405,6 @@ Bot.Button = function (list, line = 3) {
   let button = []
 
   for (let i of list) {
-
     /** 兼容单用户字符串表示permission */
     if (typeof i.permission === 'string') {
       i.list = [i.permission]
@@ -427,7 +426,6 @@ Bot.Button = function (list, line = 3) {
     if (Array.isArray(i)) {
       button.push(...Bot.Button(i, 10))
     } else {
-
       /** 构造单个按钮 */
       let Button = {
         id: String(id),
@@ -466,7 +464,6 @@ Bot.Button = function (list, line = 3) {
         })
         arr = []
       }
-
     }
     id++
     index++

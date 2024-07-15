@@ -7,7 +7,7 @@ import ComWeChat from './WeChat/index.js'
 import shamrock from './shamrock/index.js'
 
 class WebSocket {
-  constructor() {
+  constructor () {
     this.port = Cfg.port
     this.path = {
       '/Shamrock': shamrock,
@@ -17,11 +17,11 @@ class WebSocket {
   }
 
   /** run! */
-  start() {
+  start () {
     this.server()
   }
 
-  async server() {
+  async server () {
     /** 保存监听器返回 */
     lain.echo = new Map()
     /** 微信登录 */
@@ -92,7 +92,7 @@ class WebSocket {
   }
 
   /** 打印启动日志 */
-  log() {
+  log () {
     logger.info('Lain-plugin', `HTTP服务器：${logger.blue(`http://localhost:${this.port}`)}`)
     /** 转为数组对象，循环打印 */
     Object.entries(this.path).forEach(([key, value]) => {

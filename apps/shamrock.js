@@ -6,7 +6,7 @@ import Render from '../model/render.js'
 import { ShamrockRepoClient } from '../model/shamrock/shamrock.js'
 
 export class shamrock extends plugin {
-  constructor() {
+  constructor () {
     super({
       name: '铃音Shamrock版本信息',
       priority: -50,
@@ -23,7 +23,7 @@ export class shamrock extends plugin {
     })
   }
 
-  async version(e) {
+  async version (e) {
     let self_id
     for (const i of Bot.uin2) if (Bot[i].adapter === 'shamrock') self_id = i
 
@@ -54,7 +54,7 @@ export class shamrock extends plugin {
     }
   }
 
-  async apk(e) {
+  async apk (e) {
     // 不用shamrock也能用吧？
     // if (e.adapter !== 'shamrock') {
     //   return false

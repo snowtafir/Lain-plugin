@@ -6,7 +6,7 @@ import api from './api.js'
 import { faceMap, pokeMap } from '../../model/shamrock/face.js'
 
 class Shamrock {
-  constructor(bot, request) {
+  constructor (bot, request) {
     /** 存一下 */
     bot.request = request
     /** 机器人QQ号 */
@@ -24,7 +24,7 @@ class Shamrock {
   }
 
   /** 收到请求 */
-  async event(data) {
+  async event (data) {
     /** 解析得到的JSON */
     data = JSON.parse(data)
     /** debug日志 */
@@ -42,7 +42,7 @@ class Shamrock {
   }
 
   /** 元事件 */
-  async meta_event(data) {
+  async meta_event (data) {
     switch (data.meta_event_type) {
       /** 生命周期 */
       case 'lifecycle':
@@ -60,13 +60,13 @@ class Shamrock {
   }
 
   /** 消息事件 */
-  async message(data) {
+  async message (data) {
     /** 转置消息后给喵崽 */
     await Bot.emit('message', await this.ICQQEvent(data))
   }
 
   /** 自身消息事件 */
-  async message_sent(data) {
+  async message_sent (data) {
     data.post_type = 'message'
     /** 屏蔽由喵崽处理过后发送后的消息 */
     await common.sleep(1500)
@@ -76,7 +76,7 @@ class Shamrock {
   }
 
   /** 通知事件 */
-  async notice(data) {
+  async notice (data) {
     /** 啊啊啊，逼死强迫症 */
     data.post_type = 'notice';
     (async () => {
@@ -250,7 +250,7 @@ class Shamrock {
   }
 
   /** 请求事件 */
-  async request(data) {
+  async request (data) {
     data.post_type = 'request'
     switch (data.request_type) {
       case 'group': {
@@ -310,7 +310,7 @@ class Shamrock {
   }
 
   /** 注册Bot */
-  async LoadBot() {
+  async LoadBot () {
     /** 构建基本参数 */
     Bot[this.id] = {
       ws: this.bot,
@@ -374,7 +374,7 @@ class Shamrock {
   }
 
   /** 加载缓存资源 */
-  async LoadAll() {
+  async LoadAll () {
     /** 获取bot自身信息 */
     const info = await api.get_login_info(this.id)
     Bot[this.id].nickname = info?.nickname || ''
@@ -435,7 +435,7 @@ class Shamrock {
   }
 
   /** 群列表 */
-  async loadGroup(id = this.id) {
+  async loadGroup (id = this.id) {
     let groupList
     for (let retries = 0; retries < 5; retries++) {
       groupList = await api.get_group_list(id)
@@ -459,7 +459,7 @@ class Shamrock {
   }
 
   /** 获取群成员，缓存到gml中 */
-  async loadGroupMemberList(groupId, id = this.id) {
+  async loadGroupMemberList (groupId, id = this.id) {
     try {
       let gml = new Map()
       let memberList = await api.get_group_member_list(id, groupId)
@@ -475,7 +475,7 @@ class Shamrock {
   }
 
   /** 好友列表 */
-  async loadFriendList(id = this.id) {
+  async loadFriendList (id = this.id) {
     let friendList
     for (let retries = 0; retries < 5; retries++) {
       friendList = await api.get_friend_list(id)
@@ -504,7 +504,7 @@ class Shamrock {
   }
 
   /** 群对象 */
-  pickGroup(group_id) {
+  pickGroup (group_id) {
     const name = Bot[this.id].gl.get(group_id)?.group_name || group_id
     const is_admin = Bot[this.id].gml.get(group_id)?.[this.id]?.role === 'admin'
     const is_owner = Bot[this.id].gml.get(group_id)?.[this.id]?.role === 'owner'
@@ -578,7 +578,7 @@ class Shamrock {
   }
 
   /** 好友对象 */
-  pickFriend(user_id) {
+  pickFriend (user_id) {
     return {
       sendMsg: async (msg) => await this.sendFriendMsg(user_id, msg, false),
       recallMsg: async (msg_id) => await this.recallMsg(msg_id),
@@ -608,7 +608,7 @@ class Shamrock {
   }
 
   /** 群员对象 */
-  pickMember(group_id, user_id, refresh = false, cb = () => { }) {
+  pickMember (group_id, user_id, refresh = false, cb = () => { }) {
     if (!refresh) {
       /** 取缓存！！！别问为什么，因为傻鸟同步 */
       let member = Bot[this.id].gml.get(group_id)?.[user_id] || {}
@@ -626,7 +626,7 @@ class Shamrock {
   }
 
   /** 群成员列表 */
-  async getMemberMap(group_id) {
+  async getMemberMap (group_id) {
     let group_Member = Bot[this.id].gml.get(group_id)
     if (group_Member && Object.keys(group_Member) > 0) return group_Member
     group_Member = new Map()
@@ -638,7 +638,7 @@ class Shamrock {
   }
 
   /** 频道成员列表 */
-  getChannelList(guild_id) {
+  getChannelList (guild_id) {
     return {
       channel_id: 'string',
       channel_name: 'string',
@@ -648,7 +648,7 @@ class Shamrock {
   }
 
   /** 上传群文件 */
-  async upload_group_file(group_id, filePath) {
+  async upload_group_file (group_id, filePath) {
     if (!fs.existsSync(filePath)) return true
     /** 先传到shamrock... */
     const base64 = 'base64://' + fs.readFileSync(filePath).toString('base64')
@@ -658,7 +658,7 @@ class Shamrock {
   }
 
   /** 上传好友文件 */
-  async upload_private_file(user_id, filePath) {
+  async upload_private_file (user_id, filePath) {
     if (!fs.existsSync(filePath)) return true
     /** 先传到shamrock... */
     const base64 = 'base64://' + fs.readFileSync(filePath).toString('base64')
@@ -668,12 +668,12 @@ class Shamrock {
   }
 
   /** 获取文件下载链接 */
-  async getFileUrl() {
+  async getFileUrl () {
     return logger.warn('暂未实现，请先使用 [e.file]')
   }
 
   /** 音乐分享 */
-  async shareMusic(group_id, platform, id) {
+  async shareMusic (group_id, platform, id) {
     if (!['qq', '163'].includes(platform)) {
       return 'platform not supported yet'
     }
@@ -681,19 +681,19 @@ class Shamrock {
   }
 
   /** 设置精华 */
-  async setEssenceMessage(msg_id) {
+  async setEssenceMessage (msg_id) {
     let res = await api.set_essence_msg(this.id, msg_id)
     return res?.message === '成功' ? '加精成功' : res?.message
   }
 
   /** 移除群精华消息 **/
-  async removeEssenceMessage(msg_id) {
+  async removeEssenceMessage (msg_id) {
     let res = await api.delete_essence_msg(this.id, msg_id)
     return res?.message === '成功' ? '加精成功' : res?.message
   }
 
   /** 获取群成员信息 */
-  async getGroupMemberInfo(group_id, user_id, refresh) {
+  async getGroupMemberInfo (group_id, user_id, refresh) {
     /** 被自己坑了 */
     if (user_id == '88888' || user_id == 'stdin') user_id = this.id
     try {
@@ -706,12 +706,12 @@ class Shamrock {
   }
 
   /** 退群 */
-  async quit(group_id) {
+  async quit (group_id) {
     return await api.set_group_leave(this.id, group_id)
   }
 
   /** 制作转发消息 */
-  async makeForwardMsg(data) {
+  async makeForwardMsg (data) {
     if (!Array.isArray(data)) data = [data]
     let makeForwardMsg = {
       /** 标记下，视为转发消息，防止套娃 */
@@ -753,17 +753,17 @@ class Shamrock {
   }
 
   /** 撤回消息 */
-  async recallMsg(msg_id) {
+  async recallMsg (msg_id) {
     return await api.delete_msg(this.id, msg_id)
   }
 
   /** 获取禁言列表 */
-  async getMuteList(group_id) {
+  async getMuteList (group_id) {
     return await api.get_prohibited_member_list(this.id, group_id)
   }
 
   /** 转换消息为ICQQ格式 */
-  async ICQQEvent(data) {
+  async ICQQEvent (data) {
     const { post_type, group_id, user_id, message_type, message_id, sender } = data
     /** 初始化e */
     let e = data
@@ -916,7 +916,7 @@ class Shamrock {
  * @param reply 是否处理引用消息，默认处理
  * @return {Promise<{source: (*&{user_id, raw_message: string, reply: *, seq}), message: *[]}|{source: string, message: *[]}>}
  */
-  async getMessage(msg, group_id, reply = true) {
+  async getMessage (msg, group_id, reply = true) {
     let file
     let source
     let message = []
@@ -1133,7 +1133,7 @@ class Shamrock {
    * @param {number} group_id
    * @return {array|false} -
    */
-  async source(i, group_id) {
+  async source (i, group_id) {
     /** 引用消息的id */
     const msg_id = i.data.id
     /** id不存在滚犊子... */
@@ -1183,7 +1183,7 @@ class Shamrock {
  * @param {string|object|array} msg - 消息内容
  * @param {boolean} quote - 是否引用回复
  */
-  async sendReplyMsg(e, id, msg, quote) {
+  async sendReplyMsg (e, id, msg, quote) {
     let { message, raw_message, node } = await this.getShamrock(msg)
 
     if (quote) {
@@ -1200,7 +1200,7 @@ class Shamrock {
    * @param {number} user_id - 好友QQ
    * @param {string|object|array} msg - 消息内容
    */
-  async sendFriendMsg(user_id, msg) {
+  async sendFriendMsg (user_id, msg) {
     const { message, raw_message, node } = await this.getShamrock(msg)
     return await api.send_private_msg(this.id, user_id, message, raw_message, node)
   }
@@ -1210,7 +1210,7 @@ class Shamrock {
    * @param {number} group_id - 群聊QQ
    * @param {string|object|array} msg - 消息内容
    */
-  async sendGroupMsg(group_id, msg) {
+  async sendGroupMsg (group_id, msg) {
     const { message, raw_message, node } = await this.getShamrock(msg)
     return await api.send_group_msg(this.id, group_id, message, raw_message, node)
   }
@@ -1219,7 +1219,7 @@ class Shamrock {
    * 转换message为Shamrock格式
    * @param {string|Array|object} data - 消息内容
    */
-  async getShamrock(data) {
+  async getShamrock (data) {
     /** 标准化消息内容 */
     data = common.array(data)
     let node = false

@@ -3,7 +3,7 @@ import common from '../lib/common/common.js'
 import Cfg from '../lib/config/config.js'
 
 export class adapter extends plugin {
-  constructor() {
+  constructor () {
     super({
       name: 'Bot配置',
       dsc: 'QQ频道、QQ群Bot基本配置',
@@ -34,13 +34,13 @@ export class adapter extends plugin {
           reg: /^#QQ(群|Bot|频道)(MD|markdown) ?(\d{9}:)?[01234]{1}$/i,
           fnc: 'type',
           permission: 'master'
-        },
+        }
       ]
     })
   }
 
   /** bot相关配置 */
-  async bot() {
+  async bot () {
     let config = {
       model: 0,
       appid: '',
@@ -134,7 +134,7 @@ export class adapter extends plugin {
   }
 
   /** QQ群、频道Bot账号列表 */
-  async account() {
+  async account () {
     let list = []
     if (this.e.isGroup) return await this.reply('请私聊查看', true, { at: true })
     let token = Object.values(Cfg.getToken())
@@ -185,7 +185,7 @@ export class adapter extends plugin {
   }
 
   /** 设置模板ID */
-  async markdown() {
+  async markdown () {
     if (!/\d{9}_\d{10}/.test(this.e.msg)) return await this.reply('格式错误，切换模板请使用[#QQ群md 0123]')
     let msg = this.e.msg.replace(/^#QQ(群|Bot|频道)设置(MD|markdown)/i, '').replace(/：/g, ':').trim().split(':')
     const cfg = new YAML(lain._pathCfg + '/token.yaml')
@@ -219,7 +219,7 @@ export class adapter extends plugin {
   }
 
   /** 切换模板ID */
-  async type() {
+  async type () {
     let msg = this.e.msg.replace(/^#QQ(群|Bot|频道)(MD|markdown)/i, '').replace(/：/g, ':').trim().split(':')
     const cfg = new YAML(lain._pathCfg + '/token.yaml')
     let val = cfg.get('token')
@@ -249,7 +249,7 @@ export class adapter extends plugin {
   }
 
   /** 其他 */
-  async other() {
+  async other () {
     const msg = this.e.msg.replace(/^#QQ(群|Bot|频道)设置(QQ图床|前缀|防倒卖(群号)?)/i, '').replace(/：/g, ':').trim().split(':')
     const cfg = new YAML(lain._pathCfg + '/token.yaml')
     if (msg.length != 1 && msg.length != 2) return await this.reply('格式错误!', true, { at: true })
@@ -259,8 +259,7 @@ export class adapter extends plugin {
       self_id = msg[0]
     } else {
       if (this.e?.adapter === 'QQBot') self_id = this.e.self_id
-      else
-        return await this.reply('格式错误!', true, { at: true })
+      else return await this.reply('格式错误!', true, { at: true })
     }
     if (cfg.value('token', self_id)) {
       let val = cfg.get('token')

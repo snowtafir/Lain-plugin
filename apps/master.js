@@ -5,7 +5,7 @@ import Yaml from '../model/YamlHandler.js'
 let sign = {}
 
 export class LainMaster extends plugin {
-  constructor() {
+  constructor () {
     super({
       name: '铃音-设置主人',
       priority: -50,
@@ -27,7 +27,7 @@ export class LainMaster extends plugin {
     })
   }
 
-  async master(e) {
+  async master (e) {
     let user_id = e.at || e.msg.replace(/#设置主人/, '') || e.user_id
     user_id = Number(user_id) || String(user_id)
 
@@ -53,7 +53,7 @@ export class LainMaster extends plugin {
     return await this.setContext('SetAdmin')
   }
 
-  async del_master(e) {
+  async del_master (e) {
     let user_id = e.at || e.msg.replace(/#|删除|取消|主人/g, '')
     user_id = Number(user_id) || String(user_id)
 
@@ -64,7 +64,7 @@ export class LainMaster extends plugin {
     return await e.reply([segment.at(user_id), '拜拜~'])
   }
 
-  async off_master(e) {
+  async off_master (e) {
     let user_id = Number(e.user_id) || e.user_id
     if (/禁用/.test(e.msg)) {
       /** 检测用户是否是主人 */
@@ -84,7 +84,7 @@ export class LainMaster extends plugin {
     }
   }
 
-  SetAdmin() {
+  SetAdmin () {
     /** 结束上下文 */
     this.finish('SetAdmin')
     /** 判断验证码是否正确 */
@@ -96,7 +96,7 @@ export class LainMaster extends plugin {
   }
 
   /** 设置主人 */
-  addmaster(user_id) {
+  addmaster (user_id) {
     const cfg = new Yaml('./config/config/other.yaml')
     cfg.addVal('masterQQ', user_id, 'Array')
     return [segment.at(user_id), '新主人好~(*/ω＼*)']

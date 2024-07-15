@@ -2,7 +2,7 @@ import fs from 'fs'
 import Cfg from '../lib/config/config.js'
 
 export class LainTask extends plugin {
-  constructor() {
+  constructor () {
     super({
       name: 'Lain-定时任务',
       priority: 0,
@@ -10,7 +10,7 @@ export class LainTask extends plugin {
     })
 
     /** 定时任务 */
-    this.task = [] 
+    this.task = []
     for (let i of Array.isArray(Cfg.Other.DelFileCron) ? Cfg.Other.DelFileCron : [Cfg.Other.DelFileCron]) {
       this.task.push({
         /** 任务cron表达式 */
@@ -22,7 +22,7 @@ export class LainTask extends plugin {
     }
   }
 
-  TaskFile() {
+  TaskFile () {
     try {
       logger.mark('[定时任务] 开始清理缓存文件')
       const _path = './temp/FileToUrl'

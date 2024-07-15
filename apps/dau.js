@@ -1,13 +1,12 @@
 import fs from 'node:fs'
 import { join } from 'node:path'
 import moment from 'moment'
-import schedule from 'node-schedule'
 import Cfg from '../lib/config/config.js'
 import puppeteer from '../../../lib/puppeteer/puppeteer.js'
 import _ from 'lodash'
 
 export class QQBotDAU extends plugin {
-  constructor() {
+  constructor () {
     super({
       name: 'DAU',
       event: 'message',
@@ -28,16 +27,16 @@ export class QQBotDAU extends plugin {
     /** 定时任务 */
     this.task = {
       /** 任务名 */
-      name: "[Lain-plugin] 刷新DAU缓存",
+      name: '[Lain-plugin] 刷新DAU缓存',
       /** 任务cron表达式 */
-      cron: "1 0 0 * * ?",
+      cron: '1 0 0 * * ?',
       /** 任务方法名 */
       fnc: async () => {
         if (!Cfg.Other.QQBotdau) return
         await this.Task()
         await lain.sleep(100)
         for (let id of Bot.adapter) {
-          if (Bot?.[id]?.adapter == "QQBot" && !lain.DAU?.[id]) {
+          if (Bot?.[id]?.adapter == 'QQBot' && !lain.DAU?.[id]) {
             lain.DAU[id] = {
               user_count: 0,
               group_count: 0,
@@ -55,18 +54,18 @@ export class QQBotDAU extends plugin {
     }
   }
 
-  async init() {
+  async init () {
     if (Cfg.Other.QQBotdau) setTimeout(() => this.Task(), 10000)
   }
 
-  async DAURef() {
+  async DAURef () {
     if (Cfg.Other.QQBotdau) {
       await this.Task()
-      await this.e.reply("刷新成功")
-    } else await this.e.reply("暂未开启DAU统计")
+      await this.e.reply('刷新成功')
+    } else await this.e.reply('暂未开启DAU统计')
   }
 
-  async DAUStat() {
+  async DAUStat () {
     const pro = this.e.msg.includes('pro')
     const uin = this.e.msg.replace(/^#?([Qq]+[Bb]ot[Dd][Aa][Uu](pro|)|[Dd][Aa][Uu](pro|))/, '').trim() || this.e.bot.uin || this.e.self_id
     const dau = lain.DAU[uin]
@@ -178,7 +177,7 @@ export class QQBotDAU extends plugin {
     this.reply(msg.join('\n'), true)
   }
 
-  async getDAU() {
+  async getDAU () {
     const uin = this.e.bot.uin || this.e.self_id
     const time = this.getNowDate()
     const msg_count = (await redis.get(`QQBotDAU:msg_count:${uin}`)) || 0
@@ -203,14 +202,14 @@ export class QQBotDAU extends plugin {
     }
   }
 
-  getNowDate() {
+  getNowDate () {
     const date = new Date()
     const dtf = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit' })
     const [{ value: month }, , { value: day }, , { value: year }] = dtf.formatToParts(date)
     return `${year}-${month}-${day}`
   }
 
-  async Task() {
+  async Task () {
     const yearMonth = moment().format('YYYY-MM')
     /** 根目录路径 */
     const path = process.cwd() + '/data/QQBotDAU'
