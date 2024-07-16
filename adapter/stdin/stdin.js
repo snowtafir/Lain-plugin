@@ -15,22 +15,34 @@ common.mkdirs(path)
 export default async function stdin () {
   /** 自定义标准输入头像
   可随机设置随机头像(将头像文件放至resources/Avatar目录即可) */
-  let avatar = process.cwd() + '/plugins/Lain-plugin/resources/default_avatar.jpg'
-  if (fs.existsSync(process.cwd() + '/plugins/Lain-plugin/resources/avatar.jpg')) {
-    avatar = process.cwd() + '/plugins/Lain-plugin/resources/avatar.jpg'
-  } else {
-    let txurl = `${process.cwd()}/resources/Avatar/`
-    if (fs.existsSync(txurl)) {
-      let tx_img = []
-      for (let txlb of fs.readdirSync(txurl)) {
-        if (txlb.includes('.')) {
-          tx_img.push(txurl + txlb)
-        }
-      }
-      if (tx_img.length > 0) {
-        avatar = tx_img[Math.floor(Math.random() * tx_img.length)]
+
+  let avatar
+  let txurl = `${process.cwd()}/resources/Avatar/`
+  if (fs.existsSync(txurl) && Cfg.Stdin.avatar === "auto") {
+    let tx_img = []
+    for (let txlb of fs.readdirSync(txurl)) {
+      if (txlb.includes('.')) {
+        tx_img.push(txurl + txlb)
       }
     }
+    if (tx_img.length > 0) {
+      avatar = tx_img[Math.floor(Math.random() * tx_img.length)]
+    }
+  } else {
+    if (fs.existsSync(lain._path + '/resources/avatar.jpg')) {
+      avatar = lain._path + '/resources/avatar.jpg'
+    } else {
+      if (Cfg.Stdin.avatar.startsWith('/')) {
+        if (fs.existsSync(Cfg.Stdin.avatar)) {
+          avatar = Cfg.Stdin.avatar
+        }
+      } else {
+        if (fs.existsSync(`${process.cwd()}/${Cfg.Stdin.avatar}`)) {
+          avatar = `${process.cwd()}/${Cfg.Stdin.avatar}`
+        }
+      }
+    }
+    if (!avatar) avatar = lain._path + '/resources/default_avatar.jpg'
   }
 
   /** 构建基本参数 */

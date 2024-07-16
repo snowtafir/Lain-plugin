@@ -221,6 +221,16 @@ export function supportGuoba () {
           }
         },
         {
+          field: 'Adapter.Stdin.avatar',
+          label: '标准输入头像',
+          bottomHelpMessage: '自定义标准输入的椰奶状态头像',
+          component: 'Input',
+          required: false,
+          componentProps: {
+            placeholder: '请输入自定义标准输入昵称'
+          }
+        },
+        {
           component: 'Divider',
           label: '其他设置'
         },

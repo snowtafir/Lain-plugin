@@ -3,6 +3,7 @@ config/*
 !config/defSet/
 resources/image
 resources/QQBotApi
+resources/avatar.*
 plugins/button
 /.idea
 /src

@@ -1,5 +1,3 @@
- ![Visitor Count](https://profile-counter.glitch.me/Zyy955-Lain-plugin/count.svg)
-
 # 请注意，`Lagrange.Core`作者不接受任何形式的传播  
 # 请勿将`Lagrange.Core`在中国大陆任何公开的平台进行任何传播，特别是“B站”~  
 # 请勿对`Lagrange.Core`进行制作任何教程，包括于本插件的任何教程  

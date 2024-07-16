@@ -1,13 +1,11 @@
 微信应用端只支持在`Windows`环境运行，仅支持`Miao-Yunzai`
 
-如果需要linux运行，请查看我的另外一个项目 [Gitee](https://gitee.com/Zyy955/WeChat-Web-plugin)  |  [Github](https://github.com/Zyy955/WeChat-Web-plugin)
-
- ![Visitor Count](https://profile-counter.glitch.me/Zyy955-Lain-plugin/count.svg)
+如果需要linux运行，请查看我的另外一个项目 [WeXin](./WeXin.md)
 
 
 ## 温馨提示
 
-没有`Windows`环境，请使用[WeXin.md](./WeChat.md)
+没有`Windows`环境，请使用[WeXin.md](./WeXin.md)
 
 # 使用必读
 

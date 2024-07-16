@@ -1,6 +1,7 @@
 Stdin:               # 标准输入
   state: true        # 标准输入开关
-  name: "标准输入"    # 标准输入名称 => 椰奶状态显示
+  name: "标准输入"   # 标准输入名称 => 椰奶状态显示
+  avatar:            # 标准输入自定义头像路径，auto: 自动从resources/Avatar目录中选择一张
 
 ComWeChat:           # PC微信
   name:              # PC微信名称 => 椰奶状态显示
