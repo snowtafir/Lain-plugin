@@ -274,7 +274,7 @@ export default class adapterQQBot {
 
     if (!priority) return false
 
-    if (Bot[this.id].config.other.Prefix) {
+    if (this.config.other.Prefix) {
       e.message.some(msg => {
         if (msg.type === 'text') {
           msg.text = this.hasAlias(msg.text, e)
@@ -347,7 +347,7 @@ export default class adapterQQBot {
   /** 前缀处理 */
   hasAlias (text, e, hasAlias = true) {
     text = text.trim()
-    if (Bot[this.id].config.other.Prefix && text.startsWith('/')) {
+    if (this.config.other.Prefix && text.startsWith('/')) {
       return text.replace(/^\s*\/\s*/, '#')
     }
     /** 兼容前缀 */
@@ -360,7 +360,7 @@ export default class adapterQQBot {
       if (text.startsWith(name)) {
         /** 先去掉前缀 再 / => # */
         text = lodash.trimStart(text, name)
-        if (Bot[this.id].config.other.Prefix) text = text.replace(/^\s*\/\s*/, '#')
+        if (this.config.other.Prefix) text = text.replace(/^\s*\/\s*/, '#')
         if (hasAlias) return name + text
         return text
       }
@@ -711,7 +711,7 @@ export default class adapterQQBot {
 
     try {
       /** QQ图床 预留 */
-      const QQCloud = Bot[this.id].config.other.QQCloud
+      const QQCloud = this.config.other.QQCloud
       if (QQCloud) {
         const { width, height, url } = await Bot.uploadQQ(file, QQCloud)
         lain.mark('Lain-plugin', `QQ图床上传成功：${url}`)
@@ -932,7 +932,7 @@ export default class adapterQQBot {
       if (ok) { res = data; continue }
 
       /** 模板转普通消息并终止发送剩余消息 */
-      if (Bot[this.id].config.markdown.type) {
+      if (this.config.markdown.type) {
         let val
         for (const p of normalMsg) try { val = await this.sendMsg(e, p) } catch { }
         if (val.ok) {
