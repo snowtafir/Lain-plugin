@@ -32,11 +32,11 @@ export default async function stdin () {
     if (fs.existsSync(lain._path + '/resources/avatar.jpg')) {
       avatar = lain._path + '/resources/avatar.jpg'
     } else {
-      if (Cfg.Stdin.avatar.startsWith('/')) {
+      if (Cfg.Stdin.avatar?.startsWith('/')) {
         if (fs.existsSync(Cfg.Stdin.avatar)) {
           avatar = Cfg.Stdin.avatar
         }
-      } else {
+      } else if (Cfg.Stdin.avatar) {
         if (fs.existsSync(`${process.cwd()}/${Cfg.Stdin.avatar}`)) {
           avatar = `${process.cwd()}/${Cfg.Stdin.avatar}`
         }
