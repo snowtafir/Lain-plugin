@@ -227,7 +227,7 @@ export function supportGuoba () {
           component: 'Input',
           required: false,
           componentProps: {
-            placeholder: '请输入自定义标准输入昵称'
+            placeholder: '请输入自定义标准输入头像，可选绝对路径或以崽目录开始相对路径'
           }
         },
         {

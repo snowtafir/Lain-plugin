@@ -1,7 +1,5 @@
 微信应用端只支持在`Windows`环境运行，仅支持`Miao-Yunzai`
 
-如果需要linux运行，请查看我的另外一个项目 [WeXin](./WeXin.md)
-
 
 ## 温馨提示
 
