@@ -1,6 +1,5 @@
 import { exec } from 'child_process'
 import fs from 'fs'
-import fetch from 'node-fetch'
 import sizeOf from 'image-size'
 import lodash from 'lodash'
 import path from 'path'
@@ -9,7 +8,6 @@ import { encode as encodeSilk } from 'silk-wasm'
 import Yaml from 'yaml'
 import { fileTypeFromBuffer } from 'file-type'
 import MiaoCfg from '../../../../lib/config/config.js'
-import loader from '../../../../lib/plugins/loader.js'
 import common from '../../lib/common/common.js'
 import Cfg from '../../lib/config/config.js'
 import Button from './plugins.js'
@@ -32,13 +30,11 @@ export default class adapterQQBot {
   async StartBot () {
     /** 群消息 */
     this.sdk.on('message.group', async (data) => {
-      data = await this.message(data, true)
-      if (data) Bot.emit('message', data)
+      Bot.emit('message', await this.message(data, true))
     })
     /** 私聊消息 */
     this.sdk.on('message.private.friend', async (data) => {
-      data = await this.message(data)
-      if (data) Bot.emit('message', data)
+      Bot.emit('message', await this.message(data))
     })
     /** 群通知消息 */
     this.sdk.on('notice.group', async (data) => {
@@ -50,14 +46,13 @@ export default class adapterQQBot {
     })
 
     // 有点怪 先简单处理下
-    let id, avatar, username
+    let id = this.id, avatar, username = 'QQBot'
     try {
       const info = await this.sdk.getSelfInfo()
       id = info.id
       avatar = info.avatar
       username = info.username
     } catch {
-      id = this.id
       avatar = 'https://cdn.jsdelivr.net/gh/Zyy955/imgs/img/202402020757587.gif'
       let txurl = `${process.cwd()}/resources/Avatar/`
       if (fs.existsSync(txurl)) {
@@ -71,7 +66,6 @@ export default class adapterQQBot {
           avatar = tx_img[Math.floor(Math.random() * tx_img.length)]
         }
       }
-      username = 'QQBot'
     }
 
     Bot[this.id] = {
@@ -189,22 +183,13 @@ export default class adapterQQBot {
   }
 
   async member (group_id, user_id) {
-    let info = {}
-    // 尝试从API获取昵称
-    try {
-      let res = (await (await fetch(`https://api.lolimi.cn/API/qqdj/api.php?uin=${user_id}`)).json()).data
-      info.nickname = res?.Name
-      info.card = res?.Name
-    } catch (err) { lain.debug(this.id, '获取昵称异常：\n', err) }
-
     const member = {
       info: {
         group_id,
         user_id,
         nickname: '',
         card: '',
-        last_sent_time: parseInt(Date.now() / 1000),
-        ...info
+        last_sent_time: parseInt(Date.now() / 1000)
       },
       group_id,
       user_id,
@@ -254,25 +239,12 @@ export default class adapterQQBot {
 
     lain.info(this.id, `${isGroup ? `<群:${e.group_id}>` : ''}<用户:${e.user_id}> -> ${this.messageLog(e.message)}`)
 
-    /** 过滤事件 */
-    let priority = true
+    /** 处理前缀 */
     let raw_message = e.raw_message
     if (e.group_id && raw_message) {
       raw_message = this.hasAlias(raw_message, e, false)
       raw_message = raw_message.replace(/^#?(\*|星铁|星轨|穹轨|星穹|崩铁|星穹铁道|崩坏星穹铁道|铁道)+/, '#星铁')
     }
-
-    for (let v of loader.priority) {
-      // eslint-disable-next-line new-cap
-      let p = new v.class(e)
-      /** 判断是否启用功能 */
-      if (!this.checkDisable(p, raw_message)) {
-        priority = false
-        return false
-      }
-    }
-
-    if (!priority) return false
 
     if (this.config.other.Prefix) {
       e.message.some(msg => {
@@ -325,23 +297,6 @@ export default class adapterQQBot {
     /** dau统计 */
     this.msg_count(data)
     return e
-  }
-
-  /** 判断是否启用功能 */
-  checkDisable (p, raw_message) {
-    let groupCfg = Cfg.getGroup(this.id)
-
-    // 启用列表
-    if (groupCfg.enable?.length && !groupCfg.enable.includes(p.name)) {
-      lain.mark(this.id, `<${p.name}>功能不在白名单内`)
-      return false
-    }
-    // 禁用列表
-    if (groupCfg.disable?.length && groupCfg.disable.includes(p.name)) {
-      lain.mark(this.id, `<${p.name}>功能已禁用`)
-      return false
-    }
-    return true
   }
 
   /** 前缀处理 */

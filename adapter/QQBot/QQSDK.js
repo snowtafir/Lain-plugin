@@ -19,8 +19,6 @@ export default class QQSDK {
     this.config.maxRetry = this.config.maxRetry || 10
     /** 日志等级 */
     this.config.logLevel = Cfg.bot.log_level
-    /** 频道模式 */
-    this.sandbox = this.config.allMsg || false
     /** 监听事件 */
     this.config.intents = ['MESSAGE_AUDIT']
 
@@ -43,7 +41,7 @@ export default class QQSDK {
       /** 频道消息表态事件 */
       this.config.intents.push('GUILD_MESSAGE_REACTIONS')
       /** 公域 私域事件 */
-      this.sandbox ? this.config.intents.push('GUILD_MESSAGES') : this.config.intents.push('PUBLIC_GUILD_MESSAGES')
+      this.config.allMsg ? this.config.intents.push('GUILD_MESSAGES') : this.config.intents.push('PUBLIC_GUILD_MESSAGES')
     }
 
     /** 创建机器人 */
@@ -68,7 +66,7 @@ export default class QQSDK {
     if (typeof msg !== 'string' || data.length > 1) return lain.info(this.id, ...data)
     msg = msg.trim()
     try {
-      if (/^(recv from Group|recv from Guild|send to Channel|recv from User)/.test(msg)) {
+      if (/^(recv from Group|recv from Guild|send to Channel|recv from User|send to Direct|recv from Direct)/.test(msg)) {
         return ''
       } else if (/^send to Group/.test(msg)) {
         msg = msg.replace(/^send to Group\([^)]+\): /, `<发送群聊: ${this.id}-${msg.match(/\(([^)]+)\)/)[1]}> => `)

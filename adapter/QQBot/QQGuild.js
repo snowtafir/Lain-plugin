@@ -1,7 +1,6 @@
 import lodash from 'lodash'
 import fs from 'node:fs'
 import MiaoCfg from '../../../../lib/config/config.js'
-import loader from '../../../../lib/plugins/loader.js'
 import common from '../../lib/common/common.js'
 import Cfg from '../../lib/config/config.js'
 import { faceMap } from '../../model/shamrock/face.js'
@@ -21,16 +20,14 @@ export default class adapterQQGuild {
 
   async StartBot () {
     this.sdk.on('message.guild', async (data) => {
-      data = await this.GroupMessage(data)
-      data && Bot.emit('message', data)
+      Bot.emit('message', await this.GroupMessage(data))
     })
     this.sdk.on('message.private.direct', async (data) => {
-      data = await this.GroupMessage(data, 'friend')
-      data && Bot.emit('message', data)
+      Bot.emit('message', await this.GroupMessage(data, 'friend'))
     })
 
     // 有点怪 先简单处理下
-    let id, avatar, username
+    let id = this.id, avatar, username = 'QQGuild'
     try {
       const info = await this.sdk.getSelfInfo()
       id = info.id
@@ -38,19 +35,19 @@ export default class adapterQQGuild {
       username = info.username
     } catch (err) {
       lain.warn(this.id, err)
-      id = this.id
       avatar = 'https://cdn.jsdelivr.net/gh/Zyy955/imgs/img/202402020757587.gif'
       let txurl = `${process.cwd()}/resources/Avatar/`
       if (fs.existsSync(txurl)) {
         let tx_img = []
         for (let txlb of fs.readdirSync(txurl)) {
-          if (txlb.includes('.')) { tx_img.push(txurl + txlb) }
+          if (txlb.includes('.')) {
+            tx_img.push(txurl + txlb)
+          }
         }
         if (tx_img.length > 0) {
           avatar = tx_img[Math.floor(Math.random() * tx_img.length)]
         }
       }
-      username = 'QQGuild'
     }
 
     Bot[this.id] = {
@@ -87,7 +84,7 @@ export default class adapterQQGuild {
 
     /** 重启 */
     await common.init('Lain:restart:QQGuild')
-    return lain.info(this.id, `QQGuild：[${username}(${this.id})] 连接成功!`)
+    return lain.info(this.id, `QQGuild：<${username}(${this.id})> 连接成功!`)
   }
 
   async gmlList (type = 'gl') {
@@ -163,27 +160,13 @@ export default class adapterQQGuild {
 
     lain.info(this.id, `<${friend ? '私信' : '频道'}:${group_name}(${group_id})><用户:${nickname}(${user_id})> -> ${log_message}`)
 
-    /** 过滤事件 */
-    let priority = true
+    /** 处理前缀 */
     if (e.group_id && raw_message) {
       raw_message = this.hasAlias(raw_message, e, false)
       raw_message = raw_message.replace(/^#?(\*|星铁|星轨|穹轨|星穹|崩铁|星穹铁道|崩坏星穹铁道|铁道)+/, '#星铁')
     }
 
-    for (let v of loader.priority) {
-      // eslint-disable-next-line new-cap
-      let p = new v.class(data)
-      p.e = data
-      /** 判断是否启用功能 */
-      if (!this.checkDisable(data, p, raw_message)) {
-        priority = false
-        return false
-      }
-    }
-
-    if (!priority) return false
-
-    if (Bot[this.id].config.other.Prefix) {
+    if (this.config.other.Prefix) {
       data.message.some(msg => {
         if (msg.type === 'text') {
           msg.text = this.hasAlias(msg.text, data)
@@ -421,43 +404,10 @@ export default class adapterQQGuild {
     return { Pieces: message.length ? [message, ...Pieces] : Pieces, reply, messageLog: messageLog.join('') }
   }
 
-  /** 判断是否启用功能 */
-  checkDisable (e, p, raw_message) {
-    let groupCfg = Cfg.getGroup(e.self_id)
-    /** 白名单 */
-    if (!lodash.isEmpty(groupCfg.enable)) {
-      if (groupCfg.enable.includes(p.name)) {
-        /** 判断当前传入的值是否符合正则 */
-        for (let i of p.rule) {
-          i = new RegExp(i.reg)
-          if (i.test(raw_message.trim())) {
-            return true
-          }
-        }
-        logger.mark(`[Lain-plugin][${p.name}]功能已禁用`)
-        return false
-      }
-    }
-
-    if (!lodash.isEmpty(groupCfg.disable)) {
-      if (groupCfg.disable.includes(p.name)) {
-        /** 判断当前传入的值是否符合正则 */
-        for (let i of p.rule) {
-          i = new RegExp(i.reg)
-          if (i.test(raw_message.trim())) {
-            logger.mark(`[Lain-plugin][${p.name}]功能已禁用`)
-            return false
-          }
-        }
-      }
-    }
-    return true
-  }
-
   /** 前缀处理 */
   hasAlias (text, e, hasAlias = true) {
     text = text.trim()
-    if (Bot[this.id].config.other.Prefix && text.startsWith('/')) {
+    if (this.config.other.Prefix && text.startsWith('/')) {
       return text.replace(/^\//, '#')
     }
     /** 兼容前缀 */
@@ -470,7 +420,7 @@ export default class adapterQQGuild {
       if (text.startsWith(name)) {
         /** 先去掉前缀 再 / => # */
         text = lodash.trimStart(text, name)
-        if (Bot[this.id].config.other.Prefix) text = text.replace(/^\//, '#')
+        if (this.config.other.Prefix) text = text.replace(/^\//, '#')
         if (hasAlias) return name + text
         return text
       }
@@ -519,7 +469,7 @@ export default class adapterQQGuild {
           }
           break
         case 'at':
-          if ([1, '1', 4, '4'].includes(e.bot.config.markdown.type)) text.push(`<@${(i.qq || i.id).trim().split('-')[1]}>`)
+          if ([1, '1', 4, '4'].includes(this.config.markdown.type)) text.push(`<@${(i.qq || i.id).trim().split('-')[1]}>`)
           break
         case 'image':
           image.push(await this.getImage(i?.url || i.file))
@@ -548,7 +498,7 @@ export default class adapterQQGuild {
     if (text.length) try { common.MsgTotal(this.id, 'QQGuild') } catch { }
     if (image.length) try { common.MsgTotal(this.id, 'QQGuild', 'image') } catch { }
 
-    switch (e.bot.config.markdown.type) {
+    switch (this.config.markdown.type) {
       /** 关闭 */
       case 0:
       case '0':
@@ -608,8 +558,8 @@ export default class adapterQQGuild {
             const markdown = [
               {
                 type: 'markdown',
-                custom_template_id: e.bot.config.markdown.id,
-                params: [{ key: e.bot.config.markdown.text || 'text_start', values: ['\u200B'] }]
+                custom_template_id: this.config.markdown.id,
+                params: [{ key: this.config.markdown.text || 'text_start', values: ['\u200B'] }]
               },
               ...button
             ]
