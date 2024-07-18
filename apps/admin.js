@@ -136,7 +136,9 @@ export class admin extends plugin {
     const ul = []
     const Server = Cfg.Server
     const Shamrock = Cfg.Shamrock
-    const other = Cfg.Other
+    const Stdin = Cfg.Stdin
+    const ComWeChat = Cfg.ComWeChat
+    const WeXin = Cfg.WeXin
 
     /** HTTPServer设置 */
     ul.push({
@@ -176,13 +178,19 @@ export class admin extends plugin {
         {
           line: '开关',
           hint: '#铃音设置标准输入 开启/关闭',
-          status: other.Stdin.state
+          status: Stdin.state
         },
         {
           line: '名称',
           hint: '#铃音设置标准输入名称 标准输入',
-          status: other.Stdin.name,
+          status: Stdin.name,
           desc: '椰奶状态、土块状态中显示名称'
+        },
+        {
+          line: '头像',
+          hint: '#铃音设置标准输入头像 plugin/Lain-plugin/resources/default_avatar.jpg',
+          status: Stdin.avatar ? Stdin.avatar : '未设置',
+          desc: '椰奶状态、土块状态中显示头像'
         }
       ]
     })
@@ -217,13 +225,13 @@ export class admin extends plugin {
         {
           line: '名称',
           hint: '#铃音设置PC微信名称 ComWeChat',
-          status: other.ComWeChat.name ? other.ComWeChat.name : '未设置',
+          status: ComWeChat.name ? ComWeChat.name : '未设置',
           desc: '椰奶状态、土块状态中显示名称'
         },
         {
           line: '自动同意好友',
           hint: '#铃音设置PC微信好友 开启/关闭',
-          status: other.ComWeChat.autoFriend,
+          status: ComWeChat.autoFriend,
           desc: 'Windows版本的微信适配器'
         }
       ]
@@ -235,13 +243,13 @@ export class admin extends plugin {
         {
           line: '名称',
           hint: '#铃音设置微信名称 ComWeChat',
-          status: other.WeXin.name ? other.WeXin.name : '未设置',
+          status: WeXin.name ? WeXin.name : '未设置',
           desc: '椰奶状态、土块状态中显示名称'
         },
         {
           line: '自动同意好友',
           hint: '#铃音设置微信好友 开启/关闭',
-          status: other.WeXin.autoFriend,
+          status: WeXin.autoFriend,
           desc: 'Web(网页版)版本的微信适配器'
         }
       ]

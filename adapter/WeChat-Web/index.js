@@ -66,7 +66,7 @@ export default class StartWeChat4u {
         tl: new Map(),
         gml: new Map(),
         guilds: new Map(),
-        nickname: this.name,
+        nickname: Cfg.WeXin.name || this.name,
         avatar: `${this.path}${this.id}.jpg`,
         stat: { start_time: parseInt(Date.now() / 1000), recv_msg_cnt: 0 },
         apk: Bot.lain.adapter.WeXin.apk,

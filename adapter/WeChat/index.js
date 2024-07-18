@@ -86,7 +86,7 @@ class AdapterComWeChat {
     switch (data.detail_type) {
       /** 添加好友请求 */
       case 'wx.friend_request':
-        if (Cfg.Other.ComWeChat.autoFriend) {
+        if (Cfg.ComWeChat.autoFriend) {
           const { v3, v4, nickname, user_id } = data
           await this.sendApi('wx.accept_friend', { v3, v4 })
           lain.info(this.id, `自动同意好友申请：${nickname}(${user_id})`)
@@ -132,7 +132,7 @@ class AdapterComWeChat {
       tl: new Map(),
       gml: new Map(),
       guilds: new Map(),
-      nickname: Cfg.Other.ComWeChat.name || data.user_name,
+      nickname: Cfg.ComWeChat.name || data.user_name,
       adapter: 'ComWeChat',
       uin: this.id,
       tiny_id: this.id,

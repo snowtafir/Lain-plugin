@@ -2,7 +2,6 @@ import lodash from 'lodash'
 import fs from 'node:fs'
 import MiaoCfg from '../../../../lib/config/config.js'
 import common from '../../lib/common/common.js'
-import Cfg from '../../lib/config/config.js'
 import { faceMap } from '../../model/shamrock/face.js'
 
 export default class adapterQQGuild {
@@ -27,7 +26,7 @@ export default class adapterQQGuild {
     })
 
     // 有点怪 先简单处理下
-    let id = this.id, avatar, username = 'QQGuild'
+    let id = this.id; let avatar; let username = 'QQGuild'
     try {
       const info = await this.sdk.getSelfInfo()
       id = info.id
