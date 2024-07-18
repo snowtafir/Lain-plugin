@@ -18,7 +18,7 @@ export default async function stdin () {
 
   let avatar
   let txurl = `${process.cwd()}/resources/Avatar/`
-  if (fs.existsSync(txurl) && Cfg.Stdin.avatar === "auto") {
+  if (fs.existsSync(txurl) && Cfg.Stdin.avatar === 'auto') {
     let tx_img = []
     for (let txlb of fs.readdirSync(txurl)) {
       if (txlb.includes('.')) {

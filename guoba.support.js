@@ -143,7 +143,7 @@ export function supportGuoba () {
         {
           field: 'Adapter.ComWeChat.name',
           label: '椰奶状态名称',
-          bottomHelpMessage: '自定义微信椰奶状态名称',
+          bottomHelpMessage: '自定义PC微信椰奶状态名称',
           component: 'Input',
           required: false,
           componentProps: {
@@ -164,6 +164,16 @@ export function supportGuoba () {
               { label: '不处理', value: 0 },
               { label: '自动同意', value: 1 }
             ]
+          }
+        },
+        {
+          field: 'Adapter.WeXin.name',
+          label: '椰奶状态名称',
+          bottomHelpMessage: '自定义微信椰奶状态名称',
+          component: 'Input',
+          required: false,
+          componentProps: {
+            placeholder: '请输入椰奶状态名称'
           }
         },
         {

@@ -46,7 +46,7 @@ export default class adapterQQBot {
     })
 
     // 有点怪 先简单处理下
-    let id = this.id, avatar, username = 'QQBot'
+    let id = this.id; let avatar; let username = 'QQBot'
     try {
       const info = await this.sdk.getSelfInfo()
       id = info.id
@@ -200,8 +200,7 @@ export default class adapterQQBot {
       is_owner: false,
       /** 获取头像 */
       getAvatarUrl: (size = 0) => this.getAvatarUrl(size, user_id),
-      mute: async (time) => '',
-      ...info
+      mute: async (time) => ''
     }
     return member
   }
