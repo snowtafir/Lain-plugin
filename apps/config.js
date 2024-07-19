@@ -46,7 +46,7 @@ export class adapter extends plugin {
       appid: '',
       token: '',
       sandbox: false,
-      timeout: 10,
+      timeout: 10000,
       allMsg: false,
       removeAt: false,
       secret: '',
