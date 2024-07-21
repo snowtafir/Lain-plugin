@@ -20,7 +20,7 @@ export default class QQSDK {
     /** 日志等级 */
     this.config.logLevel = Cfg.bot.log_level
     /** 监听事件 */
-    this.config.intents = ['MESSAGE_AUDIT']
+    this.config.intents = []
 
     /** 是否启用群 */
     if (this.config.model == 0 || this.config.model == 2) {
