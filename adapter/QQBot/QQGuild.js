@@ -328,16 +328,20 @@ export default class adapterQQGuild {
     let { Pieces, messageLog } = await this.getQQGuild(msg)
     const info = data.message_type === 'group' ? '频道' : '私信'
     lain.info(this.id, `<回复${info}:${data.group_name}(${data.group_id})> => ${messageLog}`)
+    let result = { res: [], err: [] }
     for (const item of Pieces) {
       try {
         lain.debug(`发送回复${info}消息：`, JSON.stringify(item))
         let res = await data.data.reply(item, quote)
         res.message_id = res.id
-        lain.debug(`回复${info}消息返回：`, res)
+        lain.debug(this.id, `回复${info}消息返回：`, res)
+        result.res.push(res)
       } catch (error) {
-        console.error(error)
+        lain.error(this.id, error)
+        result.err.push(error)
       }
     }
+    return result
   }
 
   /** 转换message为sdk可接收的格式 */
@@ -605,16 +609,19 @@ export default class adapterQQGuild {
     lain.info(this.id, `<发送主动私信消息:${group_id})> => ${messageLog}`)
     /** 先创建私信会话 */
     const directData = await this.sdk.createDirectSession(guild_id, user_id)
+    let result = { res: [], err: [] }
     for (let item of Pieces) {
       try {
         if (reply) item = Array.isArray(item) ? [reply, ...item] : [reply, item]
         let res = await this.sdk.sendDirectMessage(directData.guild_id, item)
         res.message_id = res.id
-        return res
+        result.res.push(res)
       } catch (error) {
         lain.error(this.id, '发送主动私信消息息失败：', error)
+        result.err.push(error)
       }
     }
+    return result
   }
 
   /** 发送主动群消息 */
@@ -622,16 +629,19 @@ export default class adapterQQGuild {
     const channel_id = groupID.replace('qg_', '').split('-')[1]
     let { Pieces, messageLog, reply } = await this.getQQGuild(data)
     lain.info(this.id, `<发送主动频道消息:${groupID})> => ${messageLog}`)
+    let result = { res: [], err: [] }
     for (let item of Pieces) {
       try {
         if (reply) item = Array.isArray(item) ? [reply, ...item] : [reply, item]
         let res = await this.sdk.sendGuildMessage(channel_id, item)
         res.message_id = res.id
-        return res
+        result.res.push(res)
       } catch (error) {
         lain.error(this.id, '发送频道主动消息失败：', error)
+        result.err.push(error)
       }
     }
+    return result
   }
 }
 
