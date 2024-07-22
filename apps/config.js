@@ -66,7 +66,7 @@ export class adapter extends plugin {
     }
 
     const msg = this.e.msg.replace(/^#QQ(群|Bot|频道)?设置/i, '').trim().replace(/：/g, ':').split(':')
-    const cfg = new YAML(lain._pathCfg + '/Config-Token.yaml')
+    const cfg = new YAML(lain._pathCfg + '/Token.yaml')
     const QQSDK = (await import('../adapter/QQBot/QQSDK.js')).default
     const QQBot = (await import('../adapter/QQBot/index.js')).default
     const QQGuild = (await import('../adapter/QQBot/QQGuild.js')).default
@@ -188,7 +188,7 @@ export class adapter extends plugin {
   async markdown () {
     if (!/\d{9}_\d{10}/.test(this.e.msg)) return await this.reply('格式错误，切换模板请使用[#QQ群md 0123]')
     let msg = this.e.msg.replace(/^#QQ(群|Bot|频道)设置(MD|markdown)/i, '').replace(/：/g, ':').trim().split(':')
-    const cfg = new YAML(lain._pathCfg + '/Config-Token.yaml')
+    const cfg = new YAML(lain._pathCfg + '/Token.yaml')
     let val = cfg.get('QQ_Token')
     if (this.e?.adapter === 'QQBot') {
       if (msg.length == 1) {
@@ -221,7 +221,7 @@ export class adapter extends plugin {
   /** 切换模板ID */
   async type () {
     let msg = this.e.msg.replace(/^#QQ(群|Bot|频道)(MD|markdown)/i, '').replace(/：/g, ':').trim().split(':')
-    const cfg = new YAML(lain._pathCfg + '/Config-Token.yaml')
+    const cfg = new YAML(lain._pathCfg + '/Token.yaml')
     let val = cfg.get('QQ_Token')
     if (this.e?.adapter === 'QQBot') {
       if (msg.length == 1) {
@@ -251,7 +251,7 @@ export class adapter extends plugin {
   /** 其他 */
   async other () {
     const msg = this.e.msg.replace(/^#QQ(群|Bot|频道)设置(QQ图床|前缀|防倒卖(群号)?)/i, '').replace(/：/g, ':').trim().split(':')
-    const cfg = new YAML(lain._pathCfg + '/Config-Token.yaml')
+    const cfg = new YAML(lain._pathCfg + '/Token.yaml')
     if (msg.length != 1 && msg.length != 2) return await this.reply('格式错误!', true, { at: true })
 
     let self_id

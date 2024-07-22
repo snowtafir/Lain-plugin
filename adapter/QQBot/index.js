@@ -245,7 +245,7 @@ export default class adapterQQBot {
       raw_message = raw_message.replace(/^#?(\*|星铁|星轨|穹轨|星穹|崩铁|星穹铁道|崩坏星穹铁道|铁道)+/, '#星铁')
     }
 
-    if (this.config.other.Prefix) {
+    if (Bot[this.id].config.other.Prefix) {
       e.message.some(msg => {
         if (msg.type === 'text') {
           msg.text = this.hasAlias(msg.text, e)
@@ -301,7 +301,7 @@ export default class adapterQQBot {
   /** 前缀处理 */
   hasAlias (text, e, hasAlias = true) {
     text = text.trim()
-    if (this.config.other.Prefix && text.startsWith('/')) {
+    if (Bot[this.id].config.other.Prefix && text.startsWith('/')) {
       return text.replace(/^\s*\/\s*/, '#')
     }
     /** 兼容前缀 */
@@ -314,7 +314,7 @@ export default class adapterQQBot {
       if (text.startsWith(name)) {
         /** 先去掉前缀 再 / => # */
         text = lodash.trimStart(text, name)
-        if (this.config.other.Prefix) text = text.replace(/^\s*\/\s*/, '#')
+        if (Bot[this.id].config.other.Prefix) text = text.replace(/^\s*\/\s*/, '#')
         if (hasAlias) return name + text
         return text
       }
@@ -418,7 +418,7 @@ export default class adapterQQBot {
                 else if (i2?.type == 'button') button.push(i2)
                 else if (String(i2).trim()) {
                   /** 模板1、4使用按钮替换连接 */
-                  if (this.config.markdown.type == 1 || this.config.markdown.type == 4) {
+                  if (Bot[this.id].config.markdown.type == 1 || Bot[this.id].config.markdown.type == 4) {
                     for (let p of (this.HandleURL(i2))) {
                       p.type === 'button' ? button.push(p) : text.push(p.text)
                     }
@@ -434,7 +434,7 @@ export default class adapterQQBot {
             /** 禁止用户从文本键入@全体成员 */
             i.text = String(i.text).replace('@everyone', 'everyone')
             /** 模板1、4使用按钮替换连接 */
-            if (this.config.markdown.type == 1 || this.config.markdown.type == 4) {
+            if (Bot[this.id].config.markdown.type == 1 || Bot[this.id].config.markdown.type == 4) {
               for (let p of (this.HandleURL(i.text.trim()))) {
                 p.type === 'button' ? button.push(p) : text.push(p.text)
               }
@@ -446,7 +446,7 @@ export default class adapterQQBot {
           }
           break
         case 'at':
-          if (this.config.markdown.type) {
+          if (Bot[this.id].config.markdown.type) {
             if ((i.qq || i.id) === 'all') {
               text.push('@everyone')
             } else {
@@ -506,7 +506,7 @@ export default class adapterQQBot {
     if (image.length) try { common.MsgTotal(this.id, 'QQBot', 'image') } catch { }
 
     /** 浅拷贝一次消息为普通消息，用于模板发送失败重发 */
-    if (this.config.markdown.type) {
+    if (Bot[this.id].config.markdown.type) {
       /** 拷贝源消息 */
       const copyMessage = JSON.parse(JSON.stringify(message))
       const copyImage = JSON.parse(JSON.stringify(image))
@@ -518,7 +518,7 @@ export default class adapterQQBot {
       normalMsg = copyMessage.length ? [copyMessage, ...normalMsg] : normalMsg
     }
 
-    switch (this.config.markdown.type) {
+    switch (Bot[this.id].config.markdown.type) {
       /** 关闭 */
       case 0:
       case '0':
@@ -576,8 +576,8 @@ export default class adapterQQBot {
             const markdown = [
               {
                 type: 'markdown',
-                custom_template_id: this.config.markdown.id,
-                params: [{ key: this.config.markdown.text || 'text_start', values: ['\u200B'] }]
+                custom_template_id: Bot[this.id].config.markdown.id,
+                params: [{ key: Bot[this.id].config.markdown.text || 'text_start', values: ['\u200B'] }]
               },
               ...button
             ]
@@ -635,7 +635,7 @@ export default class adapterQQBot {
     file = await Bot.FormatFile(file)
 
     const type = 'image'
-    if (this.config?.markdown.type == 0 || this.config?.markdown.type == 3 || (this.config?.markdown.type == 2 && !await this.button(e))) {
+    if (Bot[this.id].config?.markdown.type == 0 || Bot[this.id].config?.markdown.type == 3 || (Bot[this.id].config?.markdown.type == 2 && !await this.button(e))) {
       return { type, file }
     }
     try {
@@ -665,7 +665,7 @@ export default class adapterQQBot {
 
     try {
       /** QQ图床 预留 */
-      const QQCloud = this.config.other.QQCloud
+      const QQCloud = Bot[this.id].config.other.QQCloud
       if (QQCloud) {
         const { width, height, url } = await Bot.uploadQQ(file, QQCloud)
         lain.mark('Lain-plugin', `QQ图床上传成功：${url}`)
@@ -756,18 +756,18 @@ export default class adapterQQBot {
   async markdown (e, data, Button = true) {
     let markdown = {
       type: 'markdown',
-      custom_template_id: this.config.markdown.id,
+      custom_template_id: Bot[this.id].config.markdown.id,
       params: []
     }
 
     for (let i of data) {
       switch (i.type) {
         case 'text':
-          markdown.params.push({ key: this.config.markdown.text || 'text_start', values: [i.text.replace(/\n/g, '\r')] })
+          markdown.params.push({ key: Bot[this.id].config.markdown.text || 'text_start', values: [i.text.replace(/\n/g, '\r')] })
           break
         case 'image':
-          markdown.params.push({ key: this.config.markdown.img_url || 'img_url', values: [i.file] })
-          markdown.params.push({ key: this.config.markdown.img_dec || 'img_dec', values: [`text #${i.width}px #${i.height}px`] })
+          markdown.params.push({ key: Bot[this.id].config.markdown.img_url || 'img_url', values: [i.file] })
+          markdown.params.push({ key: Bot[this.id].config.markdown.img_dec || 'img_dec', values: [`text #${i.width}px #${i.height}px`] })
           break
         default:
           break
@@ -886,7 +886,7 @@ export default class adapterQQBot {
       if (ok) { res = data; continue }
 
       /** 模板转普通消息并终止发送剩余消息 */
-      if (this.config.markdown.type) {
+      if (Bot[this.id].config.markdown.type) {
         let val
         for (const p of normalMsg) try { val = await this.sendMsg(e, p) } catch { }
         if (val.ok) {

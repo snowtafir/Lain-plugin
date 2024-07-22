@@ -78,7 +78,7 @@ export default class adapterQQGuild {
       getGroupMemberInfo: (group_id, user_id) => Bot.getGroupMemberInfo(group_id, user_id)
     }
 
-    if (!this.config.allMsg) Bot[this.id].version.id = '私域'
+    if (!Bot[this.id].config.allMsg) Bot[this.id].version.id = '私域'
     if (!Bot.adapter.includes(String(this.id))) Bot.adapter.push(String(this.id))
 
     /** 重启 */
@@ -165,7 +165,7 @@ export default class adapterQQGuild {
       raw_message = raw_message.replace(/^#?(\*|星铁|星轨|穹轨|星穹|崩铁|星穹铁道|崩坏星穹铁道|铁道)+/, '#星铁')
     }
 
-    if (this.config.other.Prefix) {
+    if (Bot[this.id].config.other.Prefix) {
       data.message.some(msg => {
         if (msg.type === 'text') {
           msg.text = this.hasAlias(msg.text, data)
@@ -406,7 +406,7 @@ export default class adapterQQGuild {
   /** 前缀处理 */
   hasAlias (text, e, hasAlias = true) {
     text = text.trim()
-    if (this.config.other.Prefix && text.startsWith('/')) {
+    if (Bot[this.id].config.other.Prefix && text.startsWith('/')) {
       return text.replace(/^\//, '#')
     }
     /** 兼容前缀 */
@@ -419,7 +419,7 @@ export default class adapterQQGuild {
       if (text.startsWith(name)) {
         /** 先去掉前缀 再 / => # */
         text = lodash.trimStart(text, name)
-        if (this.config.other.Prefix) text = text.replace(/^\//, '#')
+        if (Bot[this.id].config.other.Prefix) text = text.replace(/^\//, '#')
         if (hasAlias) return name + text
         return text
       }
@@ -468,7 +468,7 @@ export default class adapterQQGuild {
           }
           break
         case 'at':
-          if ([1, '1', 4, '4'].includes(this.config.markdown.type)) text.push(`<@${(i.qq || i.id).trim().split('-')[1]}>`)
+          if ([1, '1', 4, '4'].includes(Bot[this.id].config.markdown.type)) text.push(`<@${(i.qq || i.id).trim().split('-')[1]}>`)
           break
         case 'image':
           image.push(await this.getImage(i?.url || i.file))
@@ -497,7 +497,7 @@ export default class adapterQQGuild {
     if (text.length) try { common.MsgTotal(this.id, 'QQGuild') } catch { }
     if (image.length) try { common.MsgTotal(this.id, 'QQGuild', 'image') } catch { }
 
-    switch (this.config.markdown.type) {
+    switch (Bot[this.id].config.markdown.type) {
       /** 关闭 */
       case 0:
       case '0':
@@ -557,8 +557,8 @@ export default class adapterQQGuild {
             const markdown = [
               {
                 type: 'markdown',
-                custom_template_id: this.config.markdown.id,
-                params: [{ key: this.config.markdown.text || 'text_start', values: ['\u200B'] }]
+                custom_template_id: Bot[this.id].config.markdown.id,
+                params: [{ key: Bot[this.id].config.markdown.text || 'text_start', values: ['\u200B'] }]
               },
               ...button
             ]
