@@ -242,14 +242,14 @@ export default class adapterQQGuild {
       sendMsg: async (group_id, msg) => await this.sendFriendMsg(group_id, userId, msg),
       makeForwardMsg: async (data) => await common.makeForwardMsg(data),
       getChatHistory: async () => [],
-      getAvatarUrl: async (size = 0, userID) => `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${userID.split('-')[1] || this.id}`
+      getAvatarUrl: async (size = 0) => `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${userId.split('-')[1] || this.id}`
     }
   }
 
   pickMember (groupID, userID) {
     return {
       member: this.member(groupID, userID),
-      getAvatarUrl: (size = 0, userID) => `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${userID.split('-')[1] || this.id}`
+      getAvatarUrl: (size = 0) => `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${userID.split('-')[1] || this.id}`
     }
   }
 
