@@ -188,7 +188,7 @@ export default class adapterQQGuild {
     const group_id = `qg_${guildId}-${channelId}`
     const guild = await this.sdk.getGuildInfo(guildId)
     const channel = await this.sdk.getChannelInfo(channelId)
-    const user = await this.sdk.getGuildMemberInfo(guildId, userId.replace("qg_", ""))
+    const user = await this.sdk.getGuildMemberInfo(guildId, userId.replace('qg_', ''))
     const group_name = `${guild.guild_name}-${channel.channel_name}`
 
     /** 用户 */
@@ -267,7 +267,7 @@ export default class adapterQQGuild {
       /** 修改群名片 **/
       setCard: async (qq, card) => Promise.reject(new Error('QQ频道未支持')),
       /** 获取群头像链接 */
-      getAvatarUrl: () => info?.group_avatar || "",
+      getAvatarUrl: () => info?.group_avatar || '',
       ...info
     }
   }
@@ -279,7 +279,7 @@ export default class adapterQQGuild {
       sendMsg: async (groupId, msg) => await this.sendFriendMsg(groupId, userId, msg),
       makeForwardMsg: async (data) => await common.makeForwardMsg(data),
       getChatHistory: async () => [],
-      getAvatarUrl: () => info?.avatar || "",
+      getAvatarUrl: () => info?.avatar || '',
       ...info
     }
   }
@@ -288,7 +288,7 @@ export default class adapterQQGuild {
     const info = await this.member(groupID, userID)
     return {
       info,
-      getAvatarUrl: () => info?.avatar || "",
+      getAvatarUrl: () => info?.avatar || '',
       ...info
     }
   }
@@ -296,7 +296,7 @@ export default class adapterQQGuild {
   async member (groupID, userID) {
     let ret = {}
     try {
-      let data = this.sdk.getGuildMemberInfo(groupID, userID)
+      let data = this.sdk.getGuildMemberInfo(groupID.replace('qg_', '').split('-')[0], userID.replace('qg_', ''))
       ret.data = data
     } catch (error) {
       lain.error(this.id, error)
@@ -544,7 +544,7 @@ export default class adapterQQGuild {
           }
           break
         case 'at':
-          if ([1, '1', 4, '4'].includes(Bot[this.id].config.markdown.type)) text.push(`<@${(i.qq || i.id).trim().split('-')[1]}>`)
+          if ([1, '1', 4, '4'].includes(Bot[this.id].config.markdown.type)) text.push(`<@${(i.qq || i.id).trim().split('_')[1]}>`)
           break
         case 'image':
           image.push(await this.getImage(i?.url || i.file))
