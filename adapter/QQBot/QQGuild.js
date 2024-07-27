@@ -91,7 +91,7 @@ export default class adapterQQGuild {
   }
 
   async GroupMessage (e, friend) {
-    let { self_id: _tiny_id, _bot, ...data } = e
+    let { self_id: _tiny_id, ...data } = e
     const { guild_id, channel_id, member, author, src_guild_id } = e
     const { id: userId, username: nickname, avatar } = author
 
@@ -103,10 +103,12 @@ export default class adapterQQGuild {
     const role = is_owner ? 'owner' : (is_admin ? 'admin' : 'member')
     const group_name = await this.getGroupName(src_guild_id || guild_id, channel_id, friend)
 
+    // 保存用户信息至云崽
+    this.saveInfo(src_guild_id || guild_id, channel_id, user_id).catch(error => lain.error(this.id, `Bot无法在频道 ${src_guild_id || guild_id} 中获取信息，请给予权限...错误信息：`, error))
+
     data.data = e
     data.uin = this.id // ???鬼知道哪来的这玩意，icqq都没有...
     data.bot = Bot[this.id]
-    data._bot = _bot
     data.adapter = 'QQGuild'
     data.user_id = user_id
     data.group_id = group_id
@@ -181,6 +183,36 @@ export default class adapterQQGuild {
     return data
   }
 
+  /** 保存用户信息至云崽 */
+  async saveInfo (guildId, channelId, userId) {
+    const group_id = `qg_${guildId}-${channelId}`
+    const guild = await this.sdk.getGuildInfo(guildId)
+    const channel = await this.sdk.getChannelInfo(channelId)
+    const user = await this.sdk.getGuildMemberInfo(guildId, userId.replace("qg_", ""))
+    const group_name = `${guild.guild_name}-${channel.channel_name}`
+
+    /** 用户 */
+    Bot[this.id].fl.set(userId, {
+      uin: this.id,
+      ...Bot[this.id].fl.get(userId),
+      ...guild,
+      ...channel,
+      ...user,
+      group_name,
+    })
+
+    /** 群 */
+    Bot[this.id].gl.set(group_id, {
+      uin: this.id,
+      ...Bot[this.id].fl.get(group_id),
+      ...guild,
+      ...channel,
+      ...user,
+      group_name,
+      group_avatar: guild.icon
+    })
+  }
+
   /** 获取群名称 */
   async getGroupName (guildId, channelId, friend) {
     const group_id = `qg_${guildId}-${channelId}`
@@ -208,6 +240,7 @@ export default class adapterQQGuild {
 
   /** 群对象 */
   pickGroup (groupID) {
+    let info = Bot[this.id].gl.get(groupID)
     return {
       is_admin: false,
       is_owner: false,
@@ -215,7 +248,7 @@ export default class adapterQQGuild {
       sendMsg: async (msg) => await this.sendGroupMsg(groupID, msg),
       makeForwardMsg: async (data) => await common.makeForwardMsg(data),
       getChatHistory: async () => [],
-      pickMember: (userID) => this.pickMember(groupID, userID),
+      pickMember: async (userID) => await this.pickMember(groupID, userID),
       /** 戳一戳 */
       pokeMember: async (operatorId) => '',
       /** 禁言 */
@@ -232,25 +265,60 @@ export default class adapterQQGuild {
       /** 头衔 **/
       setTitle: async (qq, title, duration) => Promise.reject(new Error('QQ频道未支持')),
       /** 修改群名片 **/
-      setCard: async (qq, card) => Promise.reject(new Error('QQ频道未支持'))
+      setCard: async (qq, card) => Promise.reject(new Error('QQ频道未支持')),
+      /** 获取群头像链接 */
+      getAvatarUrl: () => info?.group_avatar || "",
+      ...info
     }
   }
 
   /** 好友对象 */
   pickFriend (userId) {
+    const info = Bot[this.id].fl.get(userId)
     return {
-      sendMsg: async (group_id, msg) => await this.sendFriendMsg(group_id, userId, msg),
+      sendMsg: async (groupId, msg) => await this.sendFriendMsg(groupId, userId, msg),
       makeForwardMsg: async (data) => await common.makeForwardMsg(data),
       getChatHistory: async () => [],
-      getAvatarUrl: async (size = 0) => `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${userId.split('-')[1] || this.id}`
+      getAvatarUrl: () => info?.avatar || "",
+      ...info
     }
   }
 
-  pickMember (groupID, userID) {
+  async pickMember (groupID, userID) {
+    const info = await this.member(groupID, userID)
     return {
-      member: this.member(groupID, userID),
-      getAvatarUrl: (size = 0) => `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${userID.split('-')[1] || this.id}`
+      info,
+      getAvatarUrl: () => info?.avatar || "",
+      ...info
     }
+  }
+
+  async member (groupID, userID) {
+    let ret = {}
+    try {
+      let data = this.sdk.getGuildMemberInfo(groupID, userID)
+      ret.data = data
+    } catch (error) {
+      lain.error(this.id, error)
+      return ret
+    }
+
+    if (ret?.data?.member_id) {
+      ret.user_id = ret.data.member_id
+      ret.open_id = ret.data.union_openid
+
+      ret.is_owner = ret.data.roles && (ret.data.roles.includes('4') || false)
+      ret.is_admin = ret.data.roles && (ret.data.roles.includes('2') || false)
+      ret.role = is_owner ? 'owner' : (is_admin ? 'admin' : 'member')
+
+      ret.card = ret.data.card
+      ret.nickname = ret.data.nickname
+      ret.avatar = ret.data.avatar
+
+      ret.join_time = ret.data.join_time
+    }
+
+    return ret
   }
 
   /** 处理消息事件 */
@@ -325,14 +393,18 @@ export default class adapterQQGuild {
 
   /** 处理回复消息 */
   async sendReplyMsg (data, msg, quote) {
-    let { Pieces, messageLog } = await this.getQQGuild(msg)
+    let { Pieces, messageLog, reply } = await this.getQQGuild(msg)
     const info = data.message_type === 'group' ? '频道' : '私信'
     lain.info(this.id, `<回复${info}:${data.group_name}(${data.group_id})> => ${messageLog}`)
     let result = { res: [], err: [] }
-    for (const item of Pieces) {
+    for (let item of Pieces) {
       try {
         lain.debug(`发送回复${info}消息：`, JSON.stringify(item))
-        let res = await data.data.reply(item, quote)
+
+        if (reply) item = Array.isArray(item) ? [reply, ...item] : [reply, item]
+        else if (quote) item = Array.isArray(item) ? [{ type: 'reply', id: data.message_id }, ...item] : [{ type: 'reply', id: data.message_id }, item]
+
+        let res = await data.data.reply(item)
         res.message_id = res.id
         lain.debug(this.id, `回复${info}消息返回：`, res)
         result.res.push(res)

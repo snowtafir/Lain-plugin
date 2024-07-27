@@ -170,8 +170,8 @@ export default class adapterQQBot {
     }
   }
 
-  async pickMember (group_id, user_id) {
-    let member = await this.member(group_id, user_id)
+  pickMember (group_id, user_id) {
+    let member = this.member(group_id, user_id)
     return {
       member,
       info: member.info,
@@ -182,7 +182,7 @@ export default class adapterQQBot {
     }
   }
 
-  async member (group_id, user_id) {
+  member (group_id, user_id) {
     const member = {
       info: {
         group_id,
@@ -200,7 +200,7 @@ export default class adapterQQBot {
       is_owner: false,
       /** 获取头像 */
       getAvatarUrl: (size = 0) => this.getAvatarUrl(size, user_id),
-      mute: async (time) => ''
+      mute: (time) => ''
     }
     return member
   }
@@ -276,7 +276,7 @@ export default class adapterQQBot {
         if (tips.Tips) await this.QQBotTips(data, e.group_id, tips)
       } catch { }
 
-      e.member = await this.member(e.group_id, e.user_id)
+      e.member = this.member(e.group_id, e.user_id)
       e.group_name = `${this.id}-${e.group_id}`
       e.group = this.pickGroup(e.group_id)
     } else {
