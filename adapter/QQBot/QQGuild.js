@@ -296,7 +296,7 @@ export default class adapterQQGuild {
   async member (groupID, userID) {
     let ret = {}
     try {
-      let data = this.sdk.getGuildMemberInfo(groupID.replace('qg_', '').split('-')[0], userID.replace('qg_', ''))
+      let data = await this.sdk.getGuildMemberInfo(groupID.replace('qg_', '').split('-')[0], userID.replace('qg_', ''))
       ret.data = data
     } catch (error) {
       lain.error(this.id, error)
@@ -309,7 +309,7 @@ export default class adapterQQGuild {
 
       ret.is_owner = ret.data.roles && (ret.data.roles.includes('4') || false)
       ret.is_admin = ret.data.roles && (ret.data.roles.includes('2') || false)
-      ret.role = is_owner ? 'owner' : (is_admin ? 'admin' : 'member')
+      ret.role = ret.is_owner ? 'owner' : (ret.is_admin ? 'admin' : 'member')
 
       ret.card = ret.data.card
       ret.nickname = ret.data.nickname
