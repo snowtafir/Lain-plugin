@@ -78,6 +78,11 @@ export default class adapterQQGuild {
       getGroupMemberInfo: (group_id, user_id) => Bot.getGroupMemberInfo(group_id, user_id)
     }
 
+    /** 加载缓存中的群列表 */
+    this.gmlList('gl')
+    /** 加载缓存中的好友列表 */
+    this.gmlList('fl')
+
     if (!Bot[this.id].config.allMsg) Bot[this.id].version.id = '私域'
     if (!Bot.adapter.includes(String(this.id))) Bot.adapter.push(String(this.id))
 
@@ -86,8 +91,23 @@ export default class adapterQQGuild {
     return lain.info(this.id, `QQGuild：<${username}(${this.id})> 连接成功!`)
   }
 
+  /** 加载缓存中的群、好友列表 */
   async gmlList (type = 'gl') {
-
+    try {
+      const List = await redis.keys(`lain:guild:${type}:${this.id}:*`)
+      List.forEach(async i => {
+        const info = JSON.parse(await redis.get(i))
+        info.uin = this.id
+        lain.debug(this.id, '<读取缓存群，好友列表>', type, info)
+        if (type === 'gl') {
+          Bot[this.id].gl.set(info.group_id, info)
+        } else {
+          Bot[this.id].fl.set(info.user_id, info)
+        }
+      })
+    } catch (err) {
+      lain.warn(this.id, err)
+    }
   }
 
   async GroupMessage (e, friend) {
@@ -184,35 +204,40 @@ export default class adapterQQGuild {
   }
 
   /** 保存用户信息至云崽 */
-  async saveInfo (friend, group_id, guildId, channelId, userId) {
+  async saveInfo (friend, group_id, guildId, channelId, user_id) {
     const guild = await this.sdk.getGuildInfo(guildId)
-    const user = await this.sdk.getGuildMemberInfo(guildId, userId.replace('qg_', ''))
+    const user = await this.sdk.getGuildMemberInfo(guildId, user_id.replace('qg_', ''))
     let channel = {}
     let group_name
+
     if (!friend) {
+      /** 频道 */
       channel = await this.sdk.getChannelInfo(channelId)
       group_name = `${guild.guild_name}-${channel.channel_name}`
+
+      redis.set(`lain:guild:gl:${this.id}:${group_id}`, JSON.stringify({ user_id, group_id, guild_id: guild.guild_id, channel_id: channel.channel_id, uin: this.id }))
+
+      Bot[this.id].gl.set(group_id, {
+        uin: this.id,
+        ...Bot[this.id].fl.get(group_id),
+        ...guild,
+        ...channel,
+        ...user,
+        group_id,
+        group_name,
+        group_avatar: guild.icon
+      })
     } else {
+      /** 用户 */
       group_name = `来自"${guild.guild_name}"频道`
+
+      redis.set(`lain:guild:fl:${this.id}:${user_id}`, JSON.stringify({ user_id, group_id, guild_id: guild.guild_id, uin: this.id }))
     }
-    
 
     /** 用户 */
-    Bot[this.id].fl.set(userId, {
+    Bot[this.id].fl.set(user_id, {
       uin: this.id,
-      ...Bot[this.id].fl.get(userId),
-      ...guild,
-      ...channel,
-      ...user,
-      group_id,
-      group_name,
-      group_avatar: guild.icon
-    })
-
-    /** 群 */
-    Bot[this.id].gl.set(group_id, {
-      uin: this.id,
-      ...Bot[this.id].fl.get(group_id),
+      ...Bot[this.id].fl.get(user_id),
       ...guild,
       ...channel,
       ...user,
@@ -260,7 +285,7 @@ export default class adapterQQGuild {
   pickFriend (userId) {
     const info = Bot[this.id].fl.get(userId)
     return {
-      sendMsg: async (groupId, msg) => await this.sendFriendMsg(groupId, userId, msg),
+      sendMsg: async (msg) => await this.sendFriendMsg(userId, msg),
       makeForwardMsg: async (data) => await common.makeForwardMsg(data),
       getChatHistory: async () => [],
       getAvatarUrl: () => info?.avatar || '',
@@ -653,14 +678,14 @@ export default class adapterQQGuild {
   }
 
   /** 发送主动私信消息 */
-  async sendFriendMsg (group_id, user_id, data) {
+  async sendFriendMsg (user_id, data) {
     /** 暂时屏蔽下 */
-    if (!(group_id || user_id || data)) {
-      throw new Error('不存在此频道，正确请求格式：Bot.pickFriend(user_id).sendMsg(group_id, msg)')
+    if (!(user_id || data)) {
+      throw new Error('不存在此频道，正确请求格式：Bot.pickFriend(user_id).sendMsg(msg)')
     }
 
+    const { group_id, guild_id } = Bot[this.id].fl.get(user_id)
     user_id = user_id.replace('qg_', '')
-    const guild_id = group_id.replace('qg_', '').split('-')[0]
     let { Pieces, messageLog, reply } = await this.getQQGuild(data)
     lain.info(this.id, `<发送主动私信消息:${group_id})> => ${messageLog}`)
     /** 先创建私信会话 */
