@@ -95,16 +95,16 @@ export default class adapterQQGuild {
     const { guild_id, channel_id, member, author, src_guild_id } = e
     const { id: userId, username: nickname, avatar } = author
 
-    const group_id = `qg_${guild_id}-${channel_id}`
+    const group_id = `qg_${guild_id}${!friend ? `-${channel_id}` : ''}`
     const user_id = `qg_${userId}`
+
+    // 保存用户信息至云崽
+    await this.saveInfo(friend, group_id, src_guild_id || guild_id, channel_id, user_id).catch(error => lain.error(this.id, `Bot无法在频道 ${src_guild_id || guild_id} 中获取信息，请给予权限...错误信息：`, error))
 
     const is_owner = member.roles && (member.roles.includes('4') || false)
     const is_admin = member.roles && (member.roles.includes('2') || false)
     const role = is_owner ? 'owner' : (is_admin ? 'admin' : 'member')
-    const group_name = await this.getGroupName(src_guild_id || guild_id, channel_id, friend)
-
-    // 保存用户信息至云崽
-    this.saveInfo(src_guild_id || guild_id, channel_id, user_id).catch(error => lain.error(this.id, `Bot无法在频道 ${src_guild_id || guild_id} 中获取信息，请给予权限...错误信息：`, error))
+    const group_name = Bot[this.id].gl.get(group_id)?.group_name || "未知"
 
     data.data = e
     data.uin = this.id // ???鬼知道哪来的这玩意，icqq都没有...
@@ -184,12 +184,18 @@ export default class adapterQQGuild {
   }
 
   /** 保存用户信息至云崽 */
-  async saveInfo (guildId, channelId, userId) {
-    const group_id = `qg_${guildId}-${channelId}`
+  async saveInfo (friend, group_id, guildId, channelId, userId) {
     const guild = await this.sdk.getGuildInfo(guildId)
-    const channel = await this.sdk.getChannelInfo(channelId)
     const user = await this.sdk.getGuildMemberInfo(guildId, userId.replace('qg_', ''))
-    const group_name = `${guild.guild_name}-${channel.channel_name}`
+    let channel = {}
+    let group_name
+    if (!friend) {
+      channel = await this.sdk.getChannelInfo(channelId)
+      group_name = `${guild.guild_name}-${channel.channel_name}`
+    } else {
+      group_name = `来自"${guild.guild_name}"频道`
+    }
+    
 
     /** 用户 */
     Bot[this.id].fl.set(userId, {
@@ -198,7 +204,9 @@ export default class adapterQQGuild {
       ...guild,
       ...channel,
       ...user,
+      group_id,
       group_name,
+      group_avatar: guild.icon
     })
 
     /** 群 */
@@ -208,34 +216,10 @@ export default class adapterQQGuild {
       ...guild,
       ...channel,
       ...user,
+      group_id,
       group_name,
       group_avatar: guild.icon
     })
-  }
-
-  /** 获取群名称 */
-  async getGroupName (guildId, channelId, friend) {
-    const group_id = `qg_${guildId}-${channelId}`
-    let group_name = Bot.gl.get(group_id)
-    if (group_name) return group_name.group_name
-    const guild = await this.sdk.getGuildInfo(guildId)
-    group_name = guild.guild_name
-    if (friend) {
-      group_name = `来自"${group_name}"频道`
-
-      /** 一个子频道为一个群 */
-      Bot.gl.set(group_id, { group_name })
-      Bot[this.id].gl.set(group_id, { group_name })
-    } else {
-      let data = await this.sdk.getChannelInfo(channelId)
-      group_name = `${group_name}-${data.channel_name}`
-
-      /** 一个子频道为一个群 */
-      Bot.gl.set(group_id, { ...data, group_name })
-      Bot[this.id].gl.set(group_id, { ...data, group_name })
-    }
-
-    return group_name
   }
 
   /** 群对象 */
