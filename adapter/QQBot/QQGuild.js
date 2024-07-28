@@ -440,9 +440,38 @@ export default class adapterQQGuild {
         case 'text':
         case 'forward':
           if (String(i.text).trim()) {
-            messageLog.push(i.text)
-            for (let item of (await Bot.HandleURL(i.text.trim()))) {
-              item.type === 'image' ? image.push(item) : text.push(item.text)
+            if (i.type === 'forward') {
+              lain.debug(this.id, '<解析转发消息>', i)
+              for (let i2 of i.text) {
+                if (i2?.type == 'image') {
+                  image.push(i2)
+                  messageLog.push(`<图片:${typeof i2.file === 'string' ? i2.file.replace(/base64:\/\/.*/, 'base64://...') : 'base64://...'}>`)
+                } else if (i2?.type == 'button') {
+                  message.push(i2)
+                  messageLog.push('<button>')
+                } else if (String(i2).trim()) {
+                  for (let p of (await Bot.HandleURL(i2))) {
+                    if (p.type === 'image') {
+                      image.push(p)
+                      messageLog.push(`<图片:${typeof p.file === 'string' ? p.file.replace(/base64:\/\/.*/, 'base64://...') : 'base64://...'}>`)
+                    } else {
+                      text.push(p.text)
+                      messageLog.push(p.text.substring(0, 1000).trim())
+                    }
+                  }
+                }
+              }
+              break
+            }
+
+            for (let p of (await Bot.HandleURL(i))) {
+              if (p.type === 'image') {
+                image.push(p)
+                messageLog.push(`<图片:${typeof p.file === 'string' ? p.file.replace(/base64:\/\/.*/, 'base64://...') : 'base64://...'}>`)
+              } else {
+                text.push(p.text)
+                messageLog.push(p.text.substring(0, 1000).trim())
+              }
             }
           }
           break
@@ -510,27 +539,6 @@ export default class adapterQQGuild {
       }
     }
     return text
-  }
-
-  /** 日志 */
-  messageLog (message) {
-    const logMessage = []
-    message.forEach(i => {
-      switch (i.type) {
-        case 'image':
-          logMessage.push(`<图片:${i.url}>`)
-          break
-        case 'face':
-          logMessage.push(`<face:${i.id}>`)
-          break
-        case 'text':
-          logMessage.push(i.text)
-          break
-        default:
-          logMessage.push(JSON.stringify(i))
-      }
-    })
-    return logMessage.join('')
   }
 
   /** 转换message */
