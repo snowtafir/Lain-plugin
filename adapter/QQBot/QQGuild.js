@@ -115,7 +115,7 @@ export default class adapterQQGuild {
   }
 
   async GroupMessage (e, friend) {
-    let { self_id: _tiny_id, ...data } = e
+    let { self_id: tiny_id, ...data } = e
     const { guild_id, channel_id, member, author, src_guild_id } = e
     const { id: userId, username: nickname, avatar } = author
 
@@ -145,6 +145,7 @@ export default class adapterQQGuild {
     data.atme = false
     data.atall = false
     data.self_id = this.id
+    data.tiny_id = tiny_id
     /** 这些字段还需要补充 */
     data.group_name = group_name
     data.sender = {
@@ -195,7 +196,7 @@ export default class adapterQQGuild {
       if (info?.author) {
         data.source.time = info.time
         data.source.message = info.raw_message
-        data.source.user_id = info.author.id
+        data.source.user_id = info.author.id === Bot[this.id].tiny_id ? this.id : info.author.id
       }
     }
 
@@ -254,6 +255,12 @@ export default class adapterQQGuild {
 
   /** 保存用户信息至云崽 */
   async saveInfo (friend, group_id, guild_id, channel_id, user_id) {
+    /** 设置冷却(默认1小时缓存) */
+    if (Bot[this.id][friend ? 'fl' : 'gl'].get(friend ? user_id : group_id) && parseInt((Date.now() - Bot[this.id][friend ? 'fl' : 'gl'].get(friend ? user_id : group_id)?.query_time) / 1000) < 1 * 60 * 60) {
+      return true
+    }
+
+    lain.warn(`<更新 ${friend ? user_id : group_id} 信息>`)
     const guild = await this.sdk.getGuildInfo(guild_id)
     const user = await this.sdk.getGuildMemberInfo(guild_id, user_id.replace('qg_', ''))
     let channel = {}
@@ -263,32 +270,15 @@ export default class adapterQQGuild {
       /** 频道 */
       channel = await this.sdk.getChannelInfo(channel_id)
       group_name = `${guild.guild_name}-${channel.channel_name}`
-
-      redis.set(`lain:guild:gl:${this.id}:${group_id}`, JSON.stringify({ user_id, group_id, guild_id, channel_id, uin: this.id }))
-
-      Bot[this.id].gl.set(group_id, {
-        uin: this.id,
-        ...Bot[this.id].fl.get(group_id),
-        ...guild,
-        ...channel,
-        ...user,
-        group_id,
-        group_name,
-        group_avatar: guild.icon,
-        guild_id: group_id.replace('qg_', ''),
-        channel_id
-      })
     } else {
-      /** 用户 */
+      /** 私信 */
       group_name = `来自"${guild.guild_name}"频道`
-
-      redis.set(`lain:guild:fl:${this.id}:${user_id}`, JSON.stringify({ user_id, group_id, guild_id, uin: this.id }))
     }
 
-    /** 用户 */
-    Bot[this.id].fl.set(user_id, {
+    /** 整合信息 */
+    const info = {
       uin: this.id,
-      ...Bot[this.id].fl.get(user_id),
+      ...Bot[this.id][friend ? 'fl' : 'gl'].get(friend ? user_id : group_id),
       ...guild,
       ...channel,
       ...user,
@@ -296,8 +286,16 @@ export default class adapterQQGuild {
       group_name,
       group_avatar: guild.icon,
       guild_id: group_id.replace('qg_', ''),
-      channel_id
-    })
+      channel_id,
+      query_time: Date.now()
+    }
+
+    /** Bot存储 */
+    if (!friend) Bot[this.id].gl.set(group_id, info)
+    Bot[this.id].fl.set(user_id, info)
+
+    /** Redis存储 */
+    redis.set(`lain:guild:${friend ? 'fl' : 'gl'}:${this.id}:${friend ? user_id : group_id}`, JSON.stringify(info))
   }
 
   /** 群对象 */
