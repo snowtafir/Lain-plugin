@@ -205,7 +205,6 @@ class LagrangeCore {
           lain.info(this.id, `群<${data.group_id}>成员<${data.user_id}>戳了戳<${data.target_id}>`)
           data.notice_type = 'group'
           data.operator_id = data.user_id
-          data.user_id = data.target_id
           return await Bot.emit('notice', await this.ICQQEvent(data))
         }
       case 'notify':
@@ -213,6 +212,7 @@ class LagrangeCore {
           case 'poke': {
             let action = data.poke_detail?.action || '戳了戳'
             let suffix = data.poke_detail?.suffix || ''
+            data.operator_id = data.user_id
             lain.info(this.id, `<${data.operator_id}>${action}<${data.target_id}>${suffix}`)
             break
           }
@@ -834,7 +834,7 @@ class LagrangeCore {
     /** 通知事件 */
     const noticePostType = async function () {
       if (e.sub_type === 'poke') {
-        e.action = e.poke_detail.action
+        e.action = e.poke_detail?.action
         e.raw_message = `${e.operator_id} ${e.action} ${e.user_id}`
       }
 
