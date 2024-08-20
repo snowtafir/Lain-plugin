@@ -1,3 +1,6 @@
+# 1.4.7
+* add `oneBotV11` Adapter
+
 # 1.4.6
 * 适配`QQBot`私聊
 * 优化`QQBot`日志输出

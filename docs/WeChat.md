@@ -5,10 +5,6 @@
 
 没有`Windows`环境，请使用[WeXin.md](./WeXin.md)
 
-## 温馨提示
-
-没有`Windows`环境，请使用[WeXin.md](./WeChat.md)
-
 # 使用必读
 
 应用端和云崽都可以单独启动，并没有必须先启动谁的说法

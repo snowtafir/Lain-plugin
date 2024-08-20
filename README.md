@@ -1,5 +1,5 @@
 ## 此插件已被修改为适配本仓库云崽，原仓库已跑路删库了
-## 原仓库已删库跑路，我也只维护QQbot适配器
+## 原仓库已删库跑路，[sky-summer](https://gitee.com/sky-summer/Lain-plugin.git) 也只维护QQbot适配器
 
 ## 简介
 - 插件更新日志：[点击查看](./CHANGELOG.md)
@@ -49,6 +49,7 @@ pnpm config set sharp_binary_host "https://npmmirror.com/mirrors/sharp" && pnpm 
 - [QQBot(群和频道)](./docs/QQBot.md)
 - [网页版微信](./docs/WeXin.md)
 - [Lagrange.Core](./docs/Lagrange.Core.md)
+- [OneBotV11](./docs/OneBotV11.md)
 
 ## 4.设置主人
 
@@ -73,6 +74,7 @@ pnpm config set sharp_binary_host "https://npmmirror.com/mirrors/sharp" && pnpm 
 - QQBot：`QQBot`
 - 网页版微信：`WeXin`
 - LagrangeCore: `LagrangeCore`
+- OneBotV11: `OneBotV11`
 
 ## 适配进度
 - [√] 标准输入
@@ -83,11 +85,13 @@ pnpm config set sharp_binary_host "https://npmmirror.com/mirrors/sharp" && pnpm 
 - [√] Shamrock适配器
 - [√] QQBot适配器
 - [√] LagrangeCore
+- [√] OneBotV11适配器
 
 ## 特别鸣谢
 
 以下排名不分先后
 
+- [Trss-Yunzai](https://github.com/TimeRainStarSky/Yunzai)
 - [Miao-Yunzai](https://github.com/yoimiya-kokomi/Miao-Yunzai)
 - [索引库](https://github.com/yhArcadia/Yunzai-Bot-plugins-index)
 - [OpenShamrock](https://github.com/whitechi73/OpenShamrock)

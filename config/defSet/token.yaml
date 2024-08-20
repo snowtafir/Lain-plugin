@@ -1,10 +1,12 @@
 # 示例配置
-default:
+QQ_Default:
   "default":
     model: 0                              # 0-全部启用  1-仅启用QQ频道  2-仅启用QQ群Bot  3-不启用
-    appid: "default"                    # 开发者ip
+    appid: "default"                      # 机器人id
     sandbox: false                        # 沙盒  true-开启  false-关闭
+    timeout: 10000                           # 请求接口超时时间，默认10秒
     allMsg: true                          # QQ频道接收全部消息  true-私域  false-公域
+    removeAt: false                       # 移除at  true-开启  false-关闭
     token:                                # 机器人令牌
     secret:                               # 机器人密钥
     maxRetry: 10                          # 重连次数
@@ -20,6 +22,4 @@ default:
       Tips: false                         # QQ群Bot => 进入新群后，发送防倒卖提示  true-开启  false-关闭
       Tips-GroupId:                       # QQ群Bot => 防倒卖提示中的QQ群号
 
-token:
-
-  
+QQ_Token:

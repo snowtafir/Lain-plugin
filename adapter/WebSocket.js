@@ -5,6 +5,7 @@ import Cfg from '../lib/config/config.js'
 import LagrangeCore from './LagrangeCore/index.js'
 import ComWeChat from './WeChat/index.js'
 import shamrock from './shamrock/index.js'
+import OneBotV11 from './OneBot-V11/onebotv11.js'
 
 class WebSocket {
   constructor () {
@@ -12,7 +13,8 @@ class WebSocket {
     this.path = {
       '/Shamrock': shamrock,
       '/ComWeChat': ComWeChat,
-      '/LagrangeCore': LagrangeCore
+      '/LagrangeCore': LagrangeCore,
+      '/OneBotV11': OneBotV11
     }
   }
 
