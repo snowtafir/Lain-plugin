@@ -1,16 +1,31 @@
+## 此插件已被修改为适配本仓库云崽，原仓库已跑路删库了
+## 原仓库已删库跑路，我也只维护QQbot适配器
+
 ## 简介
 - 插件更新日志：[点击查看](./CHANGELOG.md)
 - 本项目使用 [GPL-3.0](./LICENSE) 开源协议，欢迎任何形式的贡献！
 
+`Lain-plugin`是一个围绕云崽`Yunzai-Bot`开发的多适配器插件，让喵崽接入`QQ频道`、`微信`、`shamrock`等三方平台~，不再局限于ICQQ。
+
+我正在为 [kritor](https://github.com/KarinJS/kritor) 开发新的机器人框架，如果您有时间且热爱开源并且想参与其中，您可以联系我~
+
+新框架：[Karin](https://github.com/KarinJS/carrying)
+
+### 这里特别声明：
+
+不想登录ICQQ并继续使用本插件：
+
+- 更新云崽到最新
+- 打开云崽的`config/config/bot.yaml`文件将 `login_type: 1` 修改为 `login_type: 2`
+- 如果不存在这个，自行加一行  `login_type: 2` 即可。
+
 ## 1.安装插件
 
-在`Miao-Yunzai`根目录执行，任选其一
+在`Yunzai-Bot`根目录执行
 
-Gitee：
 ```
-git clone --depth=1 https://gitee.com/all-thoughts-are-broken/Lain-plugin ./plugins/Lain-plugin
+git clone --depth=1 https://gitee.com/sky-summer/Lain-plugin ./plugins/Lain-plugin
 ```
-
 
 ## 2.安装依赖
 
@@ -28,6 +43,7 @@ pnpm config set sharp_binary_host "https://npmmirror.com/mirrors/sharp" && pnpm 
 请点击查看对应教程~
 
 - [标准输入](./docs/stdin.md)
+- [QQ频道(旧版)](./docs/QQGuild.md)
 - [PC微信](./docs/WeChat.md)
 - [Shamrock](./docs/Shamrock.md)
 - [QQBot(群和频道)](./docs/QQBot.md)
@@ -67,7 +83,6 @@ pnpm config set sharp_binary_host "https://npmmirror.com/mirrors/sharp" && pnpm 
 - [√] Shamrock适配器
 - [√] QQBot适配器
 - [√] LagrangeCore
-
 
 ## 特别鸣谢
 

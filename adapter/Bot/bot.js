@@ -98,7 +98,7 @@ Bot.Stream = async function (file, data) {
   return new Promise((resolve, reject) => {
     const chunks = []
     file.on('data', (chunk) => chunks.push(chunk))
-    file.on('end', () => data?.base ? resolve(Buffer.concat(chunks).toString('base64')) : resolve(Buffer.concat(chunks)))
+    file.on('end', () => data?.base ? resolve('base64://' + Buffer.concat(chunks).toString('base64')) : resolve(Buffer.concat(chunks)))
     file.on('error', (err) => reject(err))
   })
 }
@@ -117,14 +117,14 @@ Bot.Stream = async function (file, data) {
 Bot.uploadQQ = async function (file, uin = Bot.uin) {
   uin = Number(uin)
   const buffer = await Bot.Buffer(file)
+  let md5
   try {
-    await Bot[uin].pickGroup(Math.floor(Math.random() * 10000 + 1)).sendMsg([segment.image(buffer)])
+    md5 = (await Bot[uin].pickFriend(uin)._preprocess(segment.image(buffer))).imgs[0].proto[1].toUpperCase()
   } catch (e) {
     throw new Error('上传图片失败', e)
   }
   const { width, height } = sizeOf(buffer)
-  const md5 = crypto.createHash('md5').update(buffer).digest('hex').toUpperCase()
-  const url = `https://gchat.qpic.cn/gchatpic_new/0/0-0-${md5}/0?term=2`
+  const url = `https://gchat.qpic.cn/gchatpic_new/0/0-0-${md5}/0`
   return { width, height, url, md5 }
 }
 
@@ -295,13 +295,13 @@ Bot.toType = function (i) {
       type = 'http'
       file = i
     } else {
-      common.log('Lain-plugin', '未知格式，无法处理：' + i)
+      lain.info('Lain-plugin', '未知格式，无法处理：', i)
       type = 'error'
       file = i
     }
   } else {
     // 留个容错
-    common.log('Lain-plugin', '未知格式，无法处理：' + i)
+    lain.info('Lain-plugin', '未知格式，无法处理：', i)
     type = 'error'
     file = i
   }
@@ -405,29 +405,28 @@ Bot.Button = function (list, line = 3) {
   let button = []
 
   for (let i of list) {
+    /** 兼容单用户字符串表示permission */
+    if (typeof i.permission === 'string') {
+      i.list = [i.permission]
+      i.permission = false
+    }
+
     /** 处理用户id */
     if (i.list && i.list.length) {
       const list = []
       i.list.forEach(p => {
         p = p.split('-')
-        p = p[1] || p[0]
+        p = p?.[1] || p[0]
         list.push(p)
       })
       i.list = list
     }
 
+    /** 支持一维和二维数组表示按钮 */
     if (Array.isArray(i)) {
       button.push(...Bot.Button(i, 10))
     } else {
-      if (typeof i.permission === 'string') {
-        if (i.permission === 'xxx') {
-          i.list = []
-        } else {
-          const openid = i.permission.split('-')
-          i.list = [openid[1] || openid[0]]
-        }
-        i.permission = false
-      }
+      /** 构造单个按钮 */
       let Button = {
         id: String(id),
         render_data: {
@@ -448,13 +447,16 @@ Bot.Button = function (list, line = 3) {
           unsupport_tips: i.tips || 'err'
         }
       }
+
+      /** 兼容trss的QQBot字段 */
       if (i.QQBot) {
-        if (i.QQBot.render_data)
-          Object.assign(Button.render_data, i.QQBot.render_data)
-        if (i.QQBot.action)
-          Object.assign(Button.action, i.QQBot.action)
+        if (i.QQBot.render_data) Object.assign(Button.render_data, i.QQBot.render_data)
+        if (i.QQBot.action) Object.assign(Button.action, i.QQBot.action)
       }
+
       arr.push(Button)
+
+      /** 构造一行按钮 */
       if (index % line == 0 || index == list.length) {
         button.push({
           type: 'button',
@@ -478,7 +480,7 @@ Bot.HandleURL = async function (msg) {
 
   let promises = urls.map(link => {
     return new Promise((resolve, reject) => {
-      common.mark('Lain-plugin', `url替换：${link}`)
+      lain.mark('Lain-plugin', `url替换：${link}`)
       QrCode.toBuffer(link, {
         errorCorrectionLevel: 'H',
         type: 'png',
@@ -488,7 +490,7 @@ Bot.HandleURL = async function (msg) {
         if (err) reject(err)
         const base64 = 'base64://' + buffer.toString('base64')
         const file = await common.Rending({ base64, link }, 'QRCode/QRCode')
-        message.push({ type: 'image', file })
+        message.push(file)
         msg = msg.replace(link, '[链接(请扫码查看)]')
         msg = msg.replace(link.replace(/^http:\/\//g, ''), '[链接(请扫码查看)]')
         msg = msg.replace(link.replace(/^https:\/\//g, ''), '[链接(请扫码查看)]')

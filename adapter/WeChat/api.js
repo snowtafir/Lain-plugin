@@ -1,5 +1,4 @@
 import { randomUUID } from 'crypto'
-import common from '../../lib/common/common.js'
 
 const api = {
   /** 获取支持的动作列表 */
@@ -120,7 +119,7 @@ const api = {
         concat += JSON.stringify(i)
       }
     }
-    common.info(Bot.lain.wc.uin, `发送${send_type === 'private' ? '好友消息' : '群消息'}：[${id}] ${concat}`)
+    lain.info(Bot.lain.wc.uin, `发送${send_type === 'private' ? '好友消息' : '群消息'}：<${id}> ${concat}`)
     return await this.SendApi(params, 'send_message')
   },
   /** 发送请求事件 */
@@ -140,7 +139,7 @@ const api = {
           return data
         }
       } else {
-        await common.sleep(1000)
+        await new Promise((resolve) => setTimeout(resolve, 1000))
       }
     }
     /** 获取失败 */

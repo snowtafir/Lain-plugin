@@ -1,8 +1,7 @@
 import fs from 'fs'
 import Cfg from '../lib/config/config.js'
-import common from '../lib/common/common.js'
 import WebSocket from './WebSocket.js'
-import stdin from './stdin/stdin.js'
+import stdin from './stdin/index.js'
 import QQSDK from './QQBot/QQSDK.js'
 import QQBot from './QQBot/index.js'
 import QQGuild from './QQBot/QQGuild.js'
@@ -24,8 +23,8 @@ if (Object.values(Cfg.getToken()).length) {
         await new QQBot(SDK.sdk)
         await new QQGuild(SDK.sdk)
       } catch (err) {
-        logger.debug(err)
-        return lain.error('Lain-plugin', `QQBot [${bot.appid}] 启动失败`, err?.data || err?.message || err)
+        logger.warn(err)
+        lain.error('Lain-plugin', `QQBot [${bot.appid}] 启动失败`, err?.data || err?.message || err)
       }
     }
     if (bot.model == 1) {
@@ -34,8 +33,8 @@ if (Object.values(Cfg.getToken()).length) {
         await SDK.start()
         await new QQGuild(SDK.sdk)
       } catch (err) {
-        logger.debug(err)
-        return lain.error('Lain-plugin', `QQGuild [${bot.appid}] 启动失败`, err?.data || err?.message || err)
+        logger.warn(err)
+        lain.error('Lain-plugin', `QQGuild [${bot.appid}] 启动失败`, err?.data || err?.message || err)
       }
     }
   })
@@ -50,11 +49,11 @@ if (JSONFile.length > 0) {
     try {
       await new WeChat4u(id, i)
     } catch (error) {
-      common.error('Lain-plugin', `微信 ${id} 登录失败，已跳过。`)
-      common.error('Lain-plugin', error)
+      lain.error('Lain-plugin', `微信 ${id} 登录失败，已跳过。`)
+      lain.error('Lain-plugin', error)
     }
   })
 }
 
-common.info('Lain-plugin', `Lain-plugin插件${Bot.lain.version}全部初始化完成~`)
-common.info('Lain-plugin', 'https://gitee.com/Zyy955/Lain-plugin')
+lain.info('Lain-plugin', `Lain-plugin插件${Bot.lain.version}全部初始化完成~`)
+lain.info('Lain-plugin', 'https://gitee.com/Zyy955/Lain-plugin')

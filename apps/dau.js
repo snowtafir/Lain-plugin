@@ -1,7 +1,6 @@
 import fs from 'node:fs'
 import { join } from 'node:path'
 import moment from 'moment'
-import schedule from 'node-schedule'
 import Cfg from '../lib/config/config.js'
 import puppeteer from '../../../lib/puppeteer/puppeteer.js'
 import _ from 'lodash'
@@ -14,20 +13,61 @@ export class QQBotDAU extends plugin {
       priority: 100,
       rule: [
         {
-          reg: /^#QQBotDAU(pro)?/i,
+          reg: /^#?([Qq]+[Bb]ot[Dd][Aa][Uu](pro|)|[Dd][Aa][Uu](pro|))/,
           fnc: 'DAUStat'
+        },
+        {
+          reg: /^#?([Qq]+[Bb]ot[Dd][Aa][Uu]刷新|[Dd][Aa][Uu]刷新)/,
+          fnc: 'DAURef',
+          permission: 'master'
         }
       ]
     })
-    // 每天零点清除DAU统计并保存到文件
-    schedule.scheduleJob('0 0 0 * * ?', () => {
-      if (Cfg.Other.QQBotdau) this.Task()
-    })
+
+    /** 定时任务 */
+    this.task = {
+      /** 任务名 */
+      name: '[Lain-plugin] 刷新DAU缓存',
+      /** 任务cron表达式 */
+      cron: '1 0 0 * * ?',
+      /** 任务方法名 */
+      fnc: async () => {
+        if (!Cfg.Other.QQBotdau) return
+        await this.Task()
+        await lain.sleep(100)
+        for (let id of Bot.adapter) {
+          if (Bot?.[id]?.adapter == 'QQBot' && !lain.DAU?.[id]) {
+            lain.DAU[id] = {
+              user_count: 0,
+              group_count: 0,
+              msg_count: 0,
+              send_count: 0,
+              user_cache: {},
+              group_cache: {},
+              time: moment().format('YYYY-MM-DD')
+            }
+          }
+        }
+        await lain.sleep(100)
+        await this.Task()
+      }
+    }
+  }
+
+  async init () {
+    if (Cfg.Other.QQBotdau) setTimeout(() => this.Task(), 10000)
+  }
+
+  async DAURef () {
+    if (Cfg.Other.QQBotdau) {
+      await this.Task()
+      await this.e.reply('刷新成功')
+    } else await this.e.reply('暂未开启DAU统计')
   }
 
   async DAUStat () {
     const pro = this.e.msg.includes('pro')
-    const uin = this.e.msg.replace(/^#QQBotDAU(pro)?/i, '').trim() || this.e.self_id
+    const uin = this.e.msg.replace(/^#?([Qq]+[Bb]ot[Dd][Aa][Uu](pro|)|[Dd][Aa][Uu](pro|))/, '').trim() || this.e.bot.uin || this.e.self_id
     const dau = lain.DAU[uin]
     if (!dau) return false
     const msg = [
@@ -35,8 +75,7 @@ export class QQBotDAU extends plugin {
       `上行消息量: ${dau.msg_count}`,
       `下行消息量: ${dau.send_count}`,
       `上行消息人数: ${dau.user_count}`,
-      `上行消息群数: ${dau.group_count}`,
-      ''
+      `上行消息群数: ${dau.group_count}`
     ]
     const path = join(process.cwd(), 'data', 'QQBotDAU', uin)
     const today = moment().format('YYYY-MM-DD')
@@ -44,8 +83,9 @@ export class QQBotDAU extends plugin {
     // 昨日DAU
     try {
       let data = JSON.parse(fs.readFileSync(join(path, `${yearMonth}.json`), 'utf8'))
-      data = data.filter(v => moment(v.time).isSame(moment(today).subtract(1, 'days')))[0]
+      data = data[data.length - 2]
       msg.push(...[
+        '',
         data.time,
         `上行消息量: ${data.msg_count}`,
         `下行消息量: ${data.send_count}`,
@@ -74,6 +114,7 @@ export class QQBotDAU extends plugin {
       })
     } catch (error) { }
     msg.push(...[
+      '',
       `最近${numToChinese[day_count] || day_count}天平均DAU`,
       `上行消息量: ${totalDAU.msg_count}`,
       `下行消息量: ${totalDAU.send_count}`,
@@ -137,7 +178,7 @@ export class QQBotDAU extends plugin {
   }
 
   async getDAU () {
-    const uin = this.e.self_id
+    const uin = this.e.bot.uin || this.e.self_id
     const time = this.getNowDate()
     const msg_count = (await redis.get(`QQBotDAU:msg_count:${uin}`)) || 0
     const send_count = (await redis.get(`QQBotDAU:send_count:${uin}`)) || 0
@@ -168,7 +209,7 @@ export class QQBotDAU extends plugin {
     return `${year}-${month}-${day}`
   }
 
-  Task () {
+  async Task () {
     const yearMonth = moment().format('YYYY-MM')
     /** 根目录路径 */
     const path = process.cwd() + '/data/QQBotDAU'
@@ -178,7 +219,7 @@ export class QQBotDAU extends plugin {
       try {
         /** 跳过小于今天的 格式：2024-02-08 */
         const time = this.getNowDate()
-        if (lain.DAU[key].time >= time) continue
+        // if (lain.DAU[key].time < time) continue
 
         /** 继续检测文件夹 */
         if (!fs.existsSync(path + `/${key}`)) fs.mkdirSync(path + `/${key}`)
@@ -189,10 +230,25 @@ export class QQBotDAU extends plugin {
         let filePath = path + `/${key}/${yearMonth}.json`
         /** 存在则解析，不存在则赋值为空数组 */
         const file = fs.existsSync(filePath) ? JSON.parse(fs.readFileSync(filePath, 'utf8')) : []
-        file.push(lain.DAU[key])
+        let index = file.findIndex(v => v.time === lain.DAU[key].time)
+        if (index != -1) file[index] = lain.DAU[key]
+        else file.push(lain.DAU[key])
         /** 写入 */
         fs.writeFile(filePath, JSON.stringify(file, '', '\t'), 'utf-8', () => { })
         delete lain.DAU[key]
+
+        // 刷新redis缓存
+        let data = await redis.get(`QQBotDAU:${key}`)
+        if (data) {
+          data = JSON.parse(data)
+          if (data.time < time) {
+            await redis.del(`QQBotDAU:msg_count:${key}`)
+            await redis.del(`QQBotDAU:send_count:${key}`)
+            await redis.del(`QQBotDAU:${key}`)
+          }
+        }
+
+        logger.warn(`[lain-plugin][${key}] 刷新DAU缓存`)
       } catch (error) {
         logger.error('保存DAU数据出错,key: ' + key, error)
       }

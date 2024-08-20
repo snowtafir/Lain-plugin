@@ -13,6 +13,7 @@ export const helpCfg = {
 export const helpList = [
   {
     group: 'QQBot ---> #QQBot设置 沙盒:私域:appID:token:secret',
+    auth: 'master',
     list: [
       {
         icon: 1,
@@ -43,11 +44,17 @@ export const helpList = [
         icon: 8,
         title: '#QQBotMD 2',
         desc: '0=关闭 1=全局 2=仅正则 3=与内容分离'
+      },
+      {
+        icon: 10,
+        title: '#QQBotDau',
+        desc: '查看消息统计'
       }
     ]
   },
   {
     group: 'Shamrock',
+    auth: 'master',
     list: [
       {
         icon: 2,
@@ -68,6 +75,7 @@ export const helpList = [
   },
   {
     group: 'WeChat',
+    auth: 'master',
     list: [
       {
         icon: 9,

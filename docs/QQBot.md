@@ -1,5 +1,3 @@
- ![Visitor Count](https://profile-counter.glitch.me/Zyy955-Lain-plugin/count.svg)
-
 # 请勿轻信任何人的出售官方Bot，吃相别太难看。
 
 ## 1.获取QQ机器人
@@ -43,7 +41,7 @@ AppSecret(机器人密钥)：`abcdefghijklmnopqrstuvwxyz`
 - 3个指令，3选1
 - `#QQBot设置`  => 同时接频道、群
 - `#QQ群设置`   => 只连接群
-- `QQ频道设置`  => 只连接频道
+- `#QQ频道设置`  => 只连接频道
 
 添加群机器人：
 ```
@@ -67,13 +65,13 @@ AppSecret(机器人密钥)：`abcdefghijklmnopqrstuvwxyz`
   - 图片：编写一个全局变量`Bot.imageToUrl`，接收一个参数，返回 `width, height, url`，例如花瓣图床，起点图床等。
   - 语音：编写一个全局变量`Bot.audioToUrl`，接收一个参数，返回 `url`。
   - 视频：编写一个全局变量`Bot.videoToUrl`，接收一个参数，返回 `url`。
-- 方法2：前往 [./plugins/Lain-plugin/config/config.yaml](../config/config.yaml) 配置公网地址，端口为配置文件中的`HTTP`端口，如果有转发，请修改`实际端口`选项。
-- 方法3：登录一个QQ机器人，随后前往[./plugins/Lain-plugin/config/config.yaml](../config/config.yaml)配置`QQBotUin`为QQ号，此方法仅可发送图片。
+- 方法2：前往 [config/Config-Server.yaml](../config/Config-Server.yaml) 配置公网地址，端口为配置文件中的`HTTP`端口，如果有转发，请修改`实际端口`选项。
+- 方法3：登录一个QQ机器人，随后前往[config/Config-Other.yaml](../config/Config-Other.yaml)配置`ICQQtoFile`为`true`，也可单独配置 [config/Config-Token.yaml](../config/Config-Token.yaml)中的`QQCloud`为 BotQQ 号。
 - 适配器自带指令前缀/转#，默认打开。若需关闭请发送
 ```
 #QQBot设置前缀关闭
 ```
-或者编辑 [config/token.yaml](../config/token.yaml) 配置文件，关闭将 `/` 转换为 `#`
+或者编辑 [config/config/Config-Token.yaml](../config/config/Config-Token.yaml) 配置文件，将`Prefix`改为`false`即可关闭 `/` 转换为 `#`
 
 
 <details><summary>方法1图床编写参考</summary>
@@ -109,9 +107,11 @@ Bot.imageToUrl = async (file) => {
     } else {
       base64 = Buffer.from(await res.arrayBuffer()).toString('base64')
     }
-  } else {
-    throw new Error('上传失败，未知格式的文件')
-  }
+  } else if (fs.existsSync(file)) { // 检查文件是否存在于本地文件系统
+        base64 = fs.readFileSync(file).toString('base64')
+    } else {
+        throw new Error('上传失败，未知格式的文件')
+    }
 
   const url = 'https://api.imgbb.com/1/upload'
   const params = new URLSearchParams()

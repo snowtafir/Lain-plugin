@@ -1,4 +1,3 @@
-import YamlParse from '../model/YamlHandler.js'
 import { execSync } from 'child_process'
 import { update as Update } from '../../other/update.js'
 import { xiaofei_music } from '../adapter/shamrock/xiaofei/music.js'
@@ -49,25 +48,16 @@ export class Lain extends plugin {
 
   async user_id (e) {
     const msg = []
-    if (e.isMaster) msg.push(`Bot：${e.self_id}`)
+    if (e.isMaster) msg.push(`Bot：${e.bot.uin || e.self_id}`)
     msg.push(`您的个人ID：${e.user_id}`)
-    e.guild_id ? msg.push(`当前频道ID：${e.guild_id}`) : ''
-    e.channel_id ? msg.push(`当前子频道ID：${e.channel_id}`) : ''
-    e.group_id ? msg.push(`当前群聊ID：${e.group_id}`) : ''
+    if (e.guild_id) msg.push(`当前频道ID：${e.guild_id}`)
+    if (e.channel_id) msg.push(`当前子频道ID：${e.channel_id}`)
+    if (e.group_id) msg.push(`当前群聊ID：${e.group_id}`)
     if (e.isMaster && e?.adapter === 'QQGuild') msg.push('\n温馨提示：\n使用本体黑白名单请使用「群聊ID」\n使用插件黑白名单请按照配置文件说明进行添加~')
 
     /** at用户 */
     if (e.isMaster && e.at) msg.push(`\n目标用户ID：${e.at}`)
     return await e.reply(`\n${msg.join('\n')}`, true, { at: true })
-  }
-
-  /** 微信椰奶状态自定义名称 */
-  async ComName (e) {
-    const msg = e.msg.replace('#微信修改名称', '').trim()
-    const cfg = new YamlParse(Bot.lain._path + '/config.yaml')
-    cfg.set('name', msg)
-    Bot[Bot.lain.wc.uin].nickname = msg
-    return await e.reply(`修改成功，新名称为：${msg}`, false, { at: true })
   }
 
   /** shamrock重载资源 */

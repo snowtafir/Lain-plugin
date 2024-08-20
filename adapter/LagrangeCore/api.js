@@ -1,5 +1,4 @@
 import { randomUUID } from 'crypto'
-import common from '../../lib/common/common.js'
 import fetch, { fileFromSync, FormData } from 'node-fetch'
 import Cfg from '../../lib/config/config.js'
 
@@ -54,8 +53,8 @@ let api = {
   * @param {string} id - 机器人QQ 通过e.bot、Bot调用无需传入
   * @param {string} user_id - 陌生人QQ
   */
-  async get_stranger_info (id, user_id) {
-    const params = { user_id }
+  async get_stranger_info (id, user_id, no_cache = false) {
+    const params = { user_id, no_cache }
     return await this.SendApi(id, 'get_stranger_info', params)
   },
 
@@ -467,10 +466,10 @@ let api = {
   * @param {number} user_id - 私聊QQ
   * @param {number} group_id - 群号
   * @param {number} count - 获取的消息数量（默认为20）
-  * @param {number} message_seq - 起始消息的message_id（默认为0，表示从最后一条发言往前）
+  * @param {number} message_id - 起始消息的message_id（默认为0，表示从最后一条发言往前）
   */
-  async get_history_msg (id, message_type, user_id, group_id, count, message_seq) {
-    const params = { message_type, user_id, group_id, count, message_seq }
+  async get_history_msg (id, message_type, user_id, group_id, count, message_id) {
+    const params = { message_type, user_id, group_id, count, message_id }
     return await this.SendApi(id, 'get_history_msg', params)
   },
 
@@ -479,11 +478,23 @@ let api = {
   * @param {string} id - 机器人QQ 通过e.bot、Bot调用无需传入
   * @param {number} group_id - 群号
   * @param {number} count - 获取的消息数量（默认为20）
-  * @param {number} message_seq - 起始消息的message_id（默认为0，表示从最后一条发言往前）
+  * @param {number} message_id - 起始消息的message_id（默认为0，表示从最后一条发言往前）
   */
-  async get_group_msg_history (id, group_id, count, message_seq) {
-    const params = { group_id, count, message_seq }
+  async get_group_msg_history (id, group_id, count, message_id) {
+    const params = { group_id, message_id, count }
     return await this.SendApi(id, 'get_group_msg_history', params)
+  },
+
+  /**
+  * 获取好友历史消息
+  * @param {string} id - 机器人QQ 通过e.bot、Bot调用无需传入
+  * @param {number} user_id - 好友qq号
+  * @param {number} count - 获取的消息数量（默认为20）
+  * @param {number} message_id - 起始消息的message_id（默认为0，表示从最后一条发言往前）
+  */
+  async get_friend_msg_history (id, user_id, count, message_id) {
+    const params = { user_id, message_id, count }
+    return await this.SendApi(id, 'get_friend_msg_history', params)
   },
 
   /**
@@ -577,7 +588,7 @@ let api = {
 
   async httpApi (id, action, headers, data, query = '') {
     if (!Cfg.Shamrock.baseUrl || !Cfg.Shamrock.baseUrl.startsWith('http')) {
-      return common.warn(id, '未配置Shamrock主动http端口')
+      return lain.warn(id, '未配置Shamrock主动http端口')
     }
     if (!headers) {
       headers = {}
@@ -589,7 +600,7 @@ let api = {
       headers.Authorization = `Bearer ${token}`
     }
     const bot = Bot[id]
-    if (!bot) return common.error(id, '不存在此Bot')
+    if (!bot) return lain.error(id, '不存在此Bot')
     let res = await fetch(baseUrl + '/' + action + query, {
       headers,
       body: data,
@@ -600,7 +611,7 @@ let api = {
       return result.data
     } else {
       let result = await res.json()
-      common.error(id, result)
+      lain.error(id, result)
       return {}
     }
   },
@@ -621,11 +632,15 @@ let api = {
       type = 'base64'
       file = file.replace('base64://', '')
     } else {
-      return common.error(id, `下载文件到缓存目录Api：未适配的格式，${file}`)
+      return lain.error(id, `下载文件到缓存目录Api：未适配的格式，${file}`)
     }
     let params = { [type]: file }
-    headers ? params.headers = headers : ''
-    thread_cnt ? params.thread_cnt = thread_cnt : ''
+    if (headers) {
+      params.headers = headers
+    }
+    if (thread_cnt) {
+      params.thread_cnt = thread_cnt
+    }
     return await this.SendApi(id, 'download_file', params)
   },
 
@@ -687,11 +702,11 @@ let api = {
       user_name = user_id
     }
     /** 打印日志 */
-    common.info(uin, `<发好友:${user_name}> => ${raw_message}`)
+    lain.info(uin, `<发好友:${user_name}> => ${raw_message}`)
 
     let res
     if (node) {
-      const id = await this.SendApi(uin, 'send_forward_msg', { messages: message.map(i => i.data) })
+      const id = await this.SendApi(uin, 'send_private_forward_msg', { user_id, messages: message.map(i => i.data) })
       res = await this.SendApi(uin, 'send_private_msg', { user_id, message: { type: 'forward', data: { id } } })
     } else {
       const params = { user_id, message }
@@ -721,11 +736,11 @@ let api = {
       group_name = group_id
     }
     /** 打印日志 */
-    common.info(uin, `<发送群聊:${group_name}> => ${raw_message}`)
+    lain.info(uin, `<发送群聊:${group_name}> => ${raw_message}`)
 
     let res
     if (node) {
-      const id = await this.SendApi(uin, 'send_forward_msg', { messages: message.map(i => i.data) })
+      const id = await this.SendApi(uin, 'send_group_forward_msg', { group_id, messages: message.map(i => i.data) })
       res = await this.SendApi(uin, 'send_group_msg', { group_id, message: { type: 'forward', data: { id } } })
     } else {
       const params = { group_id, message }
@@ -734,6 +749,7 @@ let api = {
 
     return {
       ...res,
+      time: res.message_id,
       seq: res.message_id,
       rand: 1
     }
@@ -750,7 +766,7 @@ let api = {
     /** 序列化 */
     const log = JSON.stringify({ echo, action, params })
 
-    common.debug(id, '[ws] send -> ' + log)
+    lain.debug(id, '[ws] send -> ' + log)
     Bot[id].ws.send(log)
 
     /** 等待响应 */
@@ -759,9 +775,9 @@ let api = {
       if (data) {
         delete lain.echo[echo]
         if (data.status === 'ok') return data.data
-        else common.error(id, data); throw data
+        else lain.error(id, data); throw data
       } else {
-        await common.sleep(50)
+        await new Promise((resolve) => setTimeout(resolve, 50))
       }
     }
     throw new Error({ status: 'error', message: '请求超时' })

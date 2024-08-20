@@ -1280,7 +1280,7 @@ if (Config) {
                 })
             }
         }
-        return {title: result?.title, desc: result?.desc, page, data: list}
+        return { title: result?.title, desc: result?.desc, page, data: list }
     }
 
     factory.CreateMusicShareJSON = async function (data) {
@@ -1305,7 +1305,7 @@ if (Config) {
                     title: ''
                 }
             },
-            config: {type: 'normal', forward: true}
+            config: { type: 'normal', forward: true }
         }
         let music = music_json.meta.music
 
@@ -1356,7 +1356,7 @@ if (Config) {
         }
         ;
         if (types.length > 0 && typeof (data.api) == 'function') {
-            let {url, pic, link} = await data.api(data.data, types)
+            let { url, pic, link } = await data.api(data.data, types)
             if (url) {
                 data.url = url
             }
@@ -1466,7 +1466,7 @@ if (Config) {
             }
         } catch (err) {
         }
-        return {code: -1}
+        return { code: -1 }
     }
 
     factory.get_qqmusic_userinfo = async function (ck = null) {
@@ -1505,7 +1505,7 @@ if (Config) {
             }
         } catch (err) {
         }
-        return {code: -1}
+        return { code: -1 }
     }
 
     factory.is_qqmusic_vip = async function (uin, cookies = null) {
@@ -1559,12 +1559,12 @@ if (Config) {
     factory.kugou_search = async function (search, page = 1, page_size = 10) {
         try {
             let url = `http://msearchcdn.kugou.com/api/v3/search/song?page=${page}&pagesize=${page_size}&keyword=${encodeURI(search)}`
-            let response = await fetch(url, {method: 'get'}) // 调用接口获取数据
+            let response = await fetch(url, { method: 'get' }) // 调用接口获取数据
             let res = await response.json() // 结果json字符串转对象
             if (!res.data || res.data.info < 1) {
                 return []
             }
-            return {page, data: res.data.info}
+            return { page, data: res.data.info }
         } catch (err) {
         }
 
@@ -1572,7 +1572,7 @@ if (Config) {
     }
 
     factory.qqmusic_refresh_token = async function (cookies, type) {
-        let result = {code: -1}
+        let result = { code: -1 }
         let json_body = {
             ...music_cookies.qqmusic.body,
             req_0: {
@@ -1613,7 +1613,7 @@ if (Config) {
 
         let options = {
             method: 'POST', // post请求
-            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: JSON.stringify(json_body)
         }
 
@@ -1665,7 +1665,7 @@ if (Config) {
         try {
             let json_body = {
                 ...JSON.parse(JSON.stringify(music_cookies.qqmusic.body)),
-                req_0: {module: 'track_info.UniformRuleCtrlServer', method: 'GetTrackInfo', param: {}}
+                req_0: { module: 'track_info.UniformRuleCtrlServer', method: 'GetTrackInfo', param: {} }
             }
             let types = []
             for (let i in ids) {
@@ -1678,7 +1678,7 @@ if (Config) {
             }
             let options = {
                 method: 'POST',
-                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: JSON.stringify(json_body)
             }
 
@@ -1692,7 +1692,7 @@ if (Config) {
 
             let data = res.req_0?.data?.tracks
             data = data || []
-            return {page: 0, data}
+            return { page: 0, data }
         } catch (err) {
         }
         return null
@@ -1701,11 +1701,11 @@ if (Config) {
     factory.qqmusic_recommend = async function (uin, page_size) {
         try {
             let json_body = {
-                comm: {g_tk: 5381, uin, format: 'json', ct: 20, cv: 1803, platform: 'wk_v17'},
+                comm: { g_tk: 5381, uin, format: 'json', ct: 20, cv: 1803, platform: 'wk_v17' },
                 req_0: {
                     module: 'recommend.RecommendFeedServer',
                     method: 'get_recommend_feed',
-                    param: {direction: 1, page: 1, v_cache: [], v_uniq: [], s_num: 0}
+                    param: { direction: 1, page: 1, v_cache: [], v_uniq: [], s_num: 0 }
                 }
             }
             json_body.comm.guid = md5(String(new Date().getTime()))
@@ -1715,7 +1715,7 @@ if (Config) {
             json_body.comm.authst = ''
             let options = {
                 method: 'POST',
-                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: JSON.stringify(json_body)
             }
 
@@ -1751,7 +1751,7 @@ if (Config) {
         try {
             let json_body = {
                 ...JSON.parse(JSON.stringify(music_cookies.qqmusic.body)),
-                req_0: {method: 'get_radio_track', module: 'pc_track_radio_svr', param: {id: 99, num: 1}}
+                req_0: { method: 'get_radio_track', module: 'pc_track_radio_svr', param: { id: 99, num: 1 } }
             }
             json_body.comm.guid = md5(String(new Date().getTime()))
             json_body.comm.uin = uin
@@ -1762,7 +1762,7 @@ if (Config) {
 
             let options = {
                 method: 'POST', // post请求
-                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: JSON.stringify(json_body)
             }
 
@@ -1776,7 +1776,7 @@ if (Config) {
 
             let data = res.req_0?.data?.tracks
             data = data || []
-            return {page: 0, data}
+            return { page: 0, data }
         } catch (err) {
         }
 
@@ -1814,7 +1814,7 @@ if (Config) {
 
             let options = {
                 method: 'POST', // post请求
-                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: JSON.stringify(json_body)
             }
 
@@ -1829,7 +1829,7 @@ if (Config) {
             let dirinfo = res.req_0?.data?.dirinfo || {}
             let data = res.req_0?.data?.songlist
             data = data || []
-            return {title: dirinfo.title, desc: dirinfo.desc, page, data}
+            return { title: dirinfo.title, desc: dirinfo.desc, page, data }
         } catch (err) {
         }
 
@@ -1854,7 +1854,7 @@ if (Config) {
             if (!res.data?.result || res.data?.result.length < 1) {
                 return null
             }
-            return {page, data: res.data?.result}
+            return { page, data: res.data?.result }
         } catch (err) {
         }
 
@@ -1920,7 +1920,7 @@ if (Config) {
             if (res.code != '0') {
                 return null
             }
-            return {page, data: res.search.data.body.song.list}
+            return { page, data: res.search.data.body.song.list }
         } catch (err) {
         }
 
@@ -1947,7 +1947,7 @@ if (Config) {
             if (res.result.songs < 1) {
                 return null
             }
-            return {page, data: res.result.songs}
+            return { page, data: res.result.songs }
         } catch (err) {
         }
 
@@ -1957,12 +1957,12 @@ if (Config) {
     factory.kuwo_search = async function (search, page = 1, page_size = 10) {
         try {
             let url = `http://search.kuwo.cn/r.s?user=&android_id=&prod=kwplayer_ar_10.1.2.1&corp=kuwo&newver=3&vipver=10.1.2.1&source=kwplayer_ar_10.1.2.1_40.apk&p2p=1&q36=&loginUid=&loginSid=&notrace=0&client=kt&all=${search}&pn=${page - 1}&rn=${page_size}&uid=&ver=kwplayer_ar_10.1.2.1&vipver=1&show_copyright_off=1&newver=3&correct=1&ft=music&cluster=0&strategy=2012&encoding=utf8&rformat=json&vermerge=1&mobi=1&searchapi=5&issubtitle=1&province=&city=&latitude=&longtitude=&userIP=&searchNo=&spPrivilege=0`
-            let response = await fetch(url, {method: 'get'}) // 调用接口获取数据
+            let response = await fetch(url, { method: 'get' }) // 调用接口获取数据
             let res = await response.json() // 结果json字符串转对象
             if (res.abslist.length < 1) {
                 return null
             }
-            return {page, data: res.abslist}
+            return { page, data: res.abslist }
         } catch (err) {
         }
 

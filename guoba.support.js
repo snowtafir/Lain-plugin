@@ -1,7 +1,6 @@
-import fs from 'fs'
-import Yaml from 'yaml'
-import yaml from './model/YamlHandler.js'
-import common from '../../lib/common/common.js'
+import Cfg from './lib/config/config.js'
+import Yaml from './model/YamlHandler.js'
+// import common from '../../lib/common/common.js'
 
 /**
  *  支持锅巴
@@ -11,34 +10,34 @@ import common from '../../lib/common/common.js'
  */
 
 // function guildList() {
-const guilds = []
-const channels = []
-const prefixBlack = []
+// const guilds = []
+// const channels = []
+// const prefixBlack = []
 // /** 延迟10秒加载数据，防止某些数据没有加载 */
 // setTimeout(async () => {
-//   while (true) {
-//     /** 防止为空 */
-//     if (Bot?.lain?.guilds) {
-//       const list = Bot.lain.guilds
-//       for (let id in list) {
-//         /** 频道 */
-//         guilds.push({ label: list[id].name, value: `qg_${id}` })
-//         /** 这里是子频道 */
-//         for (let i in list[id].channels) {
-//           channels.push({ label: list[id].name + '-' + list[id].channels[i], value: i })
-//         }
-//       }
-//       break
-//     } else {
-//       await common.sleep(1000)
-//     }
-//   }
+//  while (true) {
+//    /** 防止为空 */
+//    if (Bot?.lain?.guilds) {
+//      const list = Bot.lain.guilds
+//      for (let id in list) {
+//        /** 频道 */
+//        guilds.push({ label: list[id].name, value: `qg_${id}` })
+//        /** 这里是子频道 */
+//        for (let i in list[id].channels) {
+//          channels.push({ label: list[id].name + '-' + list[id].channels[i], value: i })
+//        }
+//      }
+//      break
+//    } else {
+//      await common.sleep(1000)
+//    }
+//  }
 
-//   const cfg = new yaml('./plugins/Lain-plugin/config/bot.yaml')
-//   const config = cfg.data()
-//   for (const i in config) {
-//     prefixBlack.push({ label: Bot?.[i]?.name || '未知', value: config[i].appID })
-//   }
+//  const cfg = new yaml('./plugins/Lain-plugin/config/bot.yaml')
+//  const config = cfg.data()
+//  for (const i in config) {
+//    prefixBlack.push({ label: Bot?.[i]?.name || '未知', value: config[i].appID })
+//  }
 // }, 10000)
 
 export function supportGuoba () {
@@ -58,9 +57,9 @@ export function supportGuoba () {
     pluginInfo: {
       name: '铃音插件',
       title: 'Lain-plugin',
-      author: '@Lain.',
-      authorLink: 'https://gitee.com/Zyy955',
-      link: 'https://gitee.com/Zyy955/Lain-plugin',
+      author: '@sky-summer @Lain.',
+      authorLink: 'https://gitee.com/sky-summer',
+      link: 'https://gitee.com/sky-summer/Lain-plugin',
       isV3: true,
       isV2: false,
       description: '主要为云崽提供QQ频道、PC微信、网页版微信机器人等功能',
@@ -81,7 +80,27 @@ export function supportGuoba () {
           label: 'HTTP服务器设置'
         },
         {
-          field: 'port',
+          field: 'Server.baseUrl',
+          label: '方法1：公网地址',
+          bottomHelpMessage: '请输入HTTP服务的公网地址，服务器放行http端口',
+          component: 'Input',
+          required: false,
+          componentProps: {
+            placeholder: '请输入公网地址'
+          }
+        },
+        {
+          field: 'Server.baseIP',
+          label: '方法2：公网IP',
+          bottomHelpMessage: '请输入HTTP服务的公网IP，服务器放行http端口',
+          component: 'Input',
+          required: false,
+          componentProps: {
+            placeholder: '请输入公网IP'
+          }
+        },
+        {
+          field: 'Server.port',
           label: '端口',
           bottomHelpMessage: '请输入HTTP服务器端口(Shamrock、QQBot共用)',
           component: 'InputNumber',
@@ -94,11 +113,23 @@ export function supportGuoba () {
           }
         },
         {
+          field: 'Server.InvalidTime',
+          label: '临时文件失效时间',
+          bottomHelpMessage: '请输入时间(单位：秒，QQBot使用)',
+          component: 'InputNumber',
+          required: true,
+          componentProps: {
+            type: 'number',
+            placeholder: '请输入时间(单位：秒，QQBot使用)',
+            min: 1
+          }
+        },
+        {
           component: 'Divider',
           label: 'PC微信设置'
         },
         {
-          field: 'autoFriend',
+          field: 'Adapter.ComWeChat.autoFriend',
           label: '自动同意加好友',
           component: 'RadioGroup',
           bottomHelpMessage: '是否自动同意加好友',
@@ -110,7 +141,33 @@ export function supportGuoba () {
           }
         },
         {
-          field: 'name',
+          field: 'Adapter.ComWeChat.name',
+          label: '椰奶状态名称',
+          bottomHelpMessage: '自定义PC微信椰奶状态名称',
+          component: 'Input',
+          required: false,
+          componentProps: {
+            placeholder: '请输入椰奶状态名称'
+          }
+        },
+        {
+          component: 'Divider',
+          label: '网页微信设置'
+        },
+        {
+          field: 'Adapter.WeXin.autoFriend',
+          label: '自动同意加好友',
+          component: 'RadioGroup',
+          bottomHelpMessage: '是否自动同意加好友',
+          componentProps: {
+            options: [
+              { label: '不处理', value: 0 },
+              { label: '自动同意', value: 1 }
+            ]
+          }
+        },
+        {
+          field: 'Adapter.WeXin.name',
           label: '椰奶状态名称',
           bottomHelpMessage: '自定义微信椰奶状态名称',
           component: 'Input',
@@ -121,41 +178,144 @@ export function supportGuoba () {
         },
         {
           component: 'Divider',
-          label: 'QQBot设置'
+          label: 'Shamrock设置'
         },
         {
-          field: 'QQBotImgIP',
-          label: '方法2： 公网API',
-          bottomHelpMessage: '请输入QQBot的公网IP，服务器放行http端口',
+          field: 'Adapter.Shamrock.baseUrl',
+          label: 'Shamrock主动http链接',
+          bottomHelpMessage: '例如http://localhost:5700。若填写将通过此端口进行文件上传等被动ws不支持的操作',
           component: 'Input',
           required: false,
           componentProps: {
-            placeholder: '请输入公网IP'
+            placeholder: '请输入公网地址'
           }
         },
         {
-          field: 'QQBotPort',
-          label: '公网IP实际端口',
-          bottomHelpMessage: '实际占用的是HTTP端口，此配置适用于内网和公网端口不一致用户。',
-          component: 'InputNumber',
-          required: false,
-          componentProps: {
-            type: 'number',
-            placeholder: '请输入公网端口',
-            min: 1,
-            max: 65535
-          }
-        },
-        {
-          field: 'QQBotImgToken',
-          label: '图片Api的token',
-          bottomHelpMessage: '随机生成 无特殊需求不建议更改',
+          field: 'Adapter.Shamrock.token',
+          label: '鉴权token',
+          bottomHelpMessage: 'Shamrock鉴权token，如果开放公网强烈建议配置',
           component: 'InputPassword',
           required: false,
           componentProps: {
-            placeholder: '请输入自定义的token'
+            placeholder: '请输入shamrock鉴权token'
           }
         },
+        {
+          field: 'Adapter.Shamrock.githubKey',
+          label: 'Github Access Token',
+          component: 'InputPassword',
+          bottomHelpMessage: '用于查询shamrock仓库版本信息。登录网页github点击右上角头像，然后settings-developer-personal access tokens-Fine-grained tokens创建一个默认的即可',
+          required: false,
+          componentProps: {
+            placeholder: '请输入Github Access Token'
+          }
+        },
+        {
+          component: 'Divider',
+          label: '标准输入设置'
+        },
+        {
+          field: 'Adapter.Stdin.state',
+          label: '标准输入开关',
+          bottomHelpMessage: '是否开启标准输入',
+          component: 'Switch'
+        },
+        {
+          field: 'Adapter.Stdin.name',
+          label: '标准输入昵称',
+          bottomHelpMessage: '自定义标准输入的椰奶状态名称',
+          component: 'Input',
+          required: false,
+          componentProps: {
+            placeholder: '请输入自定义标准输入昵称'
+          }
+        },
+        {
+          field: 'Adapter.Stdin.avatar',
+          label: '标准输入头像',
+          bottomHelpMessage: '自定义标准输入的椰奶状态头像',
+          component: 'Input',
+          required: false,
+          componentProps: {
+            placeholder: '请输入自定义标准输入头像路径，可选绝对路径或以崽目录开始相对路径'
+          }
+        },
+        {
+          component: 'Divider',
+          label: '其他设置'
+        },
+        {
+          field: 'Other.DelFileCron',
+          label: '定时清理缓存',
+          bottomHelpMessage: '在指定的时间清理缓存',
+          component: 'EasyCron',
+          componentProps: {
+            multiple: true,
+            placeholder: '请输入或选择Cron表达式'
+          }
+        },
+        {
+          field: 'Other.ICQQtoFile',
+          label: 'ICQQ魔法文件',
+          bottomHelpMessage: '是否开启',
+          component: 'Switch'
+        },
+        {
+          field: 'Other.QQBotdau',
+          label: 'QQBotdau统计',
+          bottomHelpMessage: '是否开启QQBotdau统计功能',
+          component: 'Switch'
+        },
+        {
+          field: 'Other.WhiteLink',
+          label: '白名单url',
+          bottomHelpMessage: 'url白名单，在白名单中的链接不会转为二维码',
+          component: 'GTags',
+          componentProps: {
+            placeholder: '请输入链接',
+            allowAdd: true,
+            allowDel: true,
+            showPrompt: true,
+            promptProps: addUrlPromptProps,
+            valueFormatter: ((value) => String(value)).toString()
+          }
+        }
+      ],
+      // 获取配置数据方法（用于前端填充显示数据）
+      getConfigData () {
+        return {
+          Server: Cfg.Server,
+          Adapter: {
+            ComWeChat: Cfg.ComWeChat,
+            WeXin: Cfg.WeXin,
+            Shamrock: Cfg.Shamrock,
+            Stdin: Cfg.Stdin
+          },
+          Other: Cfg.Other
+        }
+      },
+      // 设置配置的方法（前端点确定后调用的方法）
+      setConfigData (data, { Result }) {
+        try {
+          for (let i in data) {
+            let value = data[i]
+            i = i.split('.')
+            let key = i.shift()
+            let config = new Yaml(lain._pathCfg + `/Config-${key}.yaml`)
+            config.set(i.join('.'), value)
+          }
+          return Result.ok({}, '保存成功~')
+        } catch (err) {
+          logger.error('[Lain-plugin][锅巴] 保存失败：\n', err)
+          return Result.error(`保存失败：\n${err.message}`)
+        }
+      }
+    }
+  }
+}
+
+/** 后续添加(咕咕咕)
+
         {
           component: 'Divider',
           label: 'QQ频道设置'
@@ -182,12 +342,6 @@ export function supportGuoba () {
           field: 'forwar',
           label: '分片转发',
           bottomHelpMessage: '是否使用分片发送转发消息',
-          component: 'Switch'
-        },
-        {
-          field: 'isLog',
-          label: '黑白名单日志',
-          bottomHelpMessage: '关闭后未通过黑白名单的日志将会转为debug日志',
           component: 'Switch'
         },
         {
@@ -304,125 +458,4 @@ export function supportGuoba () {
             options: channels
           }
         },
-        {
-          component: 'Divider',
-          label: 'Shamrock设置'
-        },
-        {
-          field: 'baseUrl',
-          label: '主动http端口',
-          bottomHelpMessage: 'Shamrock主动http端口，例如http://localhost:5700。若填写将通过此端口进行文件上传等被动ws不支持的操作。未开启端口不要填写',
-          component: 'Input',
-          required: false,
-          componentProps: {
-            placeholder: '请输入shamrock主动http端口'
-          }
-        },
-        {
-          field: 'token',
-          label: '鉴权token',
-          bottomHelpMessage: 'Shamrock鉴权token，如果开放公网强烈建议配置',
-          component: 'InputPassword',
-          required: false,
-          componentProps: {
-            placeholder: '请输入shamrock鉴权token'
-          }
-        },
-        {
-          field: 'githubKey',
-          label: 'Github Access Token',
-          component: 'InputPassword',
-          bottomHelpMessage: '用于查询shamrock仓库版本信息。登录网页github点击右上角头像，然后settings-developer-personal access tokens-Fine-grained tokens创建一个默认的即可',
-          required: false,
-          componentProps: {
-            placeholder: '请输入Github Access Token'
-          }
-        },
-        {
-          component: 'Divider',
-          label: '标准输入设置'
-        },
-        {
-          field: 'stdin_nickname',
-          label: '标准输入昵称',
-          bottomHelpMessage: '自定义标准输入的椰奶状态名称',
-          component: 'Input',
-          required: true,
-          componentProps: {
-            placeholder: '请输入自定义标准输入昵称'
-          }
-        }
-      ],
-      // 获取配置数据方法（用于前端填充显示数据）
-      getConfigData () {
-        return Bot.lain.cfg
-      },
-      // 设置配置的方法（前端点确定后调用的方法）
-      setConfigData (data, { Result }) {
-        const _path = Bot.lain._path + '/config.yaml'
-        let cfg = Yaml.parseDocument(fs.readFileSync(_path, 'utf8'))
-        for (const key in data) {
-          let value = data[key]
-          switch (key) {
-            case 'port':
-              cfg.setIn([key], Number(value))
-              break
-            case 'path':
-              cfg.setIn([key], String(value))
-              break
-            case 'autoFriend':
-              cfg.setIn([key], Number(value))
-              break
-            case 'name':
-              cfg.setIn([key], String(value))
-              break
-            case 'prefix':
-              cfg.setIn([key], Boolean(value))
-              break
-            case 'forwar':
-              cfg.setIn([key], Boolean(value))
-              break
-            case 'isLog':
-              cfg.setIn([key], Boolean(value))
-              break
-            case 'ImageSize':
-              cfg.setIn([key], Number(value))
-              break
-            case 'width':
-              cfg.setIn([key], Number(value))
-              break
-            case 'quality':
-              cfg.setIn([key], Number(value))
-              break
-            case 'recallQR':
-              cfg.setIn([key], Number(value))
-              break
-            case 'stdin_nickname':
-              cfg.setIn([key], String(value))
-              Bot.lain.cfg.stdin_nickname = String(value)
-              break
-            case 'QQBotImgIP':
-              cfg.setIn([key], String(value))
-              Bot.lain.cfg.QQBotImgIP = String(value)
-              break
-            case 'QQBotPort':
-              cfg.setIn([key], Number(value))
-              Bot.lain.cfg.QQBotPort = Number(value)
-              break
-            case 'QQBotImgToken':
-              cfg.setIn([key], String(value))
-              Bot.lain.cfg.QQBotImgToken = String(value)
-              break
-            default:
-              if (!value) break
-              if (!Array.isArray(value)) value = [value]
-              cfg.setIn([key], value)
-              break
-          }
-        }
-        fs.writeFileSync(_path, cfg.toString(), 'utf8')
-        return Result.ok({}, '保存成功~')
-      }
-    }
-  }
-}
+*/

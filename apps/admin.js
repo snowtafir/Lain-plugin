@@ -24,83 +24,82 @@ export class admin extends plugin {
       {
         regex: /#(Lain|铃音)设置端口/i,
         action: (msg) => {
-          this.yamlData('Config-bot', 'Server.port', Number(msg))
+          this.yamlData('Config-Server', 'port', Number(msg))
         }
       },
       {
         regex: /#(Lain|铃音)设置IP/i,
         action: (msg) => {
-          this.yamlData('Config-bot', 'Server.baseIP', msg)
+          this.yamlData('Config-Server', 'baseIP', msg)
         }
       },
       {
         regex: /#(Lain|铃音)设置url/i,
         action: (msg) => {
-          this.yamlData('Config-bot', 'Server.baseUrl', msg)
+          this.yamlData('Config-Server', 'baseUrl', msg)
         }
       },
       {
         regex: /#(Lain|铃音)设置文件过期时间/i,
         action: (msg) => {
-          this.yamlData('Config-bot', 'Server.InvalidTime', Number(msg))
+          this.yamlData('Config-Sserver', 'InvalidTime', Number(msg))
         }
       },
       {
         regex: /#(Lain|铃音)设置标准输入名称/i,
         action: (msg) => {
-          this.yamlData('Config-other', 'Stdin.name', msg)
+          this.yamlData('Config-Adapter', 'Stdin.name', msg)
         }
       },
       {
         regex: /#(Lain|铃音)设置标准输入/i,
         action: (msg) => {
           msg = msg === '开启'
-          this.yamlData('Config-other', 'Stdin.state', msg)
+          this.yamlData('Config-Adapter', 'Stdin.state', msg)
         }
       },
       {
         regex: /#(Lain|铃音)设置三叶草url/i,
         action: (msg) => {
-          this.yamlData('Config-Shamrock', 'baseUrl', msg)
+          this.yamlData('Config-Adapter', 'Shamrock.baseUrl', msg)
         }
       },
       {
         regex: /#(Lain|铃音)设置三叶草token/i,
         action: (msg) => {
-          this.yamlData('Config-Shamrock', 'token', msg)
+          this.yamlData('Config-Adapter', 'Shamrock.token', msg)
         }
       },
       {
         regex: /#(Lain|铃音)设置三叶草git/i,
         action: (msg) => {
-          this.yamlData('Config-Shamrock', 'githubKey', msg)
+          this.yamlData('Config-Adapter', 'Shamrock.githubKey', msg)
         }
       },
       {
         regex: /#(Lain|铃音)设置PC微信名称/i,
         action: (msg) => {
-          msg = msg === '开启'
-          this.yamlData('Config-other', 'ComWeChat.name', msg)
+          this.yamlData('Config-Adapter', 'ComWeChat.name', msg)
         }
       },
       {
         regex: /#(Lain|铃音)设置PC微信好友/i,
         action: (msg) => {
           msg = msg === '开启' ? 1 : 0
-          this.yamlData('Config-other', 'ComWeChat.autoFriend', msg)
+          this.yamlData('Config-Adapter', 'ComWeChat.autoFriend', msg)
         }
       },
       {
         regex: /#(Lain|铃音)设置微信名称/i,
         action: (msg) => {
-          this.yamlData('Config-other', 'WeXin.name', msg)
+          this.yamlData('Config-Adapter', 'WeXin.name', msg)
         }
       },
       {
         regex: /#(Lain|铃音)设置微信好友/i,
         action: (msg) => {
           msg = msg === '开启' ? 1 : 0
-          this.yamlData('Config-other', 'WeXin.autoFriend', msg)
+          this.yamlData('Config-Adapter', 'WeXin.autoFriend', msg)
         }
       }
     ]
@@ -115,7 +114,7 @@ export class admin extends plugin {
   }
 
   async yamlData (app, name, msg) {
-    const config = new YamlHandler(lain._path + `/config/config/${app}.yaml`)
+    const config = new YamlHandler(lain._pathCfg + `/${app}.yaml`)
     config.set(name, msg)
     /** 热更需要延迟 */
     await common.sleep(1000)
@@ -130,14 +129,16 @@ export class admin extends plugin {
       copyright: this.copyright()
     }
 
-    return await this.reply(segment.image(await common.Rending(data, 'admin/index')))
+    return await this.reply(await common.Rending(data, 'admin/index'))
   }
 
   adminUl () {
     const ul = []
     const Server = Cfg.Server
     const Shamrock = Cfg.Shamrock
-    const other = Cfg.Other
+    const Stdin = Cfg.Stdin
+    const ComWeChat = Cfg.ComWeChat
+    const WeXin = Cfg.WeXin
 
     /** HTTPServer设置 */
     ul.push({
@@ -177,13 +178,19 @@ export class admin extends plugin {
         {
           line: '开关',
           hint: '#铃音设置标准输入 开启/关闭',
-          status: other.Stdin.state
+          status: Stdin.state
         },
         {
           line: '名称',
           hint: '#铃音设置标准输入名称 标准输入',
-          status: other.Stdin.name,
+          status: Stdin.name,
           desc: '椰奶状态、土块状态中显示名称'
+        },
+        {
+          line: '头像',
+          hint: '#铃音设置标准输入头像 plugin/Lain-plugin/resources/default_avatar.jpg',
+          status: Stdin.avatar ? Stdin.avatar : '未设置',
+          desc: '椰奶状态、土块状态中显示头像'
         }
       ]
     })
@@ -218,13 +225,13 @@ export class admin extends plugin {
         {
           line: '名称',
           hint: '#铃音设置PC微信名称 ComWeChat',
-          status: other.ComWeChat.name ? other.ComWeChat.name : '未设置',
+          status: ComWeChat.name ? ComWeChat.name : '未设置',
           desc: '椰奶状态、土块状态中显示名称'
         },
         {
           line: '自动同意好友',
           hint: '#铃音设置PC微信好友 开启/关闭',
-          status: other.ComWeChat.autoFriend,
+          status: ComWeChat.autoFriend,
           desc: 'Windows版本的微信适配器'
         }
       ]
@@ -236,13 +243,13 @@ export class admin extends plugin {
         {
           line: '名称',
           hint: '#铃音设置微信名称 ComWeChat',
-          status: other.WeXin.name ? other.WeXin.name : '未设置',
+          status: WeXin.name ? WeXin.name : '未设置',
           desc: '椰奶状态、土块状态中显示名称'
         },
         {
           line: '自动同意好友',
           hint: '#铃音设置微信好友 开启/关闭',
-          status: other.WeXin.autoFriend,
+          status: WeXin.autoFriend,
           desc: 'Web(网页版)版本的微信适配器'
         }
       ]
@@ -287,6 +294,6 @@ export class admin extends plugin {
   }
 
   copyright () {
-    return `<div class="copyright">Created By Miao-Yunzai<span class="version">${Cfg.YZPackage.version}</span> & Lain-Plugin<span class="version">${Cfg.package.version}</span></div>`
+    return `<div class="copyright">Created By ${Bot.lain.adapter.lain.apk.display}<span class="version">${Bot.lain.adapter.lain.apk.version}</span> & Lain-Plugin<span class="version">${Bot.lain.adapter.lain.version.version}</span></div>`
   }
 }

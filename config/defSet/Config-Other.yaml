@@ -1,0 +1,12 @@
+# 定时清理缓存临时文件夹 每天凌晨4点
+DelFileCron: 0 4 * * *
+
+# ICQQ魔法文件
+ICQQtoFile: false
+
+# QQBotdau统计
+QQBotdau: true
+
+# URL白名单，在白名单中的链接不会转为二维码
+WhiteLink:
+  - https://www.lain.com

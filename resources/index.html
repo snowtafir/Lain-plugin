@@ -104,7 +104,7 @@
             const old_div = document.getElementById('msg')
 
             // 检查消息是否是一个Base64编码的图片
-            if (msg.startsWith('base64://')) {
+            if (msg && msg.startsWith('base64://')) {
                 const div = document.createElement('div')
                 div.classList.add('normal-text')
 
@@ -125,7 +125,7 @@
                 img.src = "data:image/png;base64," + msg.replace("base64://", "")
                 div.appendChild(img)
                 old_div.appendChild(div)
-            } else {
+            } else if (msg) {
                 // 在循环之前添加一个p标签
                 old_div.innerHTML = '<p>原始消息：</p>'
 
@@ -151,7 +151,10 @@
 <body>
     {{if typeof error === 'string'}}
     <div class="error">
-        <p><b>初始链接：</b>{{error}}</p>
+        <p><b>原内容：</b></p>
+    </div>
+    <div class="error">
+        <p><b>{{error}}</b></p>
     </div>
     {{else if error && typeof error === 'object'}}
     <div class="error">
@@ -161,8 +164,6 @@
     </div>
     {{/if}}
 
-    <div class="message" id="msg">
-    </div>
-    <div class="author"><b>Created By Miao-Yunzai <span>{{@lain.apk.version}}</span> & Lain-plugin
-            <span>{{@lain.version.version}}</span></b></div>
+    <div class="message" id="msg"></div>
+    <div class="author"><b>Created By {{@lain.apk.display}} <span>{{@lain.apk.version}}</span> & Lain-plugin <span>{{@lain.version.version}}</span></b></div>
 </body>

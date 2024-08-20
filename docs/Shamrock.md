@@ -1,5 +1,3 @@
- ![Visitor Count](https://profile-counter.glitch.me/Zyy955-Lain-plugin/count.svg)
-
 ### 温馨提示：
 - 目前`Shamrock`搭建难度较高，不推荐小白现阶段进行迁移。
 - 目前本插件正在跟随上游`Shamrock`高速更新，追求稳定更建议您当前迁移至`QQNT`~

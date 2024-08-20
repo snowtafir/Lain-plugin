@@ -39,14 +39,8 @@ export class WebWcChat extends plugin {
         login = true
         const { url } = Bot.lain.loginMap.get(id)
         const msg = [
-          {
-            type: 'text',
-            text: '请于60秒内通过手机扫码登录微信~'
-          },
-          {
-            type: 'image',
-            file: Buffer.from(await (await fetch(url)).arrayBuffer())
-          }
+          '请于60秒内通过手机扫码登录微信~',
+          segment.image(url)
         ]
         await this.e.reply(msg, false, { recall: 60 })
         break
@@ -66,7 +60,7 @@ export class WebWcChat extends plugin {
   async account () {
     const _path = fs.readdirSync('./plugins/Lain-plugin/config')
     const Jsons = _path.filter(file => file.endsWith('.json')).map(file => file.replace('.json', ''))
-    if (Jsons) {
+    if (Jsons.length > 0) {
       return await this.reply(`微信账号：\n${Jsons.join('\n')}`, true)
     } else {
       return await this.reply('还没有账号呢~', true)

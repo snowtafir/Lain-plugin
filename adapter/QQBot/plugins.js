@@ -84,7 +84,7 @@ class Button {
       /** 热更新 */
       filesList.map(folder => {
         let state = true
-        const watcher = chokidar.watch(folder, { ignored: /[\/\\]\./, persistent: true })
+        const watcher = chokidar.watch(folder, { ignored: /[/\\]\./, persistent: true })
         watcher
           .on('add', async filePath => {
             await this.handleFileChange(filePath, 'add', state)

@@ -22,20 +22,20 @@ Bot.lain = {
     lain: {
       /** 插件 */
       version: {
-        id: '喵崽',
+        id: '云崽',
         name,
         version
       },
       /** 主体 */
       apk: {
-        display: 'Miao-Yunzai',
+        display: 'Yunzai-Bot',
         version: packYZ.version
       }
     },
     QQGuild: {
       /** 插件 */
       version: {
-        id: '私域',
+        id: '公域',
         name: 'QQ频道',
         version: adapter.QQGuild
       },
@@ -67,8 +67,8 @@ Bot.lain = {
       },
       /** 依赖包 */
       apk: {
-        display: '',
-        version: ''
+        display: 'stdin',
+        version: adapter.stdin
       }
     },
     Shamrock: {

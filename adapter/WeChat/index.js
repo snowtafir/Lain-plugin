@@ -26,8 +26,8 @@ class AdapterComWeChat {
 
   /** 处理监听事件 */
   async event (data) {
-    lain.debug('Lain-plugin', `ws => ${data}`)
     data = JSON.parse(data)
+    lain.debug('Lain-plugin ws => ', JSON.stringify(data))
     /** 带echo的属于主动请求的响应，另外保存 */
     if (data?.echo) return lain.echo.set(data.echo, data)
 
@@ -86,7 +86,7 @@ class AdapterComWeChat {
     switch (data.detail_type) {
       /** 添加好友请求 */
       case 'wx.friend_request':
-        if (Cfg.Other.ComWeChat.autoFriend) {
+        if (Cfg.ComWeChat.autoFriend) {
           const { v3, v4, nickname, user_id } = data
           await this.sendApi('wx.accept_friend', { v3, v4 })
           lain.info(this.id, `自动同意好友申请：${nickname}(${user_id})`)
@@ -132,7 +132,7 @@ class AdapterComWeChat {
       tl: new Map(),
       gml: new Map(),
       guilds: new Map(),
-      nickname: Cfg.Other.ComWeChat.name || data.user_name,
+      nickname: Cfg.ComWeChat.name || data.user_name,
       adapter: 'ComWeChat',
       uin: this.id,
       tiny_id: this.id,
@@ -195,7 +195,7 @@ class AdapterComWeChat {
   /** 发送请求 */
   async sendApi (action, params) {
     const echo = randomUUID()
-    lain.debug(this.id, '[ws] send -> ' + JSON.stringify({ echo, action, params }))
+    lain.debug(this.id, '[ws] send -> ', JSON.stringify({ echo, action, params }))
     this.bot.send(JSON.stringify({ echo, action, params }))
 
     for (let i = 0; i < 1200; i++) {
@@ -258,6 +258,8 @@ class AdapterComWeChat {
     }
 
     data = {
+      uin: this.id, // ???鬼知道哪来的这玩意，icqq都没有...
+      bot: Bot[this.id],
       ...data,
       self_id: this.id,
       message,
@@ -301,7 +303,8 @@ class AdapterComWeChat {
         recallMsg: () => '暂未支持',
         sendMsg: async (msg) => await this.sendGroupMsg(msg),
         makeForwardMsg: async (forwardMsg) => await common.makeForwardMsg(forwardMsg),
-        pickMember: async (id) => await this.pickMember(group_id, id)
+        pickMember: async (id) => await this.pickMember(group_id, id),
+        muteMember: () => '暂未支持'
       }
       lain.info(this.id, `<群:${group_id}><用户:${user_id}> -> ${log_message}`)
     }
@@ -533,7 +536,8 @@ class AdapterComWeChat {
       recallMsg: async () => '',
       /** 制作转发 */
       makeForwardMsg: async (message) => await this.makeForwardMsg(message),
-      sendFile: async (filePath) => await this.get_file_id('file', filePath)
+      sendFile: async (filePath) => await this.get_file_id('file', filePath),
+      muteMember: async () => ''
     }
   }
 

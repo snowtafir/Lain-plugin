@@ -25,7 +25,7 @@ export class shamrock extends plugin {
 
   async version (e) {
     let self_id
-    for (const i of Bot.adapter) if (Bot[i].adapter === 'shamrock') self_id = i
+    for (const i of Bot.uin2) if (Bot[i].adapter === 'shamrock') self_id = i
 
     try {
       let version = Bot[self_id]?.version?.version || '1.0.7.r228.d44150e'

@@ -1,0 +1,18 @@
+Stdin:               # 标准输入
+  state: true        # 标准输入开关
+  name: "标准输入"   # 标准输入名称 => 椰奶状态显示
+  avatar:            # 标准输入自定义头像路径，auto: 自动从resources/Avatar目录中选择一张
+
+ComWeChat:           # PC微信
+  name:              # PC微信名称 => 椰奶状态显示
+  autoFriend: 1      # 自动同意加好友 1-同意 0-不处理
+
+WeXin:               # 网页版微信
+  name:              # 网页版微信名称 => 椰奶状态显示
+  autoFriend: 1      # 自动同意加好友 1-同意 0-不处理
+
+Shamrock:            # Shamrock
+  baseUrl:           # shamrock主动http链接，例如http://localhost:5700。若填写将通过此端口进行文件上传等被动ws不支持的操作
+  token:             # 鉴权token，如果开放公网强烈建议配置
+  githubKey:         # Github personal access token, 用于查看和下载shamrock版本信息
+ 

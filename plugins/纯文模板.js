@@ -41,7 +41,7 @@ Bot.Markdown = async function (e, data, button = []) {
 function parseMD (str) {
   /** 处理第一个标题 */
   str = str.replace(/^#/, '\r#')
-  let msg = str.split(/(\*\*\*|\*\*|\*|__|_|~~|~)/).filter(Boolean)
+  let msg = str.split(/(\*\*\*|\*\*|\*|__|_|~~|~|``)/).filter(Boolean)
 
   let mdSymbols = ['***', '**', '*', '__', '_', '~~', '~']
   let result = []

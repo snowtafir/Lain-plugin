@@ -34,7 +34,7 @@ export class adapter extends plugin {
           reg: /^#QQ(群|Bot|频道)(MD|markdown) ?(\d{9}:)?[01234]{1}$/i,
           fnc: 'type',
           permission: 'master'
-        },
+        }
       ]
     })
   }
@@ -46,6 +46,7 @@ export class adapter extends plugin {
       appid: '',
       token: '',
       sandbox: false,
+      timeout: 10000,
       allMsg: false,
       removeAt: false,
       secret: '',
@@ -58,14 +59,14 @@ export class adapter extends plugin {
       },
       other: {
         Prefix: true,
-        QQ: '',
+        QQCloud: '',
         Tips: false,
         'Tips-GroupId': ''
       }
     }
 
     const msg = this.e.msg.replace(/^#QQ(群|Bot|频道)?设置/i, '').trim().replace(/：/g, ':').split(':')
-    const cfg = new YAML(lain._pathCfg + '/token.yaml')
+    const cfg = new YAML(lain._pathCfg + '/Token.yaml')
     const QQSDK = (await import('../adapter/QQBot/QQSDK.js')).default
     const QQBot = (await import('../adapter/QQBot/index.js')).default
     const QQGuild = (await import('../adapter/QQBot/QQGuild.js')).default
@@ -76,8 +77,8 @@ export class adapter extends plugin {
     if (msg[2].length != 9) return await this.reply('appid输入错误!', true, { at: true })
 
     /** 看下是否配置已存在 */
-    if (cfg.value('token', msg[2])) {
-      cfg.delVal('token', msg[2])
+    if (cfg.value('QQ_Token', msg[2])) {
+      cfg.delVal('QQ_Token', msg[2])
       return await this.reply('删除成功~请重启 Miao-Yunzai 生效~', true, { at: true })
     } else {
       /** 不存在加一下配置 */
@@ -95,7 +96,7 @@ export class adapter extends plugin {
       } else {
         config.model = 0
       }
-      cfg.addVal('token', { [config.appid]: config }, 'object')
+      cfg.addVal('QQ_Token', { [config.appid]: config }, 'object')
     }
 
     try {
@@ -163,6 +164,7 @@ export class adapter extends plugin {
     //   model: ${i.model}
     //   appid: ${i.appid}
     //   sandbox: ${i.sandbox}
+    //   timeout: ${i.timeout}
     //   allMsg: ${i.allMsg}
     //   token: ${i.token}
     //   secret: ${i.secret}
@@ -174,7 +176,7 @@ export class adapter extends plugin {
     //     img_url: ${i.markdown.img_url}
     //   other:
     //     Prefix: ${i.other.Prefix}
-    //     QQ: ${i.other.QQ}
+    //     QQCloud: ${i.other.QQCloud}
     //     Tips: ${i.other.Tips}
     //     Tips-GroupId: ${i.other['Tips-GroupId']}`)
     //     })
@@ -186,29 +188,29 @@ export class adapter extends plugin {
   async markdown () {
     if (!/\d{9}_\d{10}/.test(this.e.msg)) return await this.reply('格式错误，切换模板请使用[#QQ群md 0123]')
     let msg = this.e.msg.replace(/^#QQ(群|Bot|频道)设置(MD|markdown)/i, '').replace(/：/g, ':').trim().split(':')
-    const cfg = new YAML(lain._pathCfg + '/token.yaml')
-    let val = cfg.get('token')
+    const cfg = new YAML(lain._pathCfg + '/Token.yaml')
+    let val = cfg.get('QQ_Token')
     if (this.e?.adapter === 'QQBot') {
       if (msg.length == 1) {
         val[this.e.self_id].markdown.id = msg[0]
         if (val[this.e.self_id].markdown.type == 0) val[this.e.self_id].markdown.type = 1
         /** 保存 */
-        cfg.set('token', val)
+        cfg.set('QQ_Token', val)
       } else if (msg.length == 2) {
         val[msg[0]].markdown.id = msg[1]
         if (val[msg[0]].markdown.type == 0) val[msg[0]].markdown.type = 1
         /** 保存 */
-        cfg.set('token', val)
+        cfg.set('QQ_Token', val)
       } else {
         return await this.reply('格式错误!', true, { at: true })
       }
     } else {
       if (msg.length != 2) return await this.reply('格式错误!', true, { at: true })
-      if (cfg.value('token', msg[0])) {
+      if (cfg.value('QQ_Token', msg[0])) {
         val[msg[0]].markdown.id = msg[1]
         if (val[msg[0]].markdown.type == 0) val[msg[0]].markdown.type = 1
         /** 保存 */
-        cfg.set('token', val)
+        cfg.set('QQ_Token', val)
       } else {
         return await this.reply('不存在此appid对应的bot!', true, { at: true })
       }
@@ -219,26 +221,26 @@ export class adapter extends plugin {
   /** 切换模板ID */
   async type () {
     let msg = this.e.msg.replace(/^#QQ(群|Bot|频道)(MD|markdown)/i, '').replace(/：/g, ':').trim().split(':')
-    const cfg = new YAML(lain._pathCfg + '/token.yaml')
-    let val = cfg.get('token')
+    const cfg = new YAML(lain._pathCfg + '/Token.yaml')
+    let val = cfg.get('QQ_Token')
     if (this.e?.adapter === 'QQBot') {
       if (msg.length == 1) {
         val[this.e.self_id].markdown.type = Number(msg[0])
         /** 保存 */
-        cfg.set('token', val)
+        cfg.set('QQ_Token', val)
       } else if (msg.length == 2) {
         val[msg[0]].markdown.type = Number(msg[1])
         /** 保存 */
-        cfg.set('token', val)
+        cfg.set('QQ_Token', val)
       } else {
         return await this.reply('格式错误!', true, { at: true })
       }
     } else {
       if (msg.length != 2) return await this.reply('格式错误!', true, { at: true })
-      if (cfg.value('token', msg[0])) {
+      if (cfg.value('QQ_Token', msg[0])) {
         val[msg[0]].markdown.type = Number(msg[1])
         /** 保存 */
-        cfg.set('token', val)
+        cfg.set('QQ_Token', val)
       } else {
         return await this.reply('不存在此appid对应的bot!', true, { at: true })
       }
@@ -249,7 +251,7 @@ export class adapter extends plugin {
   /** 其他 */
   async other () {
     const msg = this.e.msg.replace(/^#QQ(群|Bot|频道)设置(QQ图床|前缀|防倒卖(群号)?)/i, '').replace(/：/g, ':').trim().split(':')
-    const cfg = new YAML(lain._pathCfg + '/token.yaml')
+    const cfg = new YAML(lain._pathCfg + '/Token.yaml')
     if (msg.length != 1 && msg.length != 2) return await this.reply('格式错误!', true, { at: true })
 
     let self_id
@@ -257,13 +259,12 @@ export class adapter extends plugin {
       self_id = msg[0]
     } else {
       if (this.e?.adapter === 'QQBot') self_id = this.e.self_id
-      else 
-        return await this.reply('格式错误!', true, { at: true })
+      else return await this.reply('格式错误!', true, { at: true })
     }
-    if (cfg.value('token', self_id)) {
-      let val = cfg.get('token')
+    if (cfg.value('QQ_Token', self_id)) {
+      let val = cfg.get('QQ_Token')
       if (this.e.msg.includes('图床')) {
-        val[self_id].other.QQ = Number(msg[1] || msg[0])
+        val[self_id].other.QQCloud = Number(msg[1] || msg[0])
       } else if (this.e.msg.includes('前缀')) {
         val[self_id].other.Prefix = (msg[1] || msg[0]) === '开启'
       } else if (this.e.msg.includes('防倒卖群号')) {
@@ -273,7 +274,7 @@ export class adapter extends plugin {
       }
       await this.reply(`bot(${self_id}):修改配置文件`, true, { at: true })
       /** 保存 */
-      cfg.set('token', val)
+      cfg.set('QQ_Token', val)
       /** 渲染 */
     } else {
       return await this.reply('不存在此appid对应的bot!', true, { at: true })

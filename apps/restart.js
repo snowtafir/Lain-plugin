@@ -36,10 +36,10 @@ export class AdapterRestart extends plugin {
 
     const data = JSON.stringify({
       adapter: this.e.adapter,
-      uin: this.e?.self_id || this.e.bot.uin,
+      uin: this.e?.bot?.uin || this.e?.self_id || Bot.uin,
       isGroup: !!this.e.isGroup,
       id: this.e.isGroup ? this.e.group_id : this.e.user_id,
-      time: new Date().getTime(),
+      time: Date.now(),
       msg_id: this.e.message_id
     })
 

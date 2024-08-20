@@ -42,7 +42,7 @@ export class LainMaster extends plugin {
       const cfg = new Yaml('./config/config/other.yaml')
       /** 检查指定用户是否已经是主人 */
       if (cfg.value('masterQQ', user_id)) return e.reply([segment.at(user_id), "已经是主人了哦(〃'▽'〃)"])
-      return await this.e.reply(this.addmaster(user_id))
+      // return await this.e.reply(this.addmaster(user_id))
     }
 
     /** 生成验证码 */

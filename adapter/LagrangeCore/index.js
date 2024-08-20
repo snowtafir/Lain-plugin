@@ -25,7 +25,7 @@ class LagrangeCore {
     /** 解析得到的JSON */
     data = JSON.parse(data)
     /** debug日志 */
-    common.debug(this.id, '[ws] received -> ', JSON.stringify(data))
+    lain.debug(this.id, '<ws> received -> ', JSON.stringify(data))
     /** 带echo事件为主动请求得到的响应，另外保存 */
     if (data?.echo) {
       lain.echo[data.echo] = data
@@ -47,11 +47,11 @@ class LagrangeCore {
       /** 生命周期 */
       case 'lifecycle':
         this.LoadBot()
-        common.info('Lain-plugin', `[Lagrange.OneBot] QQ ${this.id} 建立连接成功，正在加载资源中`)
+        lain.info('Lain-plugin', `<Lagrange.OneBot> QQ ${this.id} 建立连接成功，正在加载资源中`)
         break
       /** 心跳 */
       case 'heartbeat':
-        common.debug('Lain-plugin', `[Lagrange.OneBot] QQ ${this.id} 收到心跳：${JSON.stringify(data.status, null, 2)}`)
+        lain.debug('Lain-plugin', `<Lagrange.OneBot> QQ ${this.id} 收到心跳：${JSON.stringify(data.status, null, 2)}`)
         break
       default:
         logger.error(`[LagrangeCore][未知事件] ${JSON.stringify(data)}`)
@@ -90,57 +90,59 @@ class LagrangeCore {
           this.loadGroupMemberList(data.group_id)
         }
       }
-    })().catch(common.error)
+    })().catch(err => lain.error(this.id, err))
     switch (data.notice_type) {
-      case 'group':
+      case 'group_recall':
+        data.sub_type = 'recall'
+        data.notice_type = 'group'
         try {
           let gl = Bot[this.id].gl.get(data.group_id)
           data = { ...data, ...gl }
         } catch { }
         if (data.operator_id === data.user_id) {
-          common.info(this.id, `群消息撤回：[${data.group_id}，${data.user_id}] ${data.message_id}`)
+          lain.info(this.id, `群消息撤回：<${data.group_id}，${data.user_id}> ${data.message_id}`)
         } else {
-          common.info(this.id, `群消息撤回：[${data.group_id}]${data.operator_id} 撤回 ${data.user_id}的消息 ${data.message_id} `)
+          lain.info(this.id, `群消息撤回：<${data.group_id}>${data.operator_id} 撤回 ${data.user_id}的消息 ${data.message_id}`)
         }
-        break
+        return await Bot.emit('notice', await this.ICQQEvent(data))
       case 'group_increase': {
         data.notice_type = 'group'
         let subType = data.sub_type
         data.sub_type = 'increase'
         data.user_id = data.target_id
         if (this.id === data.user_id) {
-          common.info(this.id, `机器人加入群聊：[${data.group_id}}]`)
+          lain.info(this.id, `机器人加入群聊：<${data.group_id}}>`)
         } else {
           switch (subType) {
             case 'invite': {
-              common.info(this.id, `[${data.operator_id}]邀请[${data.user_id}]加入了群聊[${data.group_id}] `)
+              lain.info(this.id, `<${data.operator_id}>邀请<${data.user_id}>加入了群聊<${data.group_id}>`)
               break
             }
             default: {
-              common.info(this.id, `新人${data.user_id}加入群聊[${data.group_id}] `)
+              lain.info(this.id, `新人${data.user_id}加入群聊<${data.group_id}>`)
             }
           }
         }
-        return await Bot.emit('notice.group', await this.ICQQEvent(data))
+        return await Bot.emit('notice', await this.ICQQEvent(data))
       }
       case 'group_decrease': {
         data.notice_type = 'group'
         data.sub_type = 'decrease'
         data.user_id = data.target_id
         if (this.id === data.user_id) {
-          common.info(this.id, data.operator_id
-            ? `机器人被[${data.operator_id}]踢出群聊：[${data.group_id}}]`
-            : `机器人退出群聊：[${data.group_id}}]`)
+          lain.info(this.id, data.operator_id
+            ? `机器人被<${data.operator_id}>踢出群聊：<${data.group_id}>`
+            : `机器人退出群聊：<${data.group_id}>`)
           // 移除该群的信息
           Bot.gl.delete(data.group_id)
           Bot[this.id].gl.delete(data.group_id)
           Bot[this.id].gml.delete(data.group_id)
         } else {
-          common.info(this.id, data.operator_id
-            ? `成员[${data.user_id}]被[${data.operator_id}]踢出群聊：[${data.group_id}}]`
-            : `成员[${data.user_id}]退出群聊[${data.group_id}}]`)
+          lain.info(this.id, data.operator_id
+            ? `成员<${data.user_id}>被<${data.operator_id}>踢出群聊：<${data.group_id}>`
+            : `成员<${data.user_id}>退出群聊<${data.group_id}>`)
         }
-        return await Bot.emit('notice.group', await this.ICQQEvent(data))
+        return await Bot.emit('notice', await this.ICQQEvent(data))
       }
       case 'group_admin': {
         data.notice_type = 'group'
@@ -149,28 +151,28 @@ class LagrangeCore {
         data.user_id = data.target_id
         if (this.id === data.user_id) {
           let gml = await Bot[this.id].gml.get(data.group_id)
-          gml[this.id] = { ...gml[this.id] }
+          gml[this.id] = { ...gml.get(this.id) }
           if (data.set) {
             gml[this.id].role = 'admin'
-            common.info(this.id, `机器人[${this.id}]在群[${data.group_id}]被设置为管理员`)
+            lain.info(this.id, `机器人<${this.id}>在群<${data.group_id}>被设置为管理员`)
           } else {
             gml[this.id].role = 'member'
-            common.info(this.id, `机器人[${this.id}]在群[${data.group_id}]被取消管理员`)
+            lain.info(this.id, `机器人<${this.id}>在群<${data.group_id}>被取消管理员`)
           }
           Bot[this.id].gml.set(data.group_id, { ...gml })
         } else {
           let gml = await Bot[this.id].gml.get(data.group_id)
-          gml[data.target_id] = { ...gml[data.target_id] }
+          gml[data.target_id] = { ...gml.get(data.target_id) }
           if (data.set) {
             gml[data.target_id].role = 'admin'
-            common.info(this.id, `成员[${data.target_id}]在群[${data.group_id}]被设置为管理员`)
+            lain.info(this.id, `成员<${data.target_id}>在群<${data.group_id}>被设置为管理员`)
           } else {
             gml[data.target_id].role = 'member'
-            common.info(this.id, `成员[${data.target_id}]在群[${data.group_id}]被取消管理员`)
+            lain.info(this.id, `成员<${data.target_id}>在群<${data.group_id}>被取消管理员`)
           }
           Bot[this.id].gml.set(data.group_id, { ...gml })
         }
-        return await Bot.emit('notice.group', await this.ICQQEvent(data))
+        return await Bot.emit('notice', await this.ICQQEvent(data))
       }
       case 'group_ban': {
         data.notice_type = 'group'
@@ -181,30 +183,43 @@ class LagrangeCore {
           data.sub_type = 'ban'
         }
         if (this.id === data.target_id) {
-          common.info(this.id, data.duration === 0
-            ? `机器人[${this.id}]在群[${data.group_id}]被解除禁言`
-            : `机器人[${this.id}]在群[${data.group_id}]被禁言${data.duration}秒`)
+          lain.info(this.id, data.duration === 0
+            ? `机器人<${this.id}>在群<${data.group_id}>被解除禁言`
+            : `机器人<${this.id}>在群<${data.group_id}>被禁言${data.duration}秒`)
         } else {
-          common.info(this.id, data.duration === 0
-            ? `成员[${data.target_id}]在群[${data.group_id}]被解除禁言`
-            : `成员[${data.target_id}]在群[${data.group_id}]被禁言${data.duration}秒`)
+          lain.info(this.id, data.duration === 0
+            ? `成员<${data.target_id}>在群<${data.group_id}>被解除禁言`
+            : `成员<${data.target_id}>在群<${data.group_id}>被禁言${data.duration}秒`)
         }
         // 异步加载或刷新该群的群成员列表以更新禁言时长
         this.loadGroupMemberList(data.group_id)
-        return await Bot.emit('notice.group', await this.ICQQEvent(data))
+        return await Bot.emit('notice', await this.ICQQEvent(data))
       }
+      case 'poke':
+        if (!data.group_id) {
+          lain.info(this.id, `好友<${data.user_id}>戳了戳<${data.target_id}>`)
+          data.notice_type = 'friend'
+          data.operator_id = data.user_id
+          return await Bot.emit('notice', await this.ICQQEvent(data))
+        } else {
+          lain.info(this.id, `群<${data.group_id}>成员<${data.user_id}>戳了戳<${data.target_id}>`)
+          data.notice_type = 'group'
+          data.operator_id = data.user_id
+          return await Bot.emit('notice', await this.ICQQEvent(data))
+        }
       case 'notify':
         switch (data.sub_type) {
           case 'poke': {
             let action = data.poke_detail?.action || '戳了戳'
             let suffix = data.poke_detail?.suffix || ''
-            common.info(this.id, `[${data.operator_id}]${action}[${data.target_id}]${suffix}`)
+            data.operator_id = data.user_id
+            lain.info(this.id, `<${data.operator_id}>${action}<${data.target_id}>${suffix}`)
             break
           }
           case 'title': {
-            common.info(this.id, `群[${data.group_id}]成员[${data.user_id}]获得头衔[${data.title}]`)
+            lain.info(this.id, `群<${data.group_id}>成员<${data.user_id}>获得头衔<${data.title}>`)
             let gml = Bot[this.id].gml.get(data.group_id)
-            let user = gml[data.user_id]
+            let user = gml.get(data.user_id)
             user.title = data.title
             gml[data.user_id] = user
             Bot[this.id].gml.set(data.group_id, gml)
@@ -216,22 +231,23 @@ class LagrangeCore {
         // if (time - pokeCD < 1500) return false
         // pokeCD = time
         break
-      case 'friend_add':
-        // shamrock暂未实现
+      case 'friend_add': {
+        lain.info(this.id, `好友请求<${data.user_id}>`)
         break
+      }
       case 'essence': {
         // todo
-        common.info(this.id, `群[${data.group_id}]成员[${data.sender_id}]的消息[${data.message_id}]被[${data.operator_id}]${data.sub_type === 'add' ? '设为' : '移除'}精华`)
+        lain.info(this.id, `群<${data.group_id}>成员<${data.sender_id}>的消息<${data.message_id}>被<${data.operator_id}>${data.sub_type === 'add' ? '设为' : '移除'}精华`)
         break
       }
       case 'group_card': {
-        common.info(this.id, `群[${data.group_id}]成员[${data.user_id}]群名片变成为${data.card_new}`)
+        lain.info(this.id, `群<${data.group_id}>成员<${data.user_id}>群名片变成为${data.card_new}`)
         let gml = Bot[this.id].gml.get(data.group_id)
-        let user = gml[data.user_id]
+        let user = gml.get(data.user_id)
         user.card = data.card_new
         gml[data.user_id] = user
         Bot[this.id].gml.set(data.group_id, gml)
-        return await Bot.emit('notice.group', await this.ICQQEvent(data))
+        return await Bot.emit('notice', await this.ICQQEvent(data))
       }
       case 'friend_recall':
         data.sub_type = 'recall'
@@ -240,8 +256,8 @@ class LagrangeCore {
           let fl = Bot[this.id].fl.get(data.user_id)
           data = { ...data, ...fl }
         } catch { }
-        common.info(this.id, `好友消息撤回：[${data.user_name}(${data.user_id})] ${data.message_id}`)
-        return await Bot.emit('notice.friend', await this.ICQQEvent(data))
+        lain.info(this.id, `好友消息撤回：<${data.user_name}(${data.user_id})> ${data.message_id}`)
+        return await Bot.emit('notice', await this.ICQQEvent(data))
       default:
     }
     return await Bot.emit('notice', await this.ICQQEvent(data))
@@ -261,16 +277,16 @@ class LagrangeCore {
           data.user_id = Number(data.user_id)
         } catch { }
         if (data.sub_type === 'add') {
-          common.info(this.id, `[${data.user_id}]申请入群[${data.group_id}]: ${data.tips}`)
+          lain.info(this.id, `<${data.user_id}>申请入群<${data.group_id}>: ${data.tips}`)
         } else {
           // invite
-          common.info(this.id, `[${data.user_id}]邀请机器人入群[${data.group_id}]: ${data.tips}`)
+          lain.info(this.id, `<${data.user_id}>邀请机器人入群<${data.group_id}>: ${data.tips}`)
         }
         break
       }
       case 'friend': {
         data.sub_type = 'add'
-        common.info(this.id, `[${data.user_id}]申请加机器人[${this.id}]好友: ${data.comment}`)
+        lain.info(this.id, `[${data.user_id}]申请加机器人<${this.id}>好友: ${data.comment}`)
         break
       }
     }
@@ -286,10 +302,10 @@ class LagrangeCore {
           data.user_id = Number(data.user_id)
         } catch { }
         if (data.sub_type === 'add') {
-          common.info(this.id, `[${data.user_id}]申请入群[${data.group_id}]: ${data.tips}`)
+          lain.info(this.id, `<${data.user_id}>申请入群<${data.group_id}>: ${data.tips}`)
         } else {
           // invite
-          common.info(this.id, `[${data.user_id}]邀请机器人入群[${data.group_id}]: ${data.tips}`)
+          lain.info(this.id, `<${data.user_id}>邀请机器人入群<${data.group_id}>: ${data.tips}`)
         }
         break
       }
@@ -300,7 +316,7 @@ class LagrangeCore {
           data = { ...data, ...fl }
           data.user_id = Number(data.user_id)
         } catch { }
-        common.info(this.id, `[${data.user_id}]申请加机器人[${this.id}]好友: ${data.comment}`)
+        lain.info(this.id, `<${data.user_id}>申请加机器人<${this.id}>好友: ${data.comment}`)
         break
       }
     }
@@ -416,7 +432,7 @@ class LagrangeCore {
     //     }
     //   }
     // } catch (err) {
-    //   common.warn(this.id, 'LagrangeCore获取bkn失败。')
+    //   lain.warn(this.id, 'LagrangeCore获取bkn失败。')
     // }
 
     Bot[this.id].cookies = {}
@@ -432,12 +448,12 @@ class LagrangeCore {
     //     }
     //     Bot[this.id].cookies[domain] = ck
     //   }).catch(error => {
-    //     common.debug(this.id, `${domain} 获取cookie失败：${error}`)
+    //     lain.debug(this.id, `${domain} 获取cookie失败：${error}`)
     //   })
     // }
 
     const log = `LagrangeCore加载资源成功：加载了${Bot[this.id].fl.size}个好友，${Bot[this.id].gl.size}个群。`
-    common.info(this.id, log)
+    lain.info(this.id, log)
     return log
   }
 
@@ -447,7 +463,7 @@ class LagrangeCore {
     for (let retries = 0; retries < 5; retries++) {
       groupList = await api.get_group_list(id)
       if (!(groupList && Array.isArray(groupList))) {
-        common.error(this.id, `LagrangeCore群列表获取失败，正在重试：${retries + 1}`)
+        lain.error(this.id, `LagrangeCore群列表获取失败，正在重试：${retries + 1}`)
       }
       await common.sleep(50)
     }
@@ -461,7 +477,7 @@ class LagrangeCore {
         Bot[id].gl.set(i.group_id, i)
       }
     }
-    common.debug(id, '加载群列表完成')
+    lain.debug(id, '加载群列表完成')
     return groupList
   }
 
@@ -477,7 +493,7 @@ class LagrangeCore {
       }
       Bot.gml.set(groupId, gml)
       Bot[id].gml.set(groupId, gml)
-      common.debug(id, `加载[${groupId}]群成员完成`)
+      lain.debug(id, `加载<${groupId}>群成员完成`)
     } catch (error) { }
   }
 
@@ -487,14 +503,14 @@ class LagrangeCore {
     for (let retries = 0; retries < 5; retries++) {
       friendList = await api.get_friend_list(id)
       if (!(friendList && Array.isArray(friendList))) {
-        common.error(this.id, `LagrangeCore好友列表获取失败，正在重试：${retries + 1}`)
+        lain.error(this.id, `LagrangeCore好友列表获取失败，正在重试：${retries + 1}`)
       }
       await common.sleep(50)
     }
 
     /** 好友列表获取失败 */
     if (!friendList || !(typeof friendList === 'object')) {
-      common.error(this.id, 'LagrangeCore好友列表获取失败次数过多，已停止重试')
+      lain.error(this.id, 'LagrangeCore好友列表获取失败次数过多，已停止重试')
     }
 
     if (friendList && typeof friendList === 'object') {
@@ -507,14 +523,14 @@ class LagrangeCore {
         Bot[id].fl.set(i.user_id, i)
       }
     }
-    common.debug(id, '加载好友列表完成')
+    lain.debug(id, '加载好友列表完成')
   }
 
   /** 群对象 */
   pickGroup (group_id) {
     const name = Bot[this.id].gl.get(group_id)?.group_name || group_id
-    const is_admin = Bot[this.id].gml.get(group_id)?.[this.id]?.role === 'admin'
-    const is_owner = Bot[this.id].gml.get(group_id)?.[this.id]?.role === 'owner'
+    const is_admin = Bot[this.id].gml.get(group_id)?.get(this.id)?.role === 'admin'
+    const is_owner = Bot[this.id].gml.get(group_id)?.get(this.id)?.role === 'owner'
     return {
       name,
       is_admin: is_owner || is_admin,
@@ -538,9 +554,9 @@ class LagrangeCore {
       /** 设置管理 */
       setAdmin: async (qq, type) => await api.set_group_admin(this.id, group_id, qq, type),
       /** 踢 */
-      kickMember: async (qq, reject_add_request = false) => await api.set_group_kick(this.id, group_id, qq, reject_add_request),
+      kickMember: async (qq, reject_add_request = false) => { await api.set_group_kick(this.id, group_id, qq, reject_add_request); return true },
       /** 头衔 **/
-      setTitle: async (qq, title, duration) => await api.set_group_special_title(this.id, group_id, qq, title),
+      setTitle: async (qq, title, duration) => { await api.set_group_special_title(this.id, group_id, qq, title); return true },
       /** 修改群名片 **/
       setCard: async (qq, card) => await api.set_group_card(this.id, group_id, qq, card),
       pickMember: (id) => this.pickMember(group_id, id),
@@ -603,7 +619,7 @@ class LagrangeCore {
        */
       getChatHistory: async (msg_id, num, reply) => {
         msg_id = Number(msg_id)
-        let { messages } = await api.get_history_msg(this.id, 'private', user_id, null, num, msg_id)
+        let { messages } = await api.get_friend_msg_history(this.id, user_id, num, msg_id)
         messages = messages.map(async m => {
           let result = await this.getMessage(m.message, null, reply)
           m = Object.assign(m, result)
@@ -618,7 +634,7 @@ class LagrangeCore {
   pickMember (group_id, user_id, refresh = false, cb = () => { }) {
     if (!refresh) {
       /** 取缓存！！！别问为什么，因为傻鸟同步 */
-      let member = Bot[this.id].gml.get(group_id)?.[user_id] || {}
+      let member = Bot[this.id].gml.get(group_id)?.get(user_id) || {}
       member.info = { ...member }
       member.getAvatarUrl = (size = 0) => `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${user_id}`
       return member
@@ -655,22 +671,16 @@ class LagrangeCore {
   }
 
   /** 上传群文件 */
-  async upload_group_file (group_id, filePath) {
-    if (!fs.existsSync(filePath)) return true
-    /** 先传到shamrock... */
-    const base64 = 'base64://' + fs.readFileSync(filePath).toString('base64')
-    const { file } = await api.download_file(this.id, base64)
-    const name = path.basename(filePath) || Date.now() + path.extname(filePath)
+  async upload_group_file (group_id, file) {
+    if (!fs.existsSync(file)) return true
+    const name = path.basename(file) || Date.now() + path.extname(file)
     return await api.upload_group_file(this.id, group_id, file, name)
   }
 
   /** 上传好友文件 */
-  async upload_private_file (user_id, filePath) {
-    if (!fs.existsSync(filePath)) return true
-    /** 先传到shamrock... */
-    const base64 = 'base64://' + fs.readFileSync(filePath).toString('base64')
-    const { file } = await api.download_file(this.id, base64)
-    const name = path.basename(filePath) || Date.now() + path.extname(filePath)
+  async upload_private_file (user_id, file) {
+    if (!fs.existsSync(file)) return true
+    const name = path.basename(file) || Date.now() + path.extname(file)
     return await api.upload_private_file(this.id, user_id, file, name)
   }
 
@@ -738,18 +748,18 @@ class LagrangeCore {
         }
       } else {
         if (!data[i]?.message) continue
-        msg.push(data[i].message)
+        msg.push(data[i])
       }
     }
 
     if (msg.length) {
       for (let i of msg) {
         try {
-          const { message: content } = await this.getLagrangeCore(i)
+          const { message: content } = await this.getLagrangeCore(i.message)
           // const id = await this.sendApi('send_forward_msg', { messages: [{ type: 'node', data: { name: this.nickname || 'LagrangeCore', uin: String(this.id), content } }] })
-          makeForwardMsg.message.push({ type: 'node', data: { type: 'node', data: { name: this.nickname || 'LagrangeCore', uin: String(this.id), content } } })
+          makeForwardMsg.message.push({ type: 'node', data: { type: 'node', data: { name: (i.nickname == Bot.nickname) ? (this.nickname || 'LagrangeCore') : i.nickname, uin: String((i.user_id == Bot.uin) ? this.id : i.user_id), content } } })
         } catch (err) {
-          common.error(this.id, err)
+          lain.error(this.id, err)
         }
       }
     }
@@ -778,6 +788,7 @@ class LagrangeCore {
       const { message, ToString, raw_message, log_message, source, file } = await this.getMessage(data.message, group_id)
 
       /** 通用数据 */
+      e.uin = this.id // ???鬼知道哪来的这玩意，icqq都没有...
       e.message = message
       e.raw_message = raw_message
       e.log_message = log_message
@@ -794,7 +805,7 @@ class LagrangeCore {
         } catch {
           group_name = group_id
         }
-        e.log_message && common.info(this.id, `<群:${group_name || group_id}><用户:${sender?.nickname || sender?.card}(${user_id})> -> ${e.log_message}`)
+        e.log_message && lain.info(this.id, `<群:${group_name || group_id}><用户:${sender?.card || sender?.nickname}(${user_id})> -> ${e.log_message}`)
         /** 手动构建member */
         e.member = {
           info: {
@@ -816,14 +827,14 @@ class LagrangeCore {
         e.group = { ...this.pickGroup(group_id) }
       } else {
         /** 私聊消息 */
-        e.log_message && common.info(this.id, `<好友:${sender?.nickname || sender?.card}(${user_id})> -> ${e.log_message}`)
+        e.log_message && lain.info(this.id, `<好友:${sender?.card || sender?.nickname}(${user_id})> -> ${e.log_message}`)
         e.friend = { ...this.pickFriend(user_id) }
       }
     }
     /** 通知事件 */
     const noticePostType = async function () {
       if (e.sub_type === 'poke') {
-        e.action = e.poke_detail.action
+        e.action = e.poke_detail?.action
         e.raw_message = `${e.operator_id} ${e.action} ${e.user_id}`
       }
 
@@ -850,7 +861,7 @@ class LagrangeCore {
             if (e.flag) {
               return await api.set_friend_add_request(this.id, e.flag, approve)
             } else {
-              common.error(this.id, '处理好友申请失败：缺少flag参数')
+              lain.error(this.id, '处理好友申请失败：缺少flag参数')
               return false
             }
           }
@@ -867,10 +878,10 @@ class LagrangeCore {
           e.approve = async (approve = true) => {
             if (e.flag) return await api.set_group_add_request(this.id, e.flag, e.sub_type, approve)
             if (e.sub_type === 'add') {
-              common.error(this.id, '处理入群申请失败：缺少flag参数')
+              lain.error(this.id, '处理入群申请失败：缺少flag参数')
             } else {
               // invite
-              common.error(this.id, '处理邀请机器人入群失败：缺少flag参数')
+              lain.error(this.id, '处理邀请机器人入群失败：缺少flag参数')
             }
             return false
           }
@@ -898,7 +909,7 @@ class LagrangeCore {
     /** 快速撤回 */
     e.recall = async () => await api.delete_msg(this.id, message_id)
     /** 快速回复 */
-    e.reply = async (msg, quote) => await this.sendReplyMsg(e, group_id || user_id, msg, quote)
+    e.reply = async (msg, quote) => await this.sendReplyMsg(e, group_id, user_id, msg, quote)
     /** 获取对应用户头像 */
     e.getAvatarUrl = (size = 0) => `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${user_id}`
 
@@ -935,7 +946,7 @@ class LagrangeCore {
           try {
             let qq = i.data.qq
             ToString.push(`{at:${qq}}`)
-            let groupMemberList = Bot[this.id].gml.get(group_id)?.[qq]
+            let groupMemberList = Bot[this.id].gml.get(group_id)?.get(qq)
             let at = groupMemberList?.nickname || groupMemberList?.card || qq
             raw_message.push(`@${at}`)
             log_message.push(at == qq ? `@${qq}` : `<@${at}:${qq}>`)
@@ -1147,7 +1158,7 @@ class LagrangeCore {
       while (retryCount < 2) {
         source = await api.get_msg(this.id, msg_id)
         if (typeof source === 'string') {
-          common.error(this.id, `获取引用消息内容失败，正在重试：第 ${retryCount} 次`)
+          lain.error(this.id, `获取引用消息内容失败，正在重试：第 ${retryCount} 次`)
           retryCount++
         } else {
           break
@@ -1155,10 +1166,10 @@ class LagrangeCore {
       }
 
       if (typeof source === 'string') {
-        common.error(this.id, '获取引用消息内容失败，重试次数上限，已终止')
+        lain.error(this.id, '获取引用消息内容失败，重试次数上限，已终止')
         return false
       }
-      common.debug('', source)
+      lain.debug('', source)
 
       let { raw_message } = await this.getMessage(source.message, group_id, false)
 
@@ -1181,11 +1192,12 @@ class LagrangeCore {
   /**
  * 回被动消息
  * @param {object} e - 接收的e - 喵崽格式
- * @param {number} id - 目标QQ
+ * @param {number} group_id
+ * @param {number} user_id
  * @param {string|object|array} msg - 消息内容
  * @param {boolean} quote - 是否引用回复
  */
-  async sendReplyMsg (e, id, msg, quote) {
+  async sendReplyMsg (e, group_id, user_id, msg, quote) {
     let { message, raw_message, node } = await this.getLagrangeCore(msg)
 
     if (quote) {
@@ -1193,8 +1205,8 @@ class LagrangeCore {
       raw_message = '[回复]' + raw_message
     }
 
-    if (e.isGroup) return await api.send_group_msg(this.id, id, message, raw_message, node)
-    return await api.send_private_msg(this.id, id, message, raw_message, node)
+    if (group_id) return await api.send_group_msg(this.id, group_id, message, raw_message, node)
+    return await api.send_private_msg(this.id, user_id, message, raw_message, node)
   }
 
   /**
@@ -1241,7 +1253,7 @@ class LagrangeCore {
           raw_message.push(`<@${i.qq}>`)
           break
         case 'face':
-          message.push({ type: 'face', data: { id: Number(i.id) } })
+          message.push({ type: 'face', data: { id: i.id + '' } })
           raw_message.push(`<${faceMap[Number(i.id)]}>`)
           break
         case 'text':
@@ -1253,16 +1265,17 @@ class LagrangeCore {
           break
         case 'record':
           try {
-            let file = await Bot.Base64(i.file, { http: true })
-            /** 非链接需要先上传到手机 */
-            if (!/^http(s)?:\/\//.test(file)) {
-              const data = await api.download_file(this.id, `base64://${file}`)
-              file = `file://${data.file}`
+            let file = await Bot.FormatFile(i.file)
+            /** 转换buffer,但愿吧 */
+            if (!/^http(s)?:\/\/|^file:\/\//.test(file)) {
+              file = 'base64://' + await Bot.Base64(file)
+              raw_message.push('<语音:base64://...>')
+            } else {
+              raw_message.push(`<语音:${file}>`)
             }
             message.push({ type: 'record', data: { file } })
-            raw_message.push(`<语音:${i.file}>`)
           } catch (err) {
-            common.error(this.id, '语音上传失败:', err)
+            lain.error(this.id, '语音上传失败:', err)
             /** 都报错了还发啥？...我以前写的什么牛马 */
             // msg.push(await this.getFile(i, 'record'))
             message.push({ type: 'text', data: { text: JSON.stringify(err) } })
@@ -1273,25 +1286,29 @@ class LagrangeCore {
           try {
             /** 笨比复读! */
             if (i?.url) i.file = i.url
-            /** 视频文件需要先上传到手机 */
-            const { file } = await api.download_file(this.id, `base64://${await Bot.Base64(i.file)}`)
-            message.push({ type: 'video', data: { file: `file://${file}` } })
+            let file = await Bot.FormatFile(i.file)
+            /** 转换buffer,但愿吧 */
+            if (!/^http(s)?:\/\/|^file:\/\//.test(file)) {
+              file = 'base64://' + await Bot.Base64(file)
+              raw_message.push('<视频:base64://...>')
+            } else {
+              raw_message.push(`<视频:${file}>`)
+            }
+            message.push({ type: 'video', data: { file } })
           } catch (err) {
-            common.error(this.id, '视频上传失败:', err)
+            lain.error(this.id, '视频上传失败:', err)
             message.push({ type: 'text', data: { text: JSON.stringify(err) } })
             raw_message.push(JSON.stringify(err))
           }
-          raw_message.push(`<视频:${i.file}>`)
           break
         case 'image':
           try {
             /** 笨比复读! */
             if (i?.url) i.file = i.url
-            i.file = await Bot.FormatFile(i.file)
-            let file = await Bot.Base64(i.file, { http: true })
-            /** 判断是否为http */
-            if (!/^http(s)?:\/\//.test(file)) {
-              file = `base64://${file}`
+            let file = await Bot.FormatFile(i.file)
+            /** 转换buffer,但愿吧 */
+            if (!/^http(s)?:\/\/|^file:\/\//.test(file)) {
+              file = 'base64://' + await Bot.Base64(file)
               raw_message.push('<图片:base64://...>')
             } else {
               raw_message.push(`<图片:${file}>`)
@@ -1377,7 +1394,7 @@ class LagrangeCore {
     /** 序列化 */
     const log = JSON.stringify({ echo, action, params })
 
-    common.debug(this.id, '[ws] send -> ' + log)
+    lain.debug(this.id, '<ws> send -> ' + log)
     this.bot.send(log)
 
     /** 等待响应 */
@@ -1386,7 +1403,7 @@ class LagrangeCore {
       if (data) {
         delete lain.echo[echo]
         if (data.status === 'ok') return data.data
-        else common.error(this.id, data); throw data
+        else lain.error(this.id, data); throw data
       } else {
         await common.sleep(50)
       }
@@ -1406,4 +1423,4 @@ LagrangeCoreWS.on('error', async error => logger.error(error))
 
 export default LagrangeCoreWS
 
-common.info('Lain-plugin', 'LagrangeCore适配器加载完成')
+lain.info('Lain-plugin', 'LagrangeCore适配器加载完成')
