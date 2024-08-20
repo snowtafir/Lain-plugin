@@ -21,10 +21,16 @@
 
 ## 1.安装插件
 
-在`Yunzai-Bot`根目录执行
+在`Yunzai`根目录执行
 
+`github:`
 ```
-git clone --depth=1 https://gitee.com/sky-summer/Lain-plugin ./plugins/Lain-plugin
+git clone --depth=1 https://github.com/snowtafir/Lain-plugin ./plugins/Lain-plugin
+```
+
+`gitee:`
+```
+git clone --depth=1 https://gitee.com/snowtafir/Lain-plugin ./plugins/Lain-plugin
 ```
 
 ## 2.安装依赖
