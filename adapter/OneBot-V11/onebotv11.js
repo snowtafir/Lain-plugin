@@ -33,7 +33,12 @@ class OneBotv11Adapter {
    * @returns {string} - 处理后的日志信息
    */
   makeLog(msg) {
-    return this.BotString(msg).replace(/base64:\/\/.*?(,|]|")/g, "base64://...$1")
+    let logMsg = this.BotString(msg);
+    logMsg.replace(/base64:\/\/.*?(,|]|")/g, "base64://...$1");
+    if (logMsg.length > 300) {
+      logMsg = logMsg.substring(0, 300) + '...';
+    }
+    return logMsg
   }
 
   /**
@@ -44,7 +49,7 @@ class OneBotv11Adapter {
    */
   wsSendMsg(msg, ws) {
     if (!Buffer.isBuffer(msg)) msg = this.BotString(msg)
-    lain.debug(this.self_id, ["消息", msg], `${this.self_id} => ${this.user_agent}`)
+    lain.debug(this.self_id, ["消息", this.makeLog(msg)], `Bot: [${this.self_id}] => 客户端： [${this.user_agent}]`)
     return ws.send(msg)
   }
 
