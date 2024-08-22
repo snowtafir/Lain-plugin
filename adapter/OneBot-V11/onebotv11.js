@@ -6,6 +6,7 @@
 import path from "node:path"
 import { ulid } from "ulid"
 import { WebSocketServer } from 'ws'
+import fs from 'fs/promises'
 
 class OneBotv11Adapter {
   constructor(socket, request) {
@@ -35,8 +36,8 @@ class OneBotv11Adapter {
   makeLog(msg) {
     let logMsg = this.BotString(msg);
     logMsg.replace(/base64:\/\/.*?(,|]|")/g, "base64://...$1");
-    if (logMsg.length > 300) {
-      logMsg = logMsg.substring(0, 300) + '...';
+    if (logMsg.length > 200) {
+      logMsg = logMsg.substring(0, 200) + '...';
     }
     return logMsg
   }
@@ -72,7 +73,7 @@ class OneBotv11Adapter {
         timeout: setTimeout(() => {
           reject(Object.assign(error, request, { timeout: this.timeout }))
           delete this.echo[echo]
-          lain.error(this.self_id, ["请求超时", request], data.self_id)
+          lain.error(this.self_id, ["请求超时", `${this.makeLog(request)}`], data.self_id)
           ws.terminate()
         }, this.timeout),
       }
@@ -85,10 +86,47 @@ class OneBotv11Adapter {
    * @returns {Promise<string>} - 返回处理后的文件内容
    */
   async makeFile(file) {
-    file = await Bot.Buffer(file, { http: true })
+    // 确保 file 是 Buffer 类型
+    if (file instanceof Uint8Array) {
+      file = Buffer.from(file);
+    }
+    file = await this.Buffer(file, { http: true })
     if (Buffer.isBuffer(file))
       file = `base64://${file.toString("base64")}`
     return file
+  }
+
+  /** 异步获取文件状态的函数
+   * @param {string} path - 文件路径
+   * @param {Object} opts - 选项
+   * @returns {Promise<fs.Stats|false>} - 返回文件状态或false（如果发生错误）
+   */
+  async fsStat(path, opts) {
+    try {
+      return await fs.stat(path, opts)
+    } catch (err) {
+      lain.error(this.self_id, ["获取", path, "状态错误", err])
+      return false
+    }
+  }
+
+  /** 
+   * 将数据转换为Buffer对象的函数
+   * @param {string|Buffer} data - 数据
+   * @param {Object} [opts={}] - 选项
+   * @returns {Promise<Buffer>} - 返回处理后的Buffer对象
+  */
+  async Buffer(data, opts = {}) {
+    if (Buffer.isBuffer(data)) return data
+    data = this.BotString(data)
+
+    if (data.startsWith("base64://"))
+      return Buffer.from(data.replace("base64://", ""), "base64")
+    else if (data.match(/^https?:\/\//))
+      return opts.http ? data : Buffer.from(await (await fetch(data, opts)).arrayBuffer())
+    else if (await this.fsStat(data.replace(/^file:\/\//, "")))
+      return opts.file ? data : Buffer.from(await fs.readFile(data.replace(/^file:\/\//, "")))
+    return data
   }
 
   /**
@@ -621,7 +659,7 @@ class OneBotv11Adapter {
    * @returns {Promise<Object>} - 设置结果
    */
   setProfile(data, profile) {
-    lain.info(this.self_id, `设置资料：${Bot.String(profile)}`, data.self_id)
+    lain.info(this.self_id, `设置资料：${this.BotString(profile)}`, data.self_id)
     return data.bot.sendApi("set_qq_profile", profile)
   }
 
@@ -1235,7 +1273,7 @@ class OneBotv11Adapter {
       } case "guild":
         data.message_type = "group"
         data.group_id = `${data.guild_id}-${data.channel_id}`
-        lain.info(this.self_id, `频道消息：[${data.sender.nickname}] ${Bot.String(data.message)}`, `Bot: [${data.self_id}] <= 群： [${data.group_id}]: ${data.user_id}`)
+        lain.info(this.self_id, `频道消息：[${data.sender.nickname}] ${this.BotString(data.message)}`, `Bot: [${data.self_id}] <= 群： [${data.group_id}]: ${data.user_id}`)
         Object.defineProperty(data, "friend", { get() { return this.member || {} } })
         break
       default:
@@ -1288,7 +1326,7 @@ class OneBotv11Adapter {
         data.set = data.sub_type === "set"
         break
       case "group_upload":
-        lain.info(this.self_id, `群文件上传：${Bot.String(data.file)}`, `Bot: [${data.self_id}] <= 群：[${data.group_id}]: ${data.user_id}`)
+        lain.info(this.self_id, `群文件上传：${this.BotString(data.file)}`, `Bot: [${data.self_id}] <= 群：[${data.group_id}]: ${data.user_id}`)
         break
       case "group_ban":
         lain.info(this.self_id, `群禁言：${data.operator_id} => 用户： [${data.user_id}]: ${data.sub_type} ${data.duration}秒`, `Bot: [${data.self_id}] <= 群：[${data.group_id}]`)
@@ -1324,10 +1362,10 @@ class OneBotv11Adapter {
         lain.info(this.self_id, `群名片更新：${data.card_old} => ${data.card_new}`, `Bot: [${data.self_id}] <= 群：[${data.group_id}]: ${data.user_id}`)
         break
       case "offline_file":
-        lain.info(this.self_id, `离线文件：${Bot.String(data.file)}`, `Bot: [${data.self_id}] <= ${data.user_id}`)
+        lain.info(this.self_id, `离线文件：${this.BotString(data.file)}`, `Bot: [${data.self_id}] <= ${data.user_id}`)
         break
       case "client_status":
-        lain.info(this.self_id, `客户端${data.online ? "上线" : "下线"}：${Bot.String(data.client)}`, data.self_id)
+        lain.info(this.self_id, `客户端${data.online ? "上线" : "下线"}：${this.BotString(data.client)}`, data.self_id)
         data.clients = (await data.bot.sendApi("get_online_clients")).clients
         data.bot.clients = data.clients
         break
@@ -1340,20 +1378,20 @@ class OneBotv11Adapter {
         break
       case "message_reactions_updated":
         data.notice_type = "guild_message_reactions_updated"
-        lain.info(this.self_id, `频道消息表情贴：${data.message_id} ${Bot.String(data.current_reactions)}`, `Bot: [${data.self_id}] <= 频道：[${data.guild_id}-${data.channel_id}, ${data.user_id}]`)
+        lain.info(this.self_id, `频道消息表情贴：${data.message_id} ${this.BotString(data.current_reactions)}`, `Bot: [${data.self_id}] <= 频道：[${data.guild_id}-${data.channel_id}, ${data.user_id}]`)
         break
       case "channel_updated":
         data.notice_type = "guild_channel_updated"
-        lain.info(this.self_id, `子频道更新：${Bot.String(data.old_info)} => ${Bot.String(data.new_info)}`, `Bot: [${data.self_id}] <= 频道：[${data.guild_id}-${data.channel_id}, ${data.user_id}]`)
+        lain.info(this.self_id, `子频道更新：${this.BotString(data.old_info)} => ${this.BotString(data.new_info)}`, `Bot: [${data.self_id}] <= 频道：[${data.guild_id}-${data.channel_id}, ${data.user_id}]`)
         break
       case "channel_created":
         data.notice_type = "guild_channel_created"
-        lain.info(this.self_id, `子频道创建：${Bot.String(data.channel_info)}`, `Bot: [${data.self_id}] <= 频道：[${data.guild_id}-${data.channel_id}, ${data.user_id}]`)
+        lain.info(this.self_id, `子频道创建：${this.BotString(data.channel_info)}`, `Bot: [${data.self_id}] <= 频道：[${data.guild_id}-${data.channel_id}, ${data.user_id}]`)
         data.bot.getGroupMap()
         break
       case "channel_destroyed":
         data.notice_type = "guild_channel_destroyed"
-        lain.info(this.self_id, `子频道删除：${Bot.String(data.channel_info)}`, `Bot: [${data.self_id}] <= 频道：[${data.guild_id}-${data.channel_id}, ${data.user_id}]`)
+        lain.info(this.self_id, `子频道删除：${this.BotString(data.channel_info)}`, `Bot: [${data.self_id}] <= 频道：[${data.guild_id}-${data.channel_id}, ${data.user_id}]`)
         data.bot.getGroupMap()
         break
       default:
