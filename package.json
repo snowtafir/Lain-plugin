@@ -21,7 +21,7 @@
     "OneBotv11": "0.0.1"
   },
   "dependencies": {
-    "axios": "^1.7.4",
+    "axios": "^1.7.5",
     "conventional-changelog-cli": "^5.0.0",
     "express": "^4.19.2",
     "file-type": "^19.4.1",
