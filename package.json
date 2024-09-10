@@ -23,7 +23,7 @@
   "dependencies": {
     "axios": "^1.7.7",
     "conventional-changelog-cli": "^5.0.0",
-    "express": "^4.19.2",
+    "express": "^4.20.0",
     "file-type": "^19.4.1",
     "get-urls": "^12.1.0",
     "qq-group-bot": "1.1.0",
