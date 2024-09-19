@@ -1,4 +1,4 @@
-import { Bot as QQBot } from 'qq-group-bot'
+import { Bot as QQBot } from 'qq-official-bot'
 import Cfg from '../../../../lib/config/config.js'
 
 export default class QQSDK {
@@ -28,6 +28,8 @@ export default class QQSDK {
       this.config.intents.push('C2C_MESSAGE_CREATE')
       /** 群@消息事件 */
       this.config.intents.push('GROUP_AT_MESSAGE_CREATE')
+      /** 群按钮点击回调事件 */
+      this.config.intents.push('INTERACTION')
     }
 
     /** 是否启用频道 */

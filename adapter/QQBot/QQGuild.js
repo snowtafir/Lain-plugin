@@ -528,7 +528,7 @@ export default class adapterQQGuild {
         result.res.push(res)
       } catch (error) {
         lain.error(this.id, error)
-        result.err.push(error)
+        result.err.push(error?.stack || JSON.stringify(error))
       }
     }
     return result
@@ -816,7 +816,7 @@ export default class adapterQQGuild {
         result.res.push(res)
       } catch (error) {
         lain.error(this.id, '发送主动私信消息息失败：', error)
-        result.err.push(error)
+        result.err.push(error?.stack || JSON.stringify(error))
       }
     }
     return result
@@ -836,7 +836,7 @@ export default class adapterQQGuild {
         result.res.push(res)
       } catch (error) {
         lain.error(this.id, '发送频道主动消息失败：', error)
-        result.err.push(error)
+        result.err.push(error?.stack || JSON.stringify(error))
       }
     }
     return result

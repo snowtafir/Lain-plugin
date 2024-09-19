@@ -137,7 +137,7 @@ export class adapter extends plugin {
   async account () {
     let list = []
     if (this.e.isGroup) return await this.reply('请私聊查看', true, { at: true })
-    let token = Object.values(Cfg.getToken())
+    let token = Object.values(Cfg.getToken('QQ_Token'))
 
     // if (!Array.isArray(token)) token = [token] // 感觉没啥必要。
     if (!token.length) return await this.reply('当前还没有绑定过账号~', true, { at: true })

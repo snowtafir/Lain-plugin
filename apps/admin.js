@@ -49,6 +49,8 @@ export class admin extends plugin {
         regex: /#(Lain|铃音)设置标准输入名称/i,
         action: (msg) => {
           this.yamlData('Config-Adapter', 'Stdin.name', msg)
+          Bot.stdin.name = msg
+          Bot.stdin.nickname = msg
         }
       },
       {

@@ -102,6 +102,7 @@ export default class adapterQQBot {
     this.gmlList('gl')
     /** 加载缓存中的好友列表 */
     this.gmlList('fl')
+
     /** 保存id到adapter */
     if (!Bot.adapter.includes(String(this.id))) Bot.adapter.push(String(this.id))
     /** 初始化dau统计 */
@@ -216,7 +217,11 @@ export default class adapterQQBot {
   /** 转换通知消息格式 */
   async notice (data, isGroup) {
     /** 调试日志 */
-    lain.warn(this.id, '<收到通知>', data)
+    const _bot = data.bot
+    /** 防止报错 */
+    delete data.bot
+    lain.debug(this.id, '<收到通知>', JSON.stringify(data))
+
     let { self_id: tinyId, ...e } = data
 
     return e
@@ -226,6 +231,7 @@ export default class adapterQQBot {
   async message (data, isGroup) {
     /** 调试日志 */
     lain.debug(this.id, '<收到消息>', JSON.stringify(data))
+
     let { self_id: tinyId, ...e } = data
     e.data = data
     e.bot = Bot[this.id]
@@ -271,8 +277,8 @@ export default class adapterQQBot {
         /** 缓存群列表 */
         if (!await redis.get(`lain:gl:${this.id}:${e.group_id}`)) redis.set(`lain:gl:${this.id}:${e.group_id}`, JSON.stringify({ group_id: e.group_id, uin: this.id }))
         /** 防倒卖崽 */
-        let tips = Cfg.getToken(this.id).other
-        lain.debug(this.id, '<获取配置>', Cfg.getToken(this.id))
+        let tips = Cfg.getToken('QQ_Token', this.id).other
+        lain.debug(this.id, '<获取配置>', Cfg.getToken('QQ_Token', this.id))
         if (tips.Tips) await this.QQBotTips(data, e.group_id, tips)
       } catch { }
 
@@ -412,7 +418,6 @@ export default class adapterQQBot {
           if (String(i.text).trim()) {
             if (i.type === 'forward') {
               lain.debug(this.id, '<解析转发消息>', i)
-              // i.text = String(i.text).trim()
               for (let i2 of i.text) {
                 if (i2?.type == 'image') image.push(await this.getImage(i2.file, e))
                 else if (i2?.type == 'button') button.push(i2)
@@ -431,6 +436,7 @@ export default class adapterQQBot {
               }
               break
             }
+
             /** 禁止用户从文本键入@全体成员 */
             i.text = String(i.text).replace('@everyone', 'everyone')
             /** 模板1、4使用按钮替换连接 */
@@ -488,7 +494,7 @@ export default class adapterQQBot {
           break
         case 'ark':
         case 'markdown':
-          if (i.type === 'markdown' && !(i?.content || i?.template_id)) {
+          if (i.type === 'markdown' && !(i?.content || i?.custom_template_id)) {
             lain.warn(this.id, 'Markdown格式错误')
             lain.debug(this.id, JSON.stringify(i))
             break
@@ -653,7 +659,7 @@ export default class adapterQQBot {
         return { type, file: url, width, height }
       }
       /** ICQQ */
-      if (Cfg.ICQQ && lain?.file?.uploadImage) {
+      if (Cfg.toICQQ && lain?.file?.uploadImage) {
         const { url, width, height } = await lain.file.uploadImage(file)
         lain.mark('Lain-plugin', `使用ICQQ发送图片：${url}`)
         return { type, file: url, width, height }
@@ -704,7 +710,7 @@ export default class adapterQQBot {
         }
       }
       /** ICQQ */
-      if (Cfg.ICQQ && lain?.file?.uploadPtt) {
+      if (Cfg.toICQQ && lain?.file?.uploadPtt) {
         const url = await lain.file.uploadPtt(file)
         lain.mark('Lain-plugin', `使用ICQQ发送语音：${url}`)
         return { type: 'audio', file: url }
@@ -812,19 +818,22 @@ export default class adapterQQBot {
       message: common.array(data)
     }
     /** 发送返回 */
-    let ret = { res: [], error: [] }
+    let ret = { res: [], err: [] }
 
     e.message.forEach(i => { if (i.type === 'text') e.msg = (e.msg || '') + (i.text || '').trim() })
     const { Pieces, reply } = await this.getQQBot(data, e)
-    for (let i of Pieces) {
-      if (reply) i = Array.isArray(i) ? [...i, reply] : [i, reply]
+    for (let msg of Pieces) {
+      msg = await msg
+      if (!msg || (Array.isArray(msg) && !msg?.length)) continue
+      if (reply) msg = Array.isArray(msg) ? [reply, ...msg] : [reply, msg]
+      lain.debug(this.id, 1, JSON.stringify(msg).replace(/base64:\/\/.*?(,|]|")/g, 'base64://...$1'))
       try {
-        let res = await this.sdk.sendPrivateMessage(user_id, i, this.sdk)
-        ret.res.push(res)
-        lain.debug(this.id, '发送主动好友消息：', JSON.stringify(i).replace(/base64:\/\/.*?(,|]|")/g, 'base64://...$1'), res)
+        let res = await this.sdk.sendPrivateMessage(user_id, msg, this.sdk)
+        ret.res.push(this.returnResult(res))
+        lain.debug(this.id, '发送主动好友消息：', JSON.stringify(msg).replace(/base64:\/\/.*?(,|]|")/g, 'base64://...$1'), res)
       } catch (err) {
         lain.error(this.id, '发送主动好友消息错误：', err)
-        ret.error.push(err)
+        ret.err.push(err?.stack || JSON.stringify(err))
       }
       this.send_count()
     }
@@ -841,19 +850,22 @@ export default class adapterQQBot {
       message: common.array(data)
     }
     /** 发送返回 */
-    let ret = { res: [], error: [] }
+    let ret = { res: [], err: [] }
 
     e.message.forEach(i => { if (i.type === 'text') e.msg = (e.msg || '') + (i.text || '').trim() })
     const { Pieces, reply } = await this.getQQBot(data, e)
-    for (let i of Pieces) {
-      if (reply) i = Array.isArray(i) ? [...i, reply] : [i, reply]
+    for (let msg of Pieces) {
+      msg = await msg
+      if (!msg || (Array.isArray(msg) && !msg?.length)) continue
+      if (reply) msg = Array.isArray(msg) ? [reply, ...msg] : [reply, msg]
+      lain.debug(this.id, 1, JSON.stringify(msg).replace(/base64:\/\/.*?(,|]|")/g, 'base64://...$1'))
       try {
-        let res = await this.sdk.sendGroupMessage(group_id, i, this.sdk)
-        ret.res.push(res)
-        lain.debug(this.id, '发送主动群消息：', JSON.stringify(i).replace(/base64:\/\/.*?(,|]|")/g, 'base64://...$1'), res)
+        let res = await this.sdk.sendGroupMessage(group_id, msg, this.sdk)
+        ret.res.push(this.returnResult(res))
+        lain.debug(this.id, '发送主动群消息：', JSON.stringify(msg).replace(/base64:\/\/.*?(,|]|")/g, 'base64://...$1'), res)
       } catch (err) {
         lain.error(this.id, '发送主动群消息错误：', err)
-        ret.error.push(err)
+        ret.err.push(err?.stack || JSON.stringify(err))
       }
       this.send_count()
     }
@@ -869,11 +881,10 @@ export default class adapterQQBot {
 
     for (let msg of Pieces) {
       msg = await msg
-      lain.debug(this.id, 2, JSON.stringify(msg).replace(/base64:\/\/.*?(,|]|")/g, 'base64://...$1'))
       if (!msg || (Array.isArray(msg) && !msg?.length)) continue
-      lain.debug(this.id, 3, JSON.stringify(msg).replace(/base64:\/\/.*?(,|]|")/g, 'base64://...$1'))
+      lain.debug(this.id, 2, JSON.stringify(msg).replace(/base64:\/\/.*?(,|]|")/g, 'base64://...$1'))
       let { ok, data } = await this.sendMsg(e, msg)
-      lain.debug(this.id, 4, ok, data)
+      lain.debug(this.id, 3, ok, data)
       if (ok) { res = data; continue }
 
       /** 错误文本处理 */

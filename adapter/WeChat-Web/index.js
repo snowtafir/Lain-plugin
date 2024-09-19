@@ -19,7 +19,7 @@ export default class StartWeChat4u {
     try {
       WeChat4u = (await import('wechat4u')).default
     } catch (error) {
-      return '未安装 WeChat4u 依赖，请执行pnpm i'
+      throw new Error('未安装 WeChat4u 依赖，请执行pnpm i')
     }
 
     if (this.config) {
