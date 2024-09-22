@@ -85,12 +85,12 @@ class OneBotv11Adapter {
    * @param {string|Buffer} file - 文件内容
    * @returns {Promise<string>} - 返回处理后的文件内容
    */
-  async makeFile(file) {
-    // 确保 file 是 Buffer 类型
+  async makeFile(file, opts) {
+    // 如果 file 是 Uint8Array 类型，则转换为 Buffer 类型
     if (file instanceof Uint8Array) {
       file = Buffer.from(file);
     }
-    file = await this.Buffer(file, { http: true })
+    file = await this.Buffer(file, { http: true, ...opts })
     if (Buffer.isBuffer(file))
       file = `base64://${file.toString("base64")}`
     return file
@@ -125,7 +125,7 @@ class OneBotv11Adapter {
     else if (data.match(/^https?:\/\//))
       return opts.http ? data : Buffer.from(await (await fetch(data, opts)).arrayBuffer())
     else if (await this.fsStat(data.replace(/^file:\/\//, "")))
-      return opts.file ? data : Buffer.from(await fs.readFile(data.replace(/^file:\/\//, "")))
+      return opts.file ? `file://${path.resolve(data.replace(/^file:\/\//, ""))}` : Buffer.from(await fs.readFile(data))
     return data
   }
 
@@ -866,7 +866,7 @@ class OneBotv11Adapter {
     lain.info(this.self_id, `发送好友文件：${name}(${file})`, `${data.self_id} => ${data.user_id}`)
     return data.bot.sendApi("upload_private_file", {
       user_id: data.user_id,
-      file: await this.makeFile(file),
+      file: await this.makeFile(file, { file: true }),
       name,
     })
   }
@@ -884,7 +884,7 @@ class OneBotv11Adapter {
     return data.bot.sendApi("upload_group_file", {
       group_id: data.group_id,
       folder,
-      file: await this.makeFile(file),
+      file: await this.makeFile(file, { file: true }),
       name,
     })
   }
