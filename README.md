@@ -1,5 +1,5 @@
 ## 原仓库已删库跑路。
-
+## 目前QQbot相关适配器维护代码来源于 [sky-summer](https://gitee.com/sky-summer/Lain-plugin.git) 
 ## 简介
 - 插件更新日志：[点击查看](./CHANGELOG.md)
 - 本项目使用 [GPL-3.0](./LICENSE) 开源协议，欢迎任何形式的贡献！
