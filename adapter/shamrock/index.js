@@ -723,15 +723,15 @@ class Shamrock {
     let msg = []
     for (let i in data) {
       /** 该死的套娃，能不能死一死啊... */
-      if (typeof data[i] === 'object' && (data[i]?.test || data[i]?.message?.test)) {
-        if (data[i]?.message?.test) {
+      if (typeof data[i] === 'object' && (data[i]?.test || data[i]?.message?.[0]?.test)) {
+        if (data[i]?.message?.[0]?.test) {
           makeForwardMsg.message.push(...data[i].message.message)
         } else {
           makeForwardMsg.message.push(...data[i].message)
         }
       } else {
-        if (!data[i]?.message) continue
-        msg.push(data[i].message)
+        if (!data[i]?.message.length) continue
+        msg.push(...data[i].message)
       }
     }
 

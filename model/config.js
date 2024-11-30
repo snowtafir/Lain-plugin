@@ -41,8 +41,8 @@ Bot.lain = {
       },
       /** 依赖包 */
       apk: {
-        display: 'qq-group-bot',
-        version: dependencies['qq-group-bot'].replace('^', '')
+        display: 'qq-official-bot',
+        version: dependencies['qq-official-bot'].replace('^', '')
       }
     },
     ComWeChat: {
@@ -93,8 +93,8 @@ Bot.lain = {
       },
       /** 依赖包 */
       apk: {
-        display: 'qq-group-bot',
-        version: dependencies['qq-group-bot'].replace('^', '')
+        display: 'qq-official-bot',
+        version: dependencies['qq-official-bot'].replace('^', '')
       }
     },
     WeXin: {

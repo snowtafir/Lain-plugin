@@ -66,12 +66,12 @@ AppSecret(机器人密钥)：`abcdefghijklmnopqrstuvwxyz`
   - 语音：编写一个全局变量`Bot.audioToUrl`，接收一个参数，返回 `url`。
   - 视频：编写一个全局变量`Bot.videoToUrl`，接收一个参数，返回 `url`。
 - 方法2：前往 [config/Config-Server.yaml](../config/Config-Server.yaml) 配置公网地址，端口为配置文件中的`HTTP`端口，如果有转发，请修改`实际端口`选项。
-- 方法3：登录一个QQ机器人，随后前往[config/Config-Other.yaml](../config/Config-Other.yaml)配置`ICQQtoFile`为`true`，也可单独配置 [config/Config-Token.yaml](../config/Config-Token.yaml)中的`QQCloud`为 BotQQ 号。
+- 方法3：登录一个QQ机器人，随后前往[config/Config-Other.yaml](../config/Config-Other.yaml)配置`ICQQtoFile`为`true`，也可单独配置 [config/Token.yaml](../config/Token.yaml)中的`QQCloud`为 BotQQ 号。
 - 适配器自带指令前缀/转#，默认打开。若需关闭请发送
 ```
 #QQBot设置前缀关闭
 ```
-或者编辑 [config/config/Config-Token.yaml](../config/config/Config-Token.yaml) 配置文件，将`Prefix`改为`false`即可关闭 `/` 转换为 `#`
+或者编辑 [config/config/Token.yaml](../config/config/Token.yaml) 配置文件，将`Prefix`改为`false`即可关闭 `/` 转换为 `#`
 
 
 <details><summary>方法1图床编写参考</summary>

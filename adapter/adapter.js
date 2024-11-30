@@ -1,4 +1,5 @@
 import fs from 'fs'
+
 import Cfg from '../lib/config/config.js'
 import WebSocket from './WebSocket.js'
 import stdin from './stdin/index.js'
@@ -14,8 +15,8 @@ WebSocket.start()
 if (Cfg.Stdin.state) stdin()
 
 /** QQBot适配器 */
-if (Object.values(Cfg.getToken()).length) {
-  Object.values(Cfg.getToken()).forEach(async bot => {
+if (Object.values(Cfg.getToken('QQ_Token')).length) {
+  Object.values(Cfg.getToken('QQ_Token')).forEach(async bot => {
     if (bot.model == 0 || bot.model == 2) {
       try {
         const SDK = new QQSDK(bot)
