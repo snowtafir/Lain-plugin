@@ -81,7 +81,7 @@ class OneBotv11Adapter {
   }
 
   /**
-   * 生成文件
+   * 处理文件消息
    * @param {string|Buffer} file - 文件内容
    * @returns {Promise<string>} - 返回处理后的文件内容
    */
@@ -208,7 +208,7 @@ class OneBotv11Adapter {
   sendFriendMsg(data, msg) {
     return this.sendMsg(msg, message => {
       lain.info(this.self_id, `发送好友消息：${this.makeLog(message)}`, `Bot: [${data.self_id}] => 好友： [${data.user_id}]`)
-      data.bot.sendApi("send_msg", {
+      return data.bot.sendApi("send_msg", {
         user_id: data.user_id,
         message,
       })
@@ -259,8 +259,9 @@ class OneBotv11Adapter {
     if (!Array.isArray(message_id))
       message_id = [message_id]
     const msgs = []
-    for (const i of message_id)
-      msgs.push(await data.bot.sendApi("delete_msg", { message_id: i }))
+    for (const i of message_id) {
+      msgs.push(await data.bot.sendApi("delete_msg", { message_id: i }).catch(i => i))
+    }
     return msgs
   }
 
@@ -1079,7 +1080,7 @@ class OneBotv11Adapter {
       kick: reject_add_request => this.setGroupKick(i, i.user_id, reject_add_request),
       get is_friend() { return data.bot.fl.has(user_id) },
       get is_owner() { return i.role === "owner" },
-      get is_admin() { return i.role === "admin" },
+      get is_admin() { return i.role === "admin" || this.is_owner },
     }
   }
 
@@ -1148,7 +1149,7 @@ class OneBotv11Adapter {
       quit: is_dismiss => this.setGroupLeave(i, is_dismiss),
       fs: this.getGroupFs(i),
       get is_owner() { return data.bot.gml.get(group_id)?.get(data.self_id)?.role === "owner" },
-      get is_admin() { return data.bot.gml.get(group_id)?.get(data.self_id)?.role === "admin" },
+      get is_admin() { return data.bot.gml.get(group_id)?.get(data.self_id)?.role === "admin" || this.is_owner},
     }
   }
 
@@ -1327,6 +1328,14 @@ class OneBotv11Adapter {
         break
       case "group_upload":
         lain.info(this.self_id, `群文件上传：${this.BotString(data.file)}`, `Bot: [${data.self_id}] <= 群：[${data.group_id}]: ${data.user_id}`)
+        Bot.em("message.group.normal", {
+          ...data,
+          post_type: "message",
+          message_type: "group",
+          sub_type: "normal",
+          message: [{ ...data.file, type: "file" }],
+          raw_message: `[文件：${data.file.name}]`,
+        })
         break
       case "group_ban":
         lain.info(this.self_id, `群禁言：${data.operator_id} => 用户： [${data.user_id}]: ${data.sub_type} ${data.duration}秒`, `Bot: [${data.self_id}] <= 群：[${data.group_id}]`)
@@ -1363,6 +1372,14 @@ class OneBotv11Adapter {
         break
       case "offline_file":
         lain.info(this.self_id, `离线文件：${this.BotString(data.file)}`, `Bot: [${data.self_id}] <= ${data.user_id}`)
+        Bot.em("message.private.friend", {
+          ...data,
+          post_type: "message",
+          message_type: "private",
+          sub_type: "friend",
+          message: [{ ...data.file, type: "file" }],
+          raw_message: `[文件：${data.file.name}]`,
+        })
         break
       case "client_status":
         lain.info(this.self_id, `客户端${data.online ? "上线" : "下线"}：${this.BotString(data.client)}`, data.self_id)
