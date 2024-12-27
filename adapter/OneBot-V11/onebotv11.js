@@ -1034,6 +1034,20 @@ class OneBotv11Adapter {
   }
 
   /**
+   * 删除好友
+   * @param {Object} data - 数据对象
+   * @param {number} user_id - 用户ID
+   * @returns {Promise} - API调用返回的Promise
+   */
+  async deleteFriend(data, user_id) {
+    Bot.makeLog("info", "删除好友", `${data.self_id} => ${user_id}`, true)
+    return await data.bot.sendApi("delete_friend", { user_id }).then(i => {
+      this.getFriendMap(data).catch(err => logger.error(err))
+      return i
+    }).catch(i => i.error)
+  }
+
+  /**
    * 选择好友
    * @param {Object} data - 数据对象
    * @param {number} user_id - 用户ID
@@ -1057,6 +1071,7 @@ class OneBotv11Adapter {
       getAvatarUrl() { return this.avatar || `https://q.qlogo.cn/g?b=qq&s=0&nk=${user_id}` },
       getChatHistory: this.getFriendMsgHistory.bind(this, i),
       thumbUp: this.sendLike.bind(this, i),
+      delete: this.deleteFriend.bind(this, data, user_id),
     }
   }
 
@@ -1226,6 +1241,9 @@ class OneBotv11Adapter {
       getSystemMsg() { return this.request_list },
       setFriendAddRequest: this.setFriendAddRequest.bind(this, data),
       setGroupAddRequest: this.setGroupAddRequest.bind(this, data),
+
+      deleteFriend: user_id => this.deleteFriend.bind(this, data, user_id),
+
       cookies: {},
       getCookies(domain) { return this.cookies[domain] },
       getCsrfToken() { return this.bkn },
