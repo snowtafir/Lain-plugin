@@ -1034,17 +1034,50 @@ class OneBotv11Adapter {
   }
 
   /**
+   * 获取群荣誉信息
+   * @param {Object} data - 数据对象
+   */
+  getGroupHonorInfo(data) {
+    return data.bot.sendApi("get_group_honor_info", { group_id: data.group_id })
+  }
+
+  /**
+   * 获取精华消息列表
+   * @param {Object} data - 数据对象
+   */
+  getEssenceMsg(data) {
+    return data.bot.sendApi("get_essence_msg_list", { group_id: data.group_id })
+  }
+
+  /**
+   * 设置精华消息
+   * @param {Object} data - 数据对象
+   * @param {number} message_id - 消息ID
+   */
+  setEssenceMsg(data, message_id) {
+    return data.bot.sendApi("set_essence_msg", { message_id })
+  }
+
+  /**
+   * 删除精华消息
+   * @param {Object} data - 数据对象
+   * @param {number} message_id - 消息ID
+   */
+  deleteEssenceMsg(data, message_id) {
+    return data.bot.sendApi("delete_essence_msg", { message_id })
+  }
+
+  /**
    * 删除好友
    * @param {Object} data - 数据对象
    * @param {number} user_id - 用户ID
    * @returns {Promise} - API调用返回的Promise
    */
-  async deleteFriend(data, user_id) {
-    Bot.makeLog("info", "删除好友", `${data.self_id} => ${user_id}`, true)
-    return await data.bot.sendApi("delete_friend", { user_id }).then(i => {
-      this.getFriendMap(data).catch(err => logger.error(err))
-      return i
-    }).catch(i => i.error)
+
+  deleteFriend(data) {
+    lain.info("info", "删除好友", `${data.self_id} => ${data.user_id}`, true)(this.self_id, `删除好友：`, `${data.self_id} => ${data.user_id}`)
+    return data.bot.sendApi("delete_friend", { user_id: data.user_id })
+      .finally(this.getFriendMap.bind(this, data))
   }
 
   /**
@@ -1071,7 +1104,7 @@ class OneBotv11Adapter {
       getAvatarUrl() { return this.avatar || `https://q.qlogo.cn/g?b=qq&s=0&nk=${user_id}` },
       getChatHistory: this.getFriendMsgHistory.bind(this, i),
       thumbUp: this.sendLike.bind(this, i),
-      delete: this.deleteFriend.bind(this, data, user_id),
+      delete: this.deleteFriend.bind(this, i),
     }
   }
 
@@ -1168,6 +1201,8 @@ class OneBotv11Adapter {
       getInfo: this.getGroupInfo.bind(this, i),
       getAvatarUrl() { return this.avatar || `https://p.qlogo.cn/gh/${group_id}/${group_id}/0` },
       getChatHistory: this.getGroupMsgHistory.bind(this, i),
+      getGroupHonorInfo: this.getGroupHonorInfo.bind(this, i),
+      getEssence: this.getEssenceMsg.bind(this, i),
       getMemberArray: this.getMemberArray.bind(this, i),
       getMemberList: this.getMemberList.bind(this, i),
       getMemberMap: this.getMemberMap.bind(this, i),
@@ -1242,7 +1277,8 @@ class OneBotv11Adapter {
       setFriendAddRequest: this.setFriendAddRequest.bind(this, data),
       setGroupAddRequest: this.setGroupAddRequest.bind(this, data),
 
-      deleteFriend: user_id => this.deleteFriend.bind(this, data, user_id),
+      setEssenceMessage: this.setEssenceMsg.bind(this, data),
+      removeEssenceMessage: this.deleteEssenceMsg.bind(this, data),
 
       cookies: {},
       getCookies(domain) { return this.cookies[domain] },
