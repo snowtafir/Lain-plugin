@@ -27,7 +27,7 @@
     "express": "^4.19.2",
     "file-type": "^19.4.1",
     "get-urls": "^12.1.0",
-    "qq-official-bot": "1.0.2",
+    "qq-official-bot": "1.0.4",
     "qrcode": "^1.5.3",
     "sharp": "^0.33.1",
     "silk-wasm": "^3.2.4",
