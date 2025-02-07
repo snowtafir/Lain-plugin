@@ -25,7 +25,7 @@
     "axios": "^1.7.7",
     "conventional-changelog-cli": "^5.0.0",
     "express": "^4.19.2",
-    "file-type": "^19.4.1",
+    "file-type": "^20.1.0",
     "get-urls": "^12.1.0",
     "qq-official-bot": "1.0.4",
     "qrcode": "^1.5.3",
