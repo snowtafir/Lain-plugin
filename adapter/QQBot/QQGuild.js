@@ -638,7 +638,7 @@ export default class adapterQQGuild {
         case 'ark':
         case 'button':
         case 'embed':
-          if (i.type === 'button' && !(i?.buttons || i.buttons[0]?.action)) {
+          if (i.type === 'button' && !(i?.buttons || i.buttons?.[0]?.action)) {
             lain.warn(this.id, '按钮格式错误')
             lain.debug(this.id, JSON.stringify(i))
             break
