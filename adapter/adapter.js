@@ -17,7 +17,7 @@ if (Cfg.Stdin.state) stdin()
 /** QQBot适配器 */
 if (Object.values(Cfg.getToken('QQ_Token')).length) {
   Object.values(Cfg.getToken('QQ_Token')).forEach(async bot => {
-    if (bot.model == 0 || bot.model == 2) {
+    if (bot.type == 0 || bot.type == 2) {
       try {
         const SDK = new QQSDK(bot)
         await SDK.start()
@@ -25,17 +25,17 @@ if (Object.values(Cfg.getToken('QQ_Token')).length) {
         await new QQGuild(SDK.sdk)
       } catch (err) {
         logger.warn(err)
-        lain.error('Lain-plugin', `QQBot [${bot.appid}] 启动失败`, err?.data || err?.message || err)
+        lain.error('Lain-plugin', `QQBot <${bot.appid}> 启动失败`, err?.data || err?.message || err)
       }
     }
-    if (bot.model == 1) {
+    if (bot.type == 1) {
       try {
         const SDK = new QQSDK(bot)
         await SDK.start()
         await new QQGuild(SDK.sdk)
       } catch (err) {
         logger.warn(err)
-        lain.error('Lain-plugin', `QQGuild [${bot.appid}] 启动失败`, err?.data || err?.message || err)
+        lain.error('Lain-plugin', `QQGuild <${bot.appid}> 启动失败`, err?.data || err?.message || err)
       }
     }
   })

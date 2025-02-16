@@ -10,7 +10,7 @@ import { fileTypeFromBuffer } from 'file-type'
 import MiaoCfg from '../../../../lib/config/config.js'
 import common from '../../lib/common/common.js'
 import Cfg from '../../lib/config/config.js'
-import Button from './plugins.js'
+import Buttons from './plugins.js'
 
 lain.DAU = {}
 
@@ -109,7 +109,7 @@ export default class adapterQQBot {
     if (Cfg.Other.QQBotdau) lain.DAU[this.id] = await this.getDAU()
     /** 重启 */
     await common.init('Lain:restart:QQBot')
-    return `QQBot：<${username}(${this.id})> 连接成功!`
+    return lain.info(this.id, `QQBot：<${username}(${this.id})> 连接成功!`)
   }
 
   /** 加载缓存中的群、好友列表 */
@@ -122,8 +122,10 @@ export default class adapterQQBot {
         lain.debug(this.id, '<读取缓存群，好友列表>', type, info)
         if (type === 'gl') {
           Bot[this.id].gl.set(info.group_id, info)
+          Bot.gl.set(info.group_id, info)
         } else {
           Bot[this.id].fl.set(info.user_id, info)
+          Bot.fl.set(info.user_id, info)
         }
       })
     } catch (err) {
@@ -217,12 +219,10 @@ export default class adapterQQBot {
   /** 转换通知消息格式 */
   async notice (data, isGroup) {
     /** 调试日志 */
-    const _bot = data.bot
-    /** 防止报错 */
+    let { self_id: tinyId, ...e } = data
+    e._bot = data.bot
     delete data.bot
     lain.debug(this.id, '<收到通知>', JSON.stringify(data))
-
-    let { self_id: tinyId, ...e } = data
 
     return e
   }
@@ -241,6 +241,8 @@ export default class adapterQQBot {
     e.self_id = this.id
     e.sendMsg = data.reply
     e.raw_message = e.raw_message.trim()
+    e.atBot = true
+    e.atme = true
 
     lain.info(this.id, `${isGroup ? `<群:${e.group_id}>` : ''}<用户:${e.user_id}> -> ${this.messageLog(e.message)}`)
 
@@ -273,9 +275,10 @@ export default class adapterQQBot {
     /** 构建场景对应的方法 */
     if (isGroup) {
       try {
-        if (!Bot[this.id].gl.get(e.group_id)) Bot[this.id].gl.set(e.group_id, { group_id: e.group_id, uin: this.id })
+        Bot[this.id].gl.set(e.group_id, { group_id: e.group_id, group_name: '', uin: this.id })
+        Bot.gl.set(e.group_id, { group_id: e.group_id, group_name: '', uin: this.id })
         /** 缓存群列表 */
-        if (!await redis.get(`lain:gl:${this.id}:${e.group_id}`)) redis.set(`lain:gl:${this.id}:${e.group_id}`, JSON.stringify({ group_id: e.group_id, uin: this.id }))
+        if (!await redis.get(`lain:gl:${this.id}:${e.group_id}`)) redis.set(`lain:gl:${this.id}:${e.group_id}`, JSON.stringify({ group_id: e.group_id, group_name: '', uin: this.id }))
         /** 防倒卖崽 */
         let tips = Cfg.getToken('QQ_Token', this.id).other
         lain.debug(this.id, '<获取配置>', Cfg.getToken('QQ_Token', this.id))
@@ -294,8 +297,9 @@ export default class adapterQQBot {
     e.sender.nickname = e.sender.user_id || `${this.id}-${e.user_id}`
 
     /** 缓存好友列表 */
-    if (!Bot[this.id].fl.get(e.user_id)) Bot[this.id].fl.set(e.user_id, { user_id: e.user_id, uin: this.id })
-    if (!await redis.get(`lain:fl:${this.id}:${e.user_id}`)) redis.set(`lain:fl:${this.id}:${e.user_id}`, JSON.stringify({ user_id: e.user_id, uin: this.id }))
+    Bot[this.id].fl.set(e.user_id, { user_id: e.user_id, card: e.sender.nickname, nickname: e.sender.nickname, uin: this.id })
+    Bot.fl.set(e.user_id, { user_id: e.user_id, card: e.sender.nickname, nickname: e.sender.nickname, uin: this.id })
+    if (!await redis.get(`lain:fl:${this.id}:${e.user_id}`)) redis.set(`lain:fl:${this.id}:${e.user_id}`, JSON.stringify({ user_id: e.user_id, card: e.sender.nickname, nickname: e.sender.nickname, uin: this.id }))
 
     /** 保存消息次数 */
     try { common.recvMsg(this.id, e.adapter) } catch { }
@@ -791,7 +795,7 @@ export default class adapterQQBot {
   /** 按钮添加 */
   async button (e) {
     try {
-      for (let p of Button) {
+      for (let p of Buttons) {
         for (let v of p.plugin.rule) {
           const regExp = new RegExp(v.reg)
           if (regExp.test(e.msg)) {
@@ -948,7 +952,7 @@ export default class adapterQQBot {
       time,
       message_id: res?.id
     }
-    lain.debug('Lain-plugin', res)
+    lain.debug('Lain-plugin', '<处理发送返回>', res)
     return res
   }
 

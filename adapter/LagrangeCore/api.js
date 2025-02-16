@@ -563,9 +563,6 @@ let api = {
   * 获取城市ADCode
   * @param id
   * @param city 城市
-  * @param sub_type add 或 invite, 请求类型（需要和上报消息中的 sub_type 字段相符）
-  * @param approve 是否同意请求／邀请
-  * @param reason 拒绝理由（仅在拒绝时有效）
   * @return {Promise<*|string>}
   */
   async get_weather_city_code (id, city) {

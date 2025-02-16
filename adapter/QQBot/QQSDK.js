@@ -23,7 +23,7 @@ export default class QQSDK {
     this.config.intents = []
 
     /** 是否启用群 */
-    if (this.config.model == 0 || this.config.model == 2) {
+    if (this.config.type == 0 || this.config.type == 2) {
       /** 群私聊事件 */
       this.config.intents.push('C2C_MESSAGE_CREATE')
       /** 群@消息事件 */
@@ -33,7 +33,7 @@ export default class QQSDK {
     }
 
     /** 是否启用频道 */
-    if (this.config.model == 0 || this.config.model == 1) {
+    if (this.config.type == 0 || this.config.type == 1) {
       /** 频道变更事件 */
       this.config.intents.push('GUILDS')
       /** 频道成员变更事件 */
@@ -43,7 +43,7 @@ export default class QQSDK {
       /** 频道消息表态事件 */
       this.config.intents.push('GUILD_MESSAGE_REACTIONS')
       /** 公域 私域事件 */
-      this.config.allMsg ? this.config.intents.push('GUILD_MESSAGES') : this.config.intents.push('PUBLIC_GUILD_MESSAGES')
+      this.config.allMsg ? this.config.intents.push('GUILD_MESSAGES', 'FORUMS_EVENTS') : this.config.intents.push('PUBLIC_GUILD_MESSAGES', 'OPEN_FORUMS_EVENTS')
     }
 
     /** 创建机器人 */
@@ -60,23 +60,41 @@ export default class QQSDK {
       error: (...log) => lain.error(this.id, ...log),
       fatal: (...log) => lain.fatal(this.id, ...log)
     }
+    /** 实现自动重连(10秒后运行每1分钟定时检测) */
+    if (this.config.mode === 'websocket') {
+      setTimeout(() => {
+        this.sdk.timer = setInterval(async () => {
+          if (this.sdk.receiver?.handler?.ws?.readyState !== 1) {
+            lain.warn(this.id, "检测到账号离线，已自动重连")
+            await this.sdk.stop()
+            await lain.sleep(10)
+            await this.sdk.start()
+          }
+        }, 1 * 60 * 1000)
+      }, 10 * 1000)
+    }
   }
 
   /** 修改一下日志 */
   logger (...data) {
     let msg = data[0]
+
     if (typeof msg !== 'string' || data.length > 1) return lain.info(this.id, ...data)
-    msg = msg.trim()
+
+    msg = msg.trim().replace(/base64:\/\/.*?(,|]|")/g, 'base64://...$1')
     try {
-      if (/^(recv from Group|recv from Guild|send to Channel|recv from User|send to Direct|recv from Direct)/.test(msg)) {
+      if (/^(recv from Group|recv from Guild|recv from User|recv from Direct)/.test(msg)) {
         return ''
       } else if (/^send to Group/.test(msg)) {
-        msg = msg.replace(/^send to Group\([^)]+\): /, `<发送群聊: ${this.id}-${msg.match(/\(([^)]+)\)/)[1]}> => `)
-        return lain.info(this.QQBot, msg)
+        msg = msg.replace(/^send to Group\([^)]+\): /, `<发送群聊: ${msg.match(/\(([^)]+)\)/)[1]}> => `)
       } else if (/^send to User/.test(msg)) {
-        msg = msg.replace(/^send to User\([^)]+\): /, `<发送私聊: ${this.id}-${msg.match(/\(([^)]+)\)/)[1]}> => `)
+        msg = msg.replace(/^send to User\([^)]+\): /, `<发送私聊: ${msg.match(/\(([^)]+)\)/)[1]}> => `)
+      } else if (/^send to Channel/.test(msg)) {
+        msg = msg.replace(/^send to Channel\([^)]+\): /, `<发送频道: ${msg.match(/\(([^)]+)\)/)[1]}> => `)
+      } else if (/^send to Direct/.test(msg)) {
+        msg = msg.replace(/^send to Direct\([^)]+\): /, `<发送私信: ${msg.match(/\(([^)]+)\)/)[1]}> => `)
       }
     } catch { }
-    return logger.info(msg)
+    return lain.info(this.id, msg)
   }
 }

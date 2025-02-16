@@ -219,7 +219,7 @@ async function sendMsg (msg) {
   for (let i of msg) {
     if (typeof i != 'object') {
       i = { type: 'text', data: { text: i } }
-    } else if (!i.data) {
+    } else if (!i?.data) {
       i = { type: i.type, data: { ...i, type: undefined } }
     }
 
@@ -280,6 +280,7 @@ async function sendFile (file, name = path.basename(file)) {
 }
 
 function sendForwardMsg (msg) {
+  if (!Array.isArray(msg)) msg = [msg]
   const messages = []
   for (const { message } of msg) {
     messages.push(sendMsg(message))

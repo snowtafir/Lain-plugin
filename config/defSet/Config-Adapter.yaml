@@ -15,4 +15,3 @@ Shamrock:            # Shamrock
   baseUrl:           # shamrock主动http链接，例如http://localhost:5700。若填写将通过此端口进行文件上传等被动ws不支持的操作
   token:             # 鉴权token，如果开放公网强烈建议配置
   githubKey:         # Github personal access token, 用于查看和下载shamrock版本信息
- 

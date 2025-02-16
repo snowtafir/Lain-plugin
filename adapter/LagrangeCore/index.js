@@ -11,13 +11,13 @@ class LagrangeCore {
     /** 存一下 */
     bot.request = request
     /** 机器人QQ号 */
-    this.id = Number(request.headers['x-self-id'])
+    this.id = request.headers['x-self-id']
     /** ws */
     this.bot = bot
     /** 监听事件 */
     this.bot.on('message', (data) => this.event(data))
     /** 监听连接关闭事件 */
-    bot.on('close', () => logger.warn(`[Lain-plugin] [Lagrange.OneBot] QQ ${this.id} 连接已断开`))
+    bot.on('close', () => lain.warn('Lagrange.OneBot', `QQ <${this.id}> 连接已断开`))
   }
 
   /** 收到请求 */
@@ -36,8 +36,8 @@ class LagrangeCore {
       this[data?.post_type](data)
     } catch (error) {
       /** 处理错误打印日志 */
-      logger.error('[LagrangeCore]事件处理错误', error)
-      logger.mark('[LagrangeCore]事件处理错误', data)
+      lain.error('LagrangeCore', `<${this.id}>事件处理错误`, error)
+      lain.mark('LagrangeCore', `<${this.id}>事件处理错误`, data)
     }
   }
 
@@ -47,14 +47,14 @@ class LagrangeCore {
       /** 生命周期 */
       case 'lifecycle':
         this.LoadBot()
-        lain.info('Lain-plugin', `<Lagrange.OneBot> QQ ${this.id} 建立连接成功，正在加载资源中`)
+        lain.info('Lagrange.OneBot', `QQ <${this.id}> 建立连接成功，正在加载资源中`)
         break
       /** 心跳 */
       case 'heartbeat':
-        lain.debug('Lain-plugin', `<Lagrange.OneBot> QQ ${this.id} 收到心跳：${JSON.stringify(data.status, null, 2)}`)
+        lain.debug('Lagrange.OneBot', `QQ <${this.id}> 收到心跳：${JSON.stringify(data.status, null, 2)}`)
         break
       default:
-        logger.error(`[LagrangeCore][未知事件] ${JSON.stringify(data)}`)
+        lain.error(this.id, `<LagrangeCore><未知事件> ${JSON.stringify(data)}`)
         break
     }
   }
@@ -286,7 +286,7 @@ class LagrangeCore {
       }
       case 'friend': {
         data.sub_type = 'add'
-        lain.info(this.id, `[${data.user_id}]申请加机器人<${this.id}>好友: ${data.comment}`)
+        lain.info(this.id, `<${data.user_id}>申请加机器人<${this.id}>好友: ${data.comment}`)
         break
       }
     }
@@ -370,7 +370,7 @@ class LagrangeCore {
               return target[prop]
             }
           } catch (error) {
-            logger.error(error)
+            lain.error(this.id, error)
           }
         }
       })
@@ -452,8 +452,8 @@ class LagrangeCore {
     //   })
     // }
 
-    const log = `LagrangeCore加载资源成功：加载了${Bot[this.id].fl.size}个好友，${Bot[this.id].gl.size}个群。`
-    lain.info(this.id, log)
+    const log = `<${this.id}>加载资源成功：加载了${Bot[this.id].fl.size}个好友，${Bot[this.id].gl.size}个群。`
+    lain.info('Lagrange.OneBot', log)
     return log
   }
 
@@ -584,7 +584,7 @@ class LagrangeCore {
       getChatHistory: async (msg_id, num, reply) => {
         let { messages } = await api.get_group_msg_history(this.id, group_id, num, msg_id)
         if (!messages) {
-          logger.warn('获取历史消息失败')
+          lain.warn(this.id, '获取历史消息失败')
           return []
         }
         let group = Bot[this.id].gl.get(group_id)
@@ -686,7 +686,7 @@ class LagrangeCore {
 
   /** 获取文件下载链接 */
   async getFileUrl () {
-    return logger.warn('暂未实现，请先使用 [e.file]')
+    return lain.warn(this.id, '暂未实现，请先使用 <e.file>')
   }
 
   /** 音乐分享 */
@@ -949,7 +949,7 @@ class LagrangeCore {
             let groupMemberList = Bot[this.id].gml.get(group_id)?.get(qq)
             let at = groupMemberList?.nickname || groupMemberList?.card || qq
             raw_message.push(`@${at}`)
-            log_message.push(at == qq ? `@${qq}` : `<@${at}:${qq}>`)
+            log_message.push(at == qq ? `<@${qq}>` : `<@${at}:${qq}>`)
           } catch (err) {
             raw_message.push(`@${i.data.qq}`)
             log_message.push(`@${i.data.qq}`)
@@ -1079,7 +1079,7 @@ class LagrangeCore {
         case 'touch':
           message.push({ type: 'touch', ...i.data })
           raw_message.push('[双击头像]')
-          log_message.push(`<<双击头像:${i.data.id}>`)
+          log_message.push(`<双击头像:${i.data.id}>`)
           ToString.push(`{touch:${i.data.id}}`)
           break
         /** 音乐 */
@@ -1114,7 +1114,7 @@ class LagrangeCore {
         case 'share':
           message.push({ type: 'share', ...i.data })
           raw_message.push('[链接分享]')
-          log_message.push(`<<链接分享:${i.data.url}>`)
+          log_message.push(`<链接分享:${i.data.url}>`)
           ToString.push(`{share:${i.data.url}}`)
           break
         /** 礼物 */
@@ -1184,7 +1184,7 @@ class LagrangeCore {
 
       return source
     } catch (error) {
-      logger.error(error)
+      lain.error(this.id, error)
       return false
     }
   }
@@ -1319,8 +1319,20 @@ class LagrangeCore {
             raw_message.push(JSON.stringify(err))
           }
           break
+        case 'reply':
+          message.push({ type: 'reply', data: { id: String(i.id) } })
+          raw_message.push(`<回复:${i?.text || i.id}>`)
+          break
         case 'poke':
-          message.push({ type: 'poke', data: { type: i.id, id: 0, strength: i?.strength || 0 } })
+          let type = String(i.id)
+          let id = '0'
+          let name = pokeMap[Number(i.id)]
+          if (i.name) name = i.name
+          if (i.id > 6) {
+            id = String(i.id)
+            type = '126'
+          }
+          message.push({ type: 'poke', data: { type, id, name } })
           raw_message.push(`<${pokeMap[Number(i.id)]}>` || `<戳一戳:${i.id}>`)
           break
         case 'touch':
@@ -1419,7 +1431,7 @@ const LagrangeCoreWS = new WebSocketServer({ noServer: true })
 LagrangeCoreWS.on('connection', async (bot, request) => new LagrangeCore(bot, request))
 
 /** 捕获错误 */
-LagrangeCoreWS.on('error', async error => logger.error(error))
+LagrangeCoreWS.on('error', logger.error)
 
 export default LagrangeCoreWS
 

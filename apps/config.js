@@ -42,7 +42,8 @@ export class adapter extends plugin {
   /** bot相关配置 */
   async bot () {
     let config = {
-      model: 0,
+      mode: 'websocket',
+      type: 0,
       appid: '',
       token: '',
       sandbox: false,
@@ -90,11 +91,11 @@ export class adapter extends plugin {
 
       /** 获取模式 */
       if (/#QQ频道设置/i.test(this.e.msg)) {
-        config.model = 1
+        config.type = 1
       } else if (/#QQ群设置/i.test(this.e.msg)) {
-        config.model = 2
+        config.type = 2
       } else {
-        config.model = 0
+        config.type = 0
       }
       cfg.addVal('QQ_Token', { [config.appid]: config }, 'object')
     }
@@ -103,7 +104,7 @@ export class adapter extends plugin {
       await this.reply('正在建立连接，请稍等~', true, { at: true })
       const SDK = new QQSDK(config)
       await SDK.start()
-      switch (config.model) {
+      switch (config.type) {
         case 0:
           /** 同时接群和频道 */
           try {
@@ -142,7 +143,7 @@ export class adapter extends plugin {
     // if (!Array.isArray(token)) token = [token] // 感觉没啥必要。
     if (!token.length) return await this.reply('当前还没有绑定过账号~', true, { at: true })
     token.forEach(i => {
-      switch (Number(i.model)) {
+      switch (Number(i.type)) {
         case 0:
           list.push(`全量-${i.sandbox ? 1 : 0}:${i.allMsg ? 1 : 0}:${i.appid}:${i.token}` + (i.secret ? `:${i.secret}` : ''))
           break
@@ -161,7 +162,8 @@ export class adapter extends plugin {
     //     token.forEach(i => {
     //       list.push(`
     // ${i.appid}:
-    //   model: ${i.model}
+    //   mode: 'websocket'
+    //   type: ${i.type}
     //   appid: ${i.appid}
     //   sandbox: ${i.sandbox}
     //   timeout: ${i.timeout}

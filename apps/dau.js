@@ -27,7 +27,7 @@ export class QQBotDAU extends plugin {
     /** 定时任务 */
     this.task = {
       /** 任务名 */
-      name: '[Lain-plugin] 刷新DAU缓存',
+      name: '<Lain-plugin> 刷新DAU缓存',
       /** 任务cron表达式 */
       cron: '1 0 0 * * ?',
       /** 任务方法名 */
@@ -248,7 +248,7 @@ export class QQBotDAU extends plugin {
           }
         }
 
-        logger.warn(`[lain-plugin][${key}] 刷新DAU缓存`)
+        logger.warn(`<lain-plugin><${key}> 刷新DAU缓存`)
       } catch (error) {
         logger.error('保存DAU数据出错,key: ' + key, error)
       }
