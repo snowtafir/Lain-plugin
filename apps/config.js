@@ -1,5 +1,4 @@
 import YAML from '../model/YamlHandler.js'
-import common from '../lib/common/common.js'
 import Cfg from '../lib/config/config.js'
 
 export class adapter extends plugin {
@@ -110,7 +109,7 @@ export class adapter extends plugin {
           try {
             const QQB = new QQBot(SDK.sdk, true)
             await this.reply(await QQB.StartBot())
-            await common.sleep(5000)
+            await lain.sleep(5000)
             return await this.reply(await new QQGuild(SDK.sdk, true).StartBot())
           } catch {
             return await this.reply('连接失败，请查看控制台日志')

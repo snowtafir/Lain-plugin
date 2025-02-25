@@ -782,7 +782,7 @@ let api = {
           throw data
         }
       } else {
-        await common.sleep(50)
+        await lain.sleep(50)
       }
     }
 

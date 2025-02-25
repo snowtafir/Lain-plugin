@@ -1,9 +1,9 @@
 # 示例配置
 QQ_Default:
   "default":
-    mode: "websocket"                     # 运行模式  websocket  weboook  middleware
-    port: 0                               # weboook监听端口  0-跟随Lain-plugin
-    path: "/weboook"                      # weboook监听路径
+    mode: "websocket"                     # 运行模式  websocket  webhook  middleware
+    port: 0                               # webhook监听端口  0-跟随Lain-plugin
+    path: "/webhook"                      # webhook监听路径
     applacation: "express"                # 中间件  express  koa
     type: 0                               # 0-全部启用  1-仅启用QQ频道  2-仅启用QQ群Bot  3-不启用
     appid: "default"                      # 机器人id

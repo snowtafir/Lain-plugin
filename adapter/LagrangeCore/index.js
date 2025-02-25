@@ -69,7 +69,7 @@ class LagrangeCore {
   async message_sent (data) {
     data.post_type = 'message'
     /** 屏蔽由喵崽处理过后发送后的消息 */
-    await common.sleep(1500)
+    await lain.sleep(1500)
     if (await redis.get(`LagrangeCore:${this.id}:${data.message_id}`)) return
     /** 转置消息后给喵崽 */
     await Bot.emit('message', await this.ICQQEvent(data))
@@ -409,7 +409,7 @@ class LagrangeCore {
         let groupList = await _this.loadGroup()
         // 加载群员
         await Promise.all(groupList.map(async (group, index) => {
-          await common.sleep(50 * Math.floor(index / 10))
+          await lain.sleep(50 * Math.floor(index / 10))
           await _this.loadGroupMemberList(group.group_id)
         }))
       })(),
@@ -465,7 +465,7 @@ class LagrangeCore {
       if (!(groupList && Array.isArray(groupList))) {
         lain.error(this.id, `LagrangeCore群列表获取失败，正在重试：${retries + 1}`)
       }
-      await common.sleep(50)
+      await lain.sleep(50)
     }
 
     if (groupList && typeof groupList === 'object') {
@@ -505,7 +505,7 @@ class LagrangeCore {
       if (!(friendList && Array.isArray(friendList))) {
         lain.error(this.id, `LagrangeCore好友列表获取失败，正在重试：${retries + 1}`)
       }
-      await common.sleep(50)
+      await lain.sleep(50)
     }
 
     /** 好友列表获取失败 */
@@ -1417,7 +1417,7 @@ class LagrangeCore {
         if (data.status === 'ok') return data.data
         else lain.error(this.id, data); throw data
       } else {
-        await common.sleep(50)
+        await lain.sleep(50)
       }
     }
     throw new Error({ status: 'error', message: '请求超时' })

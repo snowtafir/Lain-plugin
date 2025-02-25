@@ -1,6 +1,5 @@
 import Cfg from './lib/config/config.js'
 import Yaml from './model/YamlHandler.js'
-// import common from '../../lib/common/common.js'
 
 /**
  *  支持锅巴
@@ -29,7 +28,7 @@ import Yaml from './model/YamlHandler.js'
 //      }
 //      break
 //    } else {
-//      await common.sleep(1000)
+//      await lain.sleep(1000)
 //    }
 //  }
 

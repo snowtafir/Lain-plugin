@@ -35,7 +35,7 @@ export default class SendMsg {
 
     for (const i of msg) {
       /** 加个延迟防止过快 */
-      await common.sleep(200)
+      await lain.sleep(200)
       switch (i.type) {
         case 'at':
           content.push({
@@ -93,7 +93,7 @@ export default class SendMsg {
       try { await common.MsgTotal(this.id, 'ComWeChat') } catch { }
     }
 
-    await common.sleep(200)
+    await lain.sleep(200)
 
     /** 发送图片 */
     if (ArrImg.length > 0) {
@@ -141,7 +141,7 @@ export default class SendMsg {
       file = Buffer.from(await (await fetch(file)).arrayBuffer()).toString('base64')
       name = `${Date.now()}.${(await fileTypeFromBuffer(Buffer.from(file, 'base64'))).ext}`
     } else {
-      common.error(this.id, i)
+      lain.error(this.id, i)
       return { type: 'text', data: { text: JSON.stringify(i) } }
     }
 

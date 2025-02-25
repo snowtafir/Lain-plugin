@@ -44,7 +44,7 @@ export default class SendMsg {
 
     for (const i of msg) {
       /** 加个延迟防止过快 */
-      await common.sleep(200)
+      await lain.sleep(200)
       switch (i.type) {
         case "at":
           if (i.text === Bot[this.id]?.nickname) content.push(`<@${Bot[this.id]?.guild_id}>`)
@@ -78,7 +78,7 @@ export default class SendMsg {
           }
           break
         case "button":
-          common.warn(this.id, "暂未支持按钮")
+          lain.warn(this.id, "暂未支持按钮")
           break
         default:
           content.push(JSON.stringify(i))
@@ -94,7 +94,7 @@ export default class SendMsg {
     if (ArrImg.length > 0) {
       for (const i of ArrImg) {
         /** 延迟下... */
-        await common.sleep(200)
+        await lain.sleep(200)
         /** 构建请求参数、打印日志 */
         await this.SendMsg(await this.Construct_data(i, false))
       }
@@ -119,7 +119,7 @@ export default class SendMsg {
 
       let promises = urls.map(i => {
         return new Promise((resolve, reject) => {
-          common.info("QQ频道", `url替换：${i}`)
+          lain.info("QQ频道", `url替换：${i}`)
           qrcode.toBuffer(i, {
             errorCorrectionLevel: "H",
             type: "png",
@@ -275,14 +275,14 @@ export default class SendMsg {
       logs += content
       try { await common.MsgTotal(this.id, 'QQGuild') } catch { }
     }
-    common.info(this.id, `发送消息：[${this.group_name}] ${logs}`)
+    lain.info(this.id, `发送消息：[${this.group_name}] ${logs}`)
     return msg
   }
 
   /** 向API发送消息 */
   async SendMsg(msg, qr = 0) {
     /** 随机延迟 */
-    await common.sleep(lodash.random(100, 300))
+    await lain.sleep(lodash.random(100, 300))
 
     /** 发送消息并储存res */
     let res

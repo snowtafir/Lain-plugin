@@ -321,11 +321,11 @@ export default class StartWeChat4u {
     const message = await this.message(msg)
     message.forEach(async i => {
       /** 延迟下防止过快发送失败 */
-      await common.sleep(300)
+      await lain.sleep(300)
       try {
         lain.info(this.id, `发送消息：${i}`)
         const res = await this.bot.sendMsg(i, peer_id)
-        common.mark(this.id, '发送消息返回：', JSON.stringify(res))
+        lain.mark(this.id, '发送消息返回：', JSON.stringify(res))
         return {
           seq: res.MsgID,
           rand: 1,
@@ -336,7 +336,7 @@ export default class StartWeChat4u {
       } catch (err) {
         lain.info(this.id, '发送消息：', '发送消息失败：', err?.tips || err)
         const res = await this.bot.sendMsg(`发送消息失败：${err?.tips || err}`, peer_id)
-        common.mark(this.id, '发送消息返回：', JSON.stringify(res))
+        lain.mark(this.id, '发送消息返回：', JSON.stringify(res))
         return {
           seq: res.MsgID,
           rand: 1,

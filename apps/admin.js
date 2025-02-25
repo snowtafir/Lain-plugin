@@ -119,7 +119,7 @@ export class admin extends plugin {
     const config = new YamlHandler(lain._pathCfg + `/${app}.yaml`)
     config.set(name, msg)
     /** 热更需要延迟 */
-    await common.sleep(1000)
+    await lain.sleep(1000)
     return await this.Rending()
   }
 

@@ -399,8 +399,7 @@ export default class adapterQQBot {
           return
         }
         resolve()
-      }
-      )
+      })
     })
   }
 
@@ -732,7 +731,14 @@ export default class adapterQQBot {
     const silk = path.join(_path, `${Date.now()}.silk`)
 
     /** 保存为MP3文件 */
-    fs.writeFileSync(mp3, await Bot.Buffer(file))
+    const buf = await Bot.Buffer(file)
+    fs.writeFileSync(mp3, buf)
+
+    const head = buf.slice(0, 7).toString();
+    if (head.includes("SILK")) {
+      return { type, file: `file://${mp3}`}
+    }
+
     /** mp3 转 pcm */
     await this.runFfmpeg(mp3, pcm)
     lain.mark('Lain-plugin', 'mp3 => pcm 完成!')
@@ -758,8 +764,7 @@ export default class adapterQQBot {
         return { type: 'text', text: `转码失败${err.message}` }
       })
 
-    const url = `file://${silk}`
-    return { type, file: url }
+    return { type, file: `file://${silk}` }
   }
 
   /** 转换为全局md */
@@ -803,10 +808,10 @@ export default class adapterQQBot {
             const button = await p[v.fnc](e)
             /** 无返回不添加 */
             if (button) return [...(Array.isArray(button) ? button : [button])]
-            return false
           }
         }
       }
+      return false
     } catch (error) {
       lain.error('Lain-plugin', error)
       return false

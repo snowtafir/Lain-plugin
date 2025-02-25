@@ -70,7 +70,7 @@ export default class bot {
       if (!(groupList && Array.isArray(groupList))) {
         lain.error(this.id, `Shamrock群列表获取失败，正在重试：${retries + 1}`)
       }
-      await common.sleep(50)
+      await lain.sleep(50)
     }
 
     /** 群列表获取失败 */
@@ -81,7 +81,7 @@ export default class bot {
     if (groupList && typeof groupList === 'object') {
       for (const i of groupList) {
         /** 延迟一下 */
-        // await common.sleep(50)
+        // await lain.sleep(50)
         /** 给锅巴用 */
         Bot.gl.set(i.group_id, i)
         /** 自身参数 */
@@ -99,7 +99,7 @@ export default class bot {
       let memberList = await api.get_group_member_list(id, groupId)
       for (const user of memberList) {
         /** 延迟一下 */
-        // await common.sleep(50)
+        // await lain.sleep(50)
         user.card = user.nickname
         gml[user.user_id] = user
       }
@@ -116,7 +116,7 @@ export default class bot {
       if (!(friendList && Array.isArray(friendList))) {
         lain.error(this.id, `Shamrock好友列表获取失败，正在重试：${retries + 1}`)
       }
-      await common.sleep(50)
+      await lain.sleep(50)
     }
 
     /** 好友列表获取失败 */
@@ -127,7 +127,7 @@ export default class bot {
     if (friendList && typeof friendList === 'object') {
       for (const i of friendList) {
         /** 延迟一下 */
-        // await common.sleep(50)
+        // await lain.sleep(50)
         /** 给锅巴用 */
         Bot.fl.set(i.user_id, i)
         /** 自身参数 */
@@ -154,7 +154,7 @@ export default class bot {
           let groupList = await _this.loadGroup()
           // 加载群员
           await Promise.all(groupList.map(async (group, index) => {
-            await common.sleep(50 * Math.floor(index / 10))
+            await lain.sleep(50 * Math.floor(index / 10))
             await _this.loadGroupMemberList(group.group_id)
           }))
         })(),

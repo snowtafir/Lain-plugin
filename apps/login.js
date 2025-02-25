@@ -1,5 +1,4 @@
 import fs from 'fs'
-import common from '../lib/common/common.js'
 import StartWeChat4u from '../adapter/WeChat-Web/index.js'
 
 export class WebWcChat extends plugin {
@@ -45,7 +44,7 @@ export class WebWcChat extends plugin {
         await this.e.reply(msg, false, { recall: 60 })
         break
       }
-      await common.sleep(1000)
+      await lain.sleep(1000)
     }
 
     for (let i = 0; i < 60; i++) {
@@ -53,7 +52,7 @@ export class WebWcChat extends plugin {
       if (login && bot && bot.login) {
         return this.e.reply(`Bot：${id} 登录成功~`, true, { at: true })
       }
-      await common.sleep(1000)
+      await lain.sleep(1000)
     }
   }
 

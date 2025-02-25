@@ -15,7 +15,7 @@ export default class message {
   /** 消息转换为Yunzai格式 */
   async msg(type = "") {
     /** 调试日志 */
-    common.debug(this.id, JSON.stringify(this.data))
+    lain.debug(this.id, JSON.stringify(this.data))
     /** 初始化e */
     let e = {}
     /** 获取消息体、appID */
@@ -239,9 +239,9 @@ export default class message {
       msg += `\n用户是否为机器人：${author.bot}`
       msg += `\n消息内容：${content || "未知内容"}`
       /** 打印日志 */
-      common.info(this.id, msg)
+      lain.info(this.id, msg)
     } catch (error) {
-      common.error(this.id, error)
+      lain.error(this.id, error)
     }
     /** 撤回消息 */
     return (await Bot[this.id].client.messageApi.deleteMessage(channel_ID, msg_id, false)).data
@@ -369,7 +369,7 @@ export default class message {
   async log(e) {
     let group_name = e.guild_name + "-私信"
     e.message_type === "group" ? group_name = e.group_name : ""
-    return common.info(this.id, `频道消息：[${group_name}，${e.sender?.card || e.sender?.nickname}(${e.user_id})] ${e.raw_message}`)
+    return lain.info(this.id, `频道消息：<${group_name}，${e.sender?.card || e.sender?.nickname}(${e.user_id})> ${e.raw_message}`)
   }
 
   /** 处理消息、转换格式 */
