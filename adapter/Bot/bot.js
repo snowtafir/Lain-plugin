@@ -121,7 +121,8 @@ Bot.uploadQQ = async function (file, uin = Bot.uin) {
   try {
     md5 = (await Bot[uin].pickFriend(uin)._preprocess(segment.image(buffer))).imgs[0].proto[1].toUpperCase()
   } catch (e) {
-    throw new Error('上传图片失败', e)
+    e.message = "上传图片失败\n" + e.message
+    throw e
   }
   const { width, height } = sizeOf(buffer)
   const url = `https://gchat.qpic.cn/gchatpic_new/0/0-0-${md5}/0`
