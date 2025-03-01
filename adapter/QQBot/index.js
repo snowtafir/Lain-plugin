@@ -699,11 +699,10 @@ export default class adapterQQBot {
 
   /** 处理语音 */
   async getAudio (file) {
-    /** icqq高清语音(可能寄了)
+    /** icqq高清语音(可能寄了) */
     if (typeof file === 'string' && file.startsWith('protobuf://')) {
-      return { type: 'audio', file: await lain.file.getPttUrl(lain.file.proto(file)[3]) }
+      file = await lain.file.getPttUrl(lain.file.proto(file)[3])
     }
-    */
 
     try {
       /** 自定义语音接口 */
