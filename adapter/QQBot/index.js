@@ -392,7 +392,8 @@ export default class adapterQQBot {
         throw new Error('未检测到 ffmpeg ，无法进行转码，请正确配置环境变量或手动前往 bot.yaml 进行配置')
       }
 
-      exec(`${cm} -i "${input}" -f s16le -ar 48000 -ac 1 "${output}"`, async (error, stdout, stderr) => {
+      // ${cm} -i "${input}" -f s16le -ar 48000 -ac 1 "${output}"
+      exec(`${cm} -y -i "${input}" -f s16le -ar 24000 -ac 1 -fs 31457280 "${output}"`, async (error, stdout, stderr) => {
         if (error) {
           lain.error('Lain-plugin', '执行错误: \n', error)
           reject(error)
@@ -698,10 +699,11 @@ export default class adapterQQBot {
 
   /** 处理语音 */
   async getAudio (file) {
-    /** icqq高清语音 */
+    /** icqq高清语音(可能寄了)
     if (typeof file === 'string' && file.startsWith('protobuf://')) {
       return { type: 'audio', file: await lain.file.getPttUrl(lain.file.proto(file)[3]) }
     }
+    */
 
     try {
       /** 自定义语音接口 */
@@ -712,12 +714,13 @@ export default class adapterQQBot {
           return { type: 'audio', file: url }
         }
       }
-      /** ICQQ */
+      /** ICQQ(可能寄了)
       if (Cfg.toICQQ && lain?.file?.uploadPtt) {
         const url = await lain.file.uploadPtt(file)
         lain.mark('Lain-plugin', `使用ICQQ发送语音：${url}`)
         return { type: 'audio', file: url }
       }
+      */
     } catch (error) {
       lain.error(this.id, '云转码失败')
       lain.error(this.id, error)
@@ -734,18 +737,13 @@ export default class adapterQQBot {
     const buf = await Bot.Buffer(file)
     fs.writeFileSync(mp3, buf)
 
-    const head = buf.slice(0, 7).toString();
-    if (head.includes("SILK")) {
-      return { type, file: `file://${mp3}`}
-    }
-
     /** mp3 转 pcm */
     await this.runFfmpeg(mp3, pcm)
     lain.mark('Lain-plugin', 'mp3 => pcm 完成!')
     lain.mark('Lain-plugin', 'pcm => silk 进行中!')
 
     /** pcm 转 silk */
-    await encodeSilk(fs.readFileSync(pcm), 48000)
+    await encodeSilk(fs.readFileSync(pcm), 24000)
       .then((silkData) => {
         /** 转silk完成，保存 */
         fs.writeFileSync(silk, silkData?.data || silkData)

@@ -15,7 +15,7 @@ WebSocket.start()
 if (Cfg.Stdin.state) stdin()
 
 /** QQBot适配器 */
-if (Object.values(Cfg.getToken('QQ_Token')).length) {
+if (Cfg.getToken('QQ_Token') && Object.values(Cfg.getToken('QQ_Token')).length) {
   Object.values(Cfg.getToken('QQ_Token')).forEach(async bot => {
     if (bot.type == 0 || bot.type == 2) {
       try {
