@@ -127,7 +127,7 @@ Bot.imageToUrl = async (file) => {
   if (res.ok) {
     const { data } = await res.json()
     const { width, height, url } = data
-    return { width, height, url: 'https://i0.wp.com/' + url.replace(/^https:\/\//, '') }
+    return { width, height, url: 'https://i.ibb.co/' + url.replace(/^https:\/\//, '') }
   } else {
     throw new Error(`HTTP error: ${res.status}`)
   }
