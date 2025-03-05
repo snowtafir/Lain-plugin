@@ -25,9 +25,15 @@ export class LainTask extends plugin {
   TaskFile () {
     try {
       logger.mark('[定时任务] 开始清理缓存文件')
-      const _path = './temp/FileToUrl'
-      const files = fs.readdirSync(_path)
-      files.forEach(file => fs.promises.unlink(_path + `/${file}`))
+      const _path = {
+        './temp/FileToUrl': () => true,
+        './resources/temp': (i) => i.endsWith('.silk'),
+        './data/stdin': () => true
+      }
+      for (const i of Object.keys(_path)) {
+        const files = fs.readdirSync(i)
+        files.forEach(file => _path[i](file) && fs.promises.unlink(_path + `/${file}`))
+      }
       logger.mark('[定时任务] 清理缓存文件完成~')
     } catch (error) {
       logger.error('[定时任务] 清理缓存文件发送错误：', error.message)
