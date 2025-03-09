@@ -15,7 +15,7 @@ export class LainTask extends plugin {
       this.task.push({
         /** 任务cron表达式 */
         cron: i,
-        name: '清除临时文件',
+        name: '<Lain-plugin> 清除临时文件',
         /** 任务方法名 */
         fnc: () => this.TaskFile()
       })
@@ -24,7 +24,7 @@ export class LainTask extends plugin {
 
   TaskFile () {
     try {
-      logger.mark('[定时任务] 开始清理缓存文件')
+      logger.mark('<Lain-plugin> <定时任务> 开始清理缓存文件')
       const _path = {
         './temp/FileToUrl': () => true,
         './resources/temp': (i) => i.endsWith('.silk'),
@@ -32,11 +32,11 @@ export class LainTask extends plugin {
       }
       for (const i of Object.keys(_path)) {
         const files = fs.readdirSync(i)
-        files.forEach(file => _path[i](file) && fs.promises.unlink(_path + `/${file}`))
+        files.forEach(file => _path[i](file) && fs.promises.unlink(i + `/${file}`))
       }
-      logger.mark('[定时任务] 清理缓存文件完成~')
+      logger.mark('<Lain-plugin> <定时任务> 清理缓存文件完成~')
     } catch (error) {
-      logger.error('[定时任务] 清理缓存文件发送错误：', error.message)
+      logger.error('<Lain-plugin> <定时任务> 清理缓存文件发送错误：', error.message)
     }
   }
 }
