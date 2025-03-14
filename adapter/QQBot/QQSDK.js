@@ -64,7 +64,7 @@ export default class QQSDK {
     if (this.config.mode === 'websocket') {
       setTimeout(() => {
         this.sdk.timer = setInterval(async () => {
-          if (this.sdk.receiver?.handler?.ws?.readyState !== 1) {
+          if (![0, 1].includes(this.sdk.receiver?.handler?.ws?.readyState)) {
             lain.warn(this.id, "检测到账号离线，已自动重连")
             await this.sdk.stop()
             await lain.sleep(10)

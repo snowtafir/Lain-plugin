@@ -37,7 +37,7 @@ class WebSocket {
     app.use((req, res, next) => {
       const { method, url } = req
       const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress
-      logger.info(`[请求日志] ${method} ${url} 来自IP: ${ip}`)
+      logger.info(`[请求日志] ${method} ${url} 来自IP: ${ip} 来自请求: ${req.headers.host}`)
       next()
     })
 

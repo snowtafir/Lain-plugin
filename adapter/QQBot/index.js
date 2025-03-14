@@ -4,7 +4,7 @@ import sizeOf from 'image-size'
 import lodash from 'lodash'
 import path from 'path'
 import moment from 'moment'
-import { encode as encodeSilk } from 'silk-wasm'
+import { encode as encodeSilk, isSilk } from 'silk-wasm'
 import Yaml from 'yaml'
 import { fileTypeFromBuffer } from 'file-type'
 import MiaoCfg from '../../../../lib/config/config.js'
@@ -393,7 +393,8 @@ export default class adapterQQBot {
       }
 
       // ${cm} -i "${input}" -f s16le -ar 48000 -ac 1 "${output}"
-      exec(`${cm} -y -i "${input}" -f s16le -ar 24000 -ac 1 -fs 31457280 "${output}"`, async (error, stdout, stderr) => {
+      // `${cm} -y -i "${input}" -f s16le -ar 24000 -ac 1 -fs 31457280 "${output}"`
+      exec(`${cm} -i "${input}" -f s16le -ar 48000 -ac 1 "${output}"`, async (error, stdout, stderr) => {
         if (error) {
           lain.error('Lain-plugin', '执行错误: \n', error)
           reject(error)
@@ -734,7 +735,10 @@ export default class adapterQQBot {
 
     /** 保存为MP3文件 */
     const buf = await Bot.Buffer(file)
+
     fs.writeFileSync(mp3, buf)
+
+    if (isSilk(buf)) return { type: 'audio', file: `file://${mp3}` }
 
     /** mp3 转 pcm */
     await this.runFfmpeg(mp3, pcm)
@@ -742,7 +746,7 @@ export default class adapterQQBot {
     lain.mark('Lain-plugin', 'pcm => silk 进行中!')
 
     /** pcm 转 silk */
-    await encodeSilk(fs.readFileSync(pcm), 24000)
+    await encodeSilk(fs.readFileSync(pcm), 48000)
       .then((silkData) => {
         /** 转silk完成，保存 */
         fs.writeFileSync(silk, silkData?.data || silkData)
@@ -826,7 +830,7 @@ export default class adapterQQBot {
     /** 发送返回 */
     let ret = { res: [], err: [] }
 
-    e.message.forEach(i => { if (i.type === 'text') e.msg = (e.msg || '') + (i.text || '').trim() })
+    e.message.forEach(i => { if (i.type === 'text') e.msg = (e.msg || '') + (i.text || '') })
     const { Pieces, reply } = await this.getQQBot(data, e)
     for (let msg of Pieces) {
       msg = await msg
@@ -858,7 +862,7 @@ export default class adapterQQBot {
     /** 发送返回 */
     let ret = { res: [], err: [] }
 
-    e.message.forEach(i => { if (i.type === 'text') e.msg = (e.msg || '') + (i.text || '').trim() })
+    e.message.forEach(i => { if (i.type === 'text') e.msg = (e.msg || '') + (i.text || '') })
     const { Pieces, reply } = await this.getQQBot(data, e)
     for (let msg of Pieces) {
       msg = await msg
@@ -967,9 +971,7 @@ export default class adapterQQBot {
 
     urls.forEach(link => {
       message.push(...Bot.Button([{ link }]), 1)
-      msg = msg.replace(link, '[链接(请点击按钮查看)]')
-      msg = msg.replace(link.replace(/^http:\/\//g, ''), '[链接(请点击按钮查看)]')
-      msg = msg.replace(link.replace(/^https:\/\//g, ''), '[链接(请点击按钮查看)]')
+      msg = msg.replace(new RegExp(url, 'g'), '[链接(请点击按钮查看)]')
     })
     message.unshift({ type: 'text', text: msg })
     return message

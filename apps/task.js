@@ -6,7 +6,12 @@ export class LainTask extends plugin {
     super({
       name: 'Lain-定时任务',
       priority: 0,
-      rule: []
+      rule: [
+        {
+          reg: /^#?清理缓存$/,
+          fnc: 'TaskFile'
+        }
+      ]
     })
 
     /** 定时任务 */
@@ -22,7 +27,7 @@ export class LainTask extends plugin {
     }
   }
 
-  TaskFile () {
+  TaskFile (e) {
     try {
       logger.mark('<Lain-plugin> <定时任务> 开始清理缓存文件')
       const _path = {
@@ -35,6 +40,7 @@ export class LainTask extends plugin {
         files.forEach(file => _path[i](file) && fs.promises.unlink(i + `/${file}`))
       }
       logger.mark('<Lain-plugin> <定时任务> 清理缓存文件完成~')
+      if (e?.reply) e.reply("清理缓存文件完成~")
     } catch (error) {
       logger.error('<Lain-plugin> <定时任务> 清理缓存文件发送错误：', error.message)
     }
