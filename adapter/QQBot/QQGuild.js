@@ -97,22 +97,25 @@ export default class adapterQQGuild {
 
   /** 加载缓存中的群、好友列表 */
   async gmlList (type = 'gl') {
-    try {
-      const List = await redis.keys(`lain:guild:${type}:${this.id}:*`)
-      List.forEach(async i => {
-        const info = JSON.parse(await redis.get(i))
-        info.uin = this.id
-        lain.debug(this.id, '<读取缓存群，好友列表>', type, info)
-        if (type === 'gl') {
-          Bot[this.id].gl.set(info.group_id, info)
-          Bot.gl.set(info.group_id, info)
-        } else {
-          Bot[this.id].fl.set(info.user_id, info)
-          Bot.fl.set(info.user_id, info)
-        }
-      })
-    } catch (err) {
-      lain.warn(this.id, err)
+    const List = await redis.keys(`lain:guild:${type}:${this.id}:*`)
+    for (let i of List) {
+      let info = await redis.get(i)
+      try {
+        info = JSON.parse(info)
+      } catch (err) {
+        lain.warn(this.id, err.message)
+        lain.mark(this.id, info)
+      }
+      if (!info?.user_id) continue
+      info.uin = this.id
+      lain.debug(this.id, '<读取缓存群，好友列表>', type, info)
+      if (type === 'gl') {
+        Bot[this.id].gl.set(info.group_id, info)
+        Bot.gl.set(info.group_id, info)
+      } else {
+        Bot[this.id].fl.set(info.user_id, info)
+        Bot.fl.set(info.user_id, info)
+      }
     }
   }
 
