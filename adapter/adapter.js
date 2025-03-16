@@ -21,21 +21,19 @@ if (Cfg.getToken('QQ_Token') && Object.values(Cfg.getToken('QQ_Token')).length) 
       try {
         const SDK = new QQSDK(bot)
         await SDK.start()
-        await new QQBot(SDK.sdk)
-        await new QQGuild(SDK.sdk)
+        lain.info(SDK.id, await new QQBot(SDK.sdk))
+        lain.info(SDK.id, await new QQGuild(SDK.sdk))
       } catch (err) {
-        logger.warn(err)
-        lain.error('Lain-plugin', `QQBot <${bot.appid}> 启动失败`, err?.data || err?.message || err)
+        lain.error('Lain-plugin', `QQBot <${bot.appid}> 启动失败`, err)
       }
     }
     if (bot.type == 1) {
       try {
         const SDK = new QQSDK(bot)
         await SDK.start()
-        await new QQGuild(SDK.sdk)
+        lain.info(SDK.id, await new QQGuild(SDK.sdk))
       } catch (err) {
-        logger.warn(err)
-        lain.error('Lain-plugin', `QQGuild <${bot.appid}> 启动失败`, err?.data || err?.message || err)
+        lain.error('Lain-plugin', `QQGuild <${bot.appid}> 启动失败`, err)
       }
     }
   })
@@ -50,8 +48,7 @@ if (JSONFile.length > 0) {
     try {
       await new WeChat4u(id, i)
     } catch (error) {
-      lain.error('Lain-plugin', `微信 ${id} 登录失败，已跳过。`)
-      lain.error('Lain-plugin', error)
+      lain.error('Lain-plugin', `微信 ${id} 登录失败`, error)
     }
   })
 }

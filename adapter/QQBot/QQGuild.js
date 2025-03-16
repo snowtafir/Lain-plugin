@@ -6,7 +6,7 @@ import { faceMap } from '../../model/shamrock/face.js'
 
 export default class adapterQQGuild {
   /** 传入基本配置 */
-  constructor (sdk) {
+  constructor (sdk, start = false) {
     /** sdk */
     this.sdk = sdk
     /** 基本配置 */
@@ -14,10 +14,13 @@ export default class adapterQQGuild {
     /** 开发者id */
     this.id = `qg_${this.config.appid}`
     /** 监听事件 */
-    this.StartBot()
+    if (!start) this.StartBot()
   }
 
   async StartBot () {
+    if (!Bot.adapter.includes(String(this.id))) Bot.adapter.push(String(this.id))
+    else return `QQGuild：<${username}(${this.id})> 重复连接!`
+
     this.sdk.on('message.guild', async (data) => {
       Bot.emit('message', await this.GroupMessage(data))
     })
@@ -88,11 +91,10 @@ export default class adapterQQGuild {
     this.gmlList('fl')
 
     if (!Bot[this.id].config.allMsg) Bot[this.id].version.id = '私域'
-    if (!Bot.adapter.includes(String(this.id))) Bot.adapter.push(String(this.id))
 
     /** 重启 */
     await common.init('Lain:restart:QQGuild')
-    return lain.info(this.id, `QQGuild：<${username}(${this.id})> 连接成功!`)
+    return `QQGuild：<${username}(${this.id})> 连接成功!`
   }
 
   /** 加载缓存中的群、好友列表 */

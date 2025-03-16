@@ -16,7 +16,7 @@ lain.DAU = {}
 
 export default class adapterQQBot {
   /** 传入基本配置 */
-  constructor (sdk, start) {
+  constructor (sdk, start = false) {
     /** 开发者id */
     this.id = String(sdk.config.appid)
     /** sdk */
@@ -28,6 +28,10 @@ export default class adapterQQBot {
   }
 
   async StartBot () {
+    /** 保存id到adapter */
+    if (!Bot.adapter.includes(String(this.id))) Bot.adapter.push(String(this.id))
+    else return `QQBot：<${username}(${this.id})> 重复连接!`
+
     /** 群消息 */
     this.sdk.on('message.group', async (data) => {
       Bot.emit('message', await this.message(data, true))
@@ -103,13 +107,11 @@ export default class adapterQQBot {
     /** 加载缓存中的好友列表 */
     this.gmlList('fl')
 
-    /** 保存id到adapter */
-    if (!Bot.adapter.includes(String(this.id))) Bot.adapter.push(String(this.id))
     /** 初始化dau统计 */
     if (Cfg.Other.QQBotdau) lain.DAU[this.id] = await this.getDAU()
     /** 重启 */
     await common.init('Lain:restart:QQBot')
-    return lain.info(this.id, `QQBot：<${username}(${this.id})> 连接成功!`)
+    return `QQBot：<${username}(${this.id})> 连接成功!`
   }
 
   /** 加载缓存中的群、好友列表 */

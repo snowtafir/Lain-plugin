@@ -15,9 +15,25 @@
 
 不想登录ICQQ并继续使用本插件：
 
-- 更新云崽到最新
-- 打开云崽的`config/config/bot.yaml`文件将 `login_type: 1` 修改为 `login_type: 2`
-- 如果不存在这个，自行加一行  `login_type: 2` 即可。
+<details><summary>喵崽请看</summary><blockquote>
+
+  - 更新喵崽到最新
+
+  - 打开喵崽的`config/config/bot.yaml`文件将 `skip_login: false` 修改为 `skip_login: true`
+
+  - 如果不存在这个，自行加一行  `skip_login: true` 即可。
+
+</blockquote></details>
+
+<details><summary>本仓库云崽请看</summary><blockquote>
+
+  - 更新云崽到最新
+
+  - 打开云崽的`config/config/bot.yaml`文件将 `login_type: 1` 修改为 `login_type: 2`
+
+  - 如果不存在这个，自行加一行  `login_type: 2` 即可。
+
+</blockquote></details>
 
 ## 1.安装插件
 

@@ -36,6 +36,7 @@ export class LainTask extends plugin {
         './data/stdin': () => true
       }
       for (const i of Object.keys(_path)) {
+        if (!fs.existsSync(i)) continue
         const files = fs.readdirSync(i)
         files.forEach(file => _path[i](file) && fs.promises.unlink(i + `/${file}`))
       }

@@ -44,11 +44,11 @@ export class adapter extends plugin {
       mode: 'websocket',
       type: 0,
       appid: '',
-      token: '',
       sandbox: false,
       timeout: 10000,
       allMsg: false,
       removeAt: false,
+      token: '',
       secret: '',
       markdown: {
         id: '',
@@ -111,7 +111,8 @@ export class adapter extends plugin {
             await this.reply(await QQB.StartBot())
             await lain.sleep(5000)
             return await this.reply(await new QQGuild(SDK.sdk, true).StartBot())
-          } catch {
+          } catch (err) {
+            lain.error(SDK.id, err)
             return await this.reply('连接失败，请查看控制台日志')
           }
         case 1:
@@ -121,14 +122,16 @@ export class adapter extends plugin {
           try {
             const bot = new QQBot(SDK.sdk, true)
             return await this.reply(await bot.StartBot())
-          } catch {
+          } catch (err) {
+            lain.error(SDK.id, err)
             return await this.reply('连接失败，请查看控制台日志')
           }
         default:
       }
     } catch (error) {
+      lain.error(config.appid, error)
       /** 异常处理 */
-      return this.reply(error?.message || error)
+      return this.reply("建立失败：\n" + error?.message || error)
     }
     return await this.reply('格式错误', true, { at: true })
   }
