@@ -49,7 +49,22 @@ export default class QQSDK {
     /** 创建机器人 */
     this.sdk = new QQBot(this.config)
     /** 连接机器人 */
-    await this.sdk.start()
+    if (!Bot.adapter.includes(String(this.id)) && !Bot.adapter.includes(`qg_${this.id}`)) {
+      await this.sdk.start()
+      /** 实现自动重连(10秒后运行每1分钟定时检测) */
+      if (this.config.mode === 'websocket') {
+        setTimeout(() => {
+          this.sdk.timer = setInterval(async () => {
+            if (![0, 1].includes(this.sdk.receiver?.handler?.ws?.readyState)) {
+              lain.warn(this.id, "检测到账号离线，已自动重连")
+              await this.sdk.stop()
+              await lain.sleep(10)
+              await this.sdk.start()
+            }
+          }, 1 * 60 * 1000)
+        }, 10 * 1000)
+      }
+    }
     /** 修改sdk日志为喵崽日志 */
     this.sdk.logger = {
       info: (...log) => this.logger(...log),
@@ -59,19 +74,6 @@ export default class QQSDK {
       warn: (...log) => lain.warn(this.id, ...log),
       error: (...log) => lain.error(this.id, ...log),
       fatal: (...log) => lain.fatal(this.id, ...log)
-    }
-    /** 实现自动重连(10秒后运行每1分钟定时检测) */
-    if (this.config.mode === 'websocket') {
-      setTimeout(() => {
-        this.sdk.timer = setInterval(async () => {
-          if (![0, 1].includes(this.sdk.receiver?.handler?.ws?.readyState)) {
-            lain.warn(this.id, "检测到账号离线，已自动重连")
-            await this.sdk.stop()
-            await lain.sleep(10)
-            await this.sdk.start()
-          }
-        }, 1 * 60 * 1000)
-      }, 10 * 1000)
     }
   }
 

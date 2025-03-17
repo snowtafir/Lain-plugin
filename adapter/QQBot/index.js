@@ -24,13 +24,13 @@ export default class adapterQQBot {
     /** 基本配置 */
     this.config = sdk.config
     /** 监听事件 */
-    if (!start) this.StartBot()
+    if (!start) return this.StartBot()
   }
 
   async StartBot () {
     /** 保存id到adapter */
     if (!Bot.adapter.includes(String(this.id))) Bot.adapter.push(String(this.id))
-    else return `QQBot：<${username}(${this.id})> 重复连接!`
+    else return `QQBot：<${Bot[this.id].nickname}(${this.id})> 连接重复!`
 
     /** 群消息 */
     this.sdk.on('message.group', async (data) => {

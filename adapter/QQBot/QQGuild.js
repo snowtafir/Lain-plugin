@@ -14,12 +14,12 @@ export default class adapterQQGuild {
     /** 开发者id */
     this.id = `qg_${this.config.appid}`
     /** 监听事件 */
-    if (!start) this.StartBot()
+    if (!start) return this.StartBot()
   }
 
   async StartBot () {
     if (!Bot.adapter.includes(String(this.id))) Bot.adapter.push(String(this.id))
-    else return `QQGuild：<${username}(${this.id})> 重复连接!`
+    else return `QQGuild：<${Bot[this.id].nickname}(${this.id})> 连接重复!`
 
     this.sdk.on('message.guild', async (data) => {
       Bot.emit('message', await this.GroupMessage(data))

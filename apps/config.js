@@ -109,7 +109,7 @@ export class adapter extends plugin {
           try {
             const QQB = new QQBot(SDK.sdk, true)
             await this.reply(await QQB.StartBot())
-            await lain.sleep(5000)
+            await lain.sleep(1000)
             return await this.reply(await new QQGuild(SDK.sdk, true).StartBot())
           } catch (err) {
             lain.error(SDK.id, err)

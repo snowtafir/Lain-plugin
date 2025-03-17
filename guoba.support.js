@@ -542,8 +542,6 @@ function parseQQToken(cfg, token) {
       ret[config.appid] = config
     }
 
-    if (Bot.adapter.includes(config.appid)) return
-
     try {
       const QQSDK = (await import('./adapter/QQBot/QQSDK.js')).default
     const QQBot = (await import('./adapter/QQBot/index.js')).default
@@ -557,7 +555,7 @@ function parseQQToken(cfg, token) {
           try {
             const QQB = new QQBot(SDK.sdk, true)
             lain.info(config.appid, await QQB.StartBot())
-            await lain.sleep(5000)
+            await lain.sleep(1000)
             lain.info(config.appid, await new QQGuild(SDK.sdk, true).StartBot())
           } catch (err) {
             lain.error(config.appid, err)
