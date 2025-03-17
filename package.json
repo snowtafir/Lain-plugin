@@ -34,7 +34,7 @@
     "wechat4u": "^0.7.14",
     "ws": "^8.18.0",
     "icqq": "0.6.10",
-    "ulid": "2.3.0"
+    "ulid": "2.4.0"
   },
   "devDependencies": {
     "cz-conventional-changelog": "^3.3.0",
