@@ -131,7 +131,7 @@ export function supportGuoba () {
           }
         },
         {
-          label: 'QQBot设置',
+          label: 'Token设置',
           // 第二个分组标记开始
           component: 'SOFT_GROUP_BEGIN'
         },
@@ -455,7 +455,10 @@ export function supportGuoba () {
       ],
       // 获取配置数据方法（用于前端填充显示数据）
       getConfigData () {
-        let QQ_Token = Object.values(Cfg.getToken('QQ_Token') ?? {})
+        let QQ_Token = Object.values(Cfg.getToken('QQ_Token') ?? {}).map(i => {
+          i.other.Tips_GroupId = i.other["Tips-GroupId"]
+          return i
+        })
 
         return {
           Server: Cfg.Server,
