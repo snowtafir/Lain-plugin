@@ -39,7 +39,7 @@ import Yaml from './model/YamlHandler.js'
 //  }
 // }, 10000)
 
-export function supportGuoba () {
+export function supportGuoba() {
   /** 添加url链接白名单 */
   const addUrlPromptProps = {
     content: '请输入URL：',
@@ -121,17 +121,18 @@ export function supportGuoba () {
         {
           field: 'Server.InvalidTime',
           label: '临时文件失效时间',
-          bottomHelpMessage: '请输入时间(单位：秒，QQBot使用)',
+          bottomHelpMessage: '请输入时间(QQBot使用)',
           component: 'InputNumber',
           required: true,
           componentProps: {
             type: 'number',
-            placeholder: '请输入时间(单位：秒，QQBot使用)',
-            min: 1
+            placeholder: '请输入时间(QQBot使用)',
+            min: 1,
+            addonAfter: "s"
           }
         },
         {
-          label: 'Token设置',
+          label: 'QQBot设置',
           // 第二个分组标记开始
           component: 'SOFT_GROUP_BEGIN'
         },
@@ -144,12 +145,45 @@ export function supportGuoba () {
             multiple: true,
             schemas: [
               {
+                label: '基础信息设置',
+                component: 'Divider'
+              },
+              {
+                field: "appid",
+                label: "AppID",
+                bottomHelpMessage: "机器人ID",
+                component: "Input",
+                required: true,
+                rules: [
+                  { pattern: '^\\d{9,}$', message: '最少需要9位哦！' },
+                ]
+              },
+              {
+                field: "token",
+                label: "Token",
+                bottomHelpMessage: "机器人令牌",
+                component: "InputPassword",
+                required: true
+              },
+              {
+                field: "secret",
+                label: "AppSecret",
+                bottomHelpMessage: "机器人秘钥",
+                component: "InputPassword",
+                required: true
+              },
+              {
+                label: '',
+                component: 'Divider'
+              },
+              {
                 field: "mode",
                 label: "运行模式",
-                bottomHelpMessage: "",
+                bottomHelpMessage: "设置运行模式",
                 component: "RadioGroup",
-                required: true,
                 componentProps: {
+                  buttonStyle: "solid",
+                  optionType: "button",
                   options: [
                     { label: 'websocket', value: 'websocket' },
                     { label: 'webhook', value: 'webhook' },
@@ -159,10 +193,9 @@ export function supportGuoba () {
               },
               {
                 field: "type",
-                label: "是否启用",
-                bottomHelpMessage: "",
-                component: "RadioGroup",
-                required: true,
+                label: "启用范围",
+                bottomHelpMessage: "设置启用的范围",
+                component: 'Select',
                 componentProps: {
                   options: [
                     { label: '全部启用', value: 0 },
@@ -173,31 +206,43 @@ export function supportGuoba () {
                 }
               },
               {
-                field: "appid",
-                label: "机器人ID",
-                bottomHelpMessage: "",
-                component: "Input",
-                required: true,
-                rules: [
-                  { pattern: '^\\d{9,}$', message: '最少需要9位哦！' },
-                ]
-              },
-              {
-                field: "sandbox",
-                label: "是否使用沙盒",
-                bottomHelpMessage: "",
-                component: "Switch"
-              },
-              {
                 field: "timeout",
-                label: "请求接口超时时间",
-                bottomHelpMessage: "单位：毫秒",
+                label: "超时时间",
+                bottomHelpMessage: "QQBot接口请求超时时间",
                 component: "InputNumber",
                 componentProps: {
                   type: 'number',
-                  placeholder: '请输入时间(单位：秒，QQBot使用)',
+                  placeholder: '请输入时间',
+                  addonAfter: "ms",
                   min: 1
                 }
+              },
+
+              {
+                label: '防倒卖提示设置',
+                component: 'Divider'
+              },
+              {
+                field: "other.Tips",
+                label: "发送防倒卖提示",
+                bottomHelpMessage: "进入新群时发送",
+                component: "Switch"
+              },
+              {
+                field: "other.Tips_GroupId",
+                label: "QQ群号",
+                bottomHelpMessage: "防倒卖提示中的QQ群号",
+                component: "Input"
+              },
+              {
+                label: '其他设置',
+                component: 'Divider'
+              },
+              {
+                field: "sandbox",
+                label: "使用沙盒",
+                bottomHelpMessage: "Bot提审时及上线后须关闭",
+                component: "Switch"
               },
               {
                 field: "allMsg",
@@ -208,86 +253,66 @@ export function supportGuoba () {
               {
                 field: "removeAt",
                 label: "移除at",
-                bottomHelpMessage: "",
+                bottomHelpMessage: "开启后发送指令无需at，仅私域Bot可用",
                 component: "Switch"
               },
               {
-                field: "token",
-                label: "机器人令牌",
-                bottomHelpMessage: "",
-                component: "InputPassword",
-                required: true
+                field: "other.Prefix",
+                label: "前缀转换",
+                bottomHelpMessage: "QQBot前缀转换 [/] => [#]",
+                component: "Switch"
               },
               {
-                field: "secret",
-                label: "机器人秘钥",
-                bottomHelpMessage: "",
-                component: "InputPassword",
-                required: true
-              },
-              {
-                field: "markdown.id",
-                label: "markdown模板ID",
-                bottomHelpMessage: "",
+                field: "other.QQCloud",
+                label: "QQ图床",
+                bottomHelpMessage: "填写QQ号后启用，使用QQ发送图片",
                 component: "Input"
               },
               {
+                label: 'markdown设置',
+                component: 'Divider'
+              },
+              {
                 field: "markdown.type",
-                label: "markdown模板类型",
+                label: "模板模式",
                 bottomHelpMessage: "",
                 component: "RadioGroup",
-                required: true,
                 componentProps: {
+                  buttonStyle: "solid",
+                  optionType: "button",
                   options: [
                     { label: '关闭', value: 0 },
-                    { label: '全局', value: 1 },
+                    { label: '全局模式', value: 1 },
                     { label: '正则模式', value: 2 },
                     { label: '按钮模式', value: 3 }
                   ]
                 }
               },
               {
+                field: "markdown.id",
+                label: "模板ID",
+                bottomHelpMessage: "",
+                component: "Input"
+              },
+              {
                 field: "markdown.text",
-                label: "markdown模板文字键",
+                label: "模板文字键",
                 bottomHelpMessage: "",
                 component: "Input"
               },
               {
                 field: "markdown.img_dec",
-                label: "markdown模板图片宽高键",
+                label: "模板图片宽高键",
                 bottomHelpMessage: "",
                 component: "Input"
               },
               {
                 field: "markdown.img_url",
-                label: "markdown模板图片url键",
+                label: "模板图片url键",
                 bottomHelpMessage: "",
                 component: "Input"
               },
-              {
-                field: "other.Prefix",
-                label: "QQ频道、QQ群Bot前缀转换 [/] => [#]",
-                bottomHelpMessage: "",
-                component: "Switch"
-              },
-              {
-                field: "other.QQCloud",
-                label: "QQ图床，填写QQ号。需使用QQ发送图片",
-                bottomHelpMessage: "",
-                component: "Input"
-              },
-              {
-                field: "other.Tips",
-                label: "进入新群后，发送防倒卖提示",
-                bottomHelpMessage: "",
-                component: "Switch"
-              },
-              {
-                field: "other.Tips_GroupId",
-                label: "防倒卖提示中的QQ群号",
-                bottomHelpMessage: "",
-                component: "Input"
-              }
+
             ]
           }
         },
@@ -454,7 +479,7 @@ export function supportGuoba () {
         }
       ],
       // 获取配置数据方法（用于前端填充显示数据）
-      getConfigData () {
+      getConfigData() {
         let QQ_Token = Object.values(Cfg.getToken('QQ_Token') ?? {}).map(i => {
           i.other.Tips_GroupId = i.other["Tips-GroupId"]
           return i
@@ -475,7 +500,7 @@ export function supportGuoba () {
         }
       },
       // 设置配置的方法（前端点确定后调用的方法）
-      setConfigData (data, { Result }) {
+      setConfigData(data, { Result }) {
         const selectPath = (name) => {
           if (name === "Token") return `/${name}.yaml`
           else return `/Config-${name}.yaml`
@@ -547,8 +572,8 @@ function parseQQToken(cfg, token) {
 
     try {
       const QQSDK = (await import('./adapter/QQBot/QQSDK.js')).default
-    const QQBot = (await import('./adapter/QQBot/index.js')).default
-    const QQGuild = (await import('./adapter/QQBot/QQGuild.js')).default
+      const QQBot = (await import('./adapter/QQBot/index.js')).default
+      const QQGuild = (await import('./adapter/QQBot/QQGuild.js')).default
       lain.info(config.appid, '正在建立连接，请稍等~')
       const SDK = new QQSDK(config)
       await SDK.start()
