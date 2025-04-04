@@ -29,7 +29,7 @@
     "get-urls": "^12.1.0",
     "qq-official-bot": "1.0.4",
     "qrcode": "^1.5.3",
-    "sharp": "^0.33.1",
+    "sharp": "^0.34.0",
     "silk-wasm": "^3.2.4",
     "wechat4u": "^0.7.14",
     "ws": "^8.18.0",
