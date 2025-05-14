@@ -62,7 +62,7 @@ class LagrangeCore {
   /** 消息事件 */
   async message (data) {
     /** 转置消息后给喵崽 */
-    await Bot.emit('message', await this.ICQQEvent(data))
+    return await this.emit(data)
   }
 
   /** 自身消息事件 */
@@ -72,7 +72,7 @@ class LagrangeCore {
     await lain.sleep(1500)
     if (await redis.get(`LagrangeCore:${this.id}:${data.message_id}`)) return
     /** 转置消息后给喵崽 */
-    await Bot.emit('message', await this.ICQQEvent(data))
+    return await this.emit(data)
   }
 
   /** 通知事件 */
@@ -104,7 +104,7 @@ class LagrangeCore {
         } else {
           lain.info(this.id, `群消息撤回：<${data.group_id}>${data.operator_id} 撤回 ${data.user_id}的消息 ${data.message_id}`)
         }
-        return await Bot.emit('notice', await this.ICQQEvent(data))
+        break
       case 'group_increase': {
         data.notice_type = 'group'
         let subType = data.sub_type
@@ -123,7 +123,7 @@ class LagrangeCore {
             }
           }
         }
-        return await Bot.emit('notice', await this.ICQQEvent(data))
+        break
       }
       case 'group_decrease': {
         data.notice_type = 'group'
@@ -142,7 +142,7 @@ class LagrangeCore {
             ? `成员<${data.user_id}>被<${data.operator_id}>踢出群聊：<${data.group_id}>`
             : `成员<${data.user_id}>退出群聊<${data.group_id}>`)
         }
-        return await Bot.emit('notice', await this.ICQQEvent(data))
+        break
       }
       case 'group_admin': {
         data.notice_type = 'group'
@@ -172,7 +172,7 @@ class LagrangeCore {
           }
           Bot[this.id].gml.set(data.group_id, { ...gml })
         }
-        return await Bot.emit('notice', await this.ICQQEvent(data))
+        break
       }
       case 'group_ban': {
         data.notice_type = 'group'
@@ -193,19 +193,19 @@ class LagrangeCore {
         }
         // 异步加载或刷新该群的群成员列表以更新禁言时长
         this.loadGroupMemberList(data.group_id)
-        return await Bot.emit('notice', await this.ICQQEvent(data))
+        break
       }
       case 'poke':
         if (!data.group_id) {
           lain.info(this.id, `好友<${data.user_id}>戳了戳<${data.target_id}>`)
           data.notice_type = 'friend'
           data.operator_id = data.user_id
-          return await Bot.emit('notice', await this.ICQQEvent(data))
+          break
         } else {
           lain.info(this.id, `群<${data.group_id}>成员<${data.user_id}>戳了戳<${data.target_id}>`)
           data.notice_type = 'group'
           data.operator_id = data.user_id
-          return await Bot.emit('notice', await this.ICQQEvent(data))
+          break
         }
       case 'notify':
         switch (data.sub_type) {
@@ -247,7 +247,7 @@ class LagrangeCore {
         user.card = data.card_new
         gml[data.user_id] = user
         Bot[this.id].gml.set(data.group_id, gml)
-        return await Bot.emit('notice', await this.ICQQEvent(data))
+        break
       }
       case 'friend_recall':
         data.sub_type = 'recall'
@@ -257,10 +257,12 @@ class LagrangeCore {
           data = { ...data, ...fl }
         } catch { }
         lain.info(this.id, `好友消息撤回：<${data.user_name}(${data.user_id})> ${data.message_id}`)
-        return await Bot.emit('notice', await this.ICQQEvent(data))
+        break
       default:
+        break
     }
-    return await Bot.emit('notice', await this.ICQQEvent(data))
+
+    return await this.emit(data)
   }
 
   /** 请求事件 */
@@ -320,7 +322,13 @@ class LagrangeCore {
         break
       }
     }
-    return await Bot.emit('request', await this.ICQQEvent(data))
+    return await this.emit(data)
+  }
+
+  /** 事件推送 */
+  async emit (data) {
+    let e = await this.ICQQEvent(data)
+    await Bot.em(`${e.post_type}.${e.notice_type}.${e.sub_type}`, e)
   }
 
   /** 注册Bot */
@@ -373,7 +381,14 @@ class LagrangeCore {
             lain.error(this.id, error)
           }
         }
-      })
+      }),
+      sendUni: async (...args) => await api.sendUni(this.id, ...args),
+      sendOidb: async (...args) => await api.sendOidb(this.id, ...args),
+      sendPacket: async (...args) => await api.sendPacket(this.id, ...args),
+      sendOidbSvcTrpcTcp: async (...args) => await api.sendOidbSvcTrpcTcp(this.id, ...args),
+      sig: {
+        seq: 0
+      }
     }
 
     const version_info = await api.SendApi(this.id, 'get_version_info', {})
@@ -542,7 +557,7 @@ class LagrangeCore {
       /** 制作转发 */
       makeForwardMsg: async (message) => await this.makeForwardMsg(message),
       /** 戳一戳 */
-      pokeMember: async (operator_id) => await api.group_touch(this.id, group_id, operator_id),
+      pokeMember: async (operator_id) => await api.poke(this.id, operator_id, group_id),
       /** 禁言 */
       muteMember: async (user_id, time) => await api.set_group_ban(this.id, group_id, Number(user_id), Number(time)),
       /** 全体禁言 */
@@ -596,7 +611,8 @@ class LagrangeCore {
           return m
         })
         return Promise.all(messages)
-      }
+      },
+      getNTPicRkey: async () => await api.getNTPicRkey(this.id)
     }
   }
 
@@ -608,6 +624,8 @@ class LagrangeCore {
       makeForwardMsg: async (message) => await this.makeForwardMsg(message),
       getAvatarUrl: (size = 0) => `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${user_id}`,
       sendFile: async (filePath) => await this.upload_private_file(user_id, filePath),
+      /** 戳一戳 */
+      pokeMember: async (operator_id) => await api.poke(this.id, operator_id),
       /** 获取文件下载地址 */
       getFileUrl: async (fid) => await this.getFileUrl(fid),
       /**
@@ -626,7 +644,8 @@ class LagrangeCore {
           return m
         })
         return Promise.all(messages)
-      }
+      },
+      getNTPicRkey: async () => await api.getNTPicRkey(this.id)
     }
   }
 
@@ -1308,11 +1327,11 @@ class LagrangeCore {
             let file = await Bot.FormatFile(i.file)
             /** 转换buffer,但愿吧 */
             if (!/^http(s)?:\/\/|^file:\/\//.test(file)) {
-              file = 'base64://' + await Bot.Base64(file)
               raw_message.push('<图片:base64://...>')
             } else {
               raw_message.push(`<图片:${file}>`)
             }
+            file = 'base64://' + await Bot.Base64(file)
             message.push({ type: 'image', data: { file } })
           } catch (err) {
             message.push({ type: 'text', data: { text: JSON.stringify(err) } })
@@ -1400,8 +1419,10 @@ class LagrangeCore {
   * 发送 WebSocket 请求
   * @param {string} action - 请求 API 端点
   * @param {string} params - 请求参数
+  * @param {number} timeout - 超时时间
   */
-  async sendApi (action, params) {
+  async sendApi (action, params, timeout = 30) {
+    timeout = Math.abs(timeout)
     const echo = randomUUID()
     /** 序列化 */
     const log = JSON.stringify({ echo, action, params })
@@ -1410,17 +1431,19 @@ class LagrangeCore {
     this.bot.send(log)
 
     /** 等待响应 */
-    for (let i = 0; i < 1200; i++) {
+    for (let i = 0; i < timeout * 10; i++) {
       const data = lain.echo[echo]
       if (data) {
         delete lain.echo[echo]
-        if (data.status === 'ok') return data.data
-        else lain.error(this.id, data); throw data
+        if (data.status === 'ok') {
+          if (data.data?.sequence) Bot[this.id].sig.seq = data.data.sequence
+          return data.data
+        } else lain.error(this.id, data); throw data
       } else {
-        await lain.sleep(50)
+        await lain.sleep(100)
       }
     }
-    throw new Error({ status: 'error', message: '请求超时' })
+    throw new Error('请求超时')
   }
 }
 
