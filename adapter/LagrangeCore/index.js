@@ -109,7 +109,6 @@ class LagrangeCore {
         data.notice_type = 'group'
         let subType = data.sub_type
         data.sub_type = 'increase'
-        data.user_id = data.target_id
         if (this.id === data.user_id) {
           lain.info(this.id, `机器人加入群聊：<${data.group_id}}>`)
         } else {
@@ -128,7 +127,6 @@ class LagrangeCore {
       case 'group_decrease': {
         data.notice_type = 'group'
         data.sub_type = 'decrease'
-        data.user_id = data.target_id
         if (this.id === data.user_id) {
           lain.info(this.id, data.operator_id
             ? `机器人被<${data.operator_id}>踢出群聊：<${data.group_id}>`
@@ -148,7 +146,6 @@ class LagrangeCore {
         data.notice_type = 'group'
         data.set = data.sub_type === 'set'
         data.sub_type = 'admin'
-        data.user_id = data.target_id
         if (this.id === data.user_id) {
           let gml = await Bot[this.id].gml.get(data.group_id)
           gml[this.id] = { ...gml.get(this.id) }
@@ -162,13 +159,13 @@ class LagrangeCore {
           Bot[this.id].gml.set(data.group_id, { ...gml })
         } else {
           let gml = await Bot[this.id].gml.get(data.group_id)
-          gml[data.target_id] = { ...gml.get(data.target_id) }
+          gml[data.user_id] = { ...gml.get(data.user_id) }
           if (data.set) {
-            gml[data.target_id].role = 'admin'
-            lain.info(this.id, `成员<${data.target_id}>在群<${data.group_id}>被设置为管理员`)
+            gml[data.user_id].role = 'admin'
+            lain.info(this.id, `成员<${data.user_id}>在群<${data.group_id}>被设置为管理员`)
           } else {
-            gml[data.target_id].role = 'member'
-            lain.info(this.id, `成员<${data.target_id}>在群<${data.group_id}>被取消管理员`)
+            gml[data.user_id].role = 'member'
+            lain.info(this.id, `成员<${data.user_id}>在群<${data.group_id}>被取消管理员`)
           }
           Bot[this.id].gml.set(data.group_id, { ...gml })
         }
@@ -182,14 +179,14 @@ class LagrangeCore {
         } else {
           data.sub_type = 'ban'
         }
-        if (this.id === data.target_id) {
+        if (this.id === data.user_id) {
           lain.info(this.id, data.duration === 0
             ? `机器人<${this.id}>在群<${data.group_id}>被解除禁言`
             : `机器人<${this.id}>在群<${data.group_id}>被禁言${data.duration}秒`)
         } else {
           lain.info(this.id, data.duration === 0
-            ? `成员<${data.target_id}>在群<${data.group_id}>被解除禁言`
-            : `成员<${data.target_id}>在群<${data.group_id}>被禁言${data.duration}秒`)
+            ? `成员<${data.user_id}>在群<${data.group_id}>被解除禁言`
+            : `成员<${data.user_id}>在群<${data.group_id}>被禁言${data.duration}秒`)
         }
         // 异步加载或刷新该群的群成员列表以更新禁言时长
         this.loadGroupMemberList(data.group_id)
@@ -267,31 +264,6 @@ class LagrangeCore {
 
   /** 请求事件 */
   async request (data) {
-    data.post_type = 'request'
-    switch (data.request_type) {
-      case 'group': {
-        data.tips = data.comment
-        try {
-          let gl = Bot[this.id].gl.get(data.group_id)
-          let fl = await Bot[this.id].api.get_stranger_info(Number(data.user_id))
-          data = { ...data, ...gl, ...fl }
-          data.group_id = Number(data.group_id)
-          data.user_id = Number(data.user_id)
-        } catch { }
-        if (data.sub_type === 'add') {
-          lain.info(this.id, `<${data.user_id}>申请入群<${data.group_id}>: ${data.tips}`)
-        } else {
-          // invite
-          lain.info(this.id, `<${data.user_id}>邀请机器人入群<${data.group_id}>: ${data.tips}`)
-        }
-        break
-      }
-      case 'friend': {
-        data.sub_type = 'add'
-        lain.info(this.id, `<${data.user_id}>申请加机器人<${this.id}>好友: ${data.comment}`)
-        break
-      }
-    }
     data.post_type = 'request'
     switch (data.request_type) {
       case 'group': {
@@ -625,7 +597,9 @@ class LagrangeCore {
       getAvatarUrl: (size = 0) => `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${user_id}`,
       sendFile: async (filePath) => await this.upload_private_file(user_id, filePath),
       /** 戳一戳 */
-      pokeMember: async (operator_id) => await api.poke(this.id, operator_id),
+      poke: async (self = false) => await api.poke(this.id, self ? this.id : user_id),
+      /** 点赞 */
+      thumbUp: async (times) => await api.thumbUp(this.id, user_id, times),
       /** 获取文件下载地址 */
       getFileUrl: async (fid) => await this.getFileUrl(fid),
       /**
@@ -1427,7 +1401,7 @@ class LagrangeCore {
     /** 序列化 */
     const log = JSON.stringify({ echo, action, params })
 
-    lain.debug(this.id, '<ws> send -> ' + log)
+    lain.debug(this.id, '<ws> send -> ' + log.replace(/base64:\/\/.*?(,|]|")/g, 'base64://...$1'))
     this.bot.send(log)
 
     /** 等待响应 */
@@ -1443,7 +1417,7 @@ class LagrangeCore {
         await lain.sleep(100)
       }
     }
-    throw new Error('请求超时')
+    throw { status: 'error', message: '请求超时' }
   }
 }
 

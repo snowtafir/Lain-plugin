@@ -339,7 +339,7 @@ let api = {
   * @param {number} user_id - QQ号
   * @param {number|null} group_id - 群号
   */
-  async poke (id, user_id, group_id = 0) {
+  async poke (id, user_id, group_id = null) {
     const params = {
       group_id,
       user_id
@@ -805,7 +805,7 @@ let api = {
     const rsp = core.pb.decode(payload);
     if (rsp[3] === 0)
       return rsp[4];
-    return throw new Error(`${rsp[5]?.toString() || "unknown error"} (${rsp[3]})`)
+    throw new Error(`${rsp[5]?.toString() || "unknown error"} (${rsp[3]})`)
   },
 
   async getNTPicRkey (id) {
@@ -817,6 +817,19 @@ let api = {
       else res.offNTPicRkey = i.rkey
     })
     return res
+  },
+
+  async thumbUp (id, user_id, times = 20) {
+    times = Number(times)
+    if (times > 20 || times < 0)
+      times = 20
+    const params = {
+      user_id,
+      times
+    }
+    let res = await this.SendApi(id, "send_like", params)
+    if (!res) return true
+    else return { ...res, code: res.retcode, msg: res.data }
   },
 
   /**
@@ -832,7 +845,7 @@ let api = {
     /** 序列化 */
     const log = JSON.stringify({ echo, action, params })
 
-    lain.debug(id, '[ws] send -> ' + log)
+    lain.debug(id, '[ws] send -> ' + log.replace(/base64:\/\/.*?(,|]|")/g, 'base64://...$1'))
     Bot[id].ws.send(log)
 
     /** 等待响应 */
@@ -843,12 +856,12 @@ let api = {
         if (data.status === 'ok') {
           if (data.data?.sequence) Bot[id].sig.seq = data.data.sequence
           return data.data
-        } else lain.error(id, data); throw data
+        } else lain.debug(id, data); throw data
       } else {
         await new Promise((resolve) => setTimeout(resolve, 100))
       }
     }
-    throw new Error('请求超时')
+    throw { status: 'error', message: '请求超时' }
   }
 }
 
