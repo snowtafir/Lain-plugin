@@ -11,7 +11,7 @@ class LagrangeCore {
     /** 存一下 */
     bot.request = request
     /** 机器人QQ号 */
-    this.id = request.headers['x-self-id']
+    this.id = Number(request.headers['x-self-id'])
     /** ws */
     this.bot = bot
     /** 监听事件 */
@@ -300,7 +300,8 @@ class LagrangeCore {
   /** 事件推送 */
   async emit (data) {
     let e = await this.ICQQEvent(data)
-    await Bot.em(`${e.post_type}.${e.notice_type}.${e.sub_type}`, e)
+    let sub = `${e.post_type}_type`
+    lain.em(`${e.post_type}.${e[sub]}.${e.sub_type}`, e)
   }
 
   /** 注册Bot */
@@ -371,7 +372,7 @@ class LagrangeCore {
     const apk = version_info.nt_protocol.split('|')
 
     Bot[this.id].stat = { start_time: Date.now() / 1000, recv_msg_cnt: 0 }
-    Bot[this.id].apk = { display: apk[0].trim(), version: apk[1].trim() }
+    Bot[this.id].apk = { display: apk[0].trim(), version: apk[1].trim(), ver: apk[1].trim().split('-')[0].trim() }
     Bot[this.id].version = { id: 'QQ', name: version_info.app_name, version: version_info.app_version }
 
     /** 重启 */
@@ -404,40 +405,38 @@ class LagrangeCore {
       _this.loadFriendList()
     ])
 
-    // let { token } = await api.get_csrf_token(uin, "qun.qq.com")
-    // try {
-    //   let { cookies } = await api.get_cookies(this.id)
-    //   if (cookies) {
-    //     let match = cookies.match(/skey=([^;]+)/)
-    //     if (match) {
-    //       let skey = match[1]
-    //       let n = 5381
-    //       for (let e = skey || '', r = 0, o = e.length; r < o; ++r) {
-    //         n += (n << 5) + e.charAt(r).charCodeAt(0)
-    //       }
-    //       Bot[this.id].bkn = 2147483647 & n
-    //     }
-    //   }
-    // } catch (err) {
-    //   lain.warn(this.id, 'LagrangeCore获取bkn失败。')
-    // }
+    let { token: bkn } = await api.get_csrf_token(this.id, 'qun.qq.com')
+    Bot[this.id].bkn = bkn
 
-    Bot[this.id].cookies = {}
-    // let domains = ['aq.qq.com', 'buluo.qq.com', 'connect.qq.com', 'docs.qq.com', 'game.qq.com', 'gamecenter.qq.com', 'haoma.qq.com', 'id.qq.com', 'kg.qq.com', 'mail.qq.com', 'mma.qq.com', 'office.qq.com', 'openmobile.qq.com', 'qqweb.qq.com', 'qun.qq.com', 'qzone.qq.com', 'ti.qq.com', 'v.qq.com', 'vip.qq.com', 'y.qq.com', '']
-    // for (let domain of domains) {
-    //   api.get_cookies(this.id, domain).then(ck => {
-    //     ck = ck?.cookies
-    //     if (ck) {
-    //       try {
-    //         // 适配椰奶逆天的ck转JSON方法
-    //         ck = ck.trim().replace(/\w+=;/g, '').replace(/\w+=$/g, '')
-    //       } catch (err) { }
-    //     }
-    //     Bot[this.id].cookies[domain] = ck
-    //   }).catch(error => {
-    //     lain.debug(this.id, `${domain} 获取cookie失败：${error}`)
-    //   })
-    // }
+    const cookies = {}
+    let domains = ['aq.qq.com','connect.qq.com','docs.qq.com','game.qq.com','id.qq.com','mail.qq.com','office.qq.com','om.qq.com','qqweb.qq.com','qun.qq.com','qzone.qq.com','ti.qq.com','v.qq.com','vip.qq.com','y.qq.com','jubao.qq.com','tenpay.com']
+    for (let domain of domains) {
+      api.get_cookies(this.id, domain).then(ck => {
+        ck = ck?.cookies
+        if (ck) {
+          try {
+            // 适配椰奶逆天的ck转JSON方法
+            ck = ck.trim().replace(/\w+=;/g, '').replace(/\w+=$/g, '')
+          } catch (err) { }
+        }
+        cookies[domain] = ck
+      }).catch(error => {
+        lain.warn(this.id, `${domain} 获取cookie失败：${JSON.stringify(error)}`)
+      })
+    }
+    Bot[this.id].cookies = new Proxy(cookies, {
+      get: (obj, domain) => {
+        return obj[domain]
+      },
+      set: () => {
+          return false;
+      }
+    })
+
+    /** 覆盖icqq方法 */
+    if (!Bot.isOnline()) {
+      Object.assign(Bot, Bot[this.id])
+    }
 
     const log = `<${this.id}>加载资源成功：加载了${Bot[this.id].fl.size}个好友，${Bot[this.id].gl.size}个群。`
     lain.info('Lagrange.OneBot', log)
@@ -548,7 +547,7 @@ class LagrangeCore {
       setCard: async (qq, card) => await api.set_group_card(this.id, group_id, qq, card),
       pickMember: (id) => this.pickMember(group_id, id),
       /** 获取群成员列表 */
-      getMemberMap: async () => await this.getMemberMap(group_id),
+      getMemberMap: async (no_cache = false) => await this.getMemberMap(group_id, no_cache),
       /** 设置精华 */
       setEssenceMessage: async (msg_id) => await this.setEssenceMessage(msg_id),
       /** 移除群精华消息 **/
@@ -642,9 +641,9 @@ class LagrangeCore {
   }
 
   /** 群成员列表 */
-  async getMemberMap (group_id) {
+  async getMemberMap (group_id, no_cache = false) {
     let group_Member = Bot[this.id].gml.get(group_id)
-    if (group_Member && Object.keys(group_Member) > 0) return group_Member
+    if ((group_Member && Object.keys(group_Member) > 0) || !no_cache) return group_Member
     group_Member = new Map()
     let member_list = await api.get_group_member_list(this.id, group_id)
     member_list.forEach(user => {
@@ -749,7 +748,7 @@ class LagrangeCore {
       for (let i of msg) {
         try {
           const { message: content } = await this.getLagrangeCore(i.message)
-          // const id = await this.sendApi('send_forward_msg', { messages: [{ type: 'node', data: { name: this.nickname || 'LagrangeCore', uin: String(this.id), content } }] })
+          // const id = await this.sendApi('send_forward_msg', { messages: [{ type: 'node', data: { name: this.nickname || 'LagrangeCore', uin: this.id, content } }] })
           makeForwardMsg.message.push({ type: 'node', data: { type: 'node', data: { name: (i.nickname == Bot.nickname) ? (this.nickname || 'LagrangeCore') : i.nickname, uin: String((i.user_id == Bot.uin) ? this.id : i.user_id), content } } })
         } catch (err) {
           lain.error(this.id, err)

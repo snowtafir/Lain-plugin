@@ -34,11 +34,11 @@ export default class adapterQQBot {
 
     /** 群消息 */
     this.sdk.on('message.group', async (data) => {
-      Bot.emit('message', await this.message(data, true))
+      lain.em("message.group.normal", await this.message(data, true))
     })
     /** 私聊消息 */
     this.sdk.on('message.private.friend', async (data) => {
-      Bot.emit('message', await this.message(data))
+      lain.em("message.private.friend", await this.message(data))
     })
     /** 群通知消息 */
     this.sdk.on('notice.group', async (data) => {
@@ -277,10 +277,10 @@ export default class adapterQQBot {
     /** 构建场景对应的方法 */
     if (isGroup) {
       try {
-        Bot[this.id].gl.set(e.group_id, { group_id: e.group_id, group_name: '', uin: this.id })
-        Bot.gl.set(e.group_id, { group_id: e.group_id, group_name: '', uin: this.id })
+        Bot[this.id].gl.set(e.group_id, { ...e.bot.gl.get(e.group_id), group_id: e.group_id, group_name: '', uin: this.id })
+        Bot.gl.set(e.group_id, { ...Bot.gl.get(e.group_id), group_id: e.group_id, group_name: '', uin: this.id })
         /** 缓存群列表 */
-        if (!await redis.get(`lain:gl:${this.id}:${e.group_id}`)) redis.set(`lain:gl:${this.id}:${e.group_id}`, JSON.stringify({ group_id: e.group_id, group_name: '', uin: this.id }))
+        redis.set(`lain:gl:${this.id}:${e.group_id}`, JSON.stringify({ ...e.bot.gl.get(e.group_id), group_id: e.group_id, group_name: '', uin: this.id }))
         /** 防倒卖崽 */
         let tips = Cfg.getToken('QQ_Token', this.id).other
         lain.debug(this.id, '<获取配置>', Cfg.getToken('QQ_Token', this.id))
@@ -301,7 +301,7 @@ export default class adapterQQBot {
     /** 缓存好友列表 */
     Bot[this.id].fl.set(e.user_id, { user_id: e.user_id, card: e.sender.nickname, nickname: e.sender.nickname, uin: this.id })
     Bot.fl.set(e.user_id, { user_id: e.user_id, card: e.sender.nickname, nickname: e.sender.nickname, uin: this.id })
-    if (!await redis.get(`lain:fl:${this.id}:${e.user_id}`)) redis.set(`lain:fl:${this.id}:${e.user_id}`, JSON.stringify({ user_id: e.user_id, card: e.sender.nickname, nickname: e.sender.nickname, uin: this.id }))
+    redis.set(`lain:fl:${this.id}:${e.user_id}`, JSON.stringify({ user_id: e.user_id, card: e.sender.nickname, nickname: e.sender.nickname, uin: this.id }))
 
     /** 保存消息次数 */
     try { common.recvMsg(this.id, e.adapter) } catch { }

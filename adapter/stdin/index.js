@@ -115,7 +115,7 @@ export default async function stdin () {
     if (!input) return false
     const data = msg(input)
     Bot[uin].stat.recv_msg_cnt++
-    Bot.emit('message', data)
+    lain.em('message.private.friend', data)
   })
   await common.init('Lain:restart:stdin')
 }
@@ -225,7 +225,7 @@ async function sendMsg (msg) {
 
     let file
     if (i.data.file) {
-      file = await fileType(i.data.file)
+      file = await fileType(i.data.file || i.data.url)
     }
 
     switch (i.type) {

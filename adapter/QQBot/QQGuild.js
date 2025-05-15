@@ -22,10 +22,10 @@ export default class adapterQQGuild {
     else return `QQGuild：<${Bot[this.id].nickname}(${this.id})> 连接重复!`
 
     this.sdk.on('message.guild', async (data) => {
-      Bot.emit('message', await this.GroupMessage(data))
+      lain.em('message.group.normal', await this.GroupMessage(data))
     })
     this.sdk.on('message.private.direct', async (data) => {
-      Bot.emit('message', await this.GroupMessage(data, 'friend'))
+      lain.em('message.private.friend', await this.GroupMessage(data, 'friend'))
     })
 
     // 有点怪 先简单处理下
