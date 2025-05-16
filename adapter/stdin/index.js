@@ -215,7 +215,7 @@ function msg (msg) {
 
 /** 发送消息 */
 async function sendMsg (msg) {
-  if (!Array.isArray(msg)) msg = [msg]
+  msg = common.array(msg)
   for (let i of msg) {
     if (typeof i != 'object') {
       i = { type: 'text', data: { text: i } }

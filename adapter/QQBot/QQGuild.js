@@ -550,6 +550,7 @@ export default class adapterQQGuild {
 
   /** 处理回复消息 */
   async sendReplyMsg (data, msg, quote) {
+    lain.debug(this.id, 0, JSON.stringify(msg).replace(/base64:\/\/.*?(,|]|")/g, 'base64://...$1'))
     let { Pieces, messageLog, reply } = await this.getQQGuild(msg)
     const info = data.message_type === 'group' ? '频道' : '私信'
     // lain.info(this.id, `<回复${info}:${data.group_name}(${data.group_id})> => ${messageLog}`)

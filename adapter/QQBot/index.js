@@ -888,6 +888,7 @@ export default class adapterQQBot {
   async sendReplyMsg (e, msg) {
     if (typeof msg === 'string' && msg.includes('歌曲分享失败：')) return false
     let res
+    lain.debug(this.id, 0, JSON.stringify(msg).replace(/base64:\/\/.*?(,|]|")/g, 'base64://...$1'))
     const { Pieces, normalMsg } = await this.getQQBot(msg, e)
     lain.debug(this.id, 1, JSON.stringify(Pieces).replace(/base64:\/\/.*?(,|]|")/g, 'base64://...$1'))
 
