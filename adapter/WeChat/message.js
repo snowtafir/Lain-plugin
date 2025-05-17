@@ -14,7 +14,7 @@ export default class message {
   /** 消息转换为Yunzai格式 */
   async msg (data) {
     /** 调试日志 */
-    common.debug(this.id, JSON.stringify(data))
+    lain.debug(this.id, JSON.stringify(data))
     const { group_id, detail_type, time, message_id } = data
     /** 存一份原始消息到redis中，用于引用消息 */
     if (message_id) {

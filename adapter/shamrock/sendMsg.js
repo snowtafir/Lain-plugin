@@ -222,7 +222,7 @@ export default class SendMsg {
           return data
         }
       } else {
-        await common.sleep(50)
+        await lain.sleep(50)
       }
     }
     return '获取失败'

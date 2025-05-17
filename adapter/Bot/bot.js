@@ -1,6 +1,6 @@
 import sizeOf from 'image-size'
 import QrCode from 'qrcode'
-import get_urls from 'get-urls'
+import GetUrls from '@karinjs/geturls'
 import fs from 'fs'
 import fetch from 'node-fetch'
 import crypto from 'crypto'
@@ -43,7 +43,7 @@ Bot.Buffer = async function (file, data) {
       return Buffer.from(await res.arrayBuffer())
     }
   } else {
-    throw new Error('传入的文件类型不符合规则，只接受url、buffer、file://路径或者base64编码的图片')
+    throw new Error('传入的文件类型不符合规则，只接受url、buffer、file://路径或者base64编码的图片\n' + String(file).substr(0, 20))
   }
 }
 
@@ -121,7 +121,8 @@ Bot.uploadQQ = async function (file, uin = Bot.uin) {
   try {
     md5 = (await Bot[uin].pickFriend(uin)._preprocess(segment.image(buffer))).imgs[0].proto[1].toUpperCase()
   } catch (e) {
-    throw new Error('上传图片失败', e)
+    e.message = "上传图片失败\n" + e.message
+    throw e
   }
   const { width, height } = sizeOf(buffer)
   const url = `https://gchat.qpic.cn/gchatpic_new/0/0-0-${md5}/0`
@@ -357,10 +358,11 @@ Bot.FormatFile = async function (file) {
 */
 Bot.getUrls = function (url, exclude = []) {
   if (!Array.isArray(exclude)) exclude = [exclude]
+
   let urls = []
   /** 中文不符合url规范 */
   url = url.replace(/[\u4e00-\u9fa5]/g, '|')
-  urls = get_urls(url, {
+  urls = GetUrls.getUrls(url, {
     exclude,
     /** 去除 WWW */
     stripWWW: false,
@@ -377,9 +379,17 @@ Bot.getUrls = function (url, exclude = []) {
     /** 去除文本片段 */
     stripTextFragment: false,
     /** 移除末尾斜杠 */
-    removeTrailingSlash: false
+    removeTrailingSlash: false,
+    /** 不进行标准处理url */
+    normalize: false
   })
   return [...urls]
+
+  // exclude = exclude.map(i => i.replace(/https?:\/\//, ''))
+  // url = url.match(/(https?:\/\/)?([\da-z\.-]*[a-z][\da-z\.-]*)\.([a-z]{2,6})([\/\w \.-] *)*/g)
+  // if (!url) return []
+  // url = url.filter(i => !exclude.some(i2 => i.includes(i2)))
+  // return [...new Set(url)]
 }
 
 /**
@@ -478,28 +488,19 @@ Bot.HandleURL = async function (msg) {
   /** 需要处理的url */
   let urls = Bot.getUrls(msg, Cfg.WhiteLink)
 
-  let promises = urls.map(link => {
-    return new Promise((resolve, reject) => {
-      lain.mark('Lain-plugin', `url替换：${link}`)
-      QrCode.toBuffer(link, {
-        errorCorrectionLevel: 'H',
-        type: 'png',
-        margin: 4,
-        text: link
-      }, async (err, buffer) => {
-        if (err) reject(err)
-        const base64 = 'base64://' + buffer.toString('base64')
-        const file = await common.Rending({ base64, link }, 'QRCode/QRCode')
-        message.push(file)
-        msg = msg.replace(link, '[链接(请扫码查看)]')
-        msg = msg.replace(link.replace(/^http:\/\//g, ''), '[链接(请扫码查看)]')
-        msg = msg.replace(link.replace(/^https:\/\//g, ''), '[链接(请扫码查看)]')
-        resolve()
-      })
-    })
+  urls.forEach((url) => {
+    msg = msg.replace(new RegExp(url, 'g'), '[链接(请扫码查看)]')
   })
+  message.push(segment.text(msg))
 
-  await Promise.all(promises)
-  message.unshift({ type: 'text', text: msg })
+  const list = await Promise.all(urls.map(async url => ({ qr: await QrCode.toDataURL(url), url })))
+  list.map((item) => item.qr = `base64://${item.qr.split(',')[1]}`)
+
+  for (let link of list) {
+    lain.mark('Lain-plugin', `url替换：${link.url}`)
+    const file = await common.Rending({ base64: link.qr, link: link.url }, 'QRCode/QRCode')
+    message.push(file)
+  }
+
   return message
 }

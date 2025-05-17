@@ -17,7 +17,7 @@ class LagrangeCore {
     /** 监听事件 */
     this.bot.on('message', (data) => this.event(data))
     /** 监听连接关闭事件 */
-    bot.on('close', () => logger.warn(`[Lain-plugin] [Lagrange.OneBot] QQ ${this.id} 连接已断开`))
+    bot.on('close', () => lain.warn('Lagrange.OneBot', `QQ <${this.id}> 连接已断开`))
   }
 
   /** 收到请求 */
@@ -36,8 +36,8 @@ class LagrangeCore {
       this[data?.post_type](data)
     } catch (error) {
       /** 处理错误打印日志 */
-      logger.error('[LagrangeCore]事件处理错误', error)
-      logger.mark('[LagrangeCore]事件处理错误', data)
+      lain.error('LagrangeCore', `<${this.id}>事件处理错误`, error)
+      lain.mark('LagrangeCore', `<${this.id}>事件处理错误`, data)
     }
   }
 
@@ -47,14 +47,14 @@ class LagrangeCore {
       /** 生命周期 */
       case 'lifecycle':
         this.LoadBot()
-        lain.info('Lain-plugin', `<Lagrange.OneBot> QQ ${this.id} 建立连接成功，正在加载资源中`)
+        lain.info('Lagrange.OneBot', `QQ <${this.id}> 建立连接成功，正在加载资源中`)
         break
       /** 心跳 */
       case 'heartbeat':
-        lain.debug('Lain-plugin', `<Lagrange.OneBot> QQ ${this.id} 收到心跳：${JSON.stringify(data.status, null, 2)}`)
+        lain.debug('Lagrange.OneBot', `QQ <${this.id}> 收到心跳：${JSON.stringify(data.status, null, 2)}`)
         break
       default:
-        logger.error(`[LagrangeCore][未知事件] ${JSON.stringify(data)}`)
+        lain.error(this.id, `<LagrangeCore><未知事件> ${JSON.stringify(data)}`)
         break
     }
   }
@@ -62,17 +62,17 @@ class LagrangeCore {
   /** 消息事件 */
   async message (data) {
     /** 转置消息后给喵崽 */
-    await Bot.emit('message', await this.ICQQEvent(data))
+    return await this.emit(data)
   }
 
   /** 自身消息事件 */
   async message_sent (data) {
     data.post_type = 'message'
     /** 屏蔽由喵崽处理过后发送后的消息 */
-    await common.sleep(1500)
+    await lain.sleep(1500)
     if (await redis.get(`LagrangeCore:${this.id}:${data.message_id}`)) return
     /** 转置消息后给喵崽 */
-    await Bot.emit('message', await this.ICQQEvent(data))
+    return await this.emit(data)
   }
 
   /** 通知事件 */
@@ -104,12 +104,11 @@ class LagrangeCore {
         } else {
           lain.info(this.id, `群消息撤回：<${data.group_id}>${data.operator_id} 撤回 ${data.user_id}的消息 ${data.message_id}`)
         }
-        return await Bot.emit('notice', await this.ICQQEvent(data))
+        break
       case 'group_increase': {
         data.notice_type = 'group'
         let subType = data.sub_type
         data.sub_type = 'increase'
-        data.user_id = data.target_id
         if (this.id === data.user_id) {
           lain.info(this.id, `机器人加入群聊：<${data.group_id}}>`)
         } else {
@@ -123,12 +122,11 @@ class LagrangeCore {
             }
           }
         }
-        return await Bot.emit('notice', await this.ICQQEvent(data))
+        break
       }
       case 'group_decrease': {
         data.notice_type = 'group'
         data.sub_type = 'decrease'
-        data.user_id = data.target_id
         if (this.id === data.user_id) {
           lain.info(this.id, data.operator_id
             ? `机器人被<${data.operator_id}>踢出群聊：<${data.group_id}>`
@@ -142,13 +140,12 @@ class LagrangeCore {
             ? `成员<${data.user_id}>被<${data.operator_id}>踢出群聊：<${data.group_id}>`
             : `成员<${data.user_id}>退出群聊<${data.group_id}>`)
         }
-        return await Bot.emit('notice', await this.ICQQEvent(data))
+        break
       }
       case 'group_admin': {
         data.notice_type = 'group'
         data.set = data.sub_type === 'set'
         data.sub_type = 'admin'
-        data.user_id = data.target_id
         if (this.id === data.user_id) {
           let gml = await Bot[this.id].gml.get(data.group_id)
           gml[this.id] = { ...gml.get(this.id) }
@@ -162,17 +159,17 @@ class LagrangeCore {
           Bot[this.id].gml.set(data.group_id, { ...gml })
         } else {
           let gml = await Bot[this.id].gml.get(data.group_id)
-          gml[data.target_id] = { ...gml.get(data.target_id) }
+          gml[data.user_id] = { ...gml.get(data.user_id) }
           if (data.set) {
-            gml[data.target_id].role = 'admin'
-            lain.info(this.id, `成员<${data.target_id}>在群<${data.group_id}>被设置为管理员`)
+            gml[data.user_id].role = 'admin'
+            lain.info(this.id, `成员<${data.user_id}>在群<${data.group_id}>被设置为管理员`)
           } else {
-            gml[data.target_id].role = 'member'
-            lain.info(this.id, `成员<${data.target_id}>在群<${data.group_id}>被取消管理员`)
+            gml[data.user_id].role = 'member'
+            lain.info(this.id, `成员<${data.user_id}>在群<${data.group_id}>被取消管理员`)
           }
           Bot[this.id].gml.set(data.group_id, { ...gml })
         }
-        return await Bot.emit('notice', await this.ICQQEvent(data))
+        break
       }
       case 'group_ban': {
         data.notice_type = 'group'
@@ -182,30 +179,30 @@ class LagrangeCore {
         } else {
           data.sub_type = 'ban'
         }
-        if (this.id === data.target_id) {
+        if (this.id === data.user_id) {
           lain.info(this.id, data.duration === 0
             ? `机器人<${this.id}>在群<${data.group_id}>被解除禁言`
             : `机器人<${this.id}>在群<${data.group_id}>被禁言${data.duration}秒`)
         } else {
           lain.info(this.id, data.duration === 0
-            ? `成员<${data.target_id}>在群<${data.group_id}>被解除禁言`
-            : `成员<${data.target_id}>在群<${data.group_id}>被禁言${data.duration}秒`)
+            ? `成员<${data.user_id}>在群<${data.group_id}>被解除禁言`
+            : `成员<${data.user_id}>在群<${data.group_id}>被禁言${data.duration}秒`)
         }
         // 异步加载或刷新该群的群成员列表以更新禁言时长
         this.loadGroupMemberList(data.group_id)
-        return await Bot.emit('notice', await this.ICQQEvent(data))
+        break
       }
       case 'poke':
         if (!data.group_id) {
           lain.info(this.id, `好友<${data.user_id}>戳了戳<${data.target_id}>`)
           data.notice_type = 'friend'
           data.operator_id = data.user_id
-          return await Bot.emit('notice', await this.ICQQEvent(data))
+          break
         } else {
           lain.info(this.id, `群<${data.group_id}>成员<${data.user_id}>戳了戳<${data.target_id}>`)
           data.notice_type = 'group'
           data.operator_id = data.user_id
-          return await Bot.emit('notice', await this.ICQQEvent(data))
+          break
         }
       case 'notify':
         switch (data.sub_type) {
@@ -247,7 +244,7 @@ class LagrangeCore {
         user.card = data.card_new
         gml[data.user_id] = user
         Bot[this.id].gml.set(data.group_id, gml)
-        return await Bot.emit('notice', await this.ICQQEvent(data))
+        break
       }
       case 'friend_recall':
         data.sub_type = 'recall'
@@ -257,39 +254,16 @@ class LagrangeCore {
           data = { ...data, ...fl }
         } catch { }
         lain.info(this.id, `好友消息撤回：<${data.user_name}(${data.user_id})> ${data.message_id}`)
-        return await Bot.emit('notice', await this.ICQQEvent(data))
+        break
       default:
+        break
     }
-    return await Bot.emit('notice', await this.ICQQEvent(data))
+
+    return await this.emit(data)
   }
 
   /** 请求事件 */
   async request (data) {
-    data.post_type = 'request'
-    switch (data.request_type) {
-      case 'group': {
-        data.tips = data.comment
-        try {
-          let gl = Bot[this.id].gl.get(data.group_id)
-          let fl = await Bot[this.id].api.get_stranger_info(Number(data.user_id))
-          data = { ...data, ...gl, ...fl }
-          data.group_id = Number(data.group_id)
-          data.user_id = Number(data.user_id)
-        } catch { }
-        if (data.sub_type === 'add') {
-          lain.info(this.id, `<${data.user_id}>申请入群<${data.group_id}>: ${data.tips}`)
-        } else {
-          // invite
-          lain.info(this.id, `<${data.user_id}>邀请机器人入群<${data.group_id}>: ${data.tips}`)
-        }
-        break
-      }
-      case 'friend': {
-        data.sub_type = 'add'
-        lain.info(this.id, `[${data.user_id}]申请加机器人<${this.id}>好友: ${data.comment}`)
-        break
-      }
-    }
     data.post_type = 'request'
     switch (data.request_type) {
       case 'group': {
@@ -320,7 +294,14 @@ class LagrangeCore {
         break
       }
     }
-    return await Bot.emit('request', await this.ICQQEvent(data))
+    return await this.emit(data)
+  }
+
+  /** 事件推送 */
+  async emit (data) {
+    let e = await this.ICQQEvent(data)
+    let sub = `${e.post_type}_type`
+    lain.em(`${e.post_type}.${e[sub]}.${e.sub_type}`, e)
   }
 
   /** 注册Bot */
@@ -370,10 +351,17 @@ class LagrangeCore {
               return target[prop]
             }
           } catch (error) {
-            logger.error(error)
+            lain.error(this.id, error)
           }
         }
-      })
+      }),
+      sendUni: async (...args) => await api.sendUni(this.id, ...args),
+      sendOidb: async (...args) => await api.sendOidb(this.id, ...args),
+      sendPacket: async (...args) => await api.sendPacket(this.id, ...args),
+      sendOidbSvcTrpcTcp: async (...args) => await api.sendOidbSvcTrpcTcp(this.id, ...args),
+      sig: {
+        seq: 0
+      }
     }
 
     const version_info = await api.SendApi(this.id, 'get_version_info', {})
@@ -384,7 +372,7 @@ class LagrangeCore {
     const apk = version_info.nt_protocol.split('|')
 
     Bot[this.id].stat = { start_time: Date.now() / 1000, recv_msg_cnt: 0 }
-    Bot[this.id].apk = { display: apk[0].trim(), version: apk[1].trim() }
+    Bot[this.id].apk = { display: apk[0].trim(), version: apk[1].trim(), ver: apk[1].trim().split('-')[0].trim() }
     Bot[this.id].version = { id: 'QQ', name: version_info.app_name, version: version_info.app_version }
 
     /** 重启 */
@@ -409,7 +397,7 @@ class LagrangeCore {
         let groupList = await _this.loadGroup()
         // 加载群员
         await Promise.all(groupList.map(async (group, index) => {
-          await common.sleep(50 * Math.floor(index / 10))
+          await lain.sleep(50 * Math.floor(index / 10))
           await _this.loadGroupMemberList(group.group_id)
         }))
       })(),
@@ -417,43 +405,41 @@ class LagrangeCore {
       _this.loadFriendList()
     ])
 
-    // let { token } = await api.get_csrf_token(uin, "qun.qq.com")
-    // try {
-    //   let { cookies } = await api.get_cookies(this.id)
-    //   if (cookies) {
-    //     let match = cookies.match(/skey=([^;]+)/)
-    //     if (match) {
-    //       let skey = match[1]
-    //       let n = 5381
-    //       for (let e = skey || '', r = 0, o = e.length; r < o; ++r) {
-    //         n += (n << 5) + e.charAt(r).charCodeAt(0)
-    //       }
-    //       Bot[this.id].bkn = 2147483647 & n
-    //     }
-    //   }
-    // } catch (err) {
-    //   lain.warn(this.id, 'LagrangeCore获取bkn失败。')
-    // }
+    let { token: bkn } = await api.get_csrf_token(this.id, 'qun.qq.com')
+    Bot[this.id].bkn = bkn
 
-    Bot[this.id].cookies = {}
-    // let domains = ['aq.qq.com', 'buluo.qq.com', 'connect.qq.com', 'docs.qq.com', 'game.qq.com', 'gamecenter.qq.com', 'haoma.qq.com', 'id.qq.com', 'kg.qq.com', 'mail.qq.com', 'mma.qq.com', 'office.qq.com', 'openmobile.qq.com', 'qqweb.qq.com', 'qun.qq.com', 'qzone.qq.com', 'ti.qq.com', 'v.qq.com', 'vip.qq.com', 'y.qq.com', '']
-    // for (let domain of domains) {
-    //   api.get_cookies(this.id, domain).then(ck => {
-    //     ck = ck?.cookies
-    //     if (ck) {
-    //       try {
-    //         // 适配椰奶逆天的ck转JSON方法
-    //         ck = ck.trim().replace(/\w+=;/g, '').replace(/\w+=$/g, '')
-    //       } catch (err) { }
-    //     }
-    //     Bot[this.id].cookies[domain] = ck
-    //   }).catch(error => {
-    //     lain.debug(this.id, `${domain} 获取cookie失败：${error}`)
-    //   })
-    // }
+    const cookies = {}
+    let domains = ['aq.qq.com','connect.qq.com','docs.qq.com','game.qq.com','id.qq.com','mail.qq.com','office.qq.com','om.qq.com','qqweb.qq.com','qun.qq.com','qzone.qq.com','ti.qq.com','v.qq.com','vip.qq.com','y.qq.com','jubao.qq.com','tenpay.com']
+    for (let domain of domains) {
+      api.get_cookies(this.id, domain).then(ck => {
+        ck = ck?.cookies
+        if (ck) {
+          try {
+            // 适配椰奶逆天的ck转JSON方法
+            ck = ck.trim().replace(/\w+=;/g, '').replace(/\w+=$/g, '')
+          } catch (err) { }
+        }
+        cookies[domain] = ck
+      }).catch(error => {
+        lain.warn(this.id, `${domain} 获取cookie失败：${JSON.stringify(error)}`)
+      })
+    }
+    Bot[this.id].cookies = new Proxy(cookies, {
+      get: (obj, domain) => {
+        return obj[domain]
+      },
+      set: () => {
+          return false;
+      }
+    })
 
-    const log = `LagrangeCore加载资源成功：加载了${Bot[this.id].fl.size}个好友，${Bot[this.id].gl.size}个群。`
-    lain.info(this.id, log)
+    /** 覆盖icqq方法 */
+    if (!Bot.isOnline()) {
+      Object.assign(Bot, Bot[this.id])
+    }
+
+    const log = `<${this.id}>加载资源成功：加载了${Bot[this.id].fl.size}个好友，${Bot[this.id].gl.size}个群。`
+    lain.info('Lagrange.OneBot', log)
     return log
   }
 
@@ -465,7 +451,7 @@ class LagrangeCore {
       if (!(groupList && Array.isArray(groupList))) {
         lain.error(this.id, `LagrangeCore群列表获取失败，正在重试：${retries + 1}`)
       }
-      await common.sleep(50)
+      await lain.sleep(50)
     }
 
     if (groupList && typeof groupList === 'object') {
@@ -505,7 +491,7 @@ class LagrangeCore {
       if (!(friendList && Array.isArray(friendList))) {
         lain.error(this.id, `LagrangeCore好友列表获取失败，正在重试：${retries + 1}`)
       }
-      await common.sleep(50)
+      await lain.sleep(50)
     }
 
     /** 好友列表获取失败 */
@@ -542,7 +528,7 @@ class LagrangeCore {
       /** 制作转发 */
       makeForwardMsg: async (message) => await this.makeForwardMsg(message),
       /** 戳一戳 */
-      pokeMember: async (operator_id) => await api.group_touch(this.id, group_id, operator_id),
+      pokeMember: async (operator_id) => await api.poke(this.id, operator_id, group_id),
       /** 禁言 */
       muteMember: async (user_id, time) => await api.set_group_ban(this.id, group_id, Number(user_id), Number(time)),
       /** 全体禁言 */
@@ -561,7 +547,7 @@ class LagrangeCore {
       setCard: async (qq, card) => await api.set_group_card(this.id, group_id, qq, card),
       pickMember: (id) => this.pickMember(group_id, id),
       /** 获取群成员列表 */
-      getMemberMap: async () => await this.getMemberMap(group_id),
+      getMemberMap: async (no_cache = false) => await this.getMemberMap(group_id, no_cache),
       /** 设置精华 */
       setEssenceMessage: async (msg_id) => await this.setEssenceMessage(msg_id),
       /** 移除群精华消息 **/
@@ -584,7 +570,7 @@ class LagrangeCore {
       getChatHistory: async (msg_id, num, reply) => {
         let { messages } = await api.get_group_msg_history(this.id, group_id, num, msg_id)
         if (!messages) {
-          logger.warn('获取历史消息失败')
+          lain.warn(this.id, '获取历史消息失败')
           return []
         }
         let group = Bot[this.id].gl.get(group_id)
@@ -596,7 +582,8 @@ class LagrangeCore {
           return m
         })
         return Promise.all(messages)
-      }
+      },
+      getNTPicRkey: async () => await api.getNTPicRkey(this.id)
     }
   }
 
@@ -608,6 +595,10 @@ class LagrangeCore {
       makeForwardMsg: async (message) => await this.makeForwardMsg(message),
       getAvatarUrl: (size = 0) => `https://q1.qlogo.cn/g?b=qq&s=${size}&nk=${user_id}`,
       sendFile: async (filePath) => await this.upload_private_file(user_id, filePath),
+      /** 戳一戳 */
+      poke: async (self = false) => await api.poke(this.id, self ? this.id : user_id),
+      /** 点赞 */
+      thumbUp: async (times) => await api.thumbUp(this.id, user_id, times),
       /** 获取文件下载地址 */
       getFileUrl: async (fid) => await this.getFileUrl(fid),
       /**
@@ -626,7 +617,8 @@ class LagrangeCore {
           return m
         })
         return Promise.all(messages)
-      }
+      },
+      getNTPicRkey: async () => await api.getNTPicRkey(this.id)
     }
   }
 
@@ -649,9 +641,9 @@ class LagrangeCore {
   }
 
   /** 群成员列表 */
-  async getMemberMap (group_id) {
+  async getMemberMap (group_id, no_cache = false) {
     let group_Member = Bot[this.id].gml.get(group_id)
-    if (group_Member && Object.keys(group_Member) > 0) return group_Member
+    if ((group_Member && Object.keys(group_Member) > 0) || !no_cache) return group_Member
     group_Member = new Map()
     let member_list = await api.get_group_member_list(this.id, group_id)
     member_list.forEach(user => {
@@ -686,7 +678,7 @@ class LagrangeCore {
 
   /** 获取文件下载链接 */
   async getFileUrl () {
-    return logger.warn('暂未实现，请先使用 [e.file]')
+    return lain.warn(this.id, '暂未实现，请先使用 <e.file>')
   }
 
   /** 音乐分享 */
@@ -756,7 +748,7 @@ class LagrangeCore {
       for (let i of msg) {
         try {
           const { message: content } = await this.getLagrangeCore(i.message)
-          // const id = await this.sendApi('send_forward_msg', { messages: [{ type: 'node', data: { name: this.nickname || 'LagrangeCore', uin: String(this.id), content } }] })
+          // const id = await this.sendApi('send_forward_msg', { messages: [{ type: 'node', data: { name: this.nickname || 'LagrangeCore', uin: this.id, content } }] })
           makeForwardMsg.message.push({ type: 'node', data: { type: 'node', data: { name: (i.nickname == Bot.nickname) ? (this.nickname || 'LagrangeCore') : i.nickname, uin: String((i.user_id == Bot.uin) ? this.id : i.user_id), content } } })
         } catch (err) {
           lain.error(this.id, err)
@@ -949,7 +941,7 @@ class LagrangeCore {
             let groupMemberList = Bot[this.id].gml.get(group_id)?.get(qq)
             let at = groupMemberList?.nickname || groupMemberList?.card || qq
             raw_message.push(`@${at}`)
-            log_message.push(at == qq ? `@${qq}` : `<@${at}:${qq}>`)
+            log_message.push(at == qq ? `<@${qq}>` : `<@${at}:${qq}>`)
           } catch (err) {
             raw_message.push(`@${i.data.qq}`)
             log_message.push(`@${i.data.qq}`)
@@ -1079,7 +1071,7 @@ class LagrangeCore {
         case 'touch':
           message.push({ type: 'touch', ...i.data })
           raw_message.push('[双击头像]')
-          log_message.push(`<<双击头像:${i.data.id}>`)
+          log_message.push(`<双击头像:${i.data.id}>`)
           ToString.push(`{touch:${i.data.id}}`)
           break
         /** 音乐 */
@@ -1114,7 +1106,7 @@ class LagrangeCore {
         case 'share':
           message.push({ type: 'share', ...i.data })
           raw_message.push('[链接分享]')
-          log_message.push(`<<链接分享:${i.data.url}>`)
+          log_message.push(`<链接分享:${i.data.url}>`)
           ToString.push(`{share:${i.data.url}}`)
           break
         /** 礼物 */
@@ -1184,7 +1176,7 @@ class LagrangeCore {
 
       return source
     } catch (error) {
-      logger.error(error)
+      lain.error(this.id, error)
       return false
     }
   }
@@ -1308,19 +1300,31 @@ class LagrangeCore {
             let file = await Bot.FormatFile(i.file)
             /** 转换buffer,但愿吧 */
             if (!/^http(s)?:\/\/|^file:\/\//.test(file)) {
-              file = 'base64://' + await Bot.Base64(file)
               raw_message.push('<图片:base64://...>')
             } else {
               raw_message.push(`<图片:${file}>`)
             }
+            file = 'base64://' + await Bot.Base64(file)
             message.push({ type: 'image', data: { file } })
           } catch (err) {
             message.push({ type: 'text', data: { text: JSON.stringify(err) } })
             raw_message.push(JSON.stringify(err))
           }
           break
+        case 'reply':
+          message.push({ type: 'reply', data: { id: String(i.id) } })
+          raw_message.push(`<回复:${i?.text || i.id}>`)
+          break
         case 'poke':
-          message.push({ type: 'poke', data: { type: i.id, id: 0, strength: i?.strength || 0 } })
+          let type = String(i.id)
+          let id = '0'
+          let name = pokeMap[Number(i.id)]
+          if (i.name) name = i.name
+          if (i.id > 6) {
+            id = String(i.id)
+            type = '126'
+          }
+          message.push({ type: 'poke', data: { type, id, name } })
           raw_message.push(`<${pokeMap[Number(i.id)]}>` || `<戳一戳:${i.id}>`)
           break
         case 'touch':
@@ -1388,27 +1392,31 @@ class LagrangeCore {
   * 发送 WebSocket 请求
   * @param {string} action - 请求 API 端点
   * @param {string} params - 请求参数
+  * @param {number} timeout - 超时时间
   */
-  async sendApi (action, params) {
+  async sendApi (action, params, timeout = 30) {
+    timeout = Math.abs(timeout)
     const echo = randomUUID()
     /** 序列化 */
     const log = JSON.stringify({ echo, action, params })
 
-    lain.debug(this.id, '<ws> send -> ' + log)
+    lain.debug(this.id, '<ws> send -> ' + log.replace(/base64:\/\/.*?(,|]|")/g, 'base64://...$1'))
     this.bot.send(log)
 
     /** 等待响应 */
-    for (let i = 0; i < 1200; i++) {
+    for (let i = 0; i < timeout * 10; i++) {
       const data = lain.echo[echo]
       if (data) {
         delete lain.echo[echo]
-        if (data.status === 'ok') return data.data
-        else lain.error(this.id, data); throw data
+        if (data.status === 'ok') {
+          if (data.data?.sequence) Bot[this.id].sig.seq = data.data.sequence
+          return data.data
+        } else lain.error(this.id, data); throw data
       } else {
-        await common.sleep(50)
+        await lain.sleep(100)
       }
     }
-    throw new Error({ status: 'error', message: '请求超时' })
+    throw { status: 'error', message: '请求超时' }
   }
 }
 
@@ -1419,7 +1427,7 @@ const LagrangeCoreWS = new WebSocketServer({ noServer: true })
 LagrangeCoreWS.on('connection', async (bot, request) => new LagrangeCore(bot, request))
 
 /** 捕获错误 */
-LagrangeCoreWS.on('error', async error => logger.error(error))
+LagrangeCoreWS.on('error', logger.error)
 
 export default LagrangeCoreWS
 

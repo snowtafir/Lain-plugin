@@ -35,16 +35,24 @@ class WebSocket {
     /** 创建HTTP服务器 */
     this.Server = createServer(app)
 
+    // 日志中间件
+    app.use((req, res, next) => {
+      const { method, url } = req
+      const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress
+      logger.info(`[请求日志] ${method} ${url} 来自IP: ${ip} 来自请求: ${req.headers.host}`)
+      next()
+    })
+
     /** 设置静态文件服务 */
     app.use('/api/File', express.static(process.cwd() + '/temp/FileToUrl'))
 
     /** QQBotApi */
     app.get('/api/File/:token', async (req, res) => {
-      const { host, ip } = req
+      const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress
       const token = req.params.token
       const filePath = process.cwd() + '/temp/FileToUrl/' + req.params.token
       /** 收到日志 */
-      logger.mark('[GET请求] ' + logger.blue(`[${token}] -> [${host}] -> [${ip}]`))
+      logger.mark('[GET请求] ' + logger.blue(`[${token}] -> [${req.get(host)}] -> [${ip}]`))
 
       try {
         /** 读 */

@@ -115,7 +115,7 @@ export default async function stdin () {
     if (!input) return false
     const data = msg(input)
     Bot[uin].stat.recv_msg_cnt++
-    Bot.emit('message', data)
+    lain.em('message.private.friend', data)
   })
   await common.init('Lain:restart:stdin')
 }
@@ -215,17 +215,17 @@ function msg (msg) {
 
 /** 发送消息 */
 async function sendMsg (msg) {
-  if (!Array.isArray(msg)) msg = [msg]
+  msg = common.array(msg)
   for (let i of msg) {
     if (typeof i != 'object') {
       i = { type: 'text', data: { text: i } }
-    } else if (!i.data) {
+    } else if (!i?.data) {
       i = { type: i.type, data: { ...i, type: undefined } }
     }
 
     let file
     if (i.data.file) {
-      file = await fileType(i.data.file)
+      file = await fileType(i.data.file || i.data.url)
     }
 
     switch (i.type) {
@@ -280,6 +280,7 @@ async function sendFile (file, name = path.basename(file)) {
 }
 
 function sendForwardMsg (msg) {
+  if (!Array.isArray(msg)) msg = [msg]
   const messages = []
   for (const { message } of msg) {
     messages.push(sendMsg(message))

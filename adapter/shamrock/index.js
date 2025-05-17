@@ -69,7 +69,7 @@ class Shamrock {
   async message_sent (data) {
     data.post_type = 'message'
     /** 屏蔽由喵崽处理过后发送后的消息 */
-    await common.sleep(1500)
+    await lain.sleep(1500)
     if (await redis.get(`Shamrock:${this.id}:${data.message_id}`)) return
     /** 转置消息后给喵崽 */
     await Bot.emit('message', await this.ICQQEvent(data))
@@ -386,7 +386,7 @@ class Shamrock {
         let groupList = await _this.loadGroup()
         // 加载群员
         await Promise.all(groupList.map(async (group, index) => {
-          await common.sleep(50 * Math.floor(index / 10))
+          await lain.sleep(50 * Math.floor(index / 10))
           await _this.loadGroupMemberList(group.group_id)
         }))
       })(),
@@ -442,7 +442,7 @@ class Shamrock {
       if (!(groupList && Array.isArray(groupList))) {
         lain.error(this.id, `Shamrock群列表获取失败，正在重试：${retries + 1}`)
       }
-      await common.sleep(50)
+      await lain.sleep(50)
     }
 
     if (groupList && typeof groupList === 'object') {
@@ -482,7 +482,7 @@ class Shamrock {
       if (!(friendList && Array.isArray(friendList))) {
         lain.error(this.id, `Shamrock好友列表获取失败，正在重试：${retries + 1}`)
       }
-      await common.sleep(50)
+      await lain.sleep(50)
     }
 
     /** 好友列表获取失败 */

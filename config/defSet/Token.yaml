@@ -1,7 +1,11 @@
 # 示例配置
 QQ_Default:
   "default":
-    model: 0                              # 0-全部启用  1-仅启用QQ频道  2-仅启用QQ群Bot  3-不启用
+    mode: "websocket"                     # 运行模式  websocket  webhook  middleware
+    port: 0                               # webhook监听端口  0-跟随Lain-plugin
+    path: "/webhook"                      # webhook监听路径
+    applacation: "express"                # 中间件  express  koa
+    type: 0                               # 0-全部启用  1-仅启用QQ频道  2-仅启用QQ群Bot  3-不启用
     appid: "default"                      # 机器人id
     sandbox: false                        # 沙盒  true-开启  false-关闭
     timeout: 10000                        # 请求接口超时时间，默认10秒

@@ -1,5 +1,3 @@
-import common from "../../model/common.js"
-
 export default class QQGuildLog {
   /** 传入基本配置 */
   constructor(id) {
@@ -12,20 +10,20 @@ export default class QQGuildLog {
     const eventHandler = {
       GUILD_CREATE: async (msg) => {
         /** 新加入频道稍等服务器一会 */
-        await common.sleep(2000)
+        await lain.sleep(2000)
         let admin = false
         try {
           const Member = (await Bot[this.id].client.guildApi.guildMember(msg.id, this.tiny_id)).data
           admin = !!Member.roles.includes("2")
         } catch (err) {
-          common.warn(this.id, `Bot无法在频道 ${msg.id} 中读取基础信息，请给予权限...错误信息：${err.message}`)
+          lain.warn(this.id, `Bot无法在频道 ${msg.id} 中读取基础信息，请给予权限...错误信息：${err.message}`)
         }
 
         let qg
         try {
           qg = (await Bot[this.id].client.guildApi.guild(msg.id)).data
         } catch (err) {
-          common.warn(this.id, `Bot无法在频道 ${msg.id} 中读取基础信息，请给予权限...错误信息：${err.message}`)
+          lain.warn(this.id, `Bot无法在频道 ${msg.id} 中读取基础信息，请给予权限...错误信息：${err.message}`)
         }
 
         Bot.lain.guilds[qg.id] = {
@@ -35,7 +33,7 @@ export default class QQGuildLog {
           channels: {}
         }
 
-        await common.sleep(200)
+        await lain.sleep(200)
 
         try {
           const channelList = (await Bot[this.id].client.channelApi.channels(msg.id)).data
@@ -64,7 +62,7 @@ export default class QQGuildLog {
             Bot.lain.guilds[i.guild_id].channels[i.id] = i.name || i.id
           }
         } catch (err) {
-          common.warn(this.id, `Bot无法在频道 ${qg.id} 中读取子频道列表，请给予权限...错误信息：${err.message}`)
+          lain.warn(this.id, `Bot无法在频道 ${qg.id} 中读取子频道列表，请给予权限...错误信息：${err.message}`)
         }
         return `[${msg.name}(qg_${msg.id})] 机器人加入频道，操作人：${msg.op_user_id}`
       },
@@ -84,7 +82,7 @@ export default class QQGuildLog {
         return `[${msg.name}(${msg.id})] 子频道被删除，操作人：${msg.op_user_id}`
       },
       GUILD_MEMBER_ADD: async (msg) => {
-        await common.sleep(2000)
+        await lain.sleep(2000)
         if (msg.user.bot) {
           return `[${Bot.lain.guilds[msg.guild_id]?.name}(${msg.guild_id})] 频道新增机器人：${msg.user.username}(${msg.user.id})，操作人：${msg.op_user_id}`
         } else {
@@ -124,7 +122,7 @@ export default class QQGuildLog {
       }
     }
 
-    common.warn(this.id, await eventHandler[data.eventType](data.msg) || `未知事件：${JSON.stringify(data)}`)
+    lain.warn(this.id, await eventHandler[data.eventType](data.msg) || `未知事件：${JSON.stringify(data)}`)
   }
 
   async recallMsg(msg) {

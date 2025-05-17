@@ -1,6 +1,5 @@
 import Cfg from './lib/config/config.js'
 import Yaml from './model/YamlHandler.js'
-// import common from '../../lib/common/common.js'
 
 /**
  *  支持锅巴
@@ -29,7 +28,7 @@ import Yaml from './model/YamlHandler.js'
 //      }
 //      break
 //    } else {
-//      await common.sleep(1000)
+//      await lain.sleep(1000)
 //    }
 //  }
 
@@ -40,7 +39,7 @@ import Yaml from './model/YamlHandler.js'
 //  }
 // }, 10000)
 
-export function supportGuoba () {
+export function supportGuoba() {
   /** 添加url链接白名单 */
   const addUrlPromptProps = {
     content: '请输入URL：',
@@ -57,8 +56,14 @@ export function supportGuoba () {
     pluginInfo: {
       name: '铃音插件',
       title: 'Lain-plugin',
-      author: '@sky-summer @Lain.',
-      authorLink: 'https://gitee.com/sky-summer',
+      author: [
+        '@sky-summer',
+        '@Lain.'
+      ],
+      authorLink: [
+        'https://gitee.com/sky-summer',
+        'https://gitee.com/Zyy955'
+      ],
       link: 'https://gitee.com/sky-summer/Lain-plugin',
       isV3: true,
       isV2: false,
@@ -76,8 +81,9 @@ export function supportGuoba () {
       // 配置项 schemas
       schemas: [
         {
-          component: 'Divider',
-          label: 'HTTP服务器设置'
+          label: 'HTTP服务器设置',
+          // 第二个分组标记开始
+          component: 'SOFT_GROUP_BEGIN'
         },
         {
           field: 'Server.baseUrl',
@@ -115,18 +121,205 @@ export function supportGuoba () {
         {
           field: 'Server.InvalidTime',
           label: '临时文件失效时间',
-          bottomHelpMessage: '请输入时间(单位：秒，QQBot使用)',
+          bottomHelpMessage: '请输入时间(QQBot使用)',
           component: 'InputNumber',
           required: true,
           componentProps: {
             type: 'number',
-            placeholder: '请输入时间(单位：秒，QQBot使用)',
-            min: 1
+            placeholder: '请输入时间(QQBot使用)',
+            min: 1,
+            addonAfter: "s"
           }
         },
         {
-          component: 'Divider',
-          label: 'PC微信设置'
+          label: 'QQBot设置',
+          // 第二个分组标记开始
+          component: 'SOFT_GROUP_BEGIN'
+        },
+        {
+          field: "Token.QQ_Token",
+          label: "QQBot Token配置",
+          bottomHelpMessage: "点击列表项右上角可删除配置，删除后请重启云崽以应用更新",
+          component: "GSubForm",
+          componentProps: {
+            multiple: true,
+            schemas: [
+              {
+                label: '基础信息设置',
+                component: 'Divider'
+              },
+              {
+                field: "appid",
+                label: "AppID",
+                bottomHelpMessage: "机器人ID",
+                component: "Input",
+                required: true,
+                rules: [
+                  { pattern: '^\\d{9,}$', message: '最少需要9位哦！' },
+                ]
+              },
+              {
+                field: "token",
+                label: "Token",
+                bottomHelpMessage: "机器人令牌",
+                component: "InputPassword",
+                required: true
+              },
+              {
+                field: "secret",
+                label: "AppSecret",
+                bottomHelpMessage: "机器人秘钥",
+                component: "InputPassword",
+                required: true
+              },
+              {
+                label: '',
+                component: 'Divider'
+              },
+              {
+                field: "mode",
+                label: "运行模式",
+                bottomHelpMessage: "设置运行模式",
+                component: "RadioGroup",
+                componentProps: {
+                  buttonStyle: "solid",
+                  optionType: "button",
+                  options: [
+                    { label: 'websocket', value: 'websocket' },
+                    { label: 'webhook', value: 'webhook' },
+                    { label: 'middleware', value: 'middleware' }
+                  ]
+                }
+              },
+              {
+                field: "type",
+                label: "启用范围",
+                bottomHelpMessage: "设置启用的范围",
+                component: 'Select',
+                componentProps: {
+                  options: [
+                    { label: '全部启用', value: 0 },
+                    { label: '仅启用QQ频道', value: 1 },
+                    { label: '仅启用QQ群', value: 2 },
+                    { label: '不启用', value: 3 }
+                  ]
+                }
+              },
+              {
+                field: "timeout",
+                label: "超时时间",
+                bottomHelpMessage: "QQBot接口请求超时时间",
+                component: "InputNumber",
+                componentProps: {
+                  type: 'number',
+                  placeholder: '请输入时间',
+                  addonAfter: "ms",
+                  min: 1
+                }
+              },
+
+              {
+                label: '防倒卖提示设置',
+                component: 'Divider'
+              },
+              {
+                field: "other.Tips",
+                label: "发送防倒卖提示",
+                bottomHelpMessage: "进入新群时发送",
+                component: "Switch"
+              },
+              {
+                field: "other.Tips_GroupId",
+                label: "QQ群号",
+                bottomHelpMessage: "防倒卖提示中的QQ群号",
+                component: "Input"
+              },
+              {
+                label: '其他设置',
+                component: 'Divider'
+              },
+              {
+                field: "sandbox",
+                label: "使用沙盒",
+                bottomHelpMessage: "Bot提审时及上线后须关闭",
+                component: "Switch"
+              },
+              {
+                field: "allMsg",
+                label: "QQ频道接收全部消息",
+                bottomHelpMessage: "",
+                component: "Switch"
+              },
+              {
+                field: "removeAt",
+                label: "移除at",
+                bottomHelpMessage: "开启后发送指令无需at，仅私域Bot可用",
+                component: "Switch"
+              },
+              {
+                field: "other.Prefix",
+                label: "前缀转换",
+                bottomHelpMessage: "QQBot前缀转换 [/] => [#]",
+                component: "Switch"
+              },
+              {
+                field: "other.QQCloud",
+                label: "QQ图床",
+                bottomHelpMessage: "填写QQ号后启用，使用QQ发送图片",
+                component: "Input"
+              },
+              {
+                label: 'markdown设置',
+                component: 'Divider'
+              },
+              {
+                field: "markdown.type",
+                label: "模板模式",
+                bottomHelpMessage: "",
+                component: "RadioGroup",
+                componentProps: {
+                  buttonStyle: "solid",
+                  optionType: "button",
+                  options: [
+                    { label: '关闭', value: 0 },
+                    { label: '全局模式', value: 1 },
+                    { label: '正则模式', value: 2 },
+                    { label: '按钮模式', value: 3 }
+                  ]
+                }
+              },
+              {
+                field: "markdown.id",
+                label: "模板ID",
+                bottomHelpMessage: "",
+                component: "Input"
+              },
+              {
+                field: "markdown.text",
+                label: "模板文字键",
+                bottomHelpMessage: "",
+                component: "Input"
+              },
+              {
+                field: "markdown.img_dec",
+                label: "模板图片宽高键",
+                bottomHelpMessage: "",
+                component: "Input"
+              },
+              {
+                field: "markdown.img_url",
+                label: "模板图片url键",
+                bottomHelpMessage: "",
+                component: "Input"
+              },
+
+            ]
+          }
+        },
+        {
+          label: 'PC微信设置',
+          // 第二个分组标记开始
+          component: 'SOFT_GROUP_BEGIN'
         },
         {
           field: 'Adapter.ComWeChat.autoFriend',
@@ -151,8 +344,9 @@ export function supportGuoba () {
           }
         },
         {
-          component: 'Divider',
-          label: '网页微信设置'
+          label: '网页微信设置',
+          // 第二个分组标记开始
+          component: 'SOFT_GROUP_BEGIN'
         },
         {
           field: 'Adapter.WeXin.autoFriend',
@@ -177,8 +371,9 @@ export function supportGuoba () {
           }
         },
         {
-          component: 'Divider',
-          label: 'Shamrock设置'
+          label: 'Shamrock设置',
+          // 第二个分组标记开始
+          component: 'SOFT_GROUP_BEGIN'
         },
         {
           field: 'Adapter.Shamrock.baseUrl',
@@ -211,8 +406,9 @@ export function supportGuoba () {
           }
         },
         {
-          component: 'Divider',
-          label: '标准输入设置'
+          label: '标准输入设置',
+          // 第二个分组标记开始
+          component: 'SOFT_GROUP_BEGIN'
         },
         {
           field: 'Adapter.Stdin.state',
@@ -241,8 +437,9 @@ export function supportGuoba () {
           }
         },
         {
-          component: 'Divider',
-          label: '其他设置'
+          label: '其他设置',
+          // 第二个分组标记开始
+          component: 'SOFT_GROUP_BEGIN'
         },
         {
           field: 'Other.DelFileCron',
@@ -282,7 +479,12 @@ export function supportGuoba () {
         }
       ],
       // 获取配置数据方法（用于前端填充显示数据）
-      getConfigData () {
+      getConfigData() {
+        let QQ_Token = Object.values(Cfg.getToken('QQ_Token') ?? {}).map(i => {
+          i.other.Tips_GroupId = i.other["Tips-GroupId"]
+          return i
+        })
+
         return {
           Server: Cfg.Server,
           Adapter: {
@@ -291,17 +493,27 @@ export function supportGuoba () {
             Shamrock: Cfg.Shamrock,
             Stdin: Cfg.Stdin
           },
-          Other: Cfg.Other
+          Other: Cfg.Other,
+          Token: {
+            QQ_Token
+          }
         }
       },
       // 设置配置的方法（前端点确定后调用的方法）
-      setConfigData (data, { Result }) {
+      setConfigData(data, { Result }) {
+        const selectPath = (name) => {
+          if (name === "Token") return `/${name}.yaml`
+          else return `/Config-${name}.yaml`
+        }
         try {
           for (let i in data) {
             let value = data[i]
             i = i.split('.')
             let key = i.shift()
-            let config = new Yaml(lain._pathCfg + `/Config-${key}.yaml`)
+            let config = new Yaml(lain._pathCfg + selectPath(key))
+            if (key === "Token") {
+              value = parseQQToken(config, value)
+            }
             config.set(i.join('.'), value)
           }
           return Result.ok({}, '保存成功~')
@@ -314,11 +526,98 @@ export function supportGuoba () {
   }
 }
 
+function convertToNestedObject(data) {
+  const result = {}
+
+  for (const key in data) {
+    if (Object.hasOwn(data, key)) {
+      const keys = key.split(".")
+      let obj = result
+
+      keys.forEach((k, index) => {
+        if (index === keys.length - 1) {
+          obj[k] = data[key]
+        } else {
+          obj[k] = obj[k] || {}
+          obj = obj[k]
+        }
+      })
+    }
+  }
+
+  return result
+}
+
+function parseQQToken(cfg, token) {
+  let ret = {}
+  token.map(async i => {
+    const config = convertToNestedObject(i)
+
+    /** 单独处理部分参数 */
+    config.other["Tips-GroupId"] = Number(config.other.Tips_GroupId) || ""
+    delete config.other.Tips_GroupId
+    config.other.QQCloud = Number(config.other.QQCloud) || ""
+    if (String(config.appid).length < 9) return
+    config.appid = String(config.appid)
+
+    /** 看下是否配置已存在 */
+    if (cfg.value('QQ_Token', config.appid)) {
+      ret[String(config.appid)] = {
+        ...cfg.get('QQ_Token', config.appid),
+        ...config
+      }
+    } else {
+      ret[config.appid] = config
+    }
+
+    try {
+      const QQSDK = (await import('./adapter/QQBot/QQSDK.js')).default
+      const QQBot = (await import('./adapter/QQBot/index.js')).default
+      const QQGuild = (await import('./adapter/QQBot/QQGuild.js')).default
+      lain.info(config.appid, '正在建立连接，请稍等~')
+      const SDK = new QQSDK(config)
+      await SDK.start()
+      switch (config.type) {
+        case 0:
+          /** 同时接群和频道 */
+          try {
+            const QQB = new QQBot(SDK.sdk, true)
+            lain.info(config.appid, await QQB.StartBot())
+            await lain.sleep(1000)
+            lain.info(config.appid, await new QQGuild(SDK.sdk, true).StartBot())
+          } catch (err) {
+            lain.error(config.appid, err)
+          }
+          break
+        case 1:
+          /** 开始连接QQ频道Bot */
+          lain.info(config.appid, await new QQGuild(SDK.sdk, true).StartBot())
+          break
+        case 2:
+          try {
+            const bot = new QQBot(SDK.sdk, true)
+            lain.info(config.appid, await bot.StartBot())
+          } catch (err) {
+            lain.error(config.appid, err)
+          }
+          break
+        default:
+          break
+      }
+    } catch (error) {
+      /** 异常处理 */
+      lain.error(config.appid, error)
+    }
+  })
+  return ret
+}
+
 /** 后续添加(咕咕咕)
 
         {
-          component: 'Divider',
-          label: 'QQ频道设置'
+          label: 'QQ频道设置',
+          // 第二个分组标记开始
+          component: 'SOFT_GROUP_BEGIN'
         },
         {
           field: 'prefix',

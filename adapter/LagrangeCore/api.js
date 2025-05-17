@@ -1,4 +1,5 @@
 import { randomUUID } from 'crypto'
+import { core } from 'icqq'
 import fetch, { fileFromSync, FormData } from 'node-fetch'
 import Cfg from '../../lib/config/config.js'
 
@@ -333,17 +334,17 @@ let api = {
   },
 
   /**
-  * 群戳一戳
+  * 戳一戳
   * @param {string} id - 机器人QQ 通过e.bot、Bot调用无需传入
-  * @param {number} group_id - 群号
   * @param {number} user_id - QQ号
+  * @param {number|null} group_id - 群号
   */
-  async group_touch (id, group_id, user_id) {
+  async poke (id, user_id, group_id = null) {
     const params = {
       group_id,
-      message: [{ type: 'touch', data: { id: user_id } }]
+      user_id
     }
-    return await this.SendApi(id, 'send_group_msg', params)
+    return await this.SendApi(id, 'send_poke', params)
   },
 
   /**
@@ -563,9 +564,6 @@ let api = {
   * 获取城市ADCode
   * @param id
   * @param city 城市
-  * @param sub_type add 或 invite, 请求类型（需要和上报消息中的 sub_type 字段相符）
-  * @param approve 是否同意请求／邀请
-  * @param reason 拒绝理由（仅在拒绝时有效）
   * @return {Promise<*|string>}
   */
   async get_weather_city_code (id, city) {
@@ -755,32 +753,115 @@ let api = {
     }
   },
 
+  async sendUni (id, command, body, timeout = 10) {
+    let res = await this.SendApi(id, ".send_packet", {
+      command,
+      data: Buffer.from(body).toString("hex")
+    }, timeout)
+
+    if (res?.result)
+      return Buffer.from(res.result, "hex")
+    return Buffer.alloc(0)
+  },
+
+  async sendOidb(id, cmd, body, timeout = 5) {
+    const sp = cmd //OidbSvc.0x568_22
+      .replace("OidbSvc.", "")
+      .replace("oidb_", "")
+      .split("_")
+    const type1 = parseInt(sp[0], 16)
+    const type2 = parseInt(sp[1])
+    body = core.pb.encode({
+      1: type1,
+      2: isNaN(type2) ? 1 : type2,
+      3: 0,
+      4: body,
+      6: "Linux " + Bot[id].apk.ver,
+    });
+    return await this.sendUni(id, cmd, body, timeout);
+  },
+
+  async sendPacket(id, type, cmd, body) {
+    if (type === "Uni")
+      return await this.sendUni(id, cmd, body);
+    else
+      return await this.sendOidb(id, cmd, body);
+  },
+
+  async sendOidbSvcTrpcTcp(id, cmd, body, isUid, timeout = 5) {
+    const sp = cmd //OidbSvcTrpcTcp.0xf5b_1
+      .replace("OidbSvcTrpcTcp.", "")
+      .split("_");
+    const type1 = parseInt(sp[0], 16), type2 = parseInt(sp[1]);
+    const _body = core.pb.encode({
+      1: type1,
+      2: type2,
+      4: body,
+      6: "Linux " + Bot[id].apk.ver,
+      12: isUid ? 1 : 0
+    });
+    const payload = await this.sendUni(id, cmd, _body, timeout);
+    //log(payload)
+    const rsp = core.pb.decode(payload);
+    if (rsp[3] === 0)
+      return rsp[4];
+    throw new Error(`${rsp[5]?.toString() || "unknown error"} (${rsp[3]})`)
+  },
+
+  async getNTPicRkey (id) {
+    const params = {}
+    let ret = await this.SendApi(id, "get_rkeys", params)
+    const res = {}
+    ret.rkeys.map(i => {
+      if (i.type === "group") res.groupNTPicRkey = i.rkey
+      else res.offNTPicRkey = i.rkey
+    })
+    return res
+  },
+
+  async thumbUp (id, user_id, times = 20) {
+    times = Number(times)
+    if (times > 20 || times < 0)
+      times = 20
+    const params = {
+      user_id,
+      times
+    }
+    let res = await this.SendApi(id, "send_like", params)
+    if (!res) return true
+    else return { ...res, code: res.retcode, msg: res.data }
+  },
+
   /**
   * 发送 WebSocket 请求
   * @param {string} id - 机器人QQ 通过e.bot、Bot调用无需传入
   * @param {string} action - 请求 API 端点
   * @param {string} params - 请求参数
+  * @param {number} timeout - 超时时间
   */
-  async SendApi (id, action, params) {
+  async SendApi (id, action, params, timeout = 30) {
+    timeout = Math.abs(timeout)
     const echo = randomUUID()
     /** 序列化 */
     const log = JSON.stringify({ echo, action, params })
 
-    lain.debug(id, '[ws] send -> ' + log)
+    lain.debug(id, '[ws] send -> ' + log.replace(/base64:\/\/.*?(,|]|")/g, 'base64://...$1'))
     Bot[id].ws.send(log)
 
     /** 等待响应 */
-    for (let i = 0; i < 1200; i++) {
+    for (let i = 0; i < timeout * 10; i++) {
       const data = lain.echo[echo]
       if (data) {
         delete lain.echo[echo]
-        if (data.status === 'ok') return data.data
-        else lain.error(id, data); throw data
+        if (data.status === 'ok') {
+          if (data.data?.sequence) Bot[id].sig.seq = data.data.sequence
+          return data.data
+        } else lain.debug(id, data); throw data
       } else {
-        await new Promise((resolve) => setTimeout(resolve, 50))
+        await new Promise((resolve) => setTimeout(resolve, 100))
       }
     }
-    throw new Error({ status: 'error', message: '请求超时' })
+    throw { status: 'error', message: '请求超时' }
   }
 }
 
