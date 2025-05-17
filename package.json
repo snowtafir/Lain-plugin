@@ -1,6 +1,6 @@
 {
   "name": "lain-plugin",
-  "version": "1.4.7",
+  "version": "1.4.8",
   "author": "sky-summer, snowtafir Lain.",
   "gitee": "https://gitee.com/snowtafir/Lain-plugin.git",
   "type": "module",
@@ -35,7 +35,8 @@
     "silk-wasm": "^3.6.3",
     "wechat4u": "^0.7.14",
     "ws": "^8.18.0",
-    "ulid": "2.3.0"
+    "ulid": "2.3.0",
+    "node-fetch": "3.3.2"
   },
   "devDependencies": {
     "cz-conventional-changelog": "^3.3.0",

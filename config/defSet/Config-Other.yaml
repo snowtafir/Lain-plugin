@@ -10,3 +10,4 @@ QQBotdau: true
 # URL白名单，在白名单中的链接不会转为二维码
 WhiteLink:
   - https://www.lain.com
+

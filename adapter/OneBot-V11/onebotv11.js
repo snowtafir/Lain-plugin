@@ -135,8 +135,7 @@ class OneBotv11Adapter {
    * @returns {Promise<Array>} - 返回处理后的消息内容
    */
   async makeMsg(msg) {
-    if (!Array.isArray(msg))
-      msg = [msg]
+    if (!Array.isArray(msg)) msg = [msg]
     const msgs = []
     const forward = []
     for (let i of msg) {
@@ -155,8 +154,14 @@ class OneBotv11Adapter {
         case "button":
           continue
         case "node":
-          forward.push(...i.data)
-          continue
+          if (Array.isArray(i.data)) {
+            // 这里不再直接塞进 forward，防止格式错乱
+            msgs.push(i)
+          } else if (i.data) {
+            // 这里也不直接塞进 forward
+            msgs.push(i)
+          }
+          break
         case "raw":
           i = i.data
           break
@@ -358,6 +363,30 @@ class OneBotv11Adapter {
   async makeForwardMsg(msg) {
     const msgs = []
     for (const i of msg) {
+      // 如果 message 是 node 节点数组，直接拍平，不包裹进 content
+      if (Array.isArray(i.message)) {
+        for (const m of i.message) {
+          if (m.type === "node" && m.data) {
+            msgs.push(m)
+          } else {
+            // 普通消息段，正常处理
+            const [content, forward] = await this.makeMsg(m)
+            if (forward.length)
+              msgs.push(...await this.makeForwardMsg(forward))
+            if (content.length)
+              msgs.push({
+                type: "node", data: {
+                  name: i.nickname || "匿名消息",
+                  uin: String(Number(i.user_id) || 80000000),
+                  content,
+                  time: i.time,
+                }
+              })
+          }
+        }
+        continue
+      }
+      // 普通消息
       const [content, forward] = await this.makeMsg(i.message)
       if (forward.length)
         msgs.push(...await this.makeForwardMsg(forward))
@@ -371,7 +400,7 @@ class OneBotv11Adapter {
           }
         })
     }
-    return msgs
+    return msgs;
   }
 
   /**
@@ -1107,6 +1136,7 @@ class OneBotv11Adapter {
       ...i,
       sendMsg: this.sendFriendMsg.bind(this, i),
       getMsg: this.getMsg.bind(this, i),
+      makeForwardMsg: this.makeForwardMsg.bind(this),
       recallMsg: this.recallMsg.bind(this, i),
       getForwardMsg: this.getForwardMsg.bind(this, i),
       sendForwardMsg: this.sendFriendForwardMsg.bind(this, i),
@@ -1183,6 +1213,7 @@ class OneBotv11Adapter {
         ...i,
         sendMsg: this.sendGuildMsg.bind(this, i),
         getMsg: this.getMsg.bind(this, i),
+        makeForwardMsg: this.makeForwardMsg.bind(this),
         recallMsg: this.recallMsg.bind(this, i),
         getForwardMsg: this.getForwardMsg.bind(this, i),
         getInfo: this.getGuildInfo.bind(this, i),
@@ -1207,7 +1238,7 @@ class OneBotv11Adapter {
       getMsg: this.getMsg.bind(this, i),
       recallMsg: this.recallMsg.bind(this, i),
       getForwardMsg: this.getForwardMsg.bind(this, i),
-      sendForwardMsg: this.sendGroupForwardMsg.bind(this, i),
+      makeForwardMsg: this.makeForwardMsg.bind(this),
       sendFile: (file, name) => this.sendGroupFile(i, file, undefined, name),
       getInfo: this.getGroupInfo.bind(this, i),
       getAvatarUrl() { return this.avatar || `https://p.qlogo.cn/gh/${group_id}/${group_id}/0` },
@@ -1344,6 +1375,12 @@ class OneBotv11Adapter {
    */
   async makeMessage(data) {
     data.message = this.parseMsg(data.message)
+    if (data.group_id && data.bot && typeof data.bot.pickGroup === "function") {
+      data.group = data.bot.pickGroup(data, data.group_id)
+    }
+    if (data.user_id && data.bot && typeof data.bot.pickFriend === "function") {
+      data.friend = data.bot.pickFriend(data.user_id)
+    }
     switch (data.message_type) {
       case "private": {
         const name = data.sender.card || data.sender.nickname || data.bot.fl.get(data.user_id)?.nickname

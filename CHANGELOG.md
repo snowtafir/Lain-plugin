@@ -1,3 +1,7 @@
+# 1.4.8
+* 修复 `oneBotV11` 转发消息支持
+* 合并 `sky-summer/Lain-plugin`的`master`分支
+
 # 1.4.7
 * add `oneBotV11` Adapter
 
