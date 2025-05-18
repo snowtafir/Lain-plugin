@@ -1507,6 +1507,9 @@ class OneBotv11Adapter {
         lain.info(this.self_id, `Bot: [${data.self_id}] > 群：[${data.group_id}]`, `群禁言：${data.operator_id} => 用户： [${data.user_id}]: ${data.sub_type} ${data.duration}秒`)
         data.bot.pickMember(data.group_id, data.user_id).getInfo()
         break
+      case "group_msg_emoji_like":
+        lain.info(this.self_id, `Bot: [${data.self_id}] 群：[${data.group_id}]: ${data.user_id} > [${data.likes}]`, `群消息回应：${data.message_id}`)
+        break
       case "friend_add":
         lain.info(this.self_id, `Bot: [${data.self_id}] > 用户：[${data.user_id}]`, "好友添加")
         data.bot.pickFriend(data.user_id).getInfo()
@@ -1531,6 +1534,13 @@ class OneBotv11Adapter {
           case "title":
             lain.info(this.self_id, `Bot: [${data.self_id}] > 群：[${data.group_id}]: ${data.user_id}`, `群头衔：${data.title}`)
             data.bot.pickMember(data.group_id, data.user_id).getInfo()
+            break
+          case "input_status":
+            data.post_type = "internal"
+            data.notice_type = "input"
+            data.end ??= data.event_type !== 1
+            data.message ||= data.status_text || `对方${data.end ? "结束" : "正在"}输入...`
+            lain.info(this.self_id, `Bot: [${data.self_id}] 用户：${data.user_id}`, `${data.message}`)
             break
           default:
             lain.warn(this.self_id, data.self_id, `未知通知：${logger.magenta(data.raw)}`)
@@ -1580,6 +1590,10 @@ class OneBotv11Adapter {
         data.notice_type = "guild_channel_destroyed"
         lain.info(this.self_id, `Bot: [${data.self_id}] > 频道：[${data.guild_id}-${data.channel_id}, ${data.user_id}]`, `子频道删除：${this.BotString(data.channel_info)}`)
         data.bot.getGroupMap()
+      case "bot_offline":
+        data.post_type = "system"
+        data.notice_type = "offline"
+        lain.error(this.self_id, `${data.tag || "账号下线"}：${data.message}`, data.self_id)
         break
       default:
         lain.warn(this.self_id, data.self_id, `未知通知：${logger.magenta(data.raw)}`)
