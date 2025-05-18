@@ -35,9 +35,9 @@ class OneBotv11Adapter {
    */
   makeLog(msg) {
     let logMsg = this.BotString(msg);
-    logMsg.replace(/base64:\/\/.*?(,|]|")/g, "base64://...$1");
-    if (logMsg.length > 200) {
-      logMsg = logMsg.substring(0, 200) + '...';
+    logMsg = logMsg.replace(/base64:\/\/.*?(,|]|")/g, "base64://...$1");
+    if (logMsg.length > 3000) {
+      logMsg = logMsg.substring(0, 3000) + '...';
     }
     return logMsg
   }
@@ -50,7 +50,7 @@ class OneBotv11Adapter {
    */
   wsSendMsg(msg, ws) {
     if (!Buffer.isBuffer(msg)) msg = this.BotString(msg)
-    lain.debug(this.self_id, ["消息", this.makeLog(msg)], `Bot: [${this.self_id}] => 客户端： [${this.user_agent}]`)
+    lain.debug(this.self_id, `Bot: [${this.self_id}] => 客户端： [${this.user_agent}]`, ["消息", this.makeLog(msg)])
     return ws.send(msg)
   }
 
@@ -73,7 +73,7 @@ class OneBotv11Adapter {
         timeout: setTimeout(() => {
           reject(Object.assign(error, request, { timeout: this.timeout }))
           delete this.echo[echo]
-          lain.error(this.self_id, ["请求超时", `${this.makeLog(request)}`], data.self_id)
+          lain.error(this.self_id, data.self_id, `["请求超时", ${this.makeLog(request)}]`)
           ws.terminate()
         }, this.timeout),
       }
@@ -137,7 +137,6 @@ class OneBotv11Adapter {
   async makeMsg(msg) {
     if (!Array.isArray(msg)) msg = [msg]
     const msgs = []
-    const forward = []
     for (let i of msg) {
       if (typeof i !== "object")
         i = { type: "text", data: { text: i } }
@@ -147,61 +146,83 @@ class OneBotv11Adapter {
       switch (i.type) {
         case "at":
           i.data.qq = String(i.data.qq)
-          break
+          msgs.push({ type: "at", data: i.data })
+          continue
         case "reply":
           i.data.id = String(i.data.id)
-          break
-        case "button":
+          msgs.push({ type: "reply", data: i.data })
+          continue
+        case "face":
+          msgs.push({ type: "face", data: i.data })
+          continue
+        case "rps":
+        case "new_rps":
+          msgs.push({ type: "rps", data: i.data })
+          continue
+        case "dice":
+        case "new_dice":
+          msgs.push({ type: "dice", data: i.data })
+          continue
+        case "poke":
+          msgs.push({ type: "poke", data: i.data })
+          continue
+        case "gift":
+          msgs.push({ type: "gift", data: i.data })
+          continue
+        case "touch":
+          msgs.push({ type: "touch", data: i.data })
+          continue
+        case "custom":
+          msgs.push({ type: "custom", data: i.data })
+          continue
+        case "weather":
+          msgs.push({ type: "weather", data: i.data })
+          continue
+        case "basketball":
+          msgs.push({ type: "basketball", data: i.data })
           continue
         case "node":
-          if (Array.isArray(i.data)) {
-            // 这里不再直接塞进 forward，防止格式错乱
-            msgs.push(i)
-          } else if (i.data) {
-            // 这里也不直接塞进 forward
-            msgs.push(i)
-          }
-          break
+          // 转发消息节点直接推入
+          msgs.push(i)
+          continue
         case "raw":
           i = i.data
           break
+        case "image":
+        case "record":
+        case "video":
+        case "voice":
+        case "file":
+        case "json":
+        case "xml":
+        case "music":
+        case "share":
+        case "location":
+          // 这些类型需要处理 file 字段
+          if (i.data.file)
+            i.data.file = await this.makeFile(i.data.file)
+          msgs.push({ type: i.type, data: i.data })
+          continue
       }
 
-      if (i.data.file)
+      // 兜底：text 或未知类型
+      if (i.data && i.data.file)
         i.data.file = await this.makeFile(i.data.file)
-
-      msgs.push(i)
+      msgs.push({ type: i.type || "text", data: i.data })
     }
-    return [msgs, forward]
+    return [msgs]
   }
 
   /**
    * 发送消息
    * @param {Array|Object} msg - 消息内容
    * @param {Function} send - 发送消息的函数
-   * @param {Function} sendForwardMsg - 发送转发消息的函数
    * @returns {Promise<Object>} - 返回处理后的消息内容
    */
-  async sendMsg(msg, send, sendForwardMsg) {
-    const [message, forward] = await this.makeMsg(msg)
-    const ret = []
-
-    if (forward.length) {
-      const data = await sendForwardMsg(forward)
-      if (Array.isArray(data))
-        ret.push(...data)
-      else
-        ret.push(data)
-    }
-
-    if (message.length)
-      ret.push(await send(message))
-    if (ret.length === 1) return ret[0]
-
-    const message_id = []
-    for (const i of ret) if (i?.message_id)
-      message_id.push(i.message_id)
-    return { data: ret, message_id }
+  async sendMsg(msg, send) {
+    const [message] = await this.makeMsg(msg)
+    if (!message.length) return
+    return await send(message)
   }
 
   /**
@@ -212,12 +233,12 @@ class OneBotv11Adapter {
    */
   sendFriendMsg(data, msg) {
     return this.sendMsg(msg, message => {
-      lain.info(this.self_id, `发送好友消息：${this.makeLog(message)}`, `Bot: [${data.self_id}] => 好友： [${data.user_id}]`)
+      lain.info(this.self_id, `用户：[${data.user_id}]`, `发送好友消息：${this.makeLog(message)}`)
       return data.bot.sendApi("send_msg", {
         user_id: data.user_id,
         message,
       })
-    }, msg => this.sendFriendForwardMsg(data, msg))
+    })
   }
 
   /**
@@ -228,12 +249,12 @@ class OneBotv11Adapter {
    */
   sendGroupMsg(data, msg) {
     return this.sendMsg(msg, message => {
-      lain.info(this.self_id, `发送群消息：${this.makeLog(message)}`, `Bot: [${data.self_id}] => 群：[${data.group_id}]`)
+      lain.info(this.self_id, `群：[${data.group_id}]`, `发送群消息：${this.makeLog(message)}`)
       return data.bot.sendApi("send_msg", {
         group_id: data.group_id,
         message,
       })
-    }, msg => this.sendGroupForwardMsg(data, msg))
+    })
   }
 
   /**
@@ -244,13 +265,13 @@ class OneBotv11Adapter {
    */
   sendGuildMsg(data, msg) {
     return this.sendMsg(msg, message => {
-      lain.info(this.self_id, `发送频道消息：${this.makeLog(message)}`, `Bot: [${data.self_id}] => 频道： [${data.guild_id}-${data.channel_id}]`)
+      lain.info(this.self_id, `频道：[${data.guild_id}-${data.channel_id}]`, `发送频道消息：${this.makeLog(message)}`)
       return data.bot.sendApi("send_guild_channel_msg", {
         guild_id: data.guild_id,
         channel_id: data.channel_id,
         message,
       })
-    }, msg => Bot.sendForwardMsg(msg => this.sendGuildMsg(data, msg), msg))
+    })
   }
 
   /**
@@ -260,7 +281,7 @@ class OneBotv11Adapter {
    * @returns {Promise<Array>} - 返回处理后的消息内容
    */
   async recallMsg(data, message_id) {
-    lain.info(this.self_id, `撤回消息：${message_id}`, data.self_id)
+    lain.info(this.self_id, data.self_id, `撤回消息：${message_id}`)
     if (!Array.isArray(message_id))
       message_id = [message_id]
     const msgs = []
@@ -277,11 +298,22 @@ class OneBotv11Adapter {
    */
   parseMsg(msg) {
     const array = []
-    for (const i of Array.isArray(msg) ? msg : [msg])
-      if (typeof i === "object")
-        array.push({ ...i.data, type: i.type })
-      else
+    for (const i of Array.isArray(msg) ? msg : [msg]) {
+      if (typeof i === "object") {
+        if (i.type === "node" && i.data && Array.isArray(i.data.content)) {
+          // 转发消息节点，递归解析
+          array.push({
+            ...i.data,
+            type: "node",
+            content: this.parseMsg(i.data.content)
+          })
+        } else {
+          array.push({ ...i.data, type: i.type })
+        }
+      } else {
         array.push({ type: "text", text: String(i) })
+      }
+    }
     return array
   }
 
@@ -361,46 +393,46 @@ class OneBotv11Adapter {
    * @returns {Promise<Array>} - 返回处理后的转发消息内容
    */
   async makeForwardMsg(msg) {
-    const msgs = []
+    const nodes = []
     for (const i of msg) {
-      // 如果 message 是 node 节点数组，直接拍平，不包裹进 content
-      if (Array.isArray(i.message)) {
-        for (const m of i.message) {
-          if (m.type === "node" && m.data) {
-            msgs.push(m)
-          } else {
-            // 普通消息段，正常处理
-            const [content, forward] = await this.makeMsg(m)
-            if (forward.length)
-              msgs.push(...await this.makeForwardMsg(forward))
-            if (content.length)
-              msgs.push({
-                type: "node", data: {
-                  name: i.nickname || "匿名消息",
-                  uin: String(Number(i.user_id) || 80000000),
-                  content,
-                  time: i.time,
-                }
-              })
-          }
+      // 如果是 node，递归拍平其 content
+      if (i.type === "node" && i.data && Array.isArray(i.data.content)) {
+        // 展开 content，每个都包成 node
+        const subNodes = await this.makeForwardMsg(i.data.content)
+        nodes.push(...subNodes)
+        continue
+      }
+      // 兼容 message 字段
+      if (i.message) {
+        const [content] = await this.makeMsg(i.message)
+        if (content.length) {
+          nodes.push({
+            type: "node",
+            data: {
+              name: i.nickname || "匿名消息",
+              uin: String(Number(i.user_id) || 80000000),
+              content,
+              time: i.time,
+            }
+          })
         }
         continue
       }
-      // 普通消息
-      const [content, forward] = await this.makeMsg(i.message)
-      if (forward.length)
-        msgs.push(...await this.makeForwardMsg(forward))
-      if (content.length)
-        msgs.push({
-          type: "node", data: {
+      // 普通消息段，包成 node
+      const [content] = await this.makeMsg(i)
+      if (content.length) {
+        nodes.push({
+          type: "node",
+          data: {
             name: i.nickname || "匿名消息",
             uin: String(Number(i.user_id) || 80000000),
             content,
             time: i.time,
           }
         })
+      }
     }
-    return msgs;
+    return nodes
   }
 
   /**
@@ -410,7 +442,7 @@ class OneBotv11Adapter {
    * @returns {Promise<Object>} - 返回处理后的消息内容
    */
   async sendFriendForwardMsg(data, msg) {
-    lain.info(this.self_id, `发送好友转发消息：${this.makeLog(msg)}`, `${data.self_id} => ${data.user_id}`)
+    lain.info(this.self_id, `${data.self_id} => ${data.user_id}`, `发送好友转发消息：${this.makeLog(msg)}`)
     return data.bot.sendApi("send_private_forward_msg", {
       user_id: data.user_id,
       messages: await this.makeForwardMsg(msg),
@@ -424,7 +456,7 @@ class OneBotv11Adapter {
    * @returns {Promise<Object>} - 返回处理后的消息内容
    */
   async sendGroupForwardMsg(data, msg) {
-    lain.info(this.self_id, `发送群转发消息：${this.makeLog(msg)}`, `${data.self_id} => ${data.group_id}`)
+    lain.info(this.self_id, `${data.self_id} => ${data.group_id}`, `发送群转发消息：${this.makeLog(msg)}`)
     return data.bot.sendApi("send_group_forward_msg", {
       group_id: data.group_id,
       messages: await this.makeForwardMsg(msg),
@@ -720,7 +752,7 @@ class OneBotv11Adapter {
    * @returns {Promise<Object>} - 设置结果
    */
   setProfile(data, profile) {
-    lain.info(this.self_id, `设置资料：${this.BotString(profile)}`, data.self_id)
+    lain.info(this.self_id, data.self_id, `设置资料：${this.BotString(profile)}`)
     return data.bot.sendApi("set_qq_profile", profile)
   }
 
@@ -731,7 +763,7 @@ class OneBotv11Adapter {
    * @returns {Promise<Object>} - 设置结果
    */
   async setAvatar(data, file) {
-    lain.info(this.self_id, `设置头像：${file}`, data.self_id)
+    lain.info(this.self_id, data.self_id, `设置头像：${file}`)
     return data.bot.sendApi("set_qq_avatar", {
       file: await this.makeFile(file),
     })
@@ -744,7 +776,7 @@ class OneBotv11Adapter {
    * @returns {Promise<Object>} - 发送结果
    */
   sendLike(data, times) {
-    lain.info(this.self_id, `点赞：${times}次`, `${data.self_id} => ${data.user_id}`)
+    lain.info(this.self_id, `${data.self_id} => ${data.user_id}`, `点赞：${times}次`)
     return data.bot.sendApi("send_like", {
       user_id: data.user_id,
       times,
@@ -758,7 +790,7 @@ class OneBotv11Adapter {
    * @returns {Promise<Object>} - 设置结果
    */
   setGroupName(data, group_name) {
-    lain.info(this.self_id, `设置群名：${group_name}`, `${data.self_id} => ${data.group_id}`)
+    lain.info(this.self_id, `${data.self_id} => ${data.group_id}`, `设置群名：${group_name}`)
     return data.bot.sendApi("set_group_name", {
       group_id: data.group_id,
       group_name,
@@ -772,7 +804,7 @@ class OneBotv11Adapter {
    * @returns {Promise<Object>} - 设置结果
    */
   async setGroupAvatar(data, file) {
-    lain.info(this.self_id, `设置群头像：${file}`, `${data.self_id} => ${data.group_id}`)
+    lain.info(this.self_id, `${data.self_id} => ${data.group_id}`, `设置群头像：${file}`)
     return data.bot.sendApi("set_group_portrait", {
       group_id: data.group_id,
       file: await this.makeFile(file),
@@ -787,7 +819,7 @@ class OneBotv11Adapter {
    * @returns {Promise<Object>} - 设置结果
    */
   setGroupAdmin(data, user_id, enable) {
-    lain.info(this.self_id, `${enable ? "设置" : "取消"}群管理员：${user_id}`, `${data.self_id} => ${data.group_id}`)
+    lain.info(this.self_id, `${data.self_id} => ${data.group_id}`, `${enable ? "设置" : "取消"}群管理员：${user_id}`)
     return data.bot.sendApi("set_group_admin", {
       group_id: data.group_id,
       user_id,
@@ -803,7 +835,7 @@ class OneBotv11Adapter {
    * @returns {Promise<Object>} - 设置结果
    */
   setGroupCard(data, user_id, card) {
-    lain.info(this.self_id, `设置群名片：${card}`, `${data.self_id} => ${data.group_id}, ${user_id}`)
+    lain.info(this.self_id, `${data.self_id} => ${data.group_id}[${user_id}]`, `设置群名片：${card}`)
     return data.bot.sendApi("set_group_card", {
       group_id: data.group_id,
       user_id,
@@ -820,7 +852,7 @@ class OneBotv11Adapter {
    * @returns {Promise<Object>} - 设置结果
    */
   setGroupTitle(data, user_id, special_title, duration) {
-    lain.info(this.self_id, `设置群头衔：${special_title} ${duration}`, `${data.self_id} => ${data.group_id}, ${user_id}`)
+    lain.info(this.self_id, `${data.self_id} => ${data.group_id}[${user_id}]`, `设置群头衔：${special_title} ${duration}`)
     return data.bot.sendApi("set_group_special_title", {
       group_id: data.group_id,
       user_id,
@@ -849,7 +881,7 @@ class OneBotv11Adapter {
    * @returns {Promise<Object>} - 禁言结果
    */
   setGroupBan(data, user_id, duration) {
-    lain.info(this.self_id, `禁言群成员：${duration}秒`, `${data.self_id} => ${data.group_id}, ${user_id}`)
+    lain.info(this.self_id, `${data.self_id} => ${data.group_id}[${user_id}]`, `禁言群成员：${duration}秒`)
     return data.bot.sendApi("set_group_ban", {
       group_id: data.group_id,
       user_id,
@@ -863,7 +895,7 @@ class OneBotv11Adapter {
    * @returns {Promise} - API调用返回的Promise
    */
   setGroupWholeKick(data, enable) {
-    lain.info(this.self_id, `${enable ? "开启" : "关闭"}全员禁言`, `${data.self_id} => ${data.group_id}`)
+    lain.info(this.self_id, `${data.self_id} => ${data.group_id}`, `${enable ? "开启" : "关闭"}全员禁言`)
     return data.bot.sendApi("set_group_whole_ban", {
       group_id: data.group_id,
       enable,
@@ -878,7 +910,7 @@ class OneBotv11Adapter {
    * @returns {Promise} - API调用返回的Promise
    */
   setGroupKick(data, user_id, reject_add_request) {
-    lain.info(this.self_id, `踢出群成员${reject_add_request ? "拒绝再次加群" : ""}`, `${data.self_id} => ${data.group_id}, ${user_id}`)
+    lain.info(this.self_id, `${data.self_id} => ${data.group_id}, ${user_id}`, `踢出群成员${reject_add_request ? "拒绝再次加群" : ""}`)
     return data.bot.sendApi("set_group_kick", {
       group_id: data.group_id,
       user_id,
@@ -893,7 +925,7 @@ class OneBotv11Adapter {
    * @returns {Promise} - API调用返回的Promise
    */
   setGroupLeave(data, is_dismiss) {
-    lain.info(this.self_id, is_dismiss ? "解散" : "退群", `${data.self_id} => ${data.group_id}`)
+    lain.info(this.self_id, `${data.self_id} => ${data.group_id}`, is_dismiss ? "解散" : "退群")
     return data.bot.sendApi("set_group_leave", {
       group_id: data.group_id,
       is_dismiss,
@@ -924,7 +956,7 @@ class OneBotv11Adapter {
    * @returns {Promise} - API调用返回的Promise
    */
   async sendFriendFile(data, file, name = path.basename(file)) {
-    lain.info(this.self_id, `发送好友文件：${name}(${file})`, `${data.self_id} => ${data.user_id}`)
+    lain.info(this.self_id, `${data.self_id} => ${data.user_id}`, `发送好友文件：${name}(${file})`)
     return data.bot.sendApi("upload_private_file", {
       user_id: data.user_id,
       file: await this.makeFile(file, { file: true }),
@@ -941,7 +973,7 @@ class OneBotv11Adapter {
    * @returns {Promise} - API调用返回的Promise
    */
   async sendGroupFile(data, file, folder, name = path.basename(file)) {
-    lain.info(this.self_id, `发送群文件：${folder || ""}/${name}(${file})`, `${data.self_id} => ${data.group_id}`)
+    lain.info(this.self_id, `${data.self_id} => ${data.group_id}`, `发送群文件：${folder || ""}/${name}(${file})`)
     return data.bot.sendApi("upload_group_file", {
       group_id: data.group_id,
       folder,
@@ -958,7 +990,7 @@ class OneBotv11Adapter {
    * @returns {Promise} - API调用返回的Promise
    */
   deleteGroupFile(data, file_id, busid) {
-    lain.info(this.self_id, `删除群文件：${file_id}(${busid})`, `${data.self_id} => ${data.group_id}`)
+    lain.info(this.self_id, `${data.self_id} => ${data.group_id}`, `删除群文件：${file_id}(${busid})`)
     return data.bot.sendApi("delete_group_file", {
       group_id: data.group_id,
       file_id,
@@ -973,7 +1005,7 @@ class OneBotv11Adapter {
    * @returns {Promise} - API调用返回的Promise
    */
   createGroupFileFolder(data, name) {
-    lain.info(this.self_id, `创建群文件夹：${name}`, `${data.self_id} => ${data.group_id}`)
+    lain.info(this.self_id, `${data.self_id} => ${data.group_id}`, `创建群文件夹：${name}`)
     return data.bot.sendApi("create_group_file_folder", {
       group_id: data.group_id,
       name,
@@ -1115,7 +1147,7 @@ class OneBotv11Adapter {
    */
 
   deleteFriend(data) {
-    lain.info("info", "删除好友", `${data.self_id} => ${data.user_id}`, true)(this.self_id, `删除好友：`, `${data.self_id} => ${data.user_id}`)
+    lain.info("info", `${data.self_id} => ${data.user_id}`, this.self_id, `删除好友：`)
     return data.bot.sendApi("delete_friend", { user_id: data.user_id })
       .finally(this.getFriendMap.bind(this, data))
   }
@@ -1214,6 +1246,7 @@ class OneBotv11Adapter {
         sendMsg: this.sendGuildMsg.bind(this, i),
         getMsg: this.getMsg.bind(this, i),
         makeForwardMsg: this.makeForwardMsg.bind(this),
+        sendForwardMsg: this.sendGroupForwardMsg.bind(this, i),
         recallMsg: this.recallMsg.bind(this, i),
         getForwardMsg: this.getForwardMsg.bind(this, i),
         getInfo: this.getGuildInfo.bind(this, i),
@@ -1239,6 +1272,7 @@ class OneBotv11Adapter {
       recallMsg: this.recallMsg.bind(this, i),
       getForwardMsg: this.getForwardMsg.bind(this, i),
       makeForwardMsg: this.makeForwardMsg.bind(this),
+      sendForwardMsg: this.sendGroupForwardMsg.bind(this, i),
       sendFile: (file, name) => this.sendGroupFile(i, file, undefined, name),
       getInfo: this.getGroupInfo.bind(this, i),
       getAvatarUrl() { return this.avatar || `https://p.qlogo.cn/gh/${group_id}/${group_id}/0` },
@@ -1364,7 +1398,7 @@ class OneBotv11Adapter {
     data.bot.getFriendMap()
     data.bot.getGroupMemberMap()
 
-    lain.mark(this.self_id, `${this.name}(${this.id}) ${data.bot.version.version} 已连接`, data.self_id)
+    lain.mark(this.self_id, data.self_id, `${this.name}(${this.id}) ${data.bot.version.version} 已连接`)
     Bot.em(`connect.${data.self_id}`, data)
   }
 
@@ -1384,7 +1418,7 @@ class OneBotv11Adapter {
     switch (data.message_type) {
       case "private": {
         const name = data.sender.card || data.sender.nickname || data.bot.fl.get(data.user_id)?.nickname
-        lain.info(this.self_id, `好友消息：${name ? `[${name}] ` : ""}${data.raw_message}`, `Bot: [${data.self_id}] <= 好友： [${data.user_id}]`)
+        lain.info(this.self_id, `Bot: [${data.self_id}] > 好友：[${data.user_id}]`, `好友消息：${name ? `[${name}] ` : ""}${data.raw_message}`)
         break
       } case "group": {
         const group_name = data.group_name || data.bot.gl.get(data.group_id)?.group_name
@@ -1393,16 +1427,16 @@ class OneBotv11Adapter {
           const user = data.bot.gml.get(data.group_id)?.get(data.user_id) || data.bot.fl.get(data.user_id)
           if (user) user_name = user?.card || user?.nickname
         }
-        lain.info(this.self_id, `群消息：${user_name ? `[${group_name ? `${group_name}, ` : ""}${user_name}] ` : ""}${data.raw_message}`, `Bot: [${data.self_id}] <= 群：[ ${data.group_id} ]: ${data.user_id}`)
+        lain.info(this.self_id, `Bot: [${data.self_id}] > 群：[ ${data.group_id} ]: ${data.user_id}`, `群消息：${user_name ? `[${group_name ? `${group_name}, ` : ""}${user_name}] ` : ""}${data.raw_message}`)
         break
       } case "guild":
         data.message_type = "group"
         data.group_id = `${data.guild_id}-${data.channel_id}`
-        lain.info(this.self_id, `频道消息：[${data.sender.nickname}] ${this.BotString(data.message)}`, `Bot: [${data.self_id}] <= 群： [${data.group_id}]: ${data.user_id}`)
+        lain.info(this.self_id, `Bot: [${data.self_id}] > 群：[${data.group_id}]: ${data.user_id}`, `频道消息：[${data.sender.nickname}] ${this.BotString(data.message)}`)
         Object.defineProperty(data, "friend", { get() { return this.member || {} } })
         break
       default:
-        lain.warn(this.self_id, `未知消息：${logger.magenta(data.raw)}`, data.self_id)
+        lain.warn(this.self_id, data.self_id, `未知消息：${logger.magenta(data.raw)}`)
     }
     let e = data
     e.reply = (msg) => this.sendReplyMsg(e, msg)
@@ -1427,13 +1461,13 @@ class OneBotv11Adapter {
   async makeNotice(data) {
     switch (data.notice_type) {
       case "friend_recall":
-        lain.info(this.self_id, `好友消息撤回：${data.message_id}`, `Bot: [${data.self_id}] <= 好友： [${data.user_id}]`)
+        lain.info(this.self_id, `Bot: [${data.self_id}] > 好友：[${data.user_id}]`, `好友消息撤回：${data.message_id}`)
         break
       case "group_recall":
-        lain.info(this.self_id, `群消息撤回：${data.operator_id} => 用户： [${data.user_id}]: ${data.message_id}`, `Bot: [${data.self_id}] <= 群：[${data.group_id}]`)
+        lain.info(this.self_id, `Bot: [${data.self_id}] > 群：[${data.group_id}]`, `群消息撤回：${data.operator_id} => 用户： [${data.user_id}]: ${data.message_id}`)
         break
       case "group_increase": {
-        lain.info(this.self_id, `群成员增加：${data.operator_id} => 用户： [${data.user_id}]: ${data.sub_type}`, `Bot: [${data.self_id}] <= 群：[${data.group_id}]`)
+        lain.info(this.self_id, `Bot: [${data.self_id}] > 群：[${data.group_id}]`, `群成员增加：${data.operator_id} => 用户： [${data.user_id}]: ${data.sub_type}`)
         const group = data.bot.pickGroup(data.group_id)
         group.getInfo()
         if (data.user_id === data.self_id)
@@ -1443,7 +1477,7 @@ class OneBotv11Adapter {
         break
       }
       case "group_decrease": {
-        lain.info(this.self_id, `群成员减少：${data.operator_id} => 用户： [${data.user_id}]: ${data.sub_type}`, `Bot: [${data.self_id}] <= 群：[${data.group_id}]`)
+        lain.info(this.self_id, `Bot: [${data.self_id}] > 群：[${data.group_id}]`, `群成员减少：${data.operator_id} => 用户： [${data.user_id}]: ${data.sub_type}`)
         if (data.user_id === data.self_id) {
           data.bot.gl.delete(data.group_id)
           data.bot.gml.delete(data.group_id)
@@ -1454,12 +1488,12 @@ class OneBotv11Adapter {
         break
       }
       case "group_admin":
-        lain.info(this.self_id, `群管理员变动：${data.sub_type}`, `Bot: [${data.self_id}] <= 群：[${data.group_id}]: ${data.user_id}`)
+        lain.info(this.self_id, `Bot: [${data.self_id}] > 群：[${data.group_id}]: ${data.user_id}`, `群管理员变动：${data.sub_type}`)
         data.set = data.sub_type === "set"
         data.bot.pickMember(data.group_id, data.user_id).getInfo()
         break
       case "group_upload":
-        lain.info(this.self_id, `群文件上传：${this.BotString(data.file)}`, `Bot: [${data.self_id}] <= 群：[${data.group_id}]: ${data.user_id}`)
+        lain.info(this.self_id, `Bot: [${data.self_id}] > 群：[${data.group_id}]: ${data.user_id}`, `群文件上传：${this.BotString(data.file)}`)
         Bot.em("message.group.normal", {
           ...data,
           post_type: "message",
@@ -1470,11 +1504,11 @@ class OneBotv11Adapter {
         })
         break
       case "group_ban":
-        lain.info(this.self_id, `群禁言：${data.operator_id} => 用户： [${data.user_id}]: ${data.sub_type} ${data.duration}秒`, `Bot: [${data.self_id}] <= 群：[${data.group_id}]`)
+        lain.info(this.self_id, `Bot: [${data.self_id}] > 群：[${data.group_id}]`, `群禁言：${data.operator_id} => 用户： [${data.user_id}]: ${data.sub_type} ${data.duration}秒`)
         data.bot.pickMember(data.group_id, data.user_id).getInfo()
         break
       case "friend_add":
-        lain.info(this.self_id, "好友添加", `Bot: [${data.self_id}] <= 用户：[${data.user_id}]`)
+        lain.info(this.self_id, `Bot: [${data.self_id}] > 用户：[${data.user_id}]`, "好友添加")
         data.bot.pickFriend(data.user_id).getInfo()
         break
       case "notify":
@@ -1486,28 +1520,28 @@ class OneBotv11Adapter {
           case "poke":
             data.operator_id = data.user_id
             if (data.group_id)
-              lain.info(this.self_id, `群戳一戳：${data.operator_id} => ${data.target_id}`, `Bot: [${data.self_id}] <= 群：[${data.group_id}]`)
+              lain.info(this.self_id, `Bot: [${data.self_id}] > 群：[${data.group_id}]`, `群戳一戳：${data.operator_id} => ${data.target_id}`)
             else
-              lain.info(this.self_id, `好友戳一戳：${data.operator_id} => ${data.target_id}`, data.self_id)
+              lain.info(this.self_id, data.self_id, `好友戳一戳：${data.operator_id} => ${data.target_id}`)
             break
           case "honor":
-            lain.info(this.self_id, `群荣誉：${data.honor_type}`, `Bot: [${data.self_id}] <= 群：[${data.group_id}]: ${data.user_id}`)
+            lain.info(this.self_id, `Bot: [${data.self_id}] > 群：[${data.group_id}]: ${data.user_id}`, `群荣誉：${data.honor_type}`)
             data.bot.pickMember(data.group_id, data.user_id).getInfo()
             break
           case "title":
-            lain.info(this.self_id, `群头衔：${data.title}`, `Bot: [${data.self_id}] <= 群：[${data.group_id}]: ${data.user_id}`)
+            lain.info(this.self_id, `Bot: [${data.self_id}] > 群：[${data.group_id}]: ${data.user_id}`, `群头衔：${data.title}`)
             data.bot.pickMember(data.group_id, data.user_id).getInfo()
             break
           default:
-            lain.warn(this.self_id, `未知通知：${logger.magenta(data.raw)}`, data.self_id)
+            lain.warn(this.self_id, data.self_id, `未知通知：${logger.magenta(data.raw)}`)
         }
         break
       case "group_card":
-        lain.info(this.self_id, `群名片更新：${data.card_old} => ${data.card_new}`, `Bot: [${data.self_id}] <= 群：[${data.group_id}]: ${data.user_id}`)
+        lain.info(this.self_id, `Bot: [${data.self_id}] > 群：[${data.group_id}]: ${data.user_id}`, `群名片更新：${data.card_old} => ${data.card_new}`)
         data.bot.pickMember(data.group_id, data.user_id).getInfo()
         break
       case "offline_file":
-        lain.info(this.self_id, `离线文件：${this.BotString(data.file)}`, `Bot: [${data.self_id}] <= ${data.user_id}`)
+        lain.info(this.self_id, `Bot: [${data.self_id}] > ${data.user_id}`, `离线文件：${this.BotString(data.file)}`)
         Bot.em("message.private.friend", {
           ...data,
           post_type: "message",
@@ -1518,37 +1552,37 @@ class OneBotv11Adapter {
         })
         break
       case "client_status":
-        lain.info(this.self_id, `客户端${data.online ? "上线" : "下线"}：${this.BotString(data.client)}`, data.self_id)
+        lain.info(this.self_id, data.self_id, `客户端${data.online ? "上线" : "下线"}：${this.BotString(data.client)}`)
         data.clients = (await data.bot.sendApi("get_online_clients")).clients
         data.bot.clients = data.clients
         break
       case "essence":
         data.notice_type = "group_essence"
-        lain.info(this.self_id, `群精华消息：${data.operator_id} => ${data.sender_id} ${data.sub_type} ${data.message_id}`, `Bot: [${data.self_id}] <= 群：[${data.group_id}]`)
+        lain.info(this.self_id, `Bot: [${data.self_id}] > 群：[${data.group_id}]`, `群精华消息：${data.operator_id} => ${data.sender_id} ${data.sub_type} ${data.message_id}`)
         break
       case "guild_channel_recall":
-        lain.info(this.self_id, `频道消息撤回：${data.operator_id} => ${data.user_id} ${data.message_id}`, `Bot: [${data.self_id}] <= 频道：[${data.guild_id}-${data.channel_id}]`)
+        lain.info(this.self_id, `Bot: [${data.self_id}] > 频道：[${data.guild_id}-${data.channel_id}]`, `频道消息撤回：${data.operator_id} => ${data.user_id} ${data.message_id}`)
         break
       case "message_reactions_updated":
         data.notice_type = "guild_message_reactions_updated"
-        lain.info(this.self_id, `频道消息表情贴：${data.message_id} ${this.BotString(data.current_reactions)}`, `Bot: [${data.self_id}] <= 频道：[${data.guild_id}-${data.channel_id}, ${data.user_id}]`)
+        lain.info(this.self_id, `Bot: [${data.self_id}] > 频道：[${data.guild_id}-${data.channel_id}, ${data.user_id}]`, `频道消息表情贴：${data.message_id} ${this.BotString(data.current_reactions)}`)
         break
       case "channel_updated":
         data.notice_type = "guild_channel_updated"
-        lain.info(this.self_id, `子频道更新：${this.BotString(data.old_info)} => ${this.BotString(data.new_info)}`, `Bot: [${data.self_id}] <= 频道：[${data.guild_id}-${data.channel_id}, ${data.user_id}]`)
+        lain.info(this.self_id, `Bot: [${data.self_id}] > 频道：[${data.guild_id}-${data.channel_id}, ${data.user_id}]`, `子频道更新：${this.BotString(data.old_info)} => ${this.BotString(data.new_info)}`)
         break
       case "channel_created":
         data.notice_type = "guild_channel_created"
-        lain.info(this.self_id, `子频道创建：${this.BotString(data.channel_info)}`, `Bot: [${data.self_id}] <= 频道：[${data.guild_id}-${data.channel_id}, ${data.user_id}]`)
+        lain.info(this.self_id, `Bot: [${data.self_id}] > 频道：[${data.guild_id}-${data.channel_id}, ${data.user_id}]`, `子频道创建：${this.BotString(data.channel_info)}`)
         data.bot.getGroupMap()
         break
       case "channel_destroyed":
         data.notice_type = "guild_channel_destroyed"
-        lain.info(this.self_id, `子频道删除：${this.BotString(data.channel_info)}`, `Bot: [${data.self_id}] <= 频道：[${data.guild_id}-${data.channel_id}, ${data.user_id}]`)
+        lain.info(this.self_id, `Bot: [${data.self_id}] > 频道：[${data.guild_id}-${data.channel_id}, ${data.user_id}]`, `子频道删除：${this.BotString(data.channel_info)}`)
         data.bot.getGroupMap()
         break
       default:
-        lain.warn(this.self_id, `未知通知：${logger.magenta(data.raw)}`, data.self_id)
+        lain.warn(this.self_id, data.self_id, `未知通知：${logger.magenta(data.raw)}`)
     }
 
     let notice = data.notice_type.split("_")
@@ -1572,7 +1606,7 @@ class OneBotv11Adapter {
   makeRequest(data) {
     switch (data.request_type) {
       case "friend":
-        lain.info(this.self_id, `加好友请求：${data.comment}(${data.flag})`, `${data.self_id} <= ${data.user_id}`)
+        lain.info(this.self_id, `${data.self_id} < ${data.user_id}`, `加好友请求：${data.comment}(${data.flag})`)
         data.sub_type = "add"
         data.approve = function (approve, remark) { return this.bot.setFriendAddRequest(this.flag, approve, remark) }
         break
@@ -1581,7 +1615,7 @@ class OneBotv11Adapter {
         data.approve = function (approve, reason) { return this.bot.setGroupAddRequest(this.flag, approve, reason, this.sub_type) }
         break
       default:
-        lain.warn(this.self_id, `未知请求：${logger.magenta(data.raw)}`, data.self_id)
+        lain.warn(this.self_id, data.self_id, `未知请求：${logger.magenta(data.raw)}`)
     }
 
     data.bot.request_list.push(data)
@@ -1611,7 +1645,7 @@ class OneBotv11Adapter {
         this.connect(data, ws)
         break
       default:
-        lain.warn(this.self_id, `未知消息：${logger.magenta(data.raw)}`, data.self_id)
+        lain.warn(this.self_id, data.self_id, `未知消息：${logger.magenta(data.raw)}`)
     }
   }
 
@@ -1638,7 +1672,7 @@ class OneBotv11Adapter {
 
     if (data.post_type) {
       if (data.meta_event_type !== "lifecycle" && !Bot.uin.includes(data.self_id)) {
-        lain.warn(this.self_id, `找不到对应Bot，忽略消息：${logger.magenta(data.raw)}`, data.self_id)
+        lain.warn(this.self_id, data.self_id, `找不到对应Bot，忽略消息：${logger.magenta(data.raw)}`)
         return false
       }
       data.bot = Bot[data.self_id]
@@ -1661,7 +1695,7 @@ class OneBotv11Adapter {
           this.makeMessage(data)
           break
         default:
-          lain.warn(this.self_id, `未知消息：${logger.magenta(data.raw)}`, data.self_id)
+          lain.warn(this.self_id, data.self_id, `未知消息：${logger.magenta(data.raw)}`)
       }
     } else if (data.echo && this.echo[data.echo]) {
       if (![0, 1].includes(data.retcode))
@@ -1677,7 +1711,7 @@ class OneBotv11Adapter {
       clearTimeout(this.echo[data.echo].timeout)
       delete this.echo[data.echo]
     } else {
-      lain.warn(this.self_id, `未知消息：${logger.magenta(data.raw)}`, data.self_id)
+      lain.warn(this.self_id, data.self_id, `未知消息：${logger.magenta(data.raw)}`)
     }
   }
 

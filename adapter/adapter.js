@@ -54,4 +54,4 @@ if (JSONFile.length > 0) {
 }
 
 lain.info('Lain-plugin', `Lain-plugin插件${Bot.lain.version}全部初始化完成~`)
-lain.info('Lain-plugin', 'https://gitee.com/Zyy955/Lain-plugin')
+lain.info('Lain-plugin', 'https://gitee.com/snowtafir/Lain-plugin')
