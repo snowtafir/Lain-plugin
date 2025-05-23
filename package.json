@@ -25,7 +25,7 @@
     "axios": "^1.7.7",
     "conventional-changelog-cli": "^5.0.0",
     "express": "^4.21.0",
-    "file-type": "^19.5.0",
+    "file-type": "^21.0.0",
     "@karinjs/geturls": "^1.0.2",
     "icqq": "0.6.10",
     "get-urls": "^12.1.0",
