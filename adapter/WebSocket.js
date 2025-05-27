@@ -50,7 +50,7 @@ class WebSocket {
       const token = req.params.token
       const filePath = process.cwd() + '/temp/FileToUrl/' + req.params.token
       /** 收到日志 */
-      logger.mark('[GET请求] ' + logger.blue(`[${token}] -> [${req.get(host)}] -> [${ip}]`))
+      logger.mark('[GET请求] ' + logger.blue(`[${token}] -> [${req.get('host')}] -> [${ip}]`))
 
       try {
         /** 读 */

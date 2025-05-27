@@ -105,12 +105,13 @@ export default class adapterQQGuild {
       try {
         info = JSON.parse(info)
       } catch (err) {
-        lain.warn(this.id, err.message)
-        lain.mark(this.id, info)
+        lain.warn(this.id, "<解析缓存错误，已自动删除>", err.message, i)
+        lain.debug(this.id, info)
+        await redis.del(i)
       }
       if (!info?.user_id) continue
       info.uin = this.id
-      lain.debug(this.id, '<读取缓存群，好友列表>', type, info)
+      lain.debug(this.id, '<读取缓存频道，私信列表>', type, info)
       if (type === 'gl') {
         Bot[this.id].gl.set(info.group_id, info)
         Bot.gl.set(info.group_id, info)
@@ -486,6 +487,7 @@ export default class adapterQQGuild {
           ToString.push(`{at:qg_${i.user_id}}`)
           break
         case 'reply':
+          // eslint-disable-next-line no-case-declarations
           let info = Bot[this.id].MsgSave.get(i.id)
           if (!info) {
             try {
@@ -551,7 +553,7 @@ export default class adapterQQGuild {
   /** 处理回复消息 */
   async sendReplyMsg (data, msg, quote) {
     lain.debug(this.id, 0, JSON.stringify(msg).replace(/base64:\/\/.*?(,|]|")/g, 'base64://...$1'))
-    let { Pieces, messageLog, reply } = await this.getQQGuild(msg)
+    let { Pieces, reply } = await this.getQQGuild(msg)
     const info = data.message_type === 'group' ? '频道' : '私信'
     // lain.info(this.id, `<回复${info}:${data.group_name}(${data.group_id})> => ${messageLog}`)
     let result = { res: [], err: [] }
@@ -851,9 +853,9 @@ export default class adapterQQGuild {
       throw new Error('不存在此频道，正确请求格式：Bot.pickFriend(user_id).sendMsg(msg)')
     }
 
-    const { group_id, guild_id } = Bot[this.id].fl.get(user_id)
+    const { guild_id } = Bot[this.id].fl.get(user_id)
     user_id = user_id.replace('qg_', '')
-    let { Pieces, messageLog, reply } = await this.getQQGuild(data)
+    let { Pieces, reply } = await this.getQQGuild(data)
     // lain.info(this.id, `<发送主动私信消息:${group_id})> => ${messageLog}`)
     /** 先创建私信会话 */
     const directData = await this.sdk.createDirectSession(guild_id, user_id)
@@ -875,7 +877,7 @@ export default class adapterQQGuild {
   /** 发送主动群消息 */
   async sendGroupMsg (groupID, data) {
     const channel_id = groupID.replace('qg_', '').split('-')[1]
-    let { Pieces, messageLog, reply } = await this.getQQGuild(data)
+    let { Pieces, reply } = await this.getQQGuild(data)
     // lain.info(this.id, `<发送主动频道消息:${groupID})> => ${messageLog}`)
     let result = { res: [], err: [] }
     for (let item of Pieces) {

@@ -1,10 +1,10 @@
 import sizeOf from 'image-size'
-import QrCode from 'qrcode'
+// import QrCode from 'qrcode'
 import GetUrls from '@karinjs/geturls'
 import fs from 'fs'
 import fetch from 'node-fetch'
 import crypto from 'crypto'
-import common from '../../lib/common/common.js'
+// import common from '../../lib/common/common.js'
 import Cfg from '../../lib/config/config.js'
 import { fileTypeFromBuffer } from 'file-type'
 
@@ -121,7 +121,7 @@ Bot.uploadQQ = async function (file, uin = Bot.uin) {
   try {
     md5 = (await Bot[uin].pickFriend(uin)._preprocess(segment.image(buffer))).imgs[0].proto[1].toUpperCase()
   } catch (e) {
-    e.message = "上传图片失败\n" + e.message
+    e.message = '上传图片失败\n' + e.message
     throw e
   }
   const { width, height } = sizeOf(buffer)
@@ -483,7 +483,7 @@ Bot.Button = function (list, line = 3) {
 
 /** 转换文本中的URL为图片 */
 Bot.HandleURL = async function (msg) {
-  const message = []
+  // const message = []
   if (msg?.text) msg = msg.text
   /** 需要处理的url */
   let urls = Bot.getUrls(msg, Cfg.WhiteLink)

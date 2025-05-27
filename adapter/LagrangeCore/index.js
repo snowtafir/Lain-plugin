@@ -409,7 +409,7 @@ class LagrangeCore {
     Bot[this.id].bkn = bkn
 
     const cookies = {}
-    let domains = ['aq.qq.com','connect.qq.com','docs.qq.com','game.qq.com','id.qq.com','mail.qq.com','office.qq.com','om.qq.com','qqweb.qq.com','qun.qq.com','qzone.qq.com','ti.qq.com','v.qq.com','vip.qq.com','y.qq.com','jubao.qq.com','tenpay.com']
+    let domains = ['aq.qq.com', 'connect.qq.com', 'docs.qq.com', 'game.qq.com', 'id.qq.com', 'mail.qq.com', 'office.qq.com', 'om.qq.com', 'qqweb.qq.com', 'qun.qq.com', 'qzone.qq.com', 'ti.qq.com', 'v.qq.com', 'vip.qq.com', 'y.qq.com', 'jubao.qq.com', 'tenpay.com']
     for (let domain of domains) {
       api.get_cookies(this.id, domain).then(ck => {
         ck = ck?.cookies
@@ -429,7 +429,7 @@ class LagrangeCore {
         return obj[domain]
       },
       set: () => {
-          return false;
+        return false
       }
     })
 
@@ -1316,8 +1316,11 @@ class LagrangeCore {
           raw_message.push(`<回复:${i?.text || i.id}>`)
           break
         case 'poke':
+          // eslint-disable-next-line no-case-declarations
           let type = String(i.id)
+          // eslint-disable-next-line no-case-declarations
           let id = '0'
+          // eslint-disable-next-line no-case-declarations
           let name = pokeMap[Number(i.id)]
           if (i.name) name = i.name
           if (i.id > 6) {
@@ -1416,6 +1419,7 @@ class LagrangeCore {
         await lain.sleep(100)
       }
     }
+    // eslint-disable-next-line no-throw-literal
     throw { status: 'error', message: '请求超时' }
   }
 }

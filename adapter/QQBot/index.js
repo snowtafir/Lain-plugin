@@ -34,11 +34,11 @@ export default class adapterQQBot {
 
     /** 群消息 */
     this.sdk.on('message.group', async (data) => {
-      lain.em("message.group.normal", await this.message(data, true))
+      lain.em('message.group.normal', await this.message(data, true))
     })
     /** 私聊消息 */
     this.sdk.on('message.private.friend', async (data) => {
-      lain.em("message.private.friend", await this.message(data))
+      lain.em('message.private.friend', await this.message(data))
     })
     /** 群通知消息 */
     this.sdk.on('notice.group', async (data) => {
@@ -974,7 +974,7 @@ export default class adapterQQBot {
 
     urls.forEach(link => {
       message.push(...Bot.Button([{ link }]), 1)
-      msg = msg.replace(new RegExp(url, 'g'), '[链接(请点击按钮查看)]')
+      msg = msg.replace(new RegExp(link, 'g'), '[链接(请点击按钮查看)]')
     })
     message.unshift({ type: 'text', text: msg })
     return message

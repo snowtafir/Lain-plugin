@@ -131,7 +131,7 @@ export class adapter extends plugin {
     } catch (error) {
       lain.error(config.appid, error)
       /** 异常处理 */
-      return this.reply("建立失败：\n" + error?.message || error)
+      return this.reply('建立失败：\n' + error?.message || error)
     }
     return await this.reply('格式错误', true, { at: true })
   }
