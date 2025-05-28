@@ -483,7 +483,7 @@ Bot.Button = function (list, line = 3) {
 
 /** 转换文本中的URL为图片 */
 Bot.HandleURL = async function (msg) {
-  // const message = []
+  const message = []
   if (msg?.text) msg = msg.text
   /** 需要处理的url */
   let urls = Bot.getUrls(msg, Cfg.WhiteLink)
