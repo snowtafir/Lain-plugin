@@ -14,6 +14,8 @@ QQ_Default:
     token:                                # 机器人令牌
     secret:                               # 机器人密钥
     maxRetry: 10                          # 重连次数
+    autoRetry: true                       # 掉线自动重连  true-开启  false-关闭
+    autoRetryTime: 60                     # 掉线自动重连间隔，默认60秒
     markdown:                             # QQBot高阶能力
       id:                                 # 模板ID
       type: 0                             # 0-关闭  1-全局  2-正则模式  3-按钮模式   详情请查看文档

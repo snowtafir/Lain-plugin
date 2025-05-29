@@ -217,7 +217,6 @@ export function supportGuoba () {
                   min: 1
                 }
               },
-
               {
                 label: '防倒卖提示设置',
                 component: 'Divider'
