@@ -1,10 +1,10 @@
 import sizeOf from 'image-size'
-// import QrCode from 'qrcode'
+import QrCode from 'qrcode'
 import GetUrls from '@karinjs/geturls'
 import fs from 'fs'
 import fetch from 'node-fetch'
 import crypto from 'crypto'
-// import common from '../../lib/common/common.js'
+import common from '../../lib/common/common.js'
 import Cfg from '../../lib/config/config.js'
 import { fileTypeFromBuffer } from 'file-type'
 
