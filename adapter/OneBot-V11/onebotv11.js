@@ -530,7 +530,7 @@ class OneBotv11Adapter {
             group_name: `${guild.guild_name}-${channel.channel_name}`,
           })
     } catch (err) {
-      //lain.error(this.self_id, ["获取频道列表错误", err])
+      lain.error(this.self_id, ["获取频道列表错误", err])
     }
     return array
   }
@@ -1409,11 +1409,29 @@ class OneBotv11Adapter {
    */
   async makeMessage(data) {
     data.message = this.parseMsg(data.message)
-    if (data.group_id && data.bot && typeof data.bot.pickGroup === "function") {
-      data.group = data.bot.pickGroup(data, data.group_id)
+    // 动态挂载 member
+    if (data.group_id && data.user_id && data.bot && typeof data.bot.pickMember === "function" && !Object.getOwnPropertyDescriptor(data, "member")) {
+      Object.defineProperty(data, "member", {
+        get() { return data.bot.pickMember(data.group_id, data.user_id) },
+        configurable: true,
+        enumerable: false
+      })
     }
-    if (data.user_id && data.bot && typeof data.bot.pickFriend === "function") {
-      data.friend = data.bot.pickFriend(data.user_id)
+    // 动态挂载 group
+    if (data.group_id && data.bot && typeof data.bot.pickGroup === "function" && !Object.getOwnPropertyDescriptor(data, "group")) {
+      Object.defineProperty(data, "group", {
+        get() { return data.bot.pickGroup(data.group_id) },
+        configurable: true,
+        enumerable: false
+      })
+    }
+    // 动态挂载 friend
+    if (data.user_id && data.bot && typeof data.bot.pickFriend === "function" && !Object.getOwnPropertyDescriptor(data, "friend")) {
+      Object.defineProperty(data, "friend", {
+        get() { return data.bot.pickFriend(data.user_id) },
+        configurable: true,
+        enumerable: false
+      })
     }
     switch (data.message_type) {
       case "private": {
