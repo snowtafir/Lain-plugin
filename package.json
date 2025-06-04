@@ -43,7 +43,7 @@
     "eslint": "^9.9.0",
     "eslint-config-standard": "^17.1.0",
     "eslint-plugin-import": "^2.31.0",
-    "eslint-plugin-n": "^16.0.0",
+    "eslint-plugin-n": "^17.19.0",
     "eslint-plugin-promise": "^6.0.0",
     "express-art-template": "^1.0.1",
     "husky": "^9.1.6",
