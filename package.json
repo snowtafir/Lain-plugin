@@ -44,7 +44,7 @@
     "eslint-config-standard": "^17.1.0",
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-n": "^16.0.0",
-    "eslint-plugin-promise": "^6.0.0",
+    "eslint-plugin-promise": "^7.2.1",
     "express-art-template": "^1.0.1",
     "husky": "^9.1.6",
     "validate-commit-msg": "^2.14.0"
