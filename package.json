@@ -29,7 +29,7 @@
     "@karinjs/geturls": "^1.0.2",
     "icqq": "0.6.10",
     "get-urls": "^12.1.0",
-    "qq-official-bot": "1.0.4",
+    "qq-official-bot": "1.0.7",
     "qrcode": "^1.5.4",
     "sharp": "^0.33.5",
     "silk-wasm": "^3.6.3",
