@@ -121,7 +121,7 @@ Bot.uploadQQ = async function (file, uin = Bot.uin) {
   try {
     md5 = (await Bot[uin].pickFriend(uin)._preprocess(segment.image(buffer))).imgs[0].proto[1].toUpperCase()
   } catch (e) {
-    e.message = "上传图片失败\n" + e.message
+    e.message = '上传图片失败\n' + e.message
     throw e
   }
   const { width, height } = sizeOf(buffer)

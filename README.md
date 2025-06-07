@@ -102,7 +102,7 @@ pnpm config set sharp_binary_host "https://npmmirror.com/mirrors/sharp" && pnpm 
 - [OpenShamrock](https://github.com/whitechi73/OpenShamrock)
 - [ComWeChat](https://github.com/JustUndertaker/ComWeChatBotClient)
 - [wechat4u](https://github.com/nodeWechat/wechat4u/blob/master/run-core.js)
-- [qq-group-bot](https://github.com/lc-cn/qq-group-bot)
+- [qq-official-bot](https://github.com/lc-cn/qq-official-bot)
 - [QQBot按钮库](https://gitee.com/lava081/button)
 - [xiaoye12123](https://gitee.com/xiaoye12123)
 - [Lagrange.Core](https://github.com/LagrangeDev/Lagrange.Core)

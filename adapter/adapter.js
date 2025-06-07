@@ -15,25 +15,29 @@ WebSocket.start()
 if (Cfg.Stdin.state) stdin()
 
 /** QQBot适配器 */
-if (Cfg.getToken('QQ_Token') && Object.values(Cfg.getToken('QQ_Token')).length) {
-  Object.values(Cfg.getToken('QQ_Token')).forEach(async bot => {
-    if (bot.type == 0 || bot.type == 2) {
-      try {
-        const SDK = new QQSDK(bot)
-        await SDK.start()
-        lain.info(SDK.id, await new QQBot(SDK.sdk))
-        lain.info(SDK.id, await new QQGuild(SDK.sdk))
-      } catch (err) {
-        lain.error('Lain-plugin', `QQBot <${bot.appid}> 启动失败`, err)
+const QQ_Token = Cfg.getToken('QQ_Token')
+if (QQ_Token && Object.keys(QQ_Token).length) {
+  Object.keys(QQ_Token).forEach(async id => {
+    if (id !== 'default') {
+      let bot = Cfg.getToken('QQ_Token', id)
+      if (bot.type == 0 || bot.type == 2) {
+        try {
+          const SDK = new QQSDK(bot)
+          await SDK.start()
+          lain.info(SDK.id, await new QQBot(SDK.sdk))
+          lain.info(SDK.id, await new QQGuild(SDK.sdk))
+        } catch (err) {
+          lain.error('Lain-plugin', `QQBot <${bot.appid}> 启动失败`, err)
+        }
       }
-    }
-    if (bot.type == 1) {
-      try {
-        const SDK = new QQSDK(bot)
-        await SDK.start()
-        lain.info(SDK.id, await new QQGuild(SDK.sdk))
-      } catch (err) {
-        lain.error('Lain-plugin', `QQGuild <${bot.appid}> 启动失败`, err)
+      if (bot.type == 1) {
+        try {
+          const SDK = new QQSDK(bot)
+          await SDK.start()
+          lain.info(SDK.id, await new QQGuild(SDK.sdk))
+        } catch (err) {
+          lain.error('Lain-plugin', `QQGuild <${bot.appid}> 启动失败`, err)
+        }
       }
     }
   })

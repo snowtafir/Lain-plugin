@@ -39,7 +39,7 @@ import Yaml from './model/YamlHandler.js'
 //  }
 // }, 10000)
 
-export function supportGuoba() {
+export function supportGuoba () {
   /** 添加url链接白名单 */
   const addUrlPromptProps = {
     content: '请输入URL：',
@@ -128,7 +128,7 @@ export function supportGuoba() {
             type: 'number',
             placeholder: '请输入时间(QQBot使用)',
             min: 1,
-            addonAfter: "s"
+            addonAfter: 's'
           }
         },
         {
@@ -137,10 +137,10 @@ export function supportGuoba() {
           component: 'SOFT_GROUP_BEGIN'
         },
         {
-          field: "Token.QQ_Token",
-          label: "QQBot Token配置",
-          bottomHelpMessage: "点击列表项右上角可删除配置，删除后请重启云崽以应用更新",
-          component: "GSubForm",
+          field: 'Token.QQ_Token',
+          label: 'QQBot Token配置',
+          bottomHelpMessage: '点击列表项右上角可删除配置，删除后请重启云崽以应用更新',
+          component: 'GSubForm',
           componentProps: {
             multiple: true,
             schemas: [
@@ -149,27 +149,27 @@ export function supportGuoba() {
                 component: 'Divider'
               },
               {
-                field: "appid",
-                label: "AppID",
-                bottomHelpMessage: "机器人ID",
-                component: "Input",
+                field: 'appid',
+                label: 'AppID',
+                bottomHelpMessage: '机器人ID',
+                component: 'Input',
                 required: true,
                 rules: [
-                  { pattern: '^\\d{9,}$', message: '最少需要9位哦！' },
+                  { pattern: '^\\d{9,}$', message: '最少需要9位哦！' }
                 ]
               },
               {
-                field: "token",
-                label: "Token",
-                bottomHelpMessage: "机器人令牌",
-                component: "InputPassword",
+                field: 'token',
+                label: 'Token',
+                bottomHelpMessage: '机器人令牌',
+                component: 'InputPassword',
                 required: true
               },
               {
-                field: "secret",
-                label: "AppSecret",
-                bottomHelpMessage: "机器人秘钥",
-                component: "InputPassword",
+                field: 'secret',
+                label: 'AppSecret',
+                bottomHelpMessage: '机器人秘钥',
+                component: 'InputPassword',
                 required: true
               },
               {
@@ -177,13 +177,13 @@ export function supportGuoba() {
                 component: 'Divider'
               },
               {
-                field: "mode",
-                label: "运行模式",
-                bottomHelpMessage: "设置运行模式",
-                component: "RadioGroup",
+                field: 'mode',
+                label: '运行模式',
+                bottomHelpMessage: '设置运行模式',
+                component: 'RadioGroup',
                 componentProps: {
-                  buttonStyle: "solid",
-                  optionType: "button",
+                  buttonStyle: 'solid',
+                  optionType: 'button',
                   options: [
                     { label: 'websocket', value: 'websocket' },
                     { label: 'webhook', value: 'webhook' },
@@ -192,9 +192,9 @@ export function supportGuoba() {
                 }
               },
               {
-                field: "type",
-                label: "启用范围",
-                bottomHelpMessage: "设置启用的范围",
+                field: 'type',
+                label: '启用范围',
+                bottomHelpMessage: '设置启用的范围',
                 component: 'Select',
                 componentProps: {
                   options: [
@@ -206,80 +206,79 @@ export function supportGuoba() {
                 }
               },
               {
-                field: "timeout",
-                label: "超时时间",
-                bottomHelpMessage: "QQBot接口请求超时时间",
-                component: "InputNumber",
+                field: 'timeout',
+                label: '超时时间',
+                bottomHelpMessage: 'QQBot接口请求超时时间',
+                component: 'InputNumber',
                 componentProps: {
                   type: 'number',
                   placeholder: '请输入时间',
-                  addonAfter: "ms",
+                  addonAfter: 'ms',
                   min: 1
                 }
               },
-
               {
                 label: '防倒卖提示设置',
                 component: 'Divider'
               },
               {
-                field: "other.Tips",
-                label: "发送防倒卖提示",
-                bottomHelpMessage: "进入新群时发送",
-                component: "Switch"
+                field: 'other.Tips',
+                label: '发送防倒卖提示',
+                bottomHelpMessage: '进入新群时发送',
+                component: 'Switch'
               },
               {
-                field: "other.Tips_GroupId",
-                label: "QQ群号",
-                bottomHelpMessage: "防倒卖提示中的QQ群号",
-                component: "Input"
+                field: 'other.Tips_GroupId',
+                label: 'QQ群号',
+                bottomHelpMessage: '防倒卖提示中的QQ群号',
+                component: 'Input'
               },
               {
                 label: '其他设置',
                 component: 'Divider'
               },
               {
-                field: "sandbox",
-                label: "使用沙盒",
-                bottomHelpMessage: "Bot提审时及上线后须关闭",
-                component: "Switch"
+                field: 'sandbox',
+                label: '使用沙盒',
+                bottomHelpMessage: 'Bot提审时及上线后须关闭',
+                component: 'Switch'
               },
               {
-                field: "allMsg",
-                label: "QQ频道接收全部消息",
-                bottomHelpMessage: "",
-                component: "Switch"
+                field: 'allMsg',
+                label: 'QQ频道接收全部消息',
+                bottomHelpMessage: '',
+                component: 'Switch'
               },
               {
-                field: "removeAt",
-                label: "移除at",
-                bottomHelpMessage: "开启后发送指令无需at，仅私域Bot可用",
-                component: "Switch"
+                field: 'removeAt',
+                label: '移除at',
+                bottomHelpMessage: '开启后发送指令无需at，仅私域Bot可用',
+                component: 'Switch'
               },
               {
-                field: "other.Prefix",
-                label: "前缀转换",
-                bottomHelpMessage: "QQBot前缀转换 [/] => [#]",
-                component: "Switch"
+                field: 'other.Prefix',
+                label: '前缀转换',
+                bottomHelpMessage: 'QQBot前缀转换 [/] => [#]',
+                component: 'Switch'
               },
               {
-                field: "other.QQCloud",
-                label: "QQ图床",
-                bottomHelpMessage: "填写QQ号后启用，使用QQ发送图片",
-                component: "Input"
+                field: 'other.QQCloud',
+                label: 'QQ图床',
+                bottomHelpMessage: '填写QQ号后启用，使用QQ发送图片',
+                component: 'Input'
               },
               {
                 label: 'markdown设置',
                 component: 'Divider'
               },
               {
-                field: "markdown.type",
-                label: "模板模式",
-                bottomHelpMessage: "",
-                component: "RadioGroup",
+                field: 'markdown.type',
+                label: '模板模式',
+                bottomHelpMessage: '',
+                component: 'RadioGroup',
                 componentProps: {
-                  buttonStyle: "solid",
-                  optionType: "button",
+                  buttonStyle: 'solid',
+                  optionType: 'button',
                   options: [
                     { label: '关闭', value: 0 },
                     { label: '全局模式', value: 1 },
@@ -289,29 +288,29 @@ export function supportGuoba() {
                 }
               },
               {
-                field: "markdown.id",
-                label: "模板ID",
-                bottomHelpMessage: "",
-                component: "Input"
+                field: 'markdown.id',
+                label: '模板ID',
+                bottomHelpMessage: '',
+                component: 'Input'
               },
               {
-                field: "markdown.text",
-                label: "模板文字键",
-                bottomHelpMessage: "",
-                component: "Input"
+                field: 'markdown.text',
+                label: '模板文字键',
+                bottomHelpMessage: '',
+                component: 'Input'
               },
               {
-                field: "markdown.img_dec",
-                label: "模板图片宽高键",
-                bottomHelpMessage: "",
-                component: "Input"
+                field: 'markdown.img_dec',
+                label: '模板图片宽高键',
+                bottomHelpMessage: '',
+                component: 'Input'
               },
               {
-                field: "markdown.img_url",
-                label: "模板图片url键",
-                bottomHelpMessage: "",
-                component: "Input"
-              },
+                field: 'markdown.img_url',
+                label: '模板图片url键',
+                bottomHelpMessage: '',
+                component: 'Input'
+              }
 
             ]
           }
@@ -479,9 +478,9 @@ export function supportGuoba() {
         }
       ],
       // 获取配置数据方法（用于前端填充显示数据）
-      getConfigData() {
+      getConfigData () {
         let QQ_Token = Object.values(Cfg.getToken('QQ_Token') ?? {}).map(i => {
-          i.other.Tips_GroupId = i.other["Tips-GroupId"]
+          i.other.Tips_GroupId = i.other['Tips-GroupId']
           return i
         })
 
@@ -500,9 +499,9 @@ export function supportGuoba() {
         }
       },
       // 设置配置的方法（前端点确定后调用的方法）
-      setConfigData(data, { Result }) {
+      setConfigData (data, { Result }) {
         const selectPath = (name) => {
-          if (name === "Token") return `/${name}.yaml`
+          if (name === 'Token') return `/${name}.yaml`
           else return `/Config-${name}.yaml`
         }
         try {
@@ -511,7 +510,7 @@ export function supportGuoba() {
             i = i.split('.')
             let key = i.shift()
             let config = new Yaml(lain._pathCfg + selectPath(key))
-            if (key === "Token") {
+            if (key === 'Token') {
               value = parseQQToken(config, value)
             }
             config.set(i.join('.'), value)
@@ -526,12 +525,12 @@ export function supportGuoba() {
   }
 }
 
-function convertToNestedObject(data) {
+function convertToNestedObject (data) {
   const result = {}
 
   for (const key in data) {
     if (Object.hasOwn(data, key)) {
-      const keys = key.split(".")
+      const keys = key.split('.')
       let obj = result
 
       keys.forEach((k, index) => {
@@ -548,15 +547,15 @@ function convertToNestedObject(data) {
   return result
 }
 
-function parseQQToken(cfg, token) {
+function parseQQToken (cfg, token) {
   let ret = {}
   token.map(async i => {
     const config = convertToNestedObject(i)
 
     /** 单独处理部分参数 */
-    config.other["Tips-GroupId"] = Number(config.other.Tips_GroupId) || ""
+    config.other['Tips-GroupId'] = Number(config.other.Tips_GroupId) || ''
     delete config.other.Tips_GroupId
-    config.other.QQCloud = Number(config.other.QQCloud) || ""
+    config.other.QQCloud = Number(config.other.QQCloud) || ''
     if (String(config.appid).length < 9) return
     config.appid = String(config.appid)
 

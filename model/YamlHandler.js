@@ -45,9 +45,9 @@ export default class YamlHandler {
    * @param {string} key - 指定的键
    * @returns {*} - 指定键的值
    */
-  get (key, key2 = "*") {
+  get (key, key2 = '*') {
     const ret = lodash.get(this.data(), key)
-    return key2 === "*" ? ret : ret?.[key2] ?? {}
+    return key2 === '*' ? ret : ret?.[key2] ?? {}
   }
 
   /**

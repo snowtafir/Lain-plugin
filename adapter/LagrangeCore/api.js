@@ -753,22 +753,37 @@ let api = {
     }
   },
 
+  /**
+  * 发送Uni包
+  * @param {string} id - 机器人QQ 通过e.bot、Bot调用无需传入
+  * @param {number} command - 包名
+  * @param {object} body - 数据包
+  * @param {string} timeout - 超时时间
+  */
   async sendUni (id, command, body, timeout = 10) {
-    let res = await this.SendApi(id, ".send_packet", {
+    let res = await this.SendApi(id, '.send_packet', {
       command,
-      data: Buffer.from(body).toString("hex")
+      data: Buffer.from(body).toString('hex')
     }, timeout)
 
-    if (res?.result)
-      return Buffer.from(res.result, "hex")
+    if (res?.result) {
+      return Buffer.from(res.result, 'hex')
+    }
     return Buffer.alloc(0)
   },
 
-  async sendOidb(id, cmd, body, timeout = 5) {
-    const sp = cmd //OidbSvc.0x568_22
-      .replace("OidbSvc.", "")
-      .replace("oidb_", "")
-      .split("_")
+  /**
+  * 发送Uni包
+  * @param {string} id - 机器人QQ 通过e.bot、Bot调用无需传入
+  * @param {number} cmd - 包名
+  * @param {object} body - 数据包
+  * @param {string} timeout - 超时时间
+  */
+  async sendOidb (id, cmd, body, timeout = 5) {
+    const sp = cmd // OidbSvc.0x568_22
+      .replace('OidbSvc.', '')
+      .replace('oidb_', '')
+      .split('_')
     const type1 = parseInt(sp[0], 16)
     const type2 = parseInt(sp[1])
     body = core.pb.encode({
@@ -776,44 +791,63 @@ let api = {
       2: isNaN(type2) ? 1 : type2,
       3: 0,
       4: body,
-      6: "Linux " + Bot[id].apk.ver,
-    });
-    return await this.sendUni(id, cmd, body, timeout);
+      6: 'Linux ' + Bot[id].apk.ver
+    })
+    return await this.sendUni(id, cmd, body, timeout)
   },
 
-  async sendPacket(id, type, cmd, body) {
-    if (type === "Uni")
-      return await this.sendUni(id, cmd, body);
-    else
-      return await this.sendOidb(id, cmd, body);
+  /**
+  * 另一种发送Uni包
+  * @param {string} id - 机器人QQ 通过e.bot、Bot调用无需传入
+  * @param {string} type - 包类型
+  * @param {string} cmd - 包名
+  * @param {object} body - 数据包
+  */
+  async sendPacket (id, type, cmd, body) {
+    if (type === 'Uni') {
+      return await this.sendUni(id, cmd, body)
+    } else {
+      return await this.sendOidb(id, cmd, body)
+    }
   },
 
-  async sendOidbSvcTrpcTcp(id, cmd, body, isUid, timeout = 5) {
-    const sp = cmd //OidbSvcTrpcTcp.0xf5b_1
-      .replace("OidbSvcTrpcTcp.", "")
-      .split("_");
-    const type1 = parseInt(sp[0], 16), type2 = parseInt(sp[1]);
+  /**
+  * 发送Uni包
+  * @param {string} id - 机器人QQ 通过e.bot、Bot调用无需传入
+  * @param {string} cmd - 包名
+  * @param {object} body - 数据包
+  * @param {boolean} isUid - 是否是UID
+  * @param {string} timeout - 超时时间
+  */
+  async sendOidbSvcTrpcTcp (id, cmd, body, isUid = false, timeout = 5) {
+    const sp = cmd // OidbSvcTrpcTcp.0xf5b_1
+      .replace('OidbSvcTrpcTcp.', '')
+      .split('_')
+    const type1 = parseInt(sp[0], 16)
+    const type2 = parseInt(sp[1])
     const _body = core.pb.encode({
       1: type1,
       2: type2,
       4: body,
-      6: "Linux " + Bot[id].apk.ver,
+      6: 'Linux ' + Bot[id].apk.ver,
       12: isUid ? 1 : 0
-    });
-    const payload = await this.sendUni(id, cmd, _body, timeout);
-    //log(payload)
-    const rsp = core.pb.decode(payload);
-    if (rsp[3] === 0)
-      return rsp[4];
-    throw new Error(`${rsp[5]?.toString() || "unknown error"} (${rsp[3]})`)
+    })
+    const payload = await this.sendUni(id, cmd, _body, timeout)
+    // log(payload)
+    const rsp = core.pb.decode(payload)
+    if (rsp[3] === 0) {
+      return rsp[4]
+    }
+    throw new Error(`${rsp[5]?.toString() || 'unknown error'} (${rsp[3]})`)
   },
 
   async getNTPicRkey (id) {
     const params = {}
-    let ret = await this.SendApi(id, "get_rkeys", params)
+    let ret = await this.SendApi(id, 'get_rkeys', params)
     const res = {}
+    // eslint-disable-next-line array-callback-return
     ret.rkeys.map(i => {
-      if (i.type === "group") res.groupNTPicRkey = i.rkey
+      if (i.type === 'group') res.groupNTPicRkey = i.rkey
       else res.offNTPicRkey = i.rkey
     })
     return res
@@ -821,13 +855,14 @@ let api = {
 
   async thumbUp (id, user_id, times = 20) {
     times = Number(times)
-    if (times > 20 || times < 0)
+    if (times > 20 || times < 0) {
       times = 20
+    }
     const params = {
       user_id,
       times
     }
-    let res = await this.SendApi(id, "send_like", params)
+    let res = await this.SendApi(id, 'send_like', params)
     if (!res) return true
     else return { ...res, code: res.retcode, msg: res.data }
   },
@@ -861,6 +896,7 @@ let api = {
         await new Promise((resolve) => setTimeout(resolve, 100))
       }
     }
+    // eslint-disable-next-line no-throw-literal
     throw { status: 'error', message: '请求超时' }
   }
 }

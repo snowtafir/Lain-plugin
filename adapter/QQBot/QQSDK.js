@@ -19,8 +19,8 @@ export default class QQSDK {
     this.config.logLevel = Cfg.bot.log_level
     /** 监听事件 */
     this.config.intents = []
-    /** 是否启用启动重连(默认是) */
-    this.autoRetry = true
+    /** 离线自动重连次数 */
+    let autoRetryCount = 0
 
     /** 是否启用群 */
     if (this.config.type == 0 || this.config.type == 2) {
@@ -52,23 +52,17 @@ export default class QQSDK {
     if (!Bot.adapter.includes(String(this.id)) && !Bot.adapter.includes(`qg_${this.id}`)) {
       await this.sdk.start()
       /** 实现自动重连(10秒后运行每1分钟定时检测) */
-      if (this.config.mode === 'websocket') {
-        /*
+      if (this.config.mode === 'websocket' && this.config.autoRetry && this.config.autoRetryTime > 0) {
         setTimeout(() => {
           this.sdk.timer = setInterval(async () => {
-            if (!this.autoRetry) {
-              clearInterval(this.sdk.timer)
-              return
-            }
             if (![0, 1].includes(this.sdk.receiver?.handler?.ws?.readyState)) {
-              lain.warn(this.id, "检测到账号离线，已自动重连", this.sdk.receiver?.handler?.ws?.readyState)
+              lain.warn(this.id, "检测到账号离线，已自动重连", this.sdk.receiver?.handler?.ws?.readyState, ++autoRetryCount)
               await this.sdk.stop()
               await lain.sleep(10)
               await this.sdk.start()
             }
-          }, 1 * 60 * 1000)
+          }, this.config.autoRetryTime * 1000)
         }, 10 * 1000)
-        */
       }
     }
     /** 修改sdk日志为喵崽日志 */
