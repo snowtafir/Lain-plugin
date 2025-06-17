@@ -135,8 +135,11 @@ class OneBotv11Adapter {
    * @returns {Promise<Array>} - 返回处理后的消息内容
    */
   async makeMsg(msg) {
-    if (!Array.isArray(msg)) msg = [msg]
+    //console.log("makeMsg", JSON.stringify(msg))
+    if (!Array.isArray(msg))
+      msg = [msg]
     const msgs = []
+    const forward = []
     for (let i of msg) {
       if (typeof i !== "object")
         i = { type: "text", data: { text: i } }
@@ -146,71 +149,26 @@ class OneBotv11Adapter {
       switch (i.type) {
         case "at":
           i.data.qq = String(i.data.qq)
-          msgs.push({ type: "at", data: i.data })
-          continue
+          break
         case "reply":
           i.data.id = String(i.data.id)
-          msgs.push({ type: "reply", data: i.data })
-          continue
-        case "face":
-          msgs.push({ type: "face", data: i.data })
-          continue
-        case "rps":
-        case "new_rps":
-          msgs.push({ type: "rps", data: i.data })
-          continue
-        case "dice":
-        case "new_dice":
-          msgs.push({ type: "dice", data: i.data })
-          continue
-        case "poke":
-          msgs.push({ type: "poke", data: i.data })
-          continue
-        case "gift":
-          msgs.push({ type: "gift", data: i.data })
-          continue
-        case "touch":
-          msgs.push({ type: "touch", data: i.data })
-          continue
-        case "custom":
-          msgs.push({ type: "custom", data: i.data })
-          continue
-        case "weather":
-          msgs.push({ type: "weather", data: i.data })
-          continue
-        case "basketball":
-          msgs.push({ type: "basketball", data: i.data })
+          break
+        case "button":
           continue
         case "node":
-          // 转发消息节点直接推入
-          msgs.push(i)
+          forward.push(...i.data)
           continue
         case "raw":
           i = i.data
           break
-        case "image":
-        case "record":
-        case "video":
-        case "voice":
-        case "file":
-        case "json":
-        case "xml":
-        case "music":
-        case "share":
-        case "location":
-          // 这些类型需要处理 file 字段
-          if (i.data.file)
-            i.data.file = await this.makeFile(i.data.file)
-          msgs.push({ type: i.type, data: i.data })
-          continue
       }
 
-      // 兜底：text 或未知类型
-      if (i.data && i.data.file)
+      if (i.data.file)
         i.data.file = await this.makeFile(i.data.file)
-      msgs.push({ type: i.type || "text", data: i.data })
+
+      msgs.push(i)
     }
-    return [msgs]
+    return [msgs, forward]
   }
 
   /**
@@ -219,10 +177,31 @@ class OneBotv11Adapter {
    * @param {Function} send - 发送消息的函数
    * @returns {Promise<Object>} - 返回处理后的消息内容
    */
-  async sendMsg(msg, send) {
-    const [message] = await this.makeMsg(msg)
-    if (!message.length) return
-    return await send(message)
+  async sendMsg(msg, send, sendForwardMsg) {
+    if (Array.isArray(msg) && msg.length && msg[0].type === 'node') {
+      const data = await sendForwardMsg(msg)
+      return data
+    }
+
+    const [message, forward] = await this.makeMsg(msg)
+    const ret = []
+
+    if (forward.length) {
+      const data = await sendForwardMsg(forward)
+      if (Array.isArray(data))
+        ret.push(...data)
+      else
+        ret.push(data)
+    }
+
+    if (message.length)
+      ret.push(await send(message))
+    if (ret.length === 1) return ret[0]
+
+    const message_id = []
+    for (const i of ret) if (i?.message_id)
+      message_id.push(i.message_id)
+    return { data: ret, message_id }
   }
 
   /**
@@ -238,7 +217,7 @@ class OneBotv11Adapter {
         user_id: data.user_id,
         message,
       })
-    })
+    }, msg => this.sendFriendForwardMsg(data, msg))
   }
 
   /**
@@ -254,7 +233,7 @@ class OneBotv11Adapter {
         group_id: data.group_id,
         message,
       })
-    })
+    }, msg => this.sendGroupForwardMsg(data, msg))
   }
 
   /**
@@ -271,7 +250,7 @@ class OneBotv11Adapter {
         channel_id: data.channel_id,
         message,
       })
-    })
+    }, msg => Bot.sendForwardMsg(msg => this.sendGuildMsg(data, msg), msg))
   }
 
   /**
@@ -297,24 +276,15 @@ class OneBotv11Adapter {
    * @returns {Array} - 返回解析后的消息内容
    */
   parseMsg(msg) {
-    const array = []
-    for (const i of Array.isArray(msg) ? msg : [msg]) {
+    const array = [];
+    for (const i of (Array.isArray(msg) ? msg : [msg])) {
       if (typeof i === "object") {
-        if (i.type === "node" && i.data && Array.isArray(i.data.content)) {
-          // 转发消息节点，递归解析
-          array.push({
-            ...i.data,
-            type: "node",
-            content: this.parseMsg(i.data.content)
-          })
-        } else {
-          array.push({ ...i.data, type: i.type })
-        }
+        array.push({ ...i.data, type: i.type });
       } else {
-        array.push({ type: "text", text: String(i) })
+        array.push({ type: "text", text: String(i) });
       }
     }
-    return array
+    return array;
   }
 
   /**
@@ -393,46 +363,22 @@ class OneBotv11Adapter {
    * @returns {Promise<Array>} - 返回处理后的转发消息内容
    */
   async makeForwardMsg(msg) {
-    const nodes = []
+    const msgs = []
     for (const i of msg) {
-      // 如果是 node，递归拍平其 content
-      if (i.type === "node" && i.data && Array.isArray(i.data.content)) {
-        // 展开 content，每个都包成 node
-        const subNodes = await this.makeForwardMsg(i.data.content)
-        nodes.push(...subNodes)
-        continue
-      }
-      // 兼容 message 字段
-      if (i.message) {
-        const [content] = await this.makeMsg(i.message)
-        if (content.length) {
-          nodes.push({
-            type: "node",
-            data: {
-              name: i.nickname || "匿名消息",
-              uin: String(Number(i.user_id) || 80000000),
-              content,
-              time: i.time,
-            }
-          })
-        }
-        continue
-      }
-      // 普通消息段，包成 node
-      const [content] = await this.makeMsg(i)
-      if (content.length) {
-        nodes.push({
-          type: "node",
-          data: {
+      const [content, forward] = await this.makeMsg(i.message)
+      if (forward.length)
+        msgs.push(...await this.makeForwardMsg(forward))
+      if (content.length)
+        msgs.push({
+          type: "node", data: {
             name: i.nickname || "匿名消息",
             uin: String(Number(i.user_id) || 80000000),
             content,
             time: i.time,
           }
         })
-      }
     }
-    return nodes
+    return msgs
   }
 
   /**
@@ -457,9 +403,16 @@ class OneBotv11Adapter {
    */
   async sendGroupForwardMsg(data, msg) {
     lain.info(this.self_id, `${data.self_id} => ${data.group_id}`, `发送群转发消息：${this.makeLog(msg)}`)
+    //如果已经是 node 数组，直接用
+    let messages
+    if (Array.isArray(msg) && msg.length && msg[0].type === 'node') {
+      messages = msg
+    } else {
+      messages = await this.makeForwardMsg(msg)
+    }
     return data.bot.sendApi("send_group_forward_msg", {
       group_id: data.group_id,
-      messages: await this.makeForwardMsg(msg),
+      messages,
     })
   }
 
