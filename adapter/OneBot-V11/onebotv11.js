@@ -205,6 +205,40 @@ class OneBotv11Adapter {
   }
 
   /**
+ * 递归补全 reply 段的 message 字段，并挂载 e.source
+ * @param {Array} msgArr - 消息数组
+ * @param {Object} data - 事件数据
+ * @returns {Promise<void>}
+ */
+  async completeReplySource(msgArr, data) {
+    if (!Array.isArray(msgArr)) return;
+    for (const seg of msgArr) {
+      if (seg.type === "reply" && seg.id && data && data.bot) {
+        try {
+          // 查询被引用消息
+          const quoted = await this.getMsg(data, seg.id);
+          // 保证 seg.message 一定为数组
+          seg.message = Array.isArray(quoted?.message) ? quoted.message : [];
+          // 递归补全多层引用
+          await this.completeReplySource(seg.message, data);
+          // 只挂载一次 e.source
+          if (!data.source) {
+            data.source = {
+              ...quoted,
+              message: seg.message,
+              seq: quoted?.seq || quoted?.message_id,
+              time: quoted?.time || quoted?.message_id,
+              sender: quoted?.sender,
+            };
+          }
+        } catch (e) {
+          lain.warn(this.self_id, data.self_id, `获取引用消息失败: ${seg.id}`);
+        }
+      }
+    }
+  }
+
+  /**
    * 发送好友消息
    * @param {Object} data - 数据
    * @param {Array|Object} msg - 消息内容
@@ -1362,6 +1396,7 @@ class OneBotv11Adapter {
    */
   async makeMessage(data) {
     data.message = this.parseMsg(data.message)
+    await this.completeReplySource(data.message, data)
     // 动态挂载 member
     if (data.group_id && data.user_id && data.bot && typeof data.bot.pickMember === "function" && !Object.getOwnPropertyDescriptor(data, "member")) {
       Object.defineProperty(data, "member", {
