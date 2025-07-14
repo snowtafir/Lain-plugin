@@ -14,7 +14,7 @@ class OneBotv11Adapter {
     this.name = "OneBotv11"
     this.path = this.name
     this.echo = {}
-    this.timeout = 60000
+    this.timeout = 120000 // 120000（2分钟）
     /** 存一下 */
     //bot.request = request
     /** 机器人QQ号 */
