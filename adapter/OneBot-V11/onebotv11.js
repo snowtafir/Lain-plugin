@@ -423,9 +423,16 @@ class OneBotv11Adapter {
    */
   async sendFriendForwardMsg(data, msg) {
     lain.info(this.self_id, `${data.self_id} => ${data.user_id}`, `发送好友转发消息：${this.makeLog(msg)}`)
+    //如果已经是 node 数组，直接用
+    let messages
+    if (Array.isArray(msg) && msg.length && msg[0].type === 'node') {
+      messages = msg
+    } else {
+      messages = await this.makeForwardMsg(msg)
+    }
     return data.bot.sendApi("send_private_forward_msg", {
       user_id: data.user_id,
-      messages: await this.makeForwardMsg(msg),
+      messages,
     })
   }
 
@@ -478,8 +485,10 @@ class OneBotv11Adapter {
    */
   async getFriendMap(data) {
     const map = new Map
-    for (const i of await this.getFriendArray(data))
+    for (const i of await this.getFriendArray(data)) {
       map.set(i.user_id, i)
+      Bot.fl.set(i.user_id, i)
+    }
     data.bot.fl = map
     return map
   }
@@ -490,8 +499,10 @@ class OneBotv11Adapter {
    * @returns {Promise<Object>} - 好友信息
    */
   async getFriendInfo(data) {
+    const user_id = Number(data.user_id) || data.user_id
+    if (!user_id || user_id === 0) return null
     const info = (await data.bot.sendApi("get_stranger_info", {
-      user_id: data.user_id,
+      user_id: user_id,
     })).data
     data.bot.fl.set(data.user_id, info)
     return info
@@ -541,8 +552,10 @@ class OneBotv11Adapter {
    */
   async getGroupMap(data) {
     const map = new Map
-    for (const i of await this.getGroupArray(data))
+    for (const i of await this.getGroupArray(data)) {
       map.set(i.group_id, i)
+      Bot.gl.set(i.group_id, i)
+    }
     data.bot.gl = map
     return map
   }
@@ -554,7 +567,7 @@ class OneBotv11Adapter {
    */
   async getGroupInfo(data) {
     const info = (await data.bot.sendApi("get_group_info", {
-      group_id: data.group_id,
+      group_id: Number(data.group_id) || data.group_id,
     })).data
     data.bot.gl.set(data.group_id, info)
     return info
@@ -567,7 +580,7 @@ class OneBotv11Adapter {
    */
   async getMemberArray(data) {
     return (await data.bot.sendApi("get_group_member_list", {
-      group_id: data.group_id,
+      group_id: Number(data.group_id) || data.group_id,
     })).data || []
   }
 
@@ -601,10 +614,16 @@ class OneBotv11Adapter {
    * @param {Object} data - 包含bot实例的数据对象
    */
   async getGroupMemberMap(data) {
-    for (const [group_id, group] of await this.getGroupMap(data)) {
+    let groupCount = 0
+    let memberCount = 0
+    const groupMap = await this.getGroupMap(data)
+    for (const [group_id, group] of groupMap) {
       if (group.guild) continue
-      await this.getMemberMap({ ...data, group_id })
+      groupCount++
+      const members = await this.getMemberMap({ ...data, group_id })
+      memberCount += members.size
     }
+    lain.mark(this.self_id, data.self_id, `${this.name}(${this.id}) ${data.bot.version.version} 资源加载成功: ${groupCount} 个群, ${memberCount} 个群成员`)
   }
 
   /**
@@ -613,9 +632,11 @@ class OneBotv11Adapter {
    * @returns {Promise<Object>} - 群组成员信息
    */
   async getMemberInfo(data) {
+    const user_id = Number(data.user_id) || data.user_id
+    if (!user_id || user_id === 0) return null
     const info = (await data.bot.sendApi("get_group_member_info", {
-      group_id: data.group_id,
-      user_id: data.user_id,
+      group_id: Number(data.group_id) || data.group_id,
+      user_id: user_id,
     })).data
     let gml = data.bot.gml.get(data.group_id)
     if (!gml) {
@@ -1153,6 +1174,7 @@ class OneBotv11Adapter {
     }
     return {
       ...i,
+      get info() { return this },
       sendMsg: this.sendFriendMsg.bind(this, i),
       getMsg: this.getMsg.bind(this, i),
       makeForwardMsg: this.makeForwardMsg.bind(this),
@@ -1202,6 +1224,7 @@ class OneBotv11Adapter {
     return {
       ...this.pickFriend(i, user_id),
       ...i,
+      get info() { return this },
       getInfo: this.getMemberInfo.bind(this, i),
       getAvatarUrl() { return this.avatar || `https://q.qlogo.cn/g?b=qq&s=0&nk=${user_id}` },
       poke: this.sendGroupMsg.bind(this, i, { type: "poke", qq: user_id }),
@@ -1254,6 +1277,7 @@ class OneBotv11Adapter {
     }
     return {
       ...i,
+      get info() { return this },
       sendMsg: this.sendGroupMsg.bind(this, i),
       getMsg: this.getMsg.bind(this, i),
       recallMsg: this.recallMsg.bind(this, i),
@@ -1343,6 +1367,8 @@ class OneBotv11Adapter {
       setEssenceMessage: this.setEssenceMsg.bind(this, data),
       removeEssenceMessage: this.deleteEssenceMsg.bind(this, data),
 
+      makeForwardMsg: this.makeForwardMsg.bind(this),
+
       cookies: {},
       getCookies(domain) { return this.cookies[domain] },
       getCsrfToken() { return this.bkn },
@@ -1383,9 +1409,45 @@ class OneBotv11Adapter {
     }
     data.bot.bkn = (await data.bot.sendApi("get_csrf_token").catch(i => i.error)).token
     data.bot.getFriendMap()
-    data.bot.getGroupMemberMap()
+    // 异步拉取全部群成员缓冲，避免连接阻塞/超时 (LLOneBot/NapCat 易在海量群时报错)
+    data.bot.getGroupMemberMap().catch((err) => {
+      lain.error(this.self_id, ["拉取全群成员缓存超时或失败", err])
+    })
 
     lain.mark(this.self_id, data.self_id, `${this.name}(${this.id}) ${data.bot.version.version} 已连接`)
+
+    // 覆盖全局 Bot 方法，代理到适配器的实现
+    const adapter = this
+    const bot = data.bot
+    Bot.makeForwardMsg = async function (msg) {
+      return await adapter.makeForwardMsg(msg)
+    }
+    Bot.pickGroup = function (group_id) {
+      return bot.pickGroup(group_id)
+    }
+    Bot.pickFriend = function (user_id) {
+      return bot.pickFriend(user_id)
+    }
+    Bot.pickUser = Bot.pickFriend
+    Bot.pickMember = function (group_id, user_id) {
+      return bot.pickMember(group_id, user_id)
+    }
+    Bot.getGroupMemberInfo = function (group_id, user_id) {
+      return bot.getGroupMemberInfo(group_id, user_id)
+    }
+    Bot.getGroupMap = function () {
+      return bot.gl
+    }
+    Bot.getGroupList = function () {
+      return bot.gl
+    }
+    Bot.getFriendMap = function () {
+      return bot.fl
+    }
+    Bot.getFriendList = function () {
+      return bot.fl
+    }
+
     Bot.em(`connect.${data.self_id}`, data)
   }
 
@@ -1465,6 +1527,30 @@ class OneBotv11Adapter {
    * @returns {void}
    */
   async makeNotice(data) {
+    // 动态挂载 member
+    if (data.group_id && data.user_id && data.bot && typeof data.bot.pickMember === "function" && !Object.getOwnPropertyDescriptor(data, "member")) {
+      Object.defineProperty(data, "member", {
+        get() { return data.bot.pickMember(data.group_id, data.user_id) },
+        configurable: true,
+        enumerable: false
+      })
+    }
+    // 动态挂载 group
+    if (data.group_id && data.bot && typeof data.bot.pickGroup === "function" && !Object.getOwnPropertyDescriptor(data, "group")) {
+      Object.defineProperty(data, "group", {
+        get() { return data.bot.pickGroup(data.group_id) },
+        configurable: true,
+        enumerable: false
+      })
+    }
+    // 动态挂载 friend
+    if (data.user_id && data.bot && typeof data.bot.pickFriend === "function" && !Object.getOwnPropertyDescriptor(data, "friend")) {
+      Object.defineProperty(data, "friend", {
+        get() { return data.bot.pickFriend(data.user_id) },
+        configurable: true,
+        enumerable: false
+      })
+    }
     switch (data.notice_type) {
       case "friend_recall":
         lain.info(this.self_id, `Bot: [${data.self_id}] > 好友：[${data.user_id}]`, `好友消息撤回：${data.message_id}`)
@@ -1483,6 +1569,7 @@ class OneBotv11Adapter {
         break
       }
       case "group_decrease": {
+        if (Number(data.operator_id) === 0) data.operator_id = data.user_id
         lain.info(this.self_id, `Bot: [${data.self_id}] > 群：[${data.group_id}]`, `群成员减少：${data.operator_id} => 用户： [${data.user_id}]: ${data.sub_type}`)
         if (data.user_id === data.self_id) {
           data.bot.gl.delete(data.group_id)
@@ -1614,6 +1701,10 @@ class OneBotv11Adapter {
     if (data.guild_id && data.channel_id) {
       data.group_id = `${data.guild_id}-${data.channel_id}`
       Object.defineProperty(data, "friend", { get() { return this.member || {} } })
+    }
+
+    if (data.group_id && !data.group_name && data.bot) {
+      data.group_name = data.bot.gl.get(data.group_id)?.group_name
     }
 
     Bot.em(`${data.post_type}.${data.notice_type}.${data.sub_type}`, data)
