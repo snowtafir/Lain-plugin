@@ -408,7 +408,7 @@ class OneBotv11Adapter {
             name: i.nickname || "匿名消息",
             uin: String(Number(i.user_id) || 80000000),
             content,
-            time: i.time,
+             time: i.time || Math.floor(Date.now() / 1000),
           }
         })
     }
